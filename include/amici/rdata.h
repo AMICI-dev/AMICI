@@ -8,6 +8,8 @@
 #include "amici/sundials_matrix_wrapper.h"
 #include "amici/vector.h"
 
+#include <span>
+#include <string_view>
 #include <vector>
 
 namespace amici {
@@ -16,7 +18,7 @@ class Solver;
 class ExpData;
 class ForwardProblem;
 class BackwardProblem;
-class SteadystateProblem;
+class SteadyStateProblem;
 class SteadyStateBackwardProblem;
 } // namespace amici
 
@@ -28,7 +30,7 @@ void serialize(Archive& ar, amici::ReturnData& r, unsigned int version);
 namespace amici {
 
 /**
- * @brief Stores all data to be returned by amici::runAmiciSimulation.
+ * @brief Stores all data to be returned by amici::run_simulation.
  *
  * NOTE: multi-dimensional arrays are stored in row-major order (C-style)
  */
@@ -41,6 +43,7 @@ class ReturnData : public ModelDimensions {
 
     /**
      * @brief Constructor
+     *
      * @param ts_ see amici::SimulationParameters::ts
      * @param model_dimensions_ Model dimensions
      * @param nmaxevent_ see amici::ModelDimensions::nmaxevent
@@ -56,6 +59,18 @@ class ReturnData : public ModelDimensions {
      * @param sigma_res_ indicates whether additional residuals are to be added
      * for each sigma
      * @param sigma_offset_ offset to ensure real-valuedness of sigma residuals
+     * @param free_parameter_ids_ IDs of the free parameters
+     * @param free_parameter_names_ Names of the free parameters
+     * @param fixed_parameter_ids_ IDs of the fixed parameters
+     * @param fixed_parameter_names_ Names of the fixed parameters
+     * @param state_ids_ IDs of state variables
+     * @param state_names_ Names of state variables
+     * @param state_ids_solver_ IDs of solver state variables
+     * @param state_names_solver_ Names of solver state variables
+     * @param observable_ids_ IDs of observables
+     * @param observable_names_ Names of observables
+     * @param expression_ids_ IDs of expressions
+     * @param expression_names_ Names of expressions
      */
     ReturnData(
         std::vector<realtype> ts_, ModelDimensions const& model_dimensions_,
@@ -63,12 +78,25 @@ class ReturnData : public ModelDimensions {
         std::vector<ParameterScaling> pscale_, SecondOrderMode o2mode_,
         SensitivityOrder sensi_, SensitivityMethod sensi_meth_,
         RDataReporting rdrm_, bool quadratic_llh_, bool sigma_res_,
-        realtype sigma_offset_
+        realtype sigma_offset_,
+        std::span<std::string_view const> free_parameter_ids_,
+        std::span<std::string_view const> free_parameter_names_,
+        std::span<std::string_view const> fixed_parameter_ids_,
+        std::span<std::string_view const> fixed_parameter_names_,
+        std::span<std::string_view const> state_ids_,
+        std::span<std::string_view const> state_names_,
+        std::span<std::string_view const> state_ids_solver_,
+        std::span<std::string_view const> state_names_solver_,
+        std::span<std::string_view const> observable_ids_,
+        std::span<std::string_view const> observable_names_,
+        std::span<std::string_view const> expression_ids_,
+        std::span<std::string_view const> expression_names_
     );
 
     /**
      * @brief constructor that uses information from model and solver to
      * appropriately initialize fields
+     *
      * @param solver solver instance
      * @param model model instance
      */
@@ -79,13 +107,14 @@ class ReturnData : public ModelDimensions {
     /**
      * @brief constructor that uses information from model and solver to
      * appropriately initialize fields
+     *
      * @param fwd simulated forward problem, pass `nullptr` to ignore
      * @param bwd simulated backward problem, pass `nullptr` to ignore
      * @param model matching model instance
      * @param solver matching solver instance
      * @param edata matching experimental data
      */
-    void processSimulationObjects(
+    void process_simulation_objects(
         ForwardProblem const* fwd, BackwardProblem const* bwd, Model& model,
         Solver const& solver, ExpData const* edata
     );
@@ -109,7 +138,7 @@ class ReturnData : public ModelDimensions {
      * (shape `nx_solver` x `nx_solver`, row-major) evaluated at `t_last`.
      *
      * The corresponding state variable IDs can be obtained from
-     * `Model::getStateIdsSolver()`.
+     * `state_ids_solver()`.
      */
     std::vector<realtype> J;
 
@@ -121,7 +150,7 @@ class ReturnData : public ModelDimensions {
      * at timepoints `ReturnData::ts` (shape `nt` x `nw`, row major).
      *
      * The corresponding expression IDs can be obtained from
-     * `Model::getExpressionIds()`.
+     * `expression_ids`.
      */
     std::vector<realtype> w;
 
@@ -168,7 +197,7 @@ class ReturnData : public ModelDimensions {
      * (shape `nt` x `nx_rdata`, row-major).
      *
      * The corresponding state variable IDs can be obtained from
-     * `Model::getStateIds()`.
+     * `state_ids`.
      */
     std::vector<realtype> x;
 
@@ -181,7 +210,7 @@ class ReturnData : public ModelDimensions {
      * (shape `nt` x `nplist` x `nx_rdata`, row-major).
      *
      * The corresponding state variable IDs can be obtained from
-     * `Model::getStateIds()`.
+     * `state_ids`.
      */
     std::vector<realtype> sx;
 
@@ -192,7 +221,7 @@ class ReturnData : public ModelDimensions {
      * (shape `nt` x `ny`, row-major).
      *
      * The corresponding observable IDs can be obtained from
-     * `Model::getObservableIds()`.
+     * `observable_ids`.
      */
     std::vector<realtype> y;
 
@@ -208,7 +237,7 @@ class ReturnData : public ModelDimensions {
      * (shape `nt` x `nplist` x `ny`, row-major).
      *
      * The corresponding observable IDs can be obtained from
-     * `Model::getObservableIds()`.
+     * `observable_ids`.
      */
     std::vector<realtype> sy;
 
@@ -243,30 +272,30 @@ class ReturnData : public ModelDimensions {
      * Cumulative number of integration steps for the backward problem for each
      * output timepoint in `ReturnData::ts` (shape `nt`).
      */
-    std::vector<int> numstepsB;
+    std::vector<int> numsteps_b;
 
     /** Number of right hand side evaluations forward problem (shape `nt`) */
-    std::vector<int> numrhsevals;
+    std::vector<int> num_rhs_evals;
 
     /** Number of right hand side evaluations backward problem (shape `nt`) */
-    std::vector<int> numrhsevalsB;
+    std::vector<int> num_rhs_evals_b;
 
     /** Number of error test failures forward problem (shape `nt`) */
-    std::vector<int> numerrtestfails;
+    std::vector<int> num_err_test_fails;
 
     /** Number of error test failures backward problem (shape `nt`) */
-    std::vector<int> numerrtestfailsB;
+    std::vector<int> num_err_test_fails_b;
 
     /**
      * Number of linear solver convergence failures forward problem (shape `nt`)
      */
-    std::vector<int> numnonlinsolvconvfails;
+    std::vector<int> num_non_lin_solv_conv_fails;
 
     /**
      * Number of linear solver convergence failures backward problem (shape
      * `nt`)
      */
-    std::vector<int> numnonlinsolvconvfailsB;
+    std::vector<int> num_non_lin_solv_conv_fails_b;
 
     /** Employed order forward problem (shape `nt`) */
     std::vector<int> order;
@@ -274,10 +303,10 @@ class ReturnData : public ModelDimensions {
     /**
      * @brief Computation time of forward solve [ms]
      *
-     * .. warning::
-     *      If AMICI was built without boost, this tracks the CPU-time of the
-     *      current process. Therefore, in a multi-threaded context, this value
-     *      may be incorrect.
+     * This is the CPU time of the simulating thread, except on platforms
+     * without a precise per-thread CPU clock, such as Windows (see
+     * CpuTimer::uses_thread_clock). There, it is measured with std::clock,
+     * so in a multi-threaded context, this value may be incorrect.
      *
      */
     double cpu_time = 0.0;
@@ -285,21 +314,21 @@ class ReturnData : public ModelDimensions {
     /**
      * @brief Computation time of backward solve [ms]
      *
-     * .. warning::
-     *      If AMICI was built without boost, this tracks the CPU-time of the
-     *      current process. Therefore, in a multi-threaded context, this value
-     *      may be incorrect.
+     * This is the CPU time of the simulating thread, except on platforms
+     * without a precise per-thread CPU clock, such as Windows (see
+     * CpuTimer::uses_thread_clock). There, it is measured with std::clock,
+     * so in a multi-threaded context, this value may be incorrect.
      *
      */
-    double cpu_timeB = 0.0;
+    double cpu_time_b = 0.0;
 
     /**
      * @brief Total CPU time from entering runAmiciSimulation until exiting [ms]
      *
-     * .. warning::
-     *      If AMICI was built without boost, this tracks the CPU-time of the
-     *      current process. Therefore, in a multi-threaded context, this value
-     *      may be incorrect.
+     * This is the CPU time of the simulating thread, except on platforms
+     * without a precise per-thread CPU clock, such as Windows (see
+     * CpuTimer::uses_thread_clock). There, it is measured with std::clock,
+     * so in a multi-threaded context, this value may be incorrect.
      *
      */
     double cpu_time_total = 0.0;
@@ -311,10 +340,10 @@ class ReturnData : public ModelDimensions {
      * @brief Computation time of the steady state solver [ms]
      * (pre-equilibration)
      *
-     * .. warning::
-     *      If AMICI was built without boost, this tracks the CPU-time of the
-     *      current process. Therefore, in a multi-threaded context, this value
-     *      may be incorrect.
+     * This is the CPU time of the simulating thread, except on platforms
+     * without a precise per-thread CPU clock, such as Windows (see
+     * CpuTimer::uses_thread_clock). There, it is measured with std::clock,
+     * so in a multi-threaded context, this value may be incorrect.
      *
      */
     double preeq_cpu_time = 0.0;
@@ -323,13 +352,13 @@ class ReturnData : public ModelDimensions {
      * @brief Computation time of the steady state solver of the backward
      * problem [ms] (pre-equilibration)
      *
-     * .. warning::
-     *      If AMICI was built without boost, this tracks the CPU-time of the
-     *      current process. Therefore, in a multi-threaded context, this value
-     *      may be incorrect.
+     * This is the CPU time of the simulating thread, except on platforms
+     * without a precise per-thread CPU clock, such as Windows (see
+     * CpuTimer::uses_thread_clock). There, it is measured with std::clock,
+     * so in a multi-threaded context, this value may be incorrect.
      *
      */
-    double preeq_cpu_timeB = 0.0;
+    double preeq_cpu_time_b = 0.0;
 
     /** Flags indicating success of steady-state solver  (postequilibration) */
     std::vector<SteadyStateStatus> posteq_status;
@@ -338,10 +367,10 @@ class ReturnData : public ModelDimensions {
      * @brief Computation time of the steady-state solver [ms]
      * (postequilibration)
      *
-     * .. warning::
-     *      If AMICI was built without boost, this tracks the CPU-time of the
-     *      current process. Therefore, in a multi-threaded context, this value
-     *      may be incorrect.
+     * This is the CPU time of the simulating thread, except on platforms
+     * without a precise per-thread CPU clock, such as Windows (see
+     * CpuTimer::uses_thread_clock). There, it is measured with std::clock,
+     * so in a multi-threaded context, this value may be incorrect.
      *
      */
     double posteq_cpu_time = 0.0;
@@ -350,13 +379,13 @@ class ReturnData : public ModelDimensions {
      * @brief Computation time of the steady-state solver of the backward
      * problem [ms] (postequilibration)
      *
-     * .. warning::
-     *      If AMICI was built without boost, this tracks the CPU-time of the
-     *      current process. Therefore, in a multi-threaded context, this value
-     *      may be incorrect.
+     * This is the CPU time of the simulating thread, except on platforms
+     * without a precise per-thread CPU clock, such as Windows (see
+     * CpuTimer::uses_thread_clock). There, it is measured with std::clock,
+     * so in a multi-threaded context, this value may be incorrect.
      *
      */
-    double posteq_cpu_timeB = 0.0;
+    double posteq_cpu_time_b = 0.0;
 
     /**
      * @brief Number of Newton steps for pre-equilibration.
@@ -369,7 +398,7 @@ class ReturnData : public ModelDimensions {
      * Number of simulation steps for adjoint pre-equilibration problem
      * [== 0 if analytical solution worked, > 0 otherwise]
      */
-    int preeq_numstepsB = 0;
+    int preeq_numsteps_b = 0;
 
     /**
      * Number of Newton steps for post-equilibration
@@ -381,7 +410,7 @@ class ReturnData : public ModelDimensions {
      * Number of simulation steps for the post-equilibration backward simulation
      * [== 0 if analytical solution worked, > 0 otherwise]
      */
-    int posteq_numstepsB = 0;
+    int posteq_numsteps_b = 0;
 
     /**
      * Model time at which the pre-equilibration steady state was reached via
@@ -409,7 +438,7 @@ class ReturnData : public ModelDimensions {
      * @brief Initial state of the main simulation (shape `nx_rdata`).
      *
      * The corresponding state variable IDs can be obtained from
-     * `Model::getStateIds()`.
+     * `state_ids`.
      */
     std::vector<realtype> x0;
 
@@ -419,14 +448,15 @@ class ReturnData : public ModelDimensions {
      * The values of the state variables at the pre-equilibration steady state
      * (shape `nx_rdata`).
      * The corresponding state variable IDs can be obtained from
-     * `Model::getStateIds()`.
+     * `state_ids`.
      */
     std::vector<realtype> x_ss;
 
     /**
      * @brief Initial state sensitivities for the main simulation.
      *
-     * (shape `nplist` x `nx_rdata`, row-major).
+     * Shape `nplist` x `nx_rdata` (row-major). Empty if pre-equilibration
+     * used adjoint sensitivities, in which case these are not computed.
      */
     std::vector<realtype> sx0;
 
@@ -468,19 +498,6 @@ class ReturnData : public ModelDimensions {
      */
     int status = AMICI_NOT_RUN;
 
-    /**
-     * @brief Number of state variables.
-     *
-     * (alias `nx_rdata`, kept for backward compatibility)
-     */
-    int nx{0};
-
-    /**
-     * Number of state variables in the unaugmented system
-     * (alias nxtrue_rdata, kept for backward compatibility)
-     */
-    int nxtrue{0};
-
     /** Number of parameters w.r.t. which sensitivities were requested */
     int nplist{0};
 
@@ -510,6 +527,7 @@ class ReturnData : public ModelDimensions {
 
     /**
      * @brief Serialize ReturnData (see boost::serialization::serialize)
+     *
      * @param ar Archive to serialize to
      * @param r Data to serialize
      * @param version Version number
@@ -535,9 +553,45 @@ class ReturnData : public ModelDimensions {
      * @brief Indices of the parameters w.r.t. which sensitivities were
      * computed.
      *
-     * The indices refer to parameter IDs in Model::getParameterIds().
+     * The indices refer to parameter IDs in `free_parameter_ids`.
      */
     std::vector<int> plist;
+
+    /** IDs of the free parameters */
+    std::span<std::string_view const> free_parameter_ids;
+
+    /** Names of the free parameters */
+    std::span<std::string_view const> free_parameter_names;
+
+    /** IDs of the fixed parameters */
+    std::span<std::string_view const> fixed_parameter_ids;
+
+    /** Names of the fixed parameters */
+    std::span<std::string_view const> fixed_parameter_names;
+
+    /** IDs of state variables */
+    std::span<std::string_view const> state_ids;
+
+    /** Names of state variables */
+    std::span<std::string_view const> state_names;
+
+    /** IDs of solver state variables */
+    std::span<std::string_view const> state_ids_solver;
+
+    /** Names of solver state variables */
+    std::span<std::string_view const> state_names_solver;
+
+    /** IDs of observables */
+    std::span<std::string_view const> observable_ids;
+
+    /** Names of observables */
+    std::span<std::string_view const> observable_names;
+
+    /** IDs of expressions */
+    std::span<std::string_view const> expression_ids;
+
+    /** Names of expressions */
+    std::span<std::string_view const> expression_names;
 
   protected:
     /** offset for sigma_residuals */
@@ -549,101 +603,115 @@ class ReturnData : public ModelDimensions {
 
     /**
      * @brief initializes storage for likelihood reporting mode
+     *
      * @param quadratic_llh whether model defines a quadratic nllh and computing
      * res, sres and FIM makes sense.
      */
-    void initializeLikelihoodReporting(bool quadratic_llh);
+    void initialize_likelihood_reporting(bool quadratic_llh);
 
     /**
      * @brief initializes storage for observables + likelihood reporting mode
+     *
      * @param quadratic_llh whether model defines a quadratic nllh and computing
      * res, sres and FIM makes sense.
      */
-    void initializeObservablesLikelihoodReporting(bool quadratic_llh);
+    void initialize_observables_likelihood_reporting(bool quadratic_llh);
 
     /**
      * @brief initializes storage for residual reporting mode
+     *
      * @param enable_res whether residuals are to be computed
      */
-    void initializeResidualReporting(bool enable_res);
+    void initialize_residual_reporting(bool enable_res);
 
     /**
      * @brief initializes storage for full reporting mode
+     *
      * @param enable_fim whether FIM Hessian approximation is to be computed
      */
-    void initializeFullReporting(bool enable_fim);
+    void initialize_full_reporting(bool enable_fim);
 
     /**
      * @brief initialize values for chi2 and llh and derivatives
+     *
      * @param enable_chi2 whether chi2 values are to be computed
      */
-    void initializeObjectiveFunction(bool enable_chi2);
+    void initialize_objective_function(bool enable_chi2);
 
     /**
-     * @brief extracts data from a preequilibration SteadystateProblem
-     * @param preeq SteadystateProblem for preequilibration
-     * @param preeq_bwd SteadyStateBackwardProblem from preequilibration
+     * @brief extracts data from a pre-equilibration SteadystateProblem
+     *
+     * @param preeq SteadystateProblem for pre-equilibration
+     * @param preeq_bwd SteadyStateBackwardProblem from pre-equilibration
      * @param model Model instance to compute return values
      */
-    void processPreEquilibration(
-        SteadystateProblem const& preeq,
+    void process_pre_equilibration(
+        SteadyStateProblem const& preeq,
         SteadyStateBackwardProblem const* preeq_bwd, Model& model
     );
 
     /**
-     * @brief extracts data from a preequilibration SteadystateProblem
-     * @param posteq SteadystateProblem for postequilibration
-     * @param posteq_bwd SteadyStateBackwardProblem from postequilibration
+     * @brief extracts data from a post-equilibration SteadystateProblem
+     *
+     * @param posteq SteadystateProblem for post-equilibration
+     * @param posteq_bwd SteadyStateBackwardProblem from post-equilibration
      * @param model Model instance to compute return values
      * @param edata ExpData instance containing observable data
      */
-    void processPostEquilibration(
-        SteadystateProblem const& posteq,
+    void process_post_equilibration(
+        SteadyStateProblem const& posteq,
         SteadyStateBackwardProblem const* posteq_bwd, Model& model,
         ExpData const* edata
     );
 
     /**
      * @brief extracts results from forward problem
+     *
      * @param fwd forward problem
      * @param model model that was used for forward simulation
      * @param edata ExpData instance containing observable data
+     * @param store_sx0 whether to compute and store `sx0`
      */
-    void processForwardProblem(
-        ForwardProblem const& fwd, Model& model, ExpData const* edata
+    void process_forward_problem(
+        ForwardProblem const& fwd, Model& model, ExpData const* edata,
+        bool store_sx0
     );
 
     /**
      * @brief extracts results from backward problem
+     *
      * @param fwd forward problem
      * @param bwd backward problem
      * @param preeq SteadyStateProblem for preequilibration
      * @param preeq_bwd SteadyStateBackwardProblem for preequilibration
      * @param model model that was used for forward/backward simulation
      */
-    void processBackwardProblem(
+    void process_backward_problem(
         ForwardProblem const& fwd, BackwardProblem const& bwd,
-        SteadystateProblem const* preeq,
+        SteadyStateProblem const* preeq,
         SteadyStateBackwardProblem const* preeq_bwd, Model& model
     );
 
     /**
      * @brief extracts results from solver
+     *
      * @param solver solver that was used for forward/backward simulation
      */
-    void processSolver(Solver const& solver);
+    void process_solver(Solver const& solver);
 
     /**
      * @brief Evaluates and stores the Jacobian and right hand side at final
      * timepoint
+     *
      * @param problem forward problem or steadystate problem
      * @param model model that was used for forward/backward simulation
      */
     template <class T>
-    void
-    storeJacobianAndDerivativeInReturnData(T const& problem, Model& model) {
-        auto const& simulation_state = problem.getFinalSimulationState();
-        model.setModelState(simulation_state.mod);
+    void store_jacobian_and_derivative(T const& problem, Model& model) {
+        auto const& simulation_state = problem.get_final_simulation_state();
+        if (!simulation_state.has_solution())
+            return;
+        model.set_model_state(simulation_state.mod);
         auto const& sol = simulation_state.sol;
         sundials::Context sunctx;
         AmiVector xdot(nx_solver, sunctx);
@@ -651,7 +719,7 @@ class ReturnData : public ModelDimensions {
             model.fxdot(sol.t, sol.x, sol.dx, xdot);
 
         if (!this->xdot.empty())
-            writeSlice(xdot, this->xdot);
+            write_slice(xdot, this->xdot);
 
         if (!this->J.empty()) {
             SUNMatrixWrapper J(nx_solver, nx_solver, sunctx);
@@ -666,6 +734,7 @@ class ReturnData : public ModelDimensions {
 
     /**
      * @brief Residual function
+     *
      * @param it time index
      * @param model model that was used for forward/backward simulation
      * @param sol Solution state the timepoint `it`
@@ -676,6 +745,7 @@ class ReturnData : public ModelDimensions {
 
     /**
      * @brief Chi-squared function
+     *
      * @param it time index
      * @param edata ExpData instance containing observable data
      */
@@ -683,6 +753,7 @@ class ReturnData : public ModelDimensions {
 
     /**
      * @brief Residual sensitivity function
+     *
      * @param it time index
      * @param model model that was used for forward/backward simulation
      * @param sol solution state the timepoint `it`
@@ -693,6 +764,7 @@ class ReturnData : public ModelDimensions {
 
     /**
      * @brief Fisher information matrix function
+     *
      * @param it time index
      * @param model model that was used for forward/backward simulation
      * @param sol Solution state the timepoint `it`
@@ -704,6 +776,7 @@ class ReturnData : public ModelDimensions {
     /**
      * @brief Set likelihood, state variables, outputs and respective
      * sensitivities to NaN (typically after integration failure)
+     *
      * @param it_start time index at which to start invalidating
      */
     void invalidate(int it_start);
@@ -712,26 +785,28 @@ class ReturnData : public ModelDimensions {
      * @brief Set likelihood and chi2 to NaN
      * (typically after integration failure)
      */
-    void invalidateLLH();
+    void invalidate_llh();
 
     /**
      * @brief Set likelihood sensitivities to NaN
      * (typically after integration failure)
      */
-    void invalidateSLLH();
+    void invalidate_sllh();
 
     /**
      * @brief applies the chain rule to account for parameter transformation in
      * the sensitivities of simulation results
+     *
      * @param model Model from which the ReturnData was obtained
      */
-    void applyChainRuleFactorToSimulationResults(Model const& model);
+    void apply_chain_rule_factor_to_simulation_results(Model const& model);
 
     /**
      * @brief Checks whether forward sensitivity analysis is performed
+     *
      * @return boolean indicator
      */
-    [[nodiscard]] bool computingFSA() const {
+    [[nodiscard]] bool computing_fsa() const {
         return (
             sensi_meth == SensitivityMethod::forward
             && sensi >= SensitivityOrder::first
@@ -741,37 +816,40 @@ class ReturnData : public ModelDimensions {
     /**
      * @brief Extracts output information for data-points, expects that
      * the model state was set appropriately
+     *
      * @param it timepoint index
      * @param model model that was used in forward solve
      * @param sol solution state the timepoint `it`
      * @param edata ExpData instance carrying experimental data
      */
-    void getDataOutput(
+    void get_data_output(
         int it, Model& model, SolutionState const& sol, ExpData const* edata
     );
 
     /**
      * @brief Extracts data information for forward sensitivity analysis,
      * expects that the model state was set appropriately
+     *
      * @param it index of current timepoint
      * @param model model that was used in forward solve
      * @param sol Solution state the timepoint `it`
      * @param edata ExpData instance carrying experimental data
      */
-    void getDataSensisFSA(
+    void get_data_sensis_fsa(
         int it, Model& model, SolutionState const& sol, ExpData const* edata
     );
 
     /**
      * @brief Extracts output information for events, expects that the model
      * state was set appropriately
+     *
      * @param rootidx information about which roots fired
      * (1 indicating fired, 0/-1 for not)
      * @param model model that was used in forward solve
      * @param sol Solution state the timepoint `it`
      * @param edata ExpData instance carrying experimental data
      */
-    void getEventOutput(
+    void get_event_output(
         std::vector<int> const& rootidx, Model& model, SolutionState const& sol,
         ExpData const* edata
     );
@@ -779,42 +857,43 @@ class ReturnData : public ModelDimensions {
     /**
      * @brief Extracts event information for forward sensitivity analysis,
      * expects the model state was set appropriately
+     *
      * @param ie index of event type
      * @param model model that was used in forward solve
      * @param sol Solution state the timepoint `it`
      * @param edata ExpData instance carrying experimental data
      */
-    void getEventSensisFSA(
+    void get_event_sensis_fsa(
         int ie, Model& model, SolutionState const& sol, ExpData const* edata
     );
 
     /**
      * @brief Updates contribution to likelihood from quadratures (xQB),
      * if preequilibration was run in adjoint mode
+     *
      * @param model model that was used for forward/backward simulation
-     * @param preeq SteadyStateProblem for preequilibration
-     * @param preeq_bwd SteadyStateBackwardProblem for preequilibration
+     * @param sx0 State sensitivities at pre-equilibration steady state
+     * @param xB Adjoint state from pre-equilibration.
      * @param llhS0 contribution to likelihood for initial state sensitivities
      * of preequilibration
-     * @param xQB vector with quadratures from adjoint computation
      */
-    void handleSx0Backward(
-        Model const& model, SteadystateProblem const& preeq,
-        SteadyStateBackwardProblem const* preeq_bwd,
-        std::vector<realtype>& llhS0, AmiVector& xQB
+    void handle_sx0_backward(
+        Model const& model, AmiVectorArray const& sx0, AmiVector const& xB,
+        std::vector<realtype>& llhS0
     ) const;
 
     /**
      * @brief Updates contribution to likelihood for initial state sensitivities
      * (llhS0), if no preequilibration was run or if forward sensitivities were
      * used
+     *
      * @param model model that was used for forward/backward simulation
      * @param sol Solution state the timepoint `it`
      * @param llhS0 contribution to likelihood for initial state sensitivities
      * @param xB vector with final adjoint state
      * (excluding conservation laws)
      */
-    void handleSx0Forward(
+    void handle_sx0_forward(
         Model const& model, SolutionState const& sol,
         std::vector<realtype>& llhS0, AmiVector const& xB
     ) const;

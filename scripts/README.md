@@ -80,6 +80,7 @@ This directory contains a number of build, installation, and CI scripts.
 
   Download and run the semantic
   [SBML Test Suite](https://github.com/sbmlteam/sbml-test-suite/)
+  (to `$SBML_TEST_SUITE_ROOT`, if set)
 
 * `run-valgrind.sh`
 

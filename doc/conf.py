@@ -9,20 +9,20 @@ import re
 import subprocess
 import sys
 from enum import EnumType
-import exhale.deploy
+from pathlib import Path
 from unittest import mock
+
 import sphinx
-from exhale import configs as exhale_configs
 from sphinx.transforms.post_transforms import ReferencesResolver
 
 try:
     import exhale_multiproject_monkeypatch  # noqa: F401
 except ModuleNotFoundError:
     # for unclear reasons, the import of exhale_multiproject_monkeypatch
-    #  fails on some systems, because the the location of the editable install
+    #  fails on some systems, because the location of the editable install
     #  is not automatically added to sys.path ¯\_(ツ)_/¯
-    from importlib.metadata import Distribution
     import json
+    from importlib.metadata import Distribution
     from urllib.parse import unquote_plus, urlparse
 
     dist = Distribution.from_name("sphinx-contrib-exhale-multiproject")
@@ -32,74 +32,10 @@ except ModuleNotFoundError:
     import exhale_multiproject_monkeypatch  # noqa: F401
 
 # need to import before setting typing.TYPE_CHECKING=True, fails otherwise
+
 import amici
 import pandas as pd  # noqa: F401
 import sympy as sp  # noqa: F401
-
-
-# BEGIN Monkeypatch exhale
-from exhale.deploy import _generate_doxygen as exhale_generate_doxygen
-
-
-def my_exhale_generate_doxygen(doxygen_input):
-    """Monkey-patch exhale for post-processing doxygen output"""
-
-    # run mtocpp_post
-    doxy_xml_dir = exhale_configs._doxygen_xml_output_directory
-    if "matlab" in doxy_xml_dir:
-        print("Running mtocpp_post on ", doxy_xml_dir)
-        mtocpp_post = os.path.join(
-            amici_dir, "ThirdParty", "mtocpp-master", "build", "mtocpp_post"
-        )
-        subprocess.run([mtocpp_post, doxy_xml_dir])
-
-    # let exhale do its job
-    exhale_generate_doxygen(doxygen_input)
-
-
-exhale.deploy._generate_doxygen = my_exhale_generate_doxygen
-# END Monkeypatch exhale
-
-
-# BEGIN Monkeypatch breathe
-from breathe.renderer.sphinxrenderer import (
-    DomainDirectiveFactory as breathe_DomainDirectiveFactory,
-)
-
-old_breathe_DomainDirectiveFactory_create = (
-    breathe_DomainDirectiveFactory.create
-)
-
-
-def my_breathe_DomainDirectiveFactory_create(domain: str, args):
-    if domain != "mat":
-        return old_breathe_DomainDirectiveFactory_create(domain, args)
-
-    from sphinxcontrib.matlab import MatClassmember, MATLABDomain
-
-    matlab_classes = {k: (v, k) for k, v in MATLABDomain.directives.items()}
-    matlab_classes["variable"] = (MatClassmember, "attribute")
-    cls, name = matlab_classes[args[0]]
-    return cls(domain + ":" + name, *args[1:])
-
-
-breathe_DomainDirectiveFactory.create = (
-    my_breathe_DomainDirectiveFactory_create
-)
-
-
-# END Monkeypatch breathe
-
-
-def install_mtocpp():
-    """Install mtocpp (Matlab doxygen filter)"""
-    cmd = os.path.join(amici_dir, "scripts", "downloadAndBuildMtocpp.sh")
-    ret = subprocess.run(
-        cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
-    )
-    if ret.returncode != 0:
-        print(ret.stdout.decode("utf-8"))
-        raise RuntimeError("downloadAndBuildMtocpp.sh failed")
 
 
 def install_doxygen():
@@ -129,6 +65,16 @@ def install_doxygen():
     assert version in res.stdout.decode()
 
 
+def execute_pre_sphinx_scripts():
+    """Execute scripts that need to be run before Sphinx is executed."""
+    script_dir = Path(__file__).parent / "pre-sphinx.d"
+    assert script_dir.is_dir()
+
+    for script in sorted(script_dir.glob("*.py")):
+        print(f"Executing pre-Sphinx script {script}")
+        subprocess.run([sys.executable, str(script)], check=True)
+
+
 # -- Path setup --------------------------------------------------------------
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -143,9 +89,7 @@ amici_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if "READTHEDOCS" in os.environ and os.environ["READTHEDOCS"]:
     install_doxygen()
 
-# Required for matlab doxygen processing
-install_mtocpp()
-
+execute_pre_sphinx_scripts()
 
 # -- Project information -----------------------------------------------------
 # The short X.Y version
@@ -161,7 +105,7 @@ title = "AMICI Documentation"
 # -- Mock out some problematic modules-------------------------------------
 
 # Note that for sub-modules, all parent modules must be listed explicitly.
-autodoc_mock_imports = ["_amici", "amici._amici"]
+autodoc_mock_imports = ["_amici", "amici._installation._amici"]
 for mod_name in autodoc_mock_imports:
     sys.modules[mod_name] = mock.MagicMock()
 
@@ -186,7 +130,6 @@ extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.viewcode",
     "sphinx.ext.mathjax",
-    "sphinxcontrib.matlab",
     "nbsphinx",
     "IPython.sphinxext.ipython_console_highlighting",
     "sphinx_autodoc_typehints",
@@ -204,7 +147,8 @@ intersphinx_mapping = {
     "numpy": ("https://numpy.org/devdocs/", None),
     "sympy": ("https://docs.sympy.org/latest/", None),
     "python": ("https://docs.python.org/3", None),
-    "jax": ["https://jax.readthedocs.io/en/latest/", None],
+    "jax": ("https://jax.readthedocs.io/en/latest/", None),
+    "matplotlib": ("https://matplotlib.org/stable/", None),
 }
 
 # Add notebooks prolog with binder links
@@ -254,12 +198,12 @@ language = "en"
 # This pattern also affects html_static_path and html_extra_path .
 exclude_patterns = [
     "_build",
+    "pre-sphinx.d",
     "Thumbs.db",
     ".DS_Store",
     "**.ipynb_checkpoints",
     "numpy.py",
     "INSTALL.md",
-    "MATLAB_.md",
     "CPP_.md",
     "gfx",
     "AGENTS.md",
@@ -276,7 +220,12 @@ autodoc_default_options = {
     "special-members": "__init__",
     "inherited-members": True,
     "undoc-members": True,
+    "ignore-module-all": False,
+    "imported-members": True,
 }
+
+# autosummary
+autosummary_ignore_module_all = False
 
 # sphinx-autodoc-typehints
 typehints_fully_qualified = True
@@ -285,7 +234,6 @@ set_type_checking_flag = True
 
 # breathe settings
 breathe_projects = {
-    "AMICI_Matlab": "./_doxyoutput_amici_matlab/xml",
     "AMICI_CPP": "./_doxyoutput_amici_cpp/xml",
 }
 
@@ -307,9 +255,6 @@ exhale_args = {
     "verboseBuild": True,
 }
 
-mtocpp_filter = os.path.join(
-    amici_dir, "matlab", "mtoc", "config", "mtocpp_filter.sh"
-)
 exhale_projects_args = {
     "AMICI_CPP": {
         "exhaleDoxygenStdin": "\n".join(
@@ -317,9 +262,6 @@ exhale_projects_args = {
                 "INPUT = ../include/amici",
                 "BUILTIN_STL_SUPPORT    = YES",
                 "PREDEFINED            += EXHALE_DOXYGEN_SHOULD_SKIP_THIS",
-                "EXCLUDE += ../include/amici/interface_matlab.h",
-                "EXCLUDE += ../include/amici/returndata_matlab.h",
-                "EXCLUDE += ../include/amici/spline.h",
                 # amici::log collides with amici::${some_enum}::log
                 #  potentially fixed in
                 #  https://github.com/svenevs/exhale/commit/c924df2e139a09fbacd07587779c55fd0ee4e00b
@@ -330,26 +272,6 @@ exhale_projects_args = {
         "containmentFolder": "_exhale_cpp_api",
         "rootFileTitle": "AMICI C++ API",
         "afterTitleDescription": "AMICI C++ library functions",
-    },
-    # Third Party Project Includes
-    "AMICI_Matlab": {
-        "exhaleDoxygenStdin": "\n".join(
-            [
-                "INPUT = ../matlab",
-                "EXTENSION_MAPPING = .m=C++",
-                f"FILTER_PATTERNS = *.m={mtocpp_filter}",
-                "EXCLUDE += ../matlab/examples",
-                "EXCLUDE += ../matlab/mtoc",
-                "EXCLUDE += ../matlab/SBMLimporter",
-                "EXCLUDE += ../matlab/auxiliary",
-                "EXCLUDE += ../matlab/tests",
-                "PREDEFINED += EXHALE_DOXYGEN_SHOULD_SKIP_THIS",
-            ]
-        ),
-        "containmentFolder": "_exhale_matlab_api",
-        "rootFileTitle": "AMICI Matlab API",
-        "afterTitleDescription": "AMICI Matlab library functions",
-        "lexerMapping": {r".*\.m$": "matlab"},
     },
 }
 # -- Options for HTML output -------------------------------------------------
@@ -434,6 +356,21 @@ texinfo_documents = [
     ),
 ]
 
+
+# Avoid issues with classes exported from multiple modules, until we have
+#  a better solution.
+#   WARNING: duplicate object description of XXX, other instance in YYY,
+#   use :no-index: for one of them
+import amici.importers.antimony
+import amici.importers.bngl
+import amici.importers.pysb
+import amici.importers.sbml
+
+amici.importers.sbml.__all__.remove("MeasurementChannel")
+amici.importers.pysb.__all__.remove("MeasurementChannel")
+amici.importers.antimony.__all__.remove("MeasurementChannel")
+amici.importers.bngl.__all__.remove("MeasurementChannel")
+
 # Custom processing routines for docstrings and signatures
 
 typemaps = {
@@ -460,7 +397,12 @@ vector_types = {
     "BoolVector": ":class:`bool`",
     "DoubleVector": ":class:`float`",
     "StringVector": ":class:`str`",
-    "ExpDataPtrVector": ":class:`amici.amici.ExpData`",
+    "ExpDataPtrVector": ":class:`amici.sim.sundials.ExpData`",
+}
+
+# TODO: alias for forward type definition, remove after release of petab_sciml
+autodoc_type_aliases = {
+    "NNModel": "petab_sciml.NNModel",
 }
 
 
@@ -533,59 +475,6 @@ def process_docstring(app, what, name, obj, options, lines):
         )
 
 
-def fix_typehints(sig: str) -> str:
-    # cleanup types
-    if not isinstance(sig, str):
-        return sig
-
-    for old, new in typemaps.items():
-        sig = sig.replace(old, new)
-    sig = sig.replace("void", "None")
-    sig = sig.replace("amici::realtype", "float")
-    sig = sig.replace("std::string", "str")
-    sig = sig.replace("double", "float")
-    sig = sig.replace("long", "int")
-    sig = sig.replace("char const *", "str")
-    sig = sig.replace("amici::", "")
-    sig = sig.replace("sunindextype", "int")
-    sig = sig.replace("H5::H5File", "object")
-
-    # remove const / const&
-    sig = sig.replace(" const&? ", r" ")
-    sig = re.sub(r" const&?$", r"", sig)
-
-    # remove pass by reference
-    sig = re.sub(r" &(,|\))", r"\1", sig)
-    sig = re.sub(r" &$", r"", sig)
-
-    # turn gsl_spans and pointers into Iterables
-    sig = re.sub(r"([\w.]+) \*", r"Iterable[\1]", sig)
-    sig = re.sub(r"gsl::span< ([\w.]+) >", r"Iterable[\1]", sig)
-
-    # fix garbled output
-    sig = sig.replace(" >", "")
-    return sig
-
-
-def process_signature(
-    app, what: str, name: str, obj, options, signature, return_annotation
-):
-    if signature is None:
-        return
-
-    # only apply in the amici.amici module
-    split_name = name.split(".")
-    if len(split_name) < 2 or split_name[1] != "amici":
-        return
-
-    signature = fix_typehints(signature)
-    if hasattr(obj, "__annotations__"):
-        for ann in obj.__annotations__:
-            obj.__annotations__[ann] = fix_typehints(obj.__annotations__[ann])
-
-    return signature, return_annotation
-
-
 # this code fixes references in symlinked md files in documentation folder
 # link replacements must be in env.domains['std'].labels
 doclinks = {
@@ -613,6 +502,13 @@ def process_missing_ref(app, env, node, contnode):
 
 
 def skip_member(app, what, name, obj, skip, options):
+    """Decide whether to skip a member during autodoc processing.
+
+    > Emitted when autodoc has to decide whether a member should be included in
+    > the documentation.
+    > The member is excluded if a handler returns True.
+    > It is included if the handler returns False.
+    """
     ignored_names = {
         "AbstractModel",
         "CVodeSolver",
@@ -620,29 +516,7 @@ def skip_member(app, what, name, obj, skip, options):
         "Model_ODE",
         "Model_DAE",
         "ConditionContext",
-        "checkSigmaPositivity",
-        "createGroup",
         "equals",
-        "printErrMsgIdAndTxt",
-        "wrapErrHandlerFn",
-        "printWarnMsgIdAndTxt",
-        "AmiciApplication",
-        "writeReturnData",
-        "writeReturnDataDiagnosis",
-        "attributeExists",
-        "locationExists",
-        "createAndWriteDouble1DDataset",
-        "createAndWriteDouble2DDataset",
-        "createAndWriteDouble3DDataset",
-        "createAndWriteInt1DDataset",
-        "createAndWriteInt2DDataset",
-        "createAndWriteInt3DDataset",
-        "getDoubleDataset1D",
-        "getDoubleDataset2D",
-        "getDoubleDataset3D",
-        "getIntDataset1D",
-        "getIntScalarAttribute",
-        "getDoubleScalarAttribute",
         "stdVec2ndarray",
         "SwigPyIterator",
         "thisown",
@@ -650,6 +524,16 @@ def skip_member(app, what, name, obj, skip, options):
 
     if name in ignored_names:
         return True
+
+    # skip, unless in __all__
+    # (we want to include imported members, but only the exported ones.
+    #  autodoc does not provide this functionality out of the box)
+    module_name = app.env.temp_data.get("autodoc:module")
+    if module_name and what == "module":
+        module_obj = sys.modules.get(module_name)
+        if module_obj is not None and hasattr(module_obj, "__all__"):
+            if name not in getattr(module_obj, "__all__", []):
+                return True
 
     if name.startswith("_") and name != "__init__":
         return True
@@ -692,7 +576,6 @@ def skip_member(app, what, name, obj, skip, options):
 
 def setup(app: "sphinx.application.Sphinx"):
     app.connect("autodoc-process-docstring", process_docstring, priority=0)
-    app.connect("autodoc-process-signature", process_signature, priority=0)
     app.connect("missing-reference", process_missing_ref, priority=0)
     app.connect("autodoc-skip-member", skip_member, priority=0)
     app.config.intersphinx_mapping = intersphinx_mapping

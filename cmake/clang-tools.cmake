@@ -4,7 +4,7 @@
 execute_process(
   COMMAND
     sh -c
-    "git ls-tree -r HEAD --name-only src/*.cpp include/amici/*.h | tr '\n' ' '"
+    "git ls-tree -r HEAD --name-only src/*.cpp include/amici/*.h tests/cpp/*.h tests/cpp/unittests/*.cpp | tr '\n' ' '"
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   OUTPUT_VARIABLE ALL_CXX_SOURCE_FILES)
 # ########### clang-tidy ############

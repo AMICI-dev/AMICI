@@ -1,28 +1,17 @@
 #include "amici/symbolic_functions.h"
 #include "amici/defines.h"
-#include "sundials/sundials_types.h"
 
-#include <gsl/gsl-lite.hpp>
 #include <algorithm>
-
-#include "x.h"
-#include "p.h"
-#include "h.h"
-#include "xdot.h"
-#include "xdot_old.h"
-#include "x_old.h"
-#include "xB.h"
 
 namespace amici {
 namespace model_model_nested_events_py {
 
-void deltaxB_model_nested_events_py(realtype *deltaxB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *x_old, const realtype *xB, const realtype *tcl){
+void deltaxB_model_nested_events_py(realtype *deltaxB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const int ie, const realtype *x_eval, const realtype *xB, const realtype *tcl){
+    const realtype xB0_ = xB[0];
+
     switch(ie) {
-        case 1:
-            deltaxB[0] = xB0*(dVirusdt - xdot_old0)/(Heaviside_1*Virus*rho_V - Virus*delta_V);
-            break;
         case 2:
-            deltaxB[0] = -xB0*(dVirusdt - xdot_old0)/(-Heaviside_1*Virus*rho_V + Virus*delta_V);
+            deltaxB[0] = -xB0_;
             break;
     }
 }

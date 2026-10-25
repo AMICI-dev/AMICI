@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - 'release*'
   pull_request:
     branches:
       - main
@@ -15,22 +16,24 @@ jobs:
   cpp:
     name: Benchmark Collection CPP
 
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
 
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ "3.12" ]
+        python-version: [ "3.14" ]
         extract_subexpressions: ["true", "false"]
     env:
       AMICI_EXTRACT_CSE: ${{ matrix.extract_subexpressions }}
     steps:
+    - uses: dweindl/gha-runner-diagnostics@v1
+
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 20
 
@@ -45,19 +48,45 @@ jobs:
 
     - name: Install AMICI sdist
       run: |
+        pip3 install --upgrade pip && \
         pip3 install --user petab[vis] && \
         AMICI_PARALLEL_COMPILE="" pip3 install -v --user \
-            $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,test,vis,jax]
+            --group python/sdist/pyproject.toml:test \
+            $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,vis,jax]
+
+    # Diagnostic for https://github.com/AMICI-dev/AMICI/issues/3078: root
+    # cause was NumPy's own runtime SIMD dispatch for transcendental ufuncs
+    # (np.power/np.exp, used when unscaling log10/log-scaled PEtab
+    # parameters) picking different, non-bit-identical kernels depending on
+    # which instruction-set tiers are available on the runner. This can't be
+    # inferred from generic hardware diagnostics (dweindl/gha-runner-diagnostics@v1,
+    # which runs before Python/NumPy even exist) -- it has to be queried
+    # from NumPy directly, after it's installed.
+    - name: NumPy SIMD dispatch state (#3078)
+      run: |
+        python3 -c "
+        import numpy as np
+        try:
+            from numpy._core import _multiarray_umath as mau
+        except ImportError:
+            from numpy.core import _multiarray_umath as mau
+        print('numpy:', np.__version__)
+        print('baseline:', mau.__cpu_baseline__)
+        print('dispatch (compiled in):', mau.__cpu_dispatch__)
+        print('features (active this run):', [k for k, v in mau.__cpu_features__.items() if v])
+        "
 
     - name: Install test dependencies
       run: |
-        python3 -m pip uninstall -y petab && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@main \
+        python3 -m pip install --upgrade pip \
+        &&  python3 -m pip uninstall -y petab \
+        &&  python3 -m pip install --group python/sdist/pyproject.toml:libpetab \
         &&  python3 -m pip install -U sympy \
-        &&  python3 -m pip install git+https://github.com/ICB-DCM/fiddy.git
+        &&  python3 -m pip install --group python/sdist/pyproject.toml:fiddy
 
     - name: Download benchmark collection
       run: |
-        pip install git+https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab.git@master#subdirectory=src/python
+        pip install --group python/sdist/pyproject.toml:benchmark-models-petab
 
     - name: Run tests
       env:
@@ -70,8 +99,8 @@ jobs:
           --cov-append \
 
     - name: Codecov Python
-      if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
-      uses: codecov/codecov-action@v5
+      if: (github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev') && github.actor != 'dependabot[bot]'
+      uses: codecov/codecov-action@v7
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: coverage_py.xml
@@ -84,30 +113,39 @@ jobs:
       run: |
           python3 tests/benchmark_models/evaluate_benchmark.py
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       with:
         name: computation-times-${{ matrix.python-version }}-${{ matrix.extract_subexpressions }}
         path: |
           tests/benchmark_models/computation_times.csv
           tests/benchmark_models/computation_times.png
 
+    - name: Upload model code
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v7
+      with:
+        name: amici_models
+        path: amici_models/
+
   jax:
     name: Benchmark Collection JAX
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ "3.12" ]
+        python-version: [ "3.14" ]
         extract_subexpressions: ["false"]
     env:
       AMICI_EXTRACT_CSE: ${{ matrix.extract_subexpressions }}
     steps:
+    - uses: dweindl/gha-runner-diagnostics@v1
+
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 20
 
@@ -121,21 +159,25 @@ jobs:
 
     - name: Install AMICI sdist
       run: |
+        pip3 install --upgrade pip && \
         pip3 install --user petab[vis] && \
         pip3 install -v --user \
-            $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,test,vis,jax]
+            --group python/sdist/pyproject.toml:test \
+            $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,vis,jax]
 
     - name: Install test dependencies
       run: |
-        python3 -m pip uninstall -y petab && python3 -m pip install git+https://github.com/petab-dev/libpetab-python.git@main \
+        python3 -m pip install --upgrade pip \
+        &&  python3 -m pip uninstall -y petab \
+        &&  python3 -m pip install --group python/sdist/pyproject.toml:libpetab \
         &&  python3 -m pip install -U sympy \
-        &&  python3 -m pip install git+https://github.com/ICB-DCM/fiddy.git
+        &&  python3 -m pip install --group python/sdist/pyproject.toml:fiddy
 
-    - run: pip uninstall -y diffrax && pip install git+https://github.com/patrick-kidger/diffrax@dev # TODO FIXME https://github.com/patrick-kidger/diffrax/issues/654 + event dirs
+    - run: pip uninstall -y diffrax && pip install --group python/sdist/pyproject.toml:diffrax-dev # TODO FIXME https://github.com/patrick-kidger/diffrax/issues/654 + event dirs
 
     - name: Download benchmark collection
       run: |
-        pip install git+https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab.git@master#subdirectory=src/python
+        pip install --group python/sdist/pyproject.toml:benchmark-models-petab
 
     - name: Run JAX tests
       env:
@@ -148,8 +190,8 @@ jobs:
           --cov-append
 
     - name: Codecov Python
-      if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
-      uses: codecov/codecov-action@v5
+      if: (github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev') && github.actor != 'dependabot[bot]'
+      uses: codecov/codecov-action@v7
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: coverage_py.xml

@@ -14,31 +14,33 @@ class Solver;
 
 namespace model_model_neuron_py {
 
-extern std::array<const char*, 4> parameterNames;
-extern std::array<const char*, 2> fixedParameterNames;
-extern std::array<const char*, 2> stateNames;
-extern std::array<const char*, 1> observableNames;
-extern std::array<const ObservableScaling, 1> observableScalings;
-extern std::array<const char*, 1> expressionNames;
-extern std::array<const char*, 4> parameterIds;
-extern std::array<const char*, 2> fixedParameterIds;
-extern std::array<const char*, 2> stateIds;
-extern std::array<const char*, 1> observableIds;
-extern std::array<const char*, 1> expressionIds;
-extern std::array<int, 2> stateIdxsSolver;
+extern const std::array<std::string_view const, 4> free_parameter_names;
+extern const std::array<std::string_view const, 2> fixed_parameter_names;
+extern const std::array<std::string_view const, 2> state_names;
+extern const std::array<std::string_view const, 2> state_names_solver;
+extern const std::array<std::string_view const, 1> observable_names;
+extern std::array<const ObservableScaling, 1> observable_scalings;
+extern const std::array<std::string_view const, 0> expression_names;
+extern const std::array<std::string_view const, 4> free_parameter_ids;
+extern const std::array<std::string_view const, 2> fixed_parameter_ids;
+extern const std::array<std::string_view const, 2> state_ids;
+extern const std::array<std::string_view const, 2> state_ids_solver;
+extern const std::array<std::string_view const, 1> observable_ids;
+extern const std::array<std::string_view const, 0> expression_ids;
+extern std::array<int, 2> state_idxs_solver;
 
 extern void Jy_model_neuron_py(realtype *Jy, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my);
-extern void dJydsigma_model_neuron_py(realtype *dJydsigma, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my);
+extern void dJydsigmay_model_neuron_py(realtype *dJydsigmay, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my);
 extern void dJydy_model_neuron_py(realtype *dJydy, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my);
 extern void dJydy_colptrs_model_neuron_py(SUNMatrixWrapper &colptrs, int index);
 extern void dJydy_rowvals_model_neuron_py(SUNMatrixWrapper &rowvals, int index);
 extern void Jz_model_neuron_py(realtype *Jz, const int iz, const realtype *p, const realtype *k, const realtype *z, const realtype *sigmaz, const realtype *mz);
-extern void dJzdsigma_model_neuron_py(realtype *dJzdsigma, const int iz, const realtype *p, const realtype *k, const realtype *z, const realtype *sigmaz, const realtype *mz);
+extern void dJzdsigmaz_model_neuron_py(realtype *dJzdsigmaz, const int iz, const realtype *p, const realtype *k, const realtype *z, const realtype *sigmaz, const realtype *mz);
 extern void dJzdz_model_neuron_py(realtype *dJzdz, const int iz, const realtype *p, const realtype *k, const realtype *z, const realtype *sigmaz, const double *mz);
 extern void Jrz_model_neuron_py(realtype *Jrz, const int iz, const realtype *p, const realtype *k, const realtype *rz, const realtype *sigmaz);
-extern void dJrzdsigma_model_neuron_py(realtype *dJrzdsigma, const int iz, const realtype *p, const realtype *k, const realtype *rz, const realtype *sigmaz);
-extern void dJrzdz_model_neuron_py(realtype *dJrzdz, const int iz, const realtype *p, const realtype *k, const realtype *rz, const realtype *sigmaz);
-extern void root_model_neuron_py(realtype *root, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *tcl);
+extern void dJrzdsigmaz_model_neuron_py(realtype *dJrzdsigmaz, const int iz, const realtype *p, const realtype *k, const realtype *rz, const realtype *sigmaz);
+extern void dJrzdrz_model_neuron_py(realtype *dJrzdrz, const int iz, const realtype *p, const realtype *k, const realtype *rz, const realtype *sigmaz);
+extern void root_model_neuron_py(realtype *root, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl);
 
 
 
@@ -57,7 +59,7 @@ extern void dxdotdp_explicit_rowvals_model_neuron_py(SUNMatrixWrapper &rowvals);
 extern void dxdotdx_explicit_model_neuron_py(realtype *dxdotdx_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
 extern void dxdotdx_explicit_colptrs_model_neuron_py(SUNMatrixWrapper &colptrs);
 extern void dxdotdx_explicit_rowvals_model_neuron_py(SUNMatrixWrapper &rowvals);
-extern void dydx_model_neuron_py(realtype *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx);
+extern void dydx_model_neuron_py(realtype *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
 
 extern void dzdx_model_neuron_py(realtype *dzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
 
@@ -77,11 +79,15 @@ extern void xdot_model_neuron_py(realtype *xdot, const realtype t, const realtyp
 extern void y_model_neuron_py(realtype *y, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
 extern void z_model_neuron_py(realtype *z, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
 extern void rz_model_neuron_py(realtype *rz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
-extern void stau_model_neuron_py(realtype *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const realtype *tcl, const realtype *sx, const int ip, const int ie);
-extern void deltax_model_neuron_py(double *deltax, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *x_old);
-extern void deltasx_model_neuron_py(realtype *deltasx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *sx, const realtype *stau, const realtype *tcl, const realtype *x_old);
-extern void deltaxB_model_neuron_py(realtype *deltaxB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *x_old, const realtype *xB, const realtype *tcl);
-extern void deltaqB_model_neuron_py(realtype *deltaqB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *x_old, const realtype *xB);
+extern void stau_model_neuron_py(realtype *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const realtype *sx, const int ip, const int ie);
+extern void deltax_model_neuron_py(double *deltax, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ie, const realtype *xdot, const realtype *xdot_eval, const realtype *x_eval);
+extern void deltasx_model_neuron_py(realtype *deltasx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const int ip, const int ie, const realtype *xdot, const realtype *xdot_eval, const realtype *xdot_pre, const realtype *sx, const realtype *sx_eval, const realtype *stau, const realtype *tcl, const realtype *x_eval);
+extern void deltaxB_model_neuron_py(realtype *deltaxB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const int ie, const realtype *x_eval, const realtype *xB, const realtype *tcl);
+
+extern void stauB_model_neuron_py(realtype *stauB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const int ie, const realtype *xdot, const realtype *xdot_eval, const realtype *xdot_pre, const realtype *x_eval, const realtype *xB, const realtype *tcl);
+extern void deltaqB_model_neuron_py(realtype *deltaqB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const int ip, const int ie, const realtype *x_eval, const realtype *xB);
+extern void dtaudx_model_neuron_py(realtype *dtaudx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const int ie);
+
 
 extern void x_solver_model_neuron_py(realtype *x_solver, const realtype *x_rdata);
 
@@ -110,50 +116,48 @@ class Model_model_neuron_py : public amici::Model_ODE {
      */
     Model_model_neuron_py()
         : amici::Model_ODE(
-              amici::ModelDimensions(
-                  2,                            // nx_rdata
-                  2,                        // nxtrue_rdata
-                  2,                           // nx_solver
-                  2,                       // nxtrue_solver
-                  0,                    // nx_solver_reinit
-                  4,                                  // np
-                  2,                                  // nk
-                  1,                                  // ny
-                  1,                              // nytrue
-                  1,                                  // nz
-                  1,                              // nztrue
-                  1,                              // nevent
-                  1,                       // nevent_solver
-                  0,                                // nspl
-                  1,                          // nobjective
-                  1,                                  // nw
-                  0,                               // ndwdx
-                  0,                               // ndwdp
-                  0,                               // ndwdw
-                  0,                            // ndxdotdw
-                  std::vector<int>{1},                              // ndjydy
-                  0,                    // ndxrdatadxsolver
-                  0,                        // ndxrdatadtcl
-                  0,                        // ndtotal_cldx_rdata
-                  0,                                       // nnz
-                  2,                                 // ubw
-                  2,                                 // lbw
-                  true,                                    // pythonGenerated
-                  2,                   // ndxdotdp_explicit
-                  4,                   // ndxdotdx_explicit
-                  0                    // w_recursion_depth
-              ),
+              amici::ModelDimensions{
+                  .nx_rdata = 2,
+                  .nxtrue_rdata = 2,
+                  .nx_solver = 2,
+                  .nxtrue_solver = 2,
+                  .nx_reinit = 2,
+                  .np = 4,
+                  .nk = 2,
+                  .ny = 1,
+                  .nytrue = 1,
+                  .nz = 1,
+                  .nztrue = 1,
+                  .ne = 1,
+                  .ne_solver = 1,
+                  .nspl = 0,
+                  .nw = 0,
+                  .ndwdx = 0,
+                  .ndwdp = 0,
+                  .ndwdw = 0,
+                  .ndxdotdw = 0,
+                  .ndJydy = std::vector<int>{1},
+                  .ndxrdatadxsolver = 0,
+                  .ndxrdatadtcl = 0,
+                  .ndtotal_cldx_rdata = 0,
+                  .nnz = 0,
+                  .nJ = 1,
+                  .ubw = 2,
+                  .lbw = 2,
+                  .ndxdotdp_explicit = 2,
+                  .ndxdotdx_explicit = 4,
+                  .w_recursion_depth = 0,
+              },
               amici::SimulationParameters(
                   std::vector<realtype>{-60.0, 10.0}, // fixedParameters
-                  std::vector<realtype>{0.02, 0.29999999999999999, 65.0, 0.90000000000000002}        // dynamic parameters
+                  std::vector<realtype>{0.02, 0.29999999999999999, 65.0, 0.90000000000000002}        // free parameters
               ),
               amici::SecondOrderMode::none,                                  // o2mode
               std::vector<realtype>{1.0, 1.0},   // idlist
-              std::vector<int>{1},               // z2events
+              std::vector<int>{0},               // z2events
               std::vector<Event>{
                   Event("event_1", false, true, NAN)
-              }, // events
-              {}               // state-independent events
+              } // events
           ) {
           }
 
@@ -180,23 +184,23 @@ class Model_model_neuron_py : public amici::Model_ODE {
     }
 
 
-    void fdJrzdsigma(realtype *dJrzdsigma, const int iz, const realtype *p, const realtype *k, const realtype *rz, const realtype *sigmaz) override {
-        dJrzdsigma_model_neuron_py(dJrzdsigma, iz, p, k, rz, sigmaz);
+    void fdJrzdsigmaz(realtype *dJrzdsigmaz, const int iz, const realtype *p, const realtype *k, const realtype *rz, const realtype *sigmaz) override {
+        dJrzdsigmaz_model_neuron_py(dJrzdsigmaz, iz, p, k, rz, sigmaz);
     }
 
 
-    void fdJrzdz(realtype *dJrzdz, const int iz, const realtype *p, const realtype *k, const realtype *rz, const realtype *sigmaz) override {
-        dJrzdz_model_neuron_py(dJrzdz, iz, p, k, rz, sigmaz);
+    void fdJrzdrz(realtype *dJrzdrz, const int iz, const realtype *p, const realtype *k, const realtype *rz, const realtype *sigmaz) override {
+        dJrzdrz_model_neuron_py(dJrzdrz, iz, p, k, rz, sigmaz);
     }
 
 
-    void fdJydsigma(realtype *dJydsigma, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my) override {
-        dJydsigma_model_neuron_py(dJydsigma, iy, p, k, y, sigmay, my);
+    void fdJydsigmay(realtype *dJydsigmay, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my) override {
+        dJydsigmay_model_neuron_py(dJydsigmay, iy, p, k, y, sigmay, my);
     }
 
 
-    void fdJzdsigma(realtype *dJzdsigma, const int iz, const realtype *p, const realtype *k, const realtype *z, const realtype *sigmaz, const realtype *mz) override {
-        dJzdsigma_model_neuron_py(dJzdsigma, iz, p, k, z, sigmaz, mz);
+    void fdJzdsigmaz(realtype *dJzdsigmaz, const int iz, const realtype *p, const realtype *k, const realtype *z, const realtype *sigmaz, const realtype *mz) override {
+        dJzdsigmaz_model_neuron_py(dJzdsigmaz, iz, p, k, z, sigmaz, mz);
     }
 
 
@@ -205,24 +209,40 @@ class Model_model_neuron_py : public amici::Model_ODE {
     }
 
 
-    void fdeltax(double *deltax, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *x_old) override {
-        deltax_model_neuron_py(deltax, t, x, p, k, h, ie, xdot, xdot_old, x_old);
+    void fdeltax(double *deltax, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ie, const realtype *xdot, const realtype *xdot_eval, const realtype *x_eval) override {
+        deltax_model_neuron_py(deltax, t, x, p, k, h, ie, xdot, xdot_eval, x_eval);
     }
 
 
-    void fdeltasx(realtype *deltasx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *sx, const realtype *stau, const realtype *tcl, const realtype *x_old) override {
-        deltasx_model_neuron_py(deltasx, t, x, p, k, h, w, ip, ie, xdot, xdot_old, sx, stau, tcl, x_old);
+    void fdeltasx(realtype *deltasx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const int ip, const int ie, const realtype *xdot, const realtype *xdot_eval, const realtype *xdot_pre, const realtype *sx, const realtype *sx_eval, const realtype *stau, const realtype *tcl, const realtype *x_eval) override {
+        deltasx_model_neuron_py(deltasx, t, x, p, k, h, w, ip, ie, xdot, xdot_eval, xdot_pre, sx, sx_eval, stau, tcl, x_eval);
     }
 
 
-    void fdeltaxB(realtype *deltaxB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *x_old, const realtype *xB, const realtype *tcl) override {
-        deltaxB_model_neuron_py(deltaxB, t, x, p, k, h, dx, ie, xdot, xdot_old, x_old, xB, tcl);
+    void fdeltaxB(realtype *deltaxB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const int ie, const realtype *x_eval, const realtype *xB, const realtype *tcl) override {
+        deltaxB_model_neuron_py(deltaxB, t, x, p, k, h, dx, ie, x_eval, xB, tcl);
     }
 
 
-    void fdeltaqB(realtype *deltaqB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *x_old, const realtype *xB) override {
-        deltaqB_model_neuron_py(deltaqB, t, x, p, k, h, dx, ip, ie, xdot, xdot_old, x_old, xB);
+    void fdeltaxB_at_trigger(realtype *deltaxB_at_trigger, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const int ie, const realtype *x_eval, const realtype *xB, const realtype *tcl) override {}
+
+
+    void fstauB(realtype *stauB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const int ie, const realtype *xdot, const realtype *xdot_eval, const realtype *xdot_pre, const realtype *x_eval, const realtype *xB, const realtype *tcl) override {
+        stauB_model_neuron_py(stauB, t, x, p, k, h, dx, ie, xdot, xdot_eval, xdot_pre, x_eval, xB, tcl);
     }
+
+
+    void fdeltaqB(realtype *deltaqB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const int ip, const int ie, const realtype *x_eval, const realtype *xB) override {
+        deltaqB_model_neuron_py(deltaqB, t, x, p, k, h, dx, ip, ie, x_eval, xB);
+    }
+
+
+    void fdtaudx(realtype *dtaudx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const int ie) override {
+        dtaudx_model_neuron_py(dtaudx, t, x, p, k, h, w, dx, tcl, ie);
+    }
+
+
+    void fdtaudp(realtype *dtaudp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const int ip, const int ie) override {}
 
 
     void fdrzdp(realtype *drzdp, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip) override {}
@@ -318,8 +338,8 @@ class Model_model_neuron_py : public amici::Model_ODE {
     }
 
 
-    void fdydx(realtype *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx) override {
-        dydx_model_neuron_py(dydx, t, x, p, k, h, w, dwdx);
+    void fdydx(realtype *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w) override {
+        dydx_model_neuron_py(dydx, t, x, p, k, h, w);
     }
 
 
@@ -334,8 +354,8 @@ class Model_model_neuron_py : public amici::Model_ODE {
     }
 
 
-    void froot(realtype *root, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *tcl) override {
-        root_model_neuron_py(root, t, x, p, k, h, tcl);
+    void froot(realtype *root, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl) override {
+        root_model_neuron_py(root, t, x, p, k, h, w, tcl);
     }
 
 
@@ -354,8 +374,8 @@ class Model_model_neuron_py : public amici::Model_ODE {
     }
 
 
-    void fstau(realtype *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const realtype *tcl, const realtype *sx, const int ip, const int ie) override {
-        stau_model_neuron_py(stau, t, x, p, k, h, dx, tcl, sx, ip, ie);
+    void fstau(realtype *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const realtype *sx, const int ip, const int ie) override {
+        stau_model_neuron_py(stau, t, x, p, k, h, w, dx, tcl, sx, ip, ie);
     }
 
     void fsx0(realtype *sx0, const realtype t, const realtype *x, const realtype *p, const realtype *k, const int ip) override {
@@ -432,122 +452,107 @@ class Model_model_neuron_py : public amici::Model_ODE {
     void fdtotal_cldx_rdata_rowvals(SUNMatrixWrapper &rowvals) override {}
 
 
-    std::string getName() const override {
+    std::vector<std::vector<realtype>> fexplicit_roots(const realtype *x, const realtype *p, const realtype *k, const realtype *w) override { return {}; }
+
+
+    std::string get_name() const override {
         return "model_neuron_py";
     }
 
     /**
-     * @brief Get names of the model parameters
+     * @brief Get names of the free model parameters
      * @return the names
      */
-    std::vector<std::string> getParameterNames() const override {
-        return std::vector<std::string>(parameterNames.begin(),
-                                        parameterNames.end());
+    std::span<std::string_view const> get_free_parameter_names() const override {
+        return free_parameter_names;
     }
 
     /**
      * @brief Get names of the model states
      * @return the names
      */
-    std::vector<std::string> getStateNames() const override {
-        return std::vector<std::string>(stateNames.begin(), stateNames.end());
+    std::span<std::string_view const> get_state_names() const override {
+        return state_names;
     }
 
     /**
      * @brief Get names of the solver states
      * @return the names
      */
-    std::vector<std::string> getStateNamesSolver() const override {
-        std::vector<std::string> result;
-        result.reserve(stateIdxsSolver.size());
-        for(auto const idx: stateIdxsSolver) {
-            result.push_back(stateNames[idx]);
-        }
-        return result;
+    std::span<std::string_view const> get_state_names_solver() const override {
+        return state_names_solver;
     }
 
     /**
      * @brief Get names of the fixed model parameters
      * @return the names
      */
-    std::vector<std::string> getFixedParameterNames() const override {
-        return std::vector<std::string>(fixedParameterNames.begin(),
-                                        fixedParameterNames.end());
+    std::span<std::string_view const> get_fixed_parameter_names() const override {
+        return fixed_parameter_names;
     }
 
     /**
      * @brief Get names of the observables
      * @return the names
      */
-    std::vector<std::string> getObservableNames() const override {
-        return std::vector<std::string>(observableNames.begin(),
-                                        observableNames.end());
+    std::span<std::string_view const> get_observable_names() const override {
+        return observable_names;
     }
 
     /**
      * @brief Get names of model expressions
      * @return Expression names
      */
-    std::vector<std::string> getExpressionNames() const override {
-        return std::vector<std::string>(expressionNames.begin(),
-                                        expressionNames.end());
+    std::span<std::string_view const> get_expression_names() const override {
+        return expression_names;
     }
 
     /**
-     * @brief Get ids of the model parameters
+     * @brief Get ids of the free model parameters
      * @return the ids
      */
-    std::vector<std::string> getParameterIds() const override {
-        return std::vector<std::string>(parameterIds.begin(),
-                                        parameterIds.end());
+    std::span<std::string_view const> get_free_parameter_ids() const override {
+        return free_parameter_ids;
     }
 
     /**
      * @brief Get ids of the model states
      * @return the ids
      */
-    std::vector<std::string> getStateIds() const override {
-        return std::vector<std::string>(stateIds.begin(), stateIds.end());
+    std::span<std::string_view const> get_state_ids() const override {
+        return state_ids;
     }
 
     /**
      * @brief Get ids of the solver states
      * @return the ids
      */
-    std::vector<std::string> getStateIdsSolver() const override {
-        std::vector<std::string> result;
-        result.reserve(stateIdxsSolver.size());
-        for(auto idx: stateIdxsSolver) {
-            result.push_back(stateIds[idx]);
-        }
-        return result;
+    std::span<std::string_view const> get_state_ids_solver() const override {
+        return state_ids_solver;
     }
 
     /**
      * @brief Get ids of the fixed model parameters
      * @return the ids
      */
-    std::vector<std::string> getFixedParameterIds() const override {
-        return std::vector<std::string>(fixedParameterIds.begin(),
-                                        fixedParameterIds.end());
+    std::span<std::string_view const> get_fixed_parameter_ids() const override {
+        return fixed_parameter_ids;
     }
 
     /**
      * @brief Get ids of the observables
      * @return the ids
      */
-    std::vector<std::string> getObservableIds() const override {
-        return std::vector<std::string>(observableIds.begin(),
-                                        observableIds.end());
+    std::span<std::string_view const> get_observable_ids() const override {
+        return observable_ids;
     }
 
     /**
      * @brief Get IDs of model expressions
      * @return Expression IDs
      */
-    std::vector<std::string> getExpressionIds() const override {
-        return std::vector<std::string>(expressionIds.begin(),
-                                        expressionIds.end());
+    std::span<std::string_view const> get_expression_ids() const override {
+        return expression_ids;
     }
 
     /**
@@ -556,7 +561,7 @@ class Model_model_neuron_py : public amici::Model_ODE {
      * @return flag indicating whether reinitialization of states depending on
      * fixed parameters is permissible
      */
-    bool isFixedParameterStateReinitializationAllowed() const override {
+    bool is_fixed_parameter_state_reinitialization_allowed() const override {
         return true;
     }
 
@@ -564,24 +569,24 @@ class Model_model_neuron_py : public amici::Model_ODE {
      * @brief returns the AMICI version that was used to generate the model
      * @return AMICI version string
      */
-    std::string getAmiciVersion() const override {
-        return "0.33.0";
+    std::string get_amici_version() const override {
+        return "1.1.0";
     }
 
     /**
      * @brief returns the amici version that was used to generate the model
      * @return AMICI git commit hash
      */
-    std::string getAmiciCommit() const override {
-        return "bcedb951ddf674996b269489d74f9b86112038ff";
+    std::string get_amici_commit() const override {
+        return "eb8630c7be82120d972865d1a4d6f4a71871193c";
     }
 
-    bool hasQuadraticLLH() const override {
+    bool has_quadratic_llh() const override {
         return true;
     }
 
-    ObservableScaling getObservableScaling(int iy) const override {
-        return observableScalings.at(iy);
+    ObservableScaling get_observable_scaling(int iy) const override {
+        return observable_scalings.at(iy);
     }
 };
 

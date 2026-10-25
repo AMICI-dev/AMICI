@@ -2,7 +2,7 @@
 #include "amici/defines.h"
 #include "amici/model.h"
 #include "amici/rdata.h"
-#include "amici/symbolic_functions.h" // getNaN
+#include "amici/symbolic_functions.h" // get_nan
 
 #include <algorithm>
 #include <random>
@@ -10,66 +10,69 @@
 
 namespace amici {
 
-ExpData::ExpData(int nytrue, int nztrue, int nmaxevent)
+using std::isnan;
+
+ExpData::ExpData(int const nytrue, int const nztrue, int const nmaxevent)
     : nytrue_(nytrue)
     , nztrue_(nztrue)
     , nmaxevent_(nmaxevent) {
-    applyDimensions();
+    apply_dimensions();
 }
 
 ExpData::ExpData(
-    int nytrue, int nztrue, int nmaxevent, std::vector<realtype> ts
+    int const nytrue, int const nztrue, int const nmaxevent,
+    std::vector<realtype> ts
 )
     : SimulationParameters(ts)
     , nytrue_(nytrue)
     , nztrue_(nztrue)
     , nmaxevent_(nmaxevent) {
-    applyDimensions();
+    apply_dimensions();
 }
 
 ExpData::ExpData(
-    int nytrue, int nztrue, int nmaxevent, std::vector<realtype> ts,
-    std::vector<realtype> fixedParameters
+    int const nytrue, int const nztrue, int const nmaxevent,
+    std::vector<realtype> ts, std::vector<realtype> fixed_parameters
 )
     : SimulationParameters(ts)
     , nytrue_(nytrue)
     , nztrue_(nztrue)
     , nmaxevent_(nmaxevent) {
-    this->fixedParameters = std::move(fixedParameters);
-    applyDimensions();
+    this->fixed_parameters = std::move(fixed_parameters);
+    apply_dimensions();
 }
 
 ExpData::ExpData(
-    int nytrue, int nztrue, int nmaxevent, std::vector<realtype> ts,
-    std::vector<realtype> const& observedData,
-    std::vector<realtype> const& observedDataStdDev,
-    std::vector<realtype> const& observedEvents,
-    std::vector<realtype> const& observedEventsStdDev
+    int const nytrue, int const nztrue, int const nmaxevent,
+    std::vector<realtype> ts, std::vector<realtype> const& my,
+    std::vector<realtype> const& sigma_y, std::vector<realtype> const& mz,
+    std::vector<realtype> const& sigma_z
 )
     : SimulationParameters(ts)
     , nytrue_(nytrue)
     , nztrue_(nztrue)
     , nmaxevent_(nmaxevent) {
-    applyDimensions();
-    setObservedData(observedData);
-    setObservedDataStdDev(observedDataStdDev);
-    setObservedEvents(observedEvents);
-    setObservedEventsStdDev(observedEventsStdDev);
+    apply_dimensions();
+    set_measurements(my);
+    set_noise_scales(sigma_y);
+    set_event_measurements(mz);
+    set_event_noise_scales(sigma_z);
 }
 
 ExpData::ExpData(Model const& model)
     : ExpData(
-          model.nytrue, model.nztrue, model.nMaxEvent(), model.getTimepoints(),
-          model.getFixedParameters()
+          model.nytrue, model.nztrue, model.n_max_event(),
+          model.get_timepoints(), model.get_fixed_parameters()
       ) {
-    reinitializeFixedParameterInitialStates
-        = model.getReinitializeFixedParameterInitialStates()
-          && model.getReinitializationStateIdxs().empty();
-    reinitialization_state_idxs_sim = model.getReinitializationStateIdxs();
+    reinitialize_fixed_parameter_initial_states
+        = model.get_reinitialize_fixed_parameter_initial_states()
+          && model.get_reinitialization_state_idxs().empty();
+    reinitialization_state_idxs_sim = model.get_reinitialization_state_idxs();
 }
 
 ExpData::ExpData(
-    ReturnData const& rdata, realtype sigma_y, realtype sigma_z, int seed
+    ReturnData const& rdata, realtype const sigma_y, realtype const sigma_z,
+    int const seed
 )
     : ExpData(
           rdata, std::vector<realtype>(rdata.nytrue * rdata.nt, sigma_y),
@@ -78,18 +81,18 @@ ExpData::ExpData(
 
 ExpData::ExpData(
     ReturnData const& rdata, std::vector<realtype> sigma_y,
-    std::vector<realtype> sigma_z, int seed
+    std::vector<realtype> sigma_z, int const seed
 )
     : ExpData(rdata.nytrue, rdata.nztrue, rdata.nmaxevent, rdata.ts) {
-    if (sigma_y.size() != (unsigned)nytrue_
-        && sigma_y.size() != (unsigned)nytrue_ * nt())
+    if (sigma_y.size() != static_cast<unsigned>(nytrue_)
+        && sigma_y.size() != static_cast<unsigned>(nytrue_) * nt())
         throw AmiException(
             "Dimension of sigma_y must be %d or %d, was %d", nytrue_,
             nytrue_ * nt(), sigma_y.size()
         );
 
-    if (sigma_z.size() != (unsigned)nztrue_
-        && sigma_z.size() != (unsigned)nztrue_ * nmaxevent_)
+    if (sigma_z.size() != static_cast<unsigned>(nztrue_)
+        && sigma_z.size() != static_cast<unsigned>(nztrue_) * nmaxevent_)
         throw AmiException(
             "Dimension of sigma_z must be %d or %d, was %d", nztrue_,
             nztrue_ * nmaxevent_, sigma_z.size()
@@ -99,292 +102,295 @@ ExpData::ExpData(
 
     realtype sigma;
 
-    checkSigmaPositivity(sigma_y, "sigma_y");
-    checkSigmaPositivity(sigma_z, "sigma_z");
+    check_sigma_positivity(sigma_y, "sigma_y");
+    check_sigma_positivity(sigma_z, "sigma_z");
 
     for (int iy = 0; iy < nytrue_; ++iy) {
         for (int it = 0; it < nt(); ++it) {
-            sigma = sigma_y.size() == (unsigned)nytrue_
+            sigma = sigma_y.size() == static_cast<unsigned>(nytrue_)
                         ? sigma_y.at(iy)
                         : sigma_y.at(iy + nytrue_ * it);
             std::normal_distribution<> e{0, sigma};
-            observed_data_.at(iy + nytrue_ * it)
+            measurements_.at(iy + nytrue_ * it)
                 = rdata.y.at(iy + rdata.ny * it) + e(gen);
-            observed_data_std_dev_.at(iy + nytrue_ * it) = sigma;
+            noise_scales_.at(iy + nytrue_ * it) = sigma;
         }
     }
 
     for (int iz = 0; iz < nztrue_; ++iz) {
         for (int ie = 0; ie < nmaxevent_; ++ie) {
-            sigma = sigma_z.size() == (unsigned)nztrue_
+            sigma = sigma_z.size() == static_cast<unsigned>(nztrue_)
                         ? sigma_z.at(iz)
                         : sigma_z.at(iz + nztrue_ * ie);
             std::normal_distribution<> e{0, sigma};
-            observed_events_.at(iz + rdata.nztrue * ie)
+            event_measurements_.at(iz + rdata.nztrue * ie)
                 = rdata.z.at(iz + rdata.nz * ie) + e(gen);
-            observed_events_std_dev_.at(iz + rdata.nztrue * ie) = sigma;
+            event_noise_scales_.at(iz + rdata.nztrue * ie) = sigma;
         }
     }
 
     id = rdata.id;
 }
 
-void ExpData::setTimepoints(std::vector<realtype> const& ts) {
+void ExpData::set_timepoints(std::vector<realtype> const& ts) {
     if (!std::ranges::is_sorted(ts))
         throw AmiException(
             "Encountered non-monotonic timepoints, please order timepoints "
             "such that they are monotonically increasing!"
         );
-    ts_ = ts;
-    applyDataDimension();
+    timepoints = ts;
+    apply_data_dimension();
 }
 
-std::vector<realtype> const& ExpData::getTimepoints() const { return ts_; }
-
-int ExpData::nt() const { return gsl::narrow<int>(ts_.size()); }
-
-realtype ExpData::getTimepoint(int it) const { return ts_.at(it); }
-
-void ExpData::setObservedData(std::vector<realtype> const& observedData) {
-    checkDataDimension(observedData, "observedData");
-
-    if (observedData.size() == (unsigned)nt() * nytrue_)
-        observed_data_ = observedData;
-    else if (observedData.empty())
-        observed_data_.clear();
+std::vector<realtype> const& ExpData::get_timepoints() const {
+    return timepoints;
 }
 
-void ExpData::setObservedData(
-    std::vector<realtype> const& observedData, int iy
+int ExpData::nt() const { return gsl::narrow<int>(timepoints.size()); }
+
+realtype ExpData::get_timepoint(int const it) const {
+    return timepoints.at(it);
+}
+
+void ExpData::set_measurements(std::vector<realtype> const& measurements) {
+    check_data_dimension(measurements, "measurements");
+
+    if (measurements.size() == static_cast<unsigned>(nt()) * nytrue_)
+        measurements_ = measurements;
+    else if (measurements.empty())
+        measurements_.clear();
+}
+
+void ExpData::set_measurements(
+    std::vector<realtype> const& measurements, int iy
 ) {
-    if (observedData.size() != (unsigned)nt())
+    if (measurements.size() != static_cast<unsigned>(nt()))
         throw AmiException(
-            "Input observedData did not match dimensions nt (%i), was %i", nt(),
-            observedData.size()
+            "Input measurements did not match dimensions nt (%i), was %i", nt(),
+            measurements.size()
         );
 
     for (int it = 0; it < nt(); ++it)
-        observed_data_.at(iy + it * nytrue_) = observedData.at(it);
+        measurements_.at(iy + it * nytrue_) = measurements.at(it);
 }
 
-bool ExpData::isSetObservedData(int it, int iy) const {
-    return !observed_data_.empty()
-           && !isNaN(observed_data_.at(it * nytrue_ + iy));
+bool ExpData::is_set_measurement(int const it, int const iy) const {
+    return !measurements_.empty()
+           && !isnan(measurements_.at(it * nytrue_ + iy));
 }
 
-std::vector<realtype> const& ExpData::getObservedData() const {
-    return observed_data_;
+std::vector<realtype> const& ExpData::get_measurements() const {
+    return measurements_;
 }
 
-realtype const* ExpData::getObservedDataPtr(int it) const {
-    if (!observed_data_.empty())
-        return &observed_data_.at(it * nytrue_);
+realtype const* ExpData::get_measurements_ptr(int const it) const {
+    if (!measurements_.empty())
+        return &measurements_.at(it * nytrue_);
 
     return nullptr;
 }
 
-void ExpData::setObservedDataStdDev(
-    std::vector<realtype> const& observedDataStdDev
-) {
-    checkDataDimension(observedDataStdDev, "observedDataStdDev");
-    checkSigmaPositivity(observedDataStdDev, "observedDataStdDev");
+void ExpData::set_noise_scales(std::vector<realtype> const& sigma_y) {
+    check_data_dimension(sigma_y, "sigma_y");
+    check_sigma_positivity(sigma_y, "sigma_y");
 
-    if (observedDataStdDev.size() == (unsigned)nt() * nytrue_)
-        observed_data_std_dev_ = observedDataStdDev;
-    else if (observedDataStdDev.empty())
-        observed_data_std_dev_.clear();
+    if (sigma_y.size() == static_cast<unsigned>(nt()) * nytrue_)
+        noise_scales_ = sigma_y;
+    else if (sigma_y.empty())
+        noise_scales_.clear();
 }
 
-void ExpData::setObservedDataStdDev(realtype const stdDev) {
-    checkSigmaPositivity(stdDev, "stdDev");
-    std::ranges::fill(observed_data_std_dev_, stdDev);
+void ExpData::set_noise_scales(realtype const sigma) {
+    check_sigma_positivity(sigma, "sigma");
+    std::ranges::fill(noise_scales_, sigma);
 }
 
-void ExpData::setObservedDataStdDev(
-    std::vector<realtype> const& observedDataStdDev, int iy
+void ExpData::set_noise_scales(
+    std::vector<realtype> const& sigma_y, int const iy
 ) {
-    if (observedDataStdDev.size() != (unsigned)nt())
+    if (sigma_y.size() != static_cast<unsigned>(nt()))
         throw AmiException(
-            "Input observedDataStdDev did not match dimensions nt (%i), was %i",
-            nt(), observedDataStdDev.size()
+            "Input sigma_y did not match dimensions nt (%i), was %i", nt(),
+            sigma_y.size()
         );
-    checkSigmaPositivity(observedDataStdDev, "observedDataStdDev");
+    check_sigma_positivity(sigma_y, "sigma_y");
 
     for (int it = 0; it < nt(); ++it)
-        observed_data_std_dev_.at(iy + it * nytrue_)
-            = observedDataStdDev.at(it);
+        noise_scales_.at(iy + it * nytrue_) = sigma_y.at(it);
 }
 
-void ExpData::setObservedDataStdDev(realtype const stdDev, int iy) {
-    checkSigmaPositivity(stdDev, "stdDev");
+void ExpData::set_noise_scales(realtype const sigma, int const iy) {
+    check_sigma_positivity(sigma, "sigma");
     for (int it = 0; it < nt(); ++it)
-        observed_data_std_dev_.at(iy + it * nytrue_) = stdDev;
+        noise_scales_.at(iy + it * nytrue_) = sigma;
 }
 
-bool ExpData::isSetObservedDataStdDev(int it, int iy) const {
-    return !observed_data_std_dev_.empty()
-           && !isNaN(observed_data_std_dev_.at(it * nytrue_ + iy));
+bool ExpData::is_set_noise_scale(int const it, int const iy) const {
+    return !noise_scales_.empty()
+           && !isnan(noise_scales_.at(it * nytrue_ + iy));
 }
 
-std::vector<realtype> const& ExpData::getObservedDataStdDev() const {
-    return observed_data_std_dev_;
+std::vector<realtype> const& ExpData::get_noise_scales() const {
+    return noise_scales_;
 }
 
-realtype const* ExpData::getObservedDataStdDevPtr(int it) const {
-    if (!observed_data_std_dev_.empty())
-        return &observed_data_std_dev_.at(it * nytrue_);
+realtype const* ExpData::get_noise_scales_ptr(int const it) const {
+    if (!noise_scales_.empty())
+        return &noise_scales_.at(it * nytrue_);
 
     return nullptr;
 }
 
-void ExpData::setObservedEvents(std::vector<realtype> const& observedEvents) {
-    checkEventsDimension(observedEvents, "observedEvents");
+void ExpData::set_event_measurements(
+    std::vector<realtype> const& event_measurements
+) {
+    check_events_dimension(event_measurements, "event_measurements");
 
-    if (observedEvents.size() == (unsigned)nmaxevent_ * nztrue_)
-        observed_events_ = observedEvents;
-    else if (observedEvents.empty())
-        observed_events_.clear();
+    if (event_measurements.size()
+        == static_cast<unsigned>(nmaxevent_) * nztrue_)
+        event_measurements_ = event_measurements;
+    else if (event_measurements.empty())
+        event_measurements_.clear();
 }
 
-void ExpData::setObservedEvents(
-    std::vector<realtype> const& observedEvents, int iz
+void ExpData::set_event_measurements(
+    std::vector<realtype> const& event_measurements, int const iz
 ) {
-    if (observedEvents.size() != (unsigned)nmaxevent_) {
+    if (event_measurements.size() != static_cast<unsigned>(nmaxevent_)) {
         throw AmiException(
-            "Input observedEvents did not match dimensions nmaxevent (%i), was "
+            "Input event_measurements did not match dimensions nmaxevent (%i), "
+            "was "
             "%i",
-            nmaxevent_, observedEvents.size()
+            nmaxevent_, event_measurements.size()
         );
     }
 
     for (int ie = 0; ie < nmaxevent_; ++ie)
-        observed_events_.at(iz + ie * nztrue_) = observedEvents.at(ie);
+        event_measurements_.at(iz + ie * nztrue_) = event_measurements.at(ie);
 }
 
-bool ExpData::isSetObservedEvents(int ie, int iz) const {
-    return !observed_events_.empty()
-           && !isNaN(observed_events_.at(ie * nztrue_ + iz));
+bool ExpData::is_set_event_measurement(int const ie, int const iz) const {
+    return !event_measurements_.empty()
+           && !isnan(event_measurements_.at(ie * nztrue_ + iz));
 }
 
-std::vector<realtype> const& ExpData::getObservedEvents() const {
-    return observed_events_;
+std::vector<realtype> const& ExpData::get_event_measurements() const {
+    return event_measurements_;
 }
 
-realtype const* ExpData::getObservedEventsPtr(int ie) const {
-    if (!observed_events_.empty())
-        return &observed_events_.at(ie * nztrue_);
+realtype const* ExpData::get_event_measurements_ptr(int const ie) const {
+    if (!event_measurements_.empty())
+        return &event_measurements_.at(ie * nztrue_);
 
     return nullptr;
 }
 
-void ExpData::setObservedEventsStdDev(
-    std::vector<realtype> const& observedEventsStdDev
-) {
-    checkEventsDimension(observedEventsStdDev, "observedEventsStdDev");
-    checkSigmaPositivity(observedEventsStdDev, "observedEventsStdDev");
+void ExpData::set_event_noise_scales(std::vector<realtype> const& sigma_z) {
+    check_events_dimension(sigma_z, "sigma_z");
+    check_sigma_positivity(sigma_z, "sigma_z");
 
-    if (observedEventsStdDev.size() == (unsigned)nmaxevent_ * nztrue_)
-        observed_events_std_dev_ = observedEventsStdDev;
-    else if (observedEventsStdDev.empty())
-        observed_events_std_dev_.clear();
+    if (sigma_z.size() == (unsigned)nmaxevent_ * nztrue_)
+        event_noise_scales_ = sigma_z;
+    else if (sigma_z.empty())
+        event_noise_scales_.clear();
 }
 
-void ExpData::setObservedEventsStdDev(realtype const stdDev) {
-    checkSigmaPositivity(stdDev, "stdDev");
-    std::ranges::fill(observed_events_std_dev_, stdDev);
+void ExpData::set_event_noise_scales(realtype const sigma) {
+    check_sigma_positivity(sigma, "sigma");
+    std::ranges::fill(event_noise_scales_, sigma);
 }
 
-void ExpData::setObservedEventsStdDev(
-    std::vector<realtype> const& observedEventsStdDev, int iz
+void ExpData::set_event_noise_scales(
+    std::vector<realtype> const& sigma_z, int const iz
 ) {
-    if (observedEventsStdDev.size() != (unsigned)nmaxevent_)
+    if (sigma_z.size() != (unsigned)nmaxevent_)
         throw AmiException(
-            "Input observedEventsStdDev did not match dimensions nmaxevent "
+            "Input sigma_z did not match dimensions nmaxevent "
             "(%i), was %i",
-            nmaxevent_, observedEventsStdDev.size()
+            nmaxevent_, sigma_z.size()
         );
-    checkSigmaPositivity(observedEventsStdDev, "observedEventsStdDev");
+    check_sigma_positivity(sigma_z, "sigma_z");
 
     for (int ie = 0; ie < nmaxevent_; ++ie)
-        observed_events_std_dev_.at(iz + ie * nztrue_)
-            = observedEventsStdDev.at(ie);
+        event_noise_scales_.at(iz + ie * nztrue_) = sigma_z.at(ie);
 }
 
-void ExpData::setObservedEventsStdDev(realtype const stdDev, int iz) {
-    checkSigmaPositivity(stdDev, "stdDev");
+void ExpData::set_event_noise_scales(realtype const sigma, int const iz) {
+    check_sigma_positivity(sigma, "sigma");
 
     for (int ie = 0; ie < nmaxevent_; ++ie)
-        observed_events_std_dev_.at(iz + ie * nztrue_) = stdDev;
+        event_noise_scales_.at(iz + ie * nztrue_) = sigma;
 }
 
-bool ExpData::isSetObservedEventsStdDev(int ie, int iz) const {
-    if (!observed_events_std_dev_.empty()) // avoid out of bound memory access
-        return !isNaN(observed_events_std_dev_.at(ie * nztrue_ + iz));
+bool ExpData::is_set_event_noise_scale(int const ie, int const iz) const {
+    if (!event_noise_scales_.empty()) // avoid out of bound memory access
+        return !isnan(event_noise_scales_.at(ie * nztrue_ + iz));
 
     return false;
 }
 
-std::vector<realtype> const& ExpData::getObservedEventsStdDev() const {
-    return observed_events_std_dev_;
+std::vector<realtype> const& ExpData::get_event_noise_scales() const {
+    return event_noise_scales_;
 }
 
-realtype const* ExpData::getObservedEventsStdDevPtr(int ie) const {
-    if (!observed_events_std_dev_.empty())
-        return &observed_events_std_dev_.at(ie * nztrue_);
+realtype const* ExpData::get_event_noise_scales_ptr(int const ie) const {
+    if (!event_noise_scales_.empty())
+        return &event_noise_scales_.at(ie * nztrue_);
 
     return nullptr;
 }
 
 void ExpData::clear_observations() {
-    std::ranges::fill(observed_data_, getNaN());
-    std::ranges::fill(observed_data_std_dev_, getNaN());
-    std::ranges::fill(observed_events_, getNaN());
-    std::ranges::fill(observed_events_std_dev_, getNaN());
+    std::ranges::fill(measurements_, get_nan());
+    std::ranges::fill(noise_scales_, get_nan());
+    std::ranges::fill(event_measurements_, get_nan());
+    std::ranges::fill(event_noise_scales_, get_nan());
 }
 
-void ExpData::applyDimensions() {
-    applyDataDimension();
-    applyEventDimension();
+void ExpData::apply_dimensions() {
+    apply_data_dimension();
+    apply_event_dimension();
 }
 
-void ExpData::applyDataDimension() {
-    observed_data_.resize(nt() * nytrue_, getNaN());
-    observed_data_std_dev_.resize(nt() * nytrue_, getNaN());
+void ExpData::apply_data_dimension() {
+    measurements_.resize(nt() * nytrue_, get_nan());
+    noise_scales_.resize(nt() * nytrue_, get_nan());
 }
 
-void ExpData::applyEventDimension() {
-    observed_events_.resize(nmaxevent_ * nztrue_, getNaN());
-    observed_events_std_dev_.resize(nmaxevent_ * nztrue_, getNaN());
+void ExpData::apply_event_dimension() {
+    event_measurements_.resize(nmaxevent_ * nztrue_, get_nan());
+    event_noise_scales_.resize(nmaxevent_ * nztrue_, get_nan());
 }
 
-void ExpData::checkDataDimension(
+void ExpData::check_data_dimension(
     std::vector<realtype> const& input, char const* fieldname
 ) const {
-    if (input.size() != (unsigned)nt() * nytrue_ && !input.empty())
+    if (input.size() != static_cast<unsigned>(nt()) * nytrue_ && !input.empty())
         throw AmiException(
             "Input %s did not match dimensions nt (%i) x nytrue (%i), was %i",
             fieldname, nt(), nytrue_, input.size()
         );
 }
 
-void ExpData::checkEventsDimension(
+void ExpData::check_events_dimension(
     std::vector<realtype> const& input, char const* fieldname
 ) const {
-    if (input.size() != (unsigned)nmaxevent_ * nztrue_ && !input.empty())
+    if (input.size() != static_cast<unsigned>(nmaxevent_) * nztrue_
+        && !input.empty())
         throw AmiException(
             "Input %s did not match dimensions nt (%i) x nytrue (%i), was %i",
             fieldname, nmaxevent_, nztrue_, input.size()
         );
 }
 
-void checkSigmaPositivity(
+void check_sigma_positivity(
     std::vector<realtype> const& sigmaVector, char const* vectorName
 ) {
     for (auto&& sigma : sigmaVector)
-        checkSigmaPositivity(sigma, vectorName);
+        check_sigma_positivity(sigma, vectorName);
 }
 
-void checkSigmaPositivity(realtype const sigma, char const* sigmaName) {
+void check_sigma_positivity(realtype const sigma, char const* sigmaName) {
     if (sigma <= 0.0)
         throw AmiException(
             "Encountered sigma <= 0 in %s! value: %f", sigmaName, sigma
@@ -401,31 +407,32 @@ ConditionContext::ConditionContext(
     Model* model, ExpData const* edata, FixedParameterContext fpc
 )
     : model_(model)
-    , original_parameters_(model->getParameters())
-    , original_fixed_parameters_(model->getFixedParameters())
+    , original_parameters_(model->get_free_parameters())
+    , original_fixed_parameters_(model->get_fixed_parameters())
     , original_tstart_(model->t0())
-    , original_tstart_preeq_(model->t0Preeq())
-    , original_timepoints_(model->getTimepoints())
-    , original_parameter_list_(model->getParameterList())
-    , original_scaling_(model->getParameterScale())
+    , original_tstart_preeq_(model->t0_preeq())
+    , original_timepoints_(model->get_timepoints())
+    , original_parameter_list_(model->get_parameter_list())
+    , original_scaling_(model->get_parameter_scale())
     , original_reinitialize_fixed_parameter_initial_states_(
-          model->getReinitializeFixedParameterInitialStates()
-          && model->getReinitializationStateIdxs().empty()
+          model->get_reinitialize_fixed_parameter_initial_states()
+          && model->get_reinitialization_state_idxs().empty()
       )
-    , original_reinitialization_state_idxs(model->getReinitializationStateIdxs()
+    , original_reinitialization_state_idxs(
+          model->get_reinitialization_state_idxs()
       ) {
-    if (model->hasCustomInitialStates())
-        original_x0_ = model->getInitialStates();
+    if (model->has_custom_initial_state())
+        original_x0_ = model->get_initial_state();
 
-    if (model->hasCustomInitialStateSensitivities())
-        original_sx0_ = model->getInitialStateSensitivities();
+    if (model->has_custom_initial_state_sensitivities())
+        original_sx0_ = model->get_initial_state_sensitivities();
 
-    applyCondition(edata, fpc);
+    apply_condition(edata, fpc);
 }
 
 ConditionContext::~ConditionContext() { restore(); }
 
-void ConditionContext::applyCondition(
+void ConditionContext::apply_condition(
     ExpData const* edata, FixedParameterContext fpc
 ) {
     if (!edata)
@@ -434,7 +441,7 @@ void ConditionContext::applyCondition(
     // this needs to go first, otherwise nplist will not have the right
     // dimension for all other fields that depend on Model::nplist
     if (!edata->plist.empty())
-        model_->setParameterList(edata->plist);
+        model_->set_parameter_list(edata->plist);
 
     // this needs to go second as setParameterScale will reset sx0
     if (!edata->pscale.empty()) {
@@ -444,19 +451,19 @@ void ConditionContext::applyCondition(
                 " match ExpData (%zd).",
                 model_->np(), edata->pscale.size()
             );
-        model_->setParameterScale(edata->pscale);
+        model_->set_parameter_scale(edata->pscale);
     }
 
     // this needs to be set in the model before handling initial state
     // sensitivities, which may be unscaled using model parameter values
-    if (!edata->parameters.empty()) {
-        if (edata->parameters.size() != (unsigned)model_->np())
+    if (!edata->free_parameters.empty()) {
+        if (edata->free_parameters.size() != (unsigned)model_->np())
             throw AmiException(
                 "Number of parameters (%d) in model does not"
                 " match ExpData (%zd).",
-                model_->np(), edata->parameters.size()
+                model_->np(), edata->free_parameters.size()
             );
-        model_->setParameters(edata->parameters);
+        model_->set_free_parameters(edata->free_parameters);
     }
 
     if (!edata->x0.empty()) {
@@ -466,7 +473,7 @@ void ConditionContext::applyCondition(
                 " not match ExpData (%zd).",
                 model_->nx_rdata, edata->x0.size()
             );
-        model_->setInitialStates(edata->x0);
+        model_->set_initial_state(edata->x0);
     }
 
     if (!edata->sx0.empty()) {
@@ -476,93 +483,98 @@ void ConditionContext::applyCondition(
                 " in model does not match ExpData (%zd).",
                 model_->nx_rdata * model_->nplist(), edata->sx0.size()
             );
-        model_->setInitialStateSensitivities(edata->sx0);
+        model_->set_initial_state_sensitivities(edata->sx0);
     }
 
-    model_->setReinitializeFixedParameterInitialStates(
-        edata->reinitializeFixedParameterInitialStates
+    model_->set_reinitialize_fixed_parameter_initial_states(
+        edata->reinitialize_fixed_parameter_initial_states
     );
 
     switch (fpc) {
     case FixedParameterContext::simulation:
-        if (!edata->fixedParameters.empty()) {
+        if (!edata->fixed_parameters.empty()) {
             // fixed parameter in model are superseded by those provided in
             // edata
-            if (edata->fixedParameters.size() != (unsigned)model_->nk())
+            if (edata->fixed_parameters.size() != (unsigned)model_->nk())
                 throw AmiException(
                     "Number of fixed parameters (%d) in model does"
                     "not match ExpData (%zd).",
-                    model_->nk(), edata->fixedParameters.size()
+                    model_->nk(), edata->fixed_parameters.size()
                 );
-            model_->setFixedParameters(edata->fixedParameters);
-            if (!edata->reinitializeFixedParameterInitialStates)
-                model_->setReinitializationStateIdxs(
+            model_->set_fixed_parameters(edata->fixed_parameters);
+            if (!edata->reinitialize_fixed_parameter_initial_states)
+                model_->set_reinitialization_state_idxs(
                     edata->reinitialization_state_idxs_sim
                 );
         }
         break;
     case FixedParameterContext::preequilibration:
-        if (!edata->fixedParametersPreequilibration.empty()) {
+        if (!edata->fixed_parameters_pre_equilibration.empty()) {
             // fixed parameter in model are superseded by those provided in
             // edata
-            if (edata->fixedParametersPreequilibration.size()
+            if (edata->fixed_parameters_pre_equilibration.size()
                 != (unsigned)model_->nk())
                 throw AmiException(
                     "Number of fixed parameters (%d) in model does"
                     "not match ExpData (preequilibration) (%zd).",
-                    model_->nk(), edata->fixedParametersPreequilibration.size()
+                    model_->nk(),
+                    edata->fixed_parameters_pre_equilibration.size()
                 );
-            model_->setFixedParameters(edata->fixedParametersPreequilibration);
+            model_->set_fixed_parameters(
+                edata->fixed_parameters_pre_equilibration
+            );
         }
         break;
     case FixedParameterContext::presimulation:
-        if (!edata->fixedParametersPresimulation.empty()) {
+        if (!edata->fixed_parameters_presimulation.empty()) {
             // fixed parameter in model are superseded by those provided in
             // edata
-            if (edata->fixedParametersPresimulation.size()
+            if (edata->fixed_parameters_presimulation.size()
                 != (unsigned)model_->nk())
                 throw AmiException(
                     "Number of fixed parameters (%d) in model does"
                     " not match ExpData (presimulation) (%zd).",
-                    model_->nk(), edata->fixedParametersPresimulation.size()
+                    model_->nk(), edata->fixed_parameters_presimulation.size()
                 );
-            model_->setFixedParameters(edata->fixedParametersPresimulation);
-            if (!edata->reinitializeFixedParameterInitialStates)
-                model_->setReinitializationStateIdxs(
+            model_->set_fixed_parameters(edata->fixed_parameters_presimulation);
+            if (!edata->reinitialize_fixed_parameter_initial_states)
+                model_->set_reinitialization_state_idxs(
                     edata->reinitialization_state_idxs_presim
                 );
         }
         break;
     }
 
-    model_->setT0(edata->tstart_);
+    model_->set_t0(edata->t_start);
     if (edata->nt()) {
         // fixed parameter in model are superseded by those provided in edata
-        model_->setTimepoints(edata->getTimepoints());
+        model_->set_timepoints(edata->get_timepoints());
     }
 }
 
 void ConditionContext::restore() {
     // parameter list has to be set before initial state sensitivities
-    model_->setParameterList(original_parameter_list_);
+    model_->set_parameter_list(original_parameter_list_);
     // parameter scale has to be set before initial state sensitivities
-    model_->setParameterScale(original_scaling_);
+    model_->set_parameter_scale(original_scaling_);
 
     if (!original_x0_.empty())
-        model_->setInitialStates(original_x0_);
+        model_->set_initial_state(original_x0_);
 
     if (!original_sx0_.empty())
-        model_->setUnscaledInitialStateSensitivities(original_sx0_);
+        model_->set_unscaled_initial_state_sensitivities(original_sx0_);
 
-    model_->setParameters(original_parameters_);
-    model_->setFixedParameters(original_fixed_parameters_);
-    model_->setT0(original_tstart_);
-    model_->setT0Preeq(original_tstart_preeq_);
-    model_->setTimepoints(original_timepoints_);
-    model_->setReinitializeFixedParameterInitialStates(
+    model_->set_free_parameters(original_parameters_);
+    model_->set_fixed_parameters(original_fixed_parameters_);
+    model_->set_t0(original_tstart_);
+    model_->set_t0_preeq(original_tstart_preeq_);
+    model_->set_timepoints(original_timepoints_);
+    model_->set_reinitialize_fixed_parameter_initial_states(
         original_reinitialize_fixed_parameter_initial_states_
     );
-    model_->setReinitializationStateIdxs(original_reinitialization_state_idxs);
+    model_->set_reinitialization_state_idxs(
+        original_reinitialization_state_idxs
+    );
 }
 
 } // namespace amici

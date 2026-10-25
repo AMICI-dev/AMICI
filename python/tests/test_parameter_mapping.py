@@ -1,6 +1,6 @@
 """Test for ``amici.parameter_mapping``"""
 
-from amici.petab.parameter_mapping import (
+from amici.sim._parameter_mapping import (
     ParameterMapping,
     ParameterMappingForCondition,
 )

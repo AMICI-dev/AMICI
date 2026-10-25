@@ -7,6 +7,9 @@ using namespace amici;
 %}
 
 %ignore ConditionContext;
+%ignore get_measurements_ptr;
+%ignore get_noise_scales_ptr;
+%ignore check_sigma_positivity;
 
 %feature("pythonprepend") amici::ExpData::ExpData %{
     """
@@ -17,7 +20,7 @@ using namespace amici;
     :returns: ExpData Instance
     """
     if args:
-        from amici.numpy import ReturnDataView
+        from amici.sim.sundials._numpy import ReturnDataView
 
         # Get the raw pointer if necessary
         if isinstance(args[0], (ExpData, ExpDataPtr, Model, ModelPtr)):
@@ -30,22 +33,22 @@ using namespace amici;
 %pythoncode %{
 def _edata_repr(self: "ExpData"):
     n_data_y = sum(
-        self.isSetObservedData(it, iy)
+        self.is_set_measurement(it, iy)
         for it in range(self.nt()) for
         iy in range(self.nytrue())
     )
     n_sigma_y = sum(
-        self.isSetObservedDataStdDev(it, iy)
+        self.is_set_noise_scale(it, iy)
         for it in range(self.nt())
         for iy in range(self.nytrue())
     )
     n_data_z = sum(
-        self.isSetObservedEvents(ie, iz)
+        self.is_set_event_measurement(ie, iz)
         for ie in range(self.nmaxevent())
         for iz in range(self.nztrue())
     )
     n_sigma_z = sum(
-        self.isSetObservedEventsStdDev(ie, iz)
+        self.is_set_event_noise_scale(ie, iz)
         for ie in range(self.nmaxevent())
         for iz in range(self.nztrue())
     )
@@ -53,21 +56,21 @@ def _edata_repr(self: "ExpData"):
     custom_simulation_settings = []
     if self.pscale:
         custom_simulation_settings.append(f"parameter scales")
-    if self.fixedParameters:
-        custom_simulation_settings.append(f"constants")
-    if self.fixedParametersPreequilibration:
+    if self.fixed_parameters:
+        custom_simulation_settings.append(f"fixed parameters")
+    if self.fixed_parameters_pre_equilibration:
         custom_simulation_settings.append(f"pre-equilibration condition")
     if self.t_presim:
         tmp = f"pre-simulation condition (t={self.t_presim})"
-        if self.fixedParametersPresimulation:
-            tmp += " with custom constants"
+        if self.fixed_parameters_presimulation:
+            tmp += " with custom fixed parameters"
         custom_simulation_settings.append(tmp)
-    if self.reinitializeFixedParameterInitialStates and self.reinitialization_state_idxs_sim:
+    if self.reinitialize_fixed_parameter_initial_states and self.reinitialization_state_idxs_sim:
         custom_simulation_settings.append(f"{len(self.reinitialization_state_idxs_sim)} reinitialized states (simulation)")
-    if self.reinitializeFixedParameterInitialStates and self.reinitialization_state_idxs_presim:
+    if self.reinitialize_fixed_parameter_initial_states and self.reinitialization_state_idxs_presim:
         custom_simulation_settings.append(f"{len(self.reinitialization_state_idxs_presim)} reinitialized states (presimulation)")
-    if self.parameters:
-        custom_simulation_settings.append(f"parameters")
+    if self.free_parameters:
+        custom_simulation_settings.append(f"free parameters")
     if self.x0:
         custom_simulation_settings.append(f"initial states")
     if self.sx0:
@@ -80,7 +83,7 @@ def _edata_repr(self: "ExpData"):
 
     return "\n".join([
         self.this.__repr__()[:-1],
-        f"  condition '{self.id}' starting at t={self.tstart_}" + custom_simulation_settings,
+        f"  condition '{self.id}' starting at t={self.t_start}" + custom_simulation_settings,
         f"  {self.nt()}x{self.nytrue()} time-resolved datapoints",
         f"    ({n_data_y}/{self.nt()*self.nytrue()} measurements & {n_sigma_y}/{self.nt()*self.nytrue()} sigmas set)",
         f"  {self.nmaxevent()}x{self.nztrue()} event-resolved datapoints",
@@ -100,6 +103,27 @@ def __deepcopy__(self, memo):
     # invoke copy constructor
     return type(self)(self)
 
+def __reduce__(self):
+    from amici.sim.sundials._swig_wrappers import restore_edata
+
+    return (
+        restore_edata,
+        (
+            # ExpData ctor arguments
+            (
+                self.nytrue(),
+                self.nztrue(),
+                self.nmaxevent(),
+                self.get_timepoints(),
+                self.get_measurements(),
+                self.get_noise_scales(),
+                self.get_event_measurements(),
+                self.get_event_noise_scales(),
+            ),
+            dict(self)
+        ),
+        {}
+    )
 %}
 };
 %extend std::unique_ptr<amici::ExpData> {

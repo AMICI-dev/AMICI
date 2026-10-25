@@ -5,8 +5,7 @@ Using AMICI's C++ interface
 ===========================
 
 The various import functions in of the
-:ref:`Python interface <python_interface>` and
-:ref:`Matlab interface <matlab_interface>` translate models defined in
+:ref:`Python interface <python_interface>` translate models defined in
 different formats into C++ code. These generated model libraries, together with
 the AMICI base library can be used in any C++ application for model simulation
 and sensitivity analysis. This section will give a short overview over the
@@ -17,10 +16,9 @@ included in other applications. Further details are available in the
 AMICI-generated C++ model files
 ===============================
 
-After importing a model using either the
-:ref:`Python interface <python_interface>` or the
-:ref:`Matlab interface <matlab_interface>`, the specified output directory
-contains (among others) C++ code for the various model functions.
+After importing a model using the :ref:`Python interface <python_interface>`,
+the specified output directory contains (among others) C++ code for the various
+model functions.
 
 The content of a model source directory looks something like this (given
 `MODEL_NAME=model_steadystate`):
@@ -58,7 +56,7 @@ The former provides some functions for reading and writing
 All model-specific functions are defined in the namespace ``model_$modelname``.
 
 The main function for running an AMICI simulation is
-:cpp:func:`amici::runAmiciSimulation`. This function requires
+:cpp:func:`amici::run_simulation`. This function requires
 
 * an instance of a :cpp:class:`amici::Model` subclass as generated during model
   import. For the example `model_steadystate` the respective class is provided
@@ -67,7 +65,7 @@ The main function for running an AMICI simulation is
 
 * a :cpp:class:`amici::Solver` instance. This solver instance needs to match
   the requirements of the model and can be obtained from
-  :cpp:func:`amici::AbstractModel::getSolver`.
+  :cpp:func:`amici::AbstractModel::create_solver`.
 
 * optionally an :cpp:class:`amici::ExpData` instance, which contains any
   experimental data (e.g. measurements, noise model parameters or model inputs)
@@ -78,7 +76,7 @@ all simulation results.
 
 For running simulations for multiple experimental conditions
 (multiple :cpp:class:`amici::ExpData` instances),
-:cpp:func:`amici::runAmiciSimulations`
+:cpp:func:`amici::run_simulations`
 provides an alternative entry point. If AMICI (and your application)
 have been compiled with OpenMP support (see installation guide), this allows
 for running those simulations in parallel.
@@ -99,7 +97,7 @@ model, which can be inconvenient in some cases.
 
 When working with a single model, the ``wrapfunctions.h`` file generated during
 model import can be used to avoid specifying model names explicitly. It defines
-a function ``amici::generic_model::getModel()``, that returns an instance of
+a function ``amici::generic_model::get_model()``, that returns an instance of
 the model class by a generic name.
 
 .. note::
@@ -123,7 +121,7 @@ and link the following libraries:
 * optionally HDF5 (C, HL, and CXX components)
   set CMake option ``ENABLE_HDF5`` to ``OFF`` to build without HDF5-support
 * optionally OpenMP (for parallel simulation of multiple conditions, see
-  :cpp:func:`amici::runAmiciSimulations`)
+  :cpp:func:`amici::run_simulations`)
 * optionally boost (only when using serialization of AMICI object)
 
 The simplest and recommended way is using the provide CMake files which take

@@ -49,11 +49,12 @@ To run the SBML Test Suite test cases, the easiest way is:
    Once the test cases are available locally, for debugging it might be easier
    to directly use `pytest` with `tests/sbml/testSBMLSuite.py`.
 
-
-## Matlab tests (not included in CI pipeline)
-
-To execute the Matlab test suite, run `tests/testModels.m`.
-
+   By default, the test suite is cloned to `tests/sbml/sbml-test-suite`.
+   To share a single checkout across multiple clones or worktrees, set the
+   `SBML_TEST_SUITE_ROOT` environment variable to its location
+   (e.g., `export SBML_TEST_SUITE_ROOT=~/src/sbml-test-suite`).
+   If that directory does not exist yet, `scripts/run-SBMLTestsuite.sh` will
+   clone the test suite there.
 
 ## Model simulation integration tests
 
@@ -69,17 +70,7 @@ This code is to be updated whenever `amici::Model` changes.
 
 ### Regenerating C++ code of the test models
 
-Regeneration of the model code has to be done whenever `amici::Model` or
-the Matlab model import routines change.
-
-This is done with
-
-    tests/cpp/wrapTestModels.m
-
-**Note:** This is currently only possible from Matlab < R2018a. This should
-change as soon as 1) all second-order sensitivity code is ported to C++/Python,
-2) a non-SBML import exists for Python and 3) support for events has been added
-for Python.
+*To be updated*
 
 
 ### Regenerating expected results

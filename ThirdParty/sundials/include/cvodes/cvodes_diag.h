@@ -2,8 +2,11 @@
  * Programmer(s): Radu Serban @ LLNL
  * ---------------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2024, Lawrence Livermore National Security
+ * Copyright (c) 2025-2026, Lawrence Livermore National Security,
+ * University of Maryland Baltimore County, and the SUNDIALS contributors.
+ * Copyright (c) 2013-2025, Lawrence Livermore National Security
  * and Southern Methodist University.
+ * Copyright (c) 2002-2013, Lawrence Livermore National Security.
  * All rights reserved.
  *
  * See the top-level LICENSE and NOTICE files for details.
@@ -53,8 +56,9 @@ SUNDIALS_EXPORT int CVDiag(void* cvode_mem);
 
 /* Optional output functions */
 
-SUNDIALS_EXPORT int CVDiagGetWorkSpace(void* cvode_mem, long int* lenrwLS,
-                                       long int* leniwLS);
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+  "Work space functions will be removed in version 8.0.0")
+int CVDiagGetWorkSpace(void* cvode_mem, long int* lenrwLS, long int* leniwLS);
 SUNDIALS_EXPORT int CVDiagGetNumRhsEvals(void* cvode_mem, long int* nfevalsLS);
 SUNDIALS_EXPORT int CVDiagGetLastFlag(void* cvode_mem, long int* flag);
 SUNDIALS_EXPORT char* CVDiagGetReturnFlagName(long int flag);

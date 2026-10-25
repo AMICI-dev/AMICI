@@ -3,17 +3,18 @@ on:
   push:
     branches:
       - main
+      - 'release*'
   pull_request:
     paths:
       - .github/workflows/test_sbml_semantic_test_suite.yml
-      - python/sdist/amici/de_export.py
-      - python/sdist/amici/de_model_components.py
-      - python/sdist/amici/de_model.py
-      - python/sdist/amici/sbml_import.py
-      - python/sdist/amici/import_utils.py
+      - python/sdist/amici/exporters/sundials/de_export.py
+      - python/sdist/amici/_symbolic/**
+      - python/sdist/amici/importers/sbml/**
+      - python/sdist/amici/importers/utils.py
       - scripts/run-SBMLTestsuite.sh
       - tests/sbml/testSBMLSuite.py
       - tests/sbml/conftest.py
+      - tests/sbml/utils.py
   check_suite:
    types: [requested]
   workflow_dispatch:
@@ -21,22 +22,24 @@ on:
 jobs:
   build:
     name: SBML Semantic Test Suite
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
 
     strategy:
       fail-fast: false
       matrix:
         cases: ["1-250", "251-500", "501-750", "751-1000",
                 "1000-1250", "1251-"]
-        python-version: [ "3.13" ]
+        python-version: [ "3.14" ]
 
     steps:
+    - uses: dweindl/gha-runner-diagnostics@v1
+
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 1
 
@@ -44,19 +47,64 @@ jobs:
       uses: ./.github/actions/install-apt-dependencies
 
     - run: AMICI_PARALLEL_COMPILE="" ./scripts/installAmiciSource.sh
+
+    - name: Install test dependencies
+      run: python3 -m pip install --upgrade --group python/sdist/pyproject.toml:fiddy
+
     - run: AMICI_PARALLEL_COMPILE="" ./scripts/run-SBMLTestsuite.sh ${{ matrix.cases }}
+    - run: mv tests/sbml/amici-semantic-results/results.json tests/sbml/amici-semantic-results/results_${{ matrix.cases }}.json
 
     - name: "Upload artifact: SBML semantic test suite results"
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: amici-semantic-results-${{ matrix.cases }}
         path: tests/sbml/amici-semantic-results
 
     - name: Codecov SBMLSuite
-      if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
-      uses: codecov/codecov-action@v5
+      if: (github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev') && github.actor != 'dependabot[bot]'
+      uses: codecov/codecov-action@v7
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: coverage_SBMLSuite.xml
         flags: sbmlsuite
         fail_ci_if_error: true
+
+  collect:
+    name: Collect and combine artifacts
+    runs-on: ubuntu-26.04
+    needs: build
+    steps:
+      - uses: dweindl/gha-runner-diagnostics@v1
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+
+      - name: Download all artifacts from workflow
+        uses: actions/download-artifact@v8
+        with:
+          pattern: amici-semantic-results-*
+          path: combined
+          merge-multiple: true
+
+      - name: Consolidate results
+        run: |
+          python tests/sbml/consolidate_results.py
+          # Cleanup individual files after consolidation
+          rm combined/results_*.json
+
+      - name: Show combined files
+        run: |
+          echo "Combined files:" && ls -l combined || true
+          echo "Number of files:" && find combined -type f | wc -l
+
+      - name: Upload combined artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: amici-semantic-results-combined
+          path: combined

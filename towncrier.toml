@@ -1,0 +1,40 @@
+# Configuration for collecting changelog entries from changelog.d/,
+# see changelog.d/README.md
+[tool.towncrier]
+name = "AMICI"
+filename = "CHANGELOG.md"
+directory = "changelog.d"
+template = "changelog.d/template.md.j2"
+start_string = "<!-- towncrier release notes start -->\n"
+title_format = "### v{version} ({project_date})"
+underlines = ["", "", ""]
+
+[[tool.towncrier.type]]
+directory = "breaking"
+name = "BREAKING CHANGES"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "feature"
+name = "Features"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "fix"
+name = "Fixes"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "performance"
+name = "Performance"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "doc"
+name = "Documentation"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "misc"
+name = "Other changes"
+showcontent = true

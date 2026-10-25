@@ -13,7 +13,7 @@ runs:
       shell: bash
 
     # BioNetGen path
-    - run: echo "BNGPATH=${AMICI_DIR}/ThirdParty/BioNetGen-2.7.0" >> $GITHUB_ENV
+    - run: echo "BNGPATH=${AMICI_DIR}/ThirdParty/BioNetGen-2.9.2" >> $GITHUB_ENV
       shell: bash
 
     # CMake hints

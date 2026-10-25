@@ -1,29 +1,47 @@
 #include "amici/symbolic_functions.h"
 #include "amici/defines.h"
-#include "sundials/sundials_types.h"
 
-#include <gsl/gsl-lite.hpp>
 #include <algorithm>
-
-#include "x.h"
-#include "p.h"
-#include "k.h"
-#include "w.h"
-#include "xdot.h"
 
 namespace amici {
 namespace model_model_jakstat_adjoint_py {
 
 void xdot_model_jakstat_adjoint_py(realtype *xdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w){
-    dSTATdt = (-Omega_cyt*STAT*p1*u + Omega_nuc*nSTAT5*p4)/Omega_cyt;  // xdot[0]
-    dpSTATdt = STAT*p1*u - 2*p2*std::pow(pSTAT, 2);  // xdot[1]
-    dpSTAT_pSTATdt = p2*std::pow(pSTAT, 2) - p3*pSTAT_pSTAT;  // xdot[2]
-    dnpSTAT_npSTATdt = (Omega_cyt*p3*pSTAT_pSTAT - Omega_nuc*npSTAT_npSTAT*p4)/Omega_nuc;  // xdot[3]
-    dnSTAT1dt = -p4*(nSTAT1 - 2*npSTAT_npSTAT);  // xdot[4]
-    dnSTAT2dt = p4*(nSTAT1 - nSTAT2);  // xdot[5]
-    dnSTAT3dt = p4*(nSTAT2 - nSTAT3);  // xdot[6]
-    dnSTAT4dt = p4*(nSTAT3 - nSTAT4);  // xdot[7]
-    dnSTAT5dt = p4*(nSTAT4 - nSTAT5);  // xdot[8]
+    const realtype STAT_ = x[0];
+    const realtype pSTAT_ = x[1];
+    const realtype pSTAT_pSTAT_ = x[2];
+    const realtype npSTAT_npSTAT_ = x[3];
+    const realtype nSTAT1_ = x[4];
+    const realtype nSTAT2_ = x[5];
+    const realtype nSTAT3_ = x[6];
+    const realtype nSTAT4_ = x[7];
+    const realtype nSTAT5_ = x[8];
+    const realtype p1_ = p[0];
+    const realtype p2_ = p[1];
+    const realtype p3_ = p[2];
+    const realtype p4_ = p[3];
+    const realtype Omega_cyt_ = k[0];
+    const realtype Omega_nuc_ = k[1];
+    const realtype u_ = w[0];
+
+    realtype &dSTATdt_ = xdot[0];
+    realtype &dpSTATdt_ = xdot[1];
+    realtype &dpSTAT_pSTATdt_ = xdot[2];
+    realtype &dnpSTAT_npSTATdt_ = xdot[3];
+    realtype &dnSTAT1dt_ = xdot[4];
+    realtype &dnSTAT2dt_ = xdot[5];
+    realtype &dnSTAT3dt_ = xdot[6];
+    realtype &dnSTAT4dt_ = xdot[7];
+    realtype &dnSTAT5dt_ = xdot[8];
+    dSTATdt_ = (-Omega_cyt_*STAT_*p1_*u_ + Omega_nuc_*nSTAT5_*p4_)/Omega_cyt_;  // xdot[0]
+    dpSTATdt_ = STAT_*p1_*u_ - 2*p2_*std::pow(pSTAT_, 2);  // xdot[1]
+    dpSTAT_pSTATdt_ = p2_*std::pow(pSTAT_, 2) - p3_*pSTAT_pSTAT_;  // xdot[2]
+    dnpSTAT_npSTATdt_ = (Omega_cyt_*p3_*pSTAT_pSTAT_ - Omega_nuc_*npSTAT_npSTAT_*p4_)/Omega_nuc_;  // xdot[3]
+    dnSTAT1dt_ = -p4_*(nSTAT1_ - 2*npSTAT_npSTAT_);  // xdot[4]
+    dnSTAT2dt_ = p4_*(nSTAT1_ - nSTAT2_);  // xdot[5]
+    dnSTAT3dt_ = p4_*(nSTAT2_ - nSTAT3_);  // xdot[6]
+    dnSTAT4dt_ = p4_*(nSTAT3_ - nSTAT4_);  // xdot[7]
+    dnSTAT5dt_ = p4_*(nSTAT4_ - nSTAT5_);  // xdot[8]
 }
 
 } // namespace model_model_jakstat_adjoint_py

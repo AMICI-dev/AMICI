@@ -1,17 +1,21 @@
 #!/bin/bash
 # Download and run SBML test suite. Use --jax to run JAX backend.
+# The test suite is cloned to $SBML_TEST_SUITE_ROOT if set,
+# otherwise to tests/sbml/sbml-test-suite.
 REPO_URL="https://github.com/sbmlteam/sbml-test-suite/"
 set -e
 
-# run tests
-if [[ ! -d "tests/sbml/sbml-test-suite" ]]; then
-    git clone --depth=1 ${REPO_URL}
-    mv -f ./sbml-test-suite ./tests/sbml/sbml-test-suite
+SBML_TEST_SUITE_ROOT="${SBML_TEST_SUITE_ROOT:-tests/sbml/sbml-test-suite}"
+export SBML_TEST_SUITE_ROOT
+
+if [[ ! -d "${SBML_TEST_SUITE_ROOT}" ]]; then
+    # only cases/semantic is needed
+    git clone --depth=1 --filter=blob:none --sparse "${REPO_URL}" \
+      "${SBML_TEST_SUITE_ROOT}"
+    git -C "${SBML_TEST_SUITE_ROOT}" sparse-checkout set cases/semantic
 fi
 
 source venv/bin/activate
-pip show pytest-xdist > /dev/null 2>&1 || pip install pytest-xdist
-pip install coverage pytest-cov
 
 BACKEND="python"
 if [[ "$1" == "--jax" ]]; then
@@ -40,5 +44,5 @@ if [[ -d "${RESULT_DIR}" ]]; then
 fi
 mkdir "${RESULT_DIR}"
 
-pytest "$TEST_SCRIPT" $cases -rfsE -n auto \
+pytest "$TEST_SCRIPT" $cases -rfsE -n auto --dist=loadgroup \
   --cov=amici --cov-report=xml:"$COVERAGE_FILE" --cov-append

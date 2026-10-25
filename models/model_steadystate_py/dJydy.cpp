@@ -45,31 +45,34 @@ void dJydy_rowvals_model_steadystate_py(SUNMatrixWrapper &dJydy, int index){
 
 #include "amici/symbolic_functions.h"
 #include "amici/defines.h"
-#include "sundials/sundials_types.h"
 
-#include <gsl/gsl-lite.hpp>
 #include <algorithm>
-
-#include "p.h"
-#include "k.h"
-#include "y.h"
-#include "sigmay.h"
-#include "my.h"
-#include "dJydy.h"
+#include <sundials/sundials_types.h>
+#include <gsl/gsl-lite.hpp>
 
 namespace amici {
 namespace model_model_steadystate_py {
 
 void dJydy_model_steadystate_py(realtype *dJydy, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my){
+    const realtype obs_x1_ = y[0];
+    const realtype obs_x2_ = y[1];
+    const realtype obs_x3_ = y[2];
+    const realtype sigma_obs_x1_ = sigmay[0];
+    const realtype sigma_obs_x2_ = sigmay[1];
+    const realtype sigma_obs_x3_ = sigmay[2];
+    const realtype mobs_x1_ = my[0];
+    const realtype mobs_x2_ = my[1];
+    const realtype mobs_x3_ = my[2];
+
     switch(iy) {
         case 0:
-            dJydy[0] = (-1.0*mobs_x1 + 1.0*obs_x1)/std::pow(sigma_obs_x1, 2);
+            dJydy[0] = (-1.0*mobs_x1_ + 1.0*obs_x1_)/std::pow(sigma_obs_x1_, 2);
             break;
         case 1:
-            dJydy[0] = (-1.0*mobs_x2 + 1.0*obs_x2)/std::pow(sigma_obs_x2, 2);
+            dJydy[0] = (-1.0*mobs_x2_ + 1.0*obs_x2_)/std::pow(sigma_obs_x2_, 2);
             break;
         case 2:
-            dJydy[0] = (-1.0*mobs_x3 + 1.0*obs_x3)/std::pow(sigma_obs_x3, 2);
+            dJydy[0] = (-1.0*mobs_x3_ + 1.0*obs_x3_)/std::pow(sigma_obs_x3_, 2);
             break;
     }
 }

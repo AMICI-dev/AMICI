@@ -8,7 +8,7 @@
 %ignore fJSparseB;
 %ignore fxBdot_ss;
 %ignore fJSparseB_ss;
-%ignore writeSteadystateJB;
+%ignore write_steady_state_JB;
 %ignore fdx0;
 %ignore fdxdotdp;
 %ignore froot;
@@ -29,15 +29,19 @@
 %ignore fJrz;
 %ignore fJy;
 %ignore fJz;
-%ignore fdJrzdsigma;
-%ignore fdJrzdz;
-%ignore fdJzdsigma;
+%ignore fdJrzdsigmaz;
+%ignore fdJrzdrz;
+%ignore fdJzdsigmaz;
 %ignore fdJzdz;
-%ignore fdJydsigma;
+%ignore fdJydsigmay;
 %ignore fdeltaqB;
 %ignore fdeltasx;
 %ignore fdeltax;
 %ignore fdeltaxB;
+%ignore fdeltaxB_at_trigger;
+%ignore fdtaudp;
+%ignore fdtaudx;
+%ignore fstauB;
 %ignore fdrzdp;
 %ignore fdrzdx;
 %ignore fdsigmaydp;
@@ -47,7 +51,6 @@
 %ignore fdzdp;
 %ignore fdzdx;
 %ignore frz;
-%ignore fsdx0;
 %ignore fsigmay;
 %ignore fsigmaz;
 %ignore fsrz;
@@ -56,8 +59,6 @@
 %ignore fw;
 %ignore fy;
 %ignore fz;
-%ignore fdwdp;
-%ignore fdwdx;
 %ignore fx0;
 %ignore fx0_fixedParameters;
 %ignore fsx0;
@@ -69,4 +70,14 @@
 %ignore fdtotal_cldx_rdata_colptrs;
 %ignore fdtotal_cldx_rdata_rowvals;
 %ignore fcreate_splines;
+%ignore fdsigmaydy;
+%ignore fdx_rdatadx_solver;
+%ignore fdx_rdatadp;
+%ignore fdx_rdatadtcl;
+%ignore fdtotal_cldp;
+%ignore fdtotal_cldx_rdata;
+%ignore fdspline_valuesdp;
+%ignore fdspline_slopesdp;
+%ignore fexplicit_roots;
+
 %include "amici/abstract_model.h"

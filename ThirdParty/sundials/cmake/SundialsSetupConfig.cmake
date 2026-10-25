@@ -2,8 +2,11 @@
 # Programmer(s): Cody J. Balos @ LLNL
 # ---------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2024, Lawrence Livermore National Security
+# Copyright (c) 2025-2026, Lawrence Livermore National Security,
+# University of Maryland Baltimore County, and the SUNDIALS contributors.
+# Copyright (c) 2013-2025, Lawrence Livermore National Security
 # and Southern Methodist University.
+# Copyright (c) 2002-2013, Lawrence Livermore National Security.
 # All rights reserved.
 #
 # See the top-level LICENSE and NOTICE files for details.
@@ -26,10 +29,12 @@ set(PRECISION_LEVEL "#define SUNDIALS_${SUNDIALS_PRECISION}_PRECISION 1")
 # prepare substitution variable INDEX_TYPE for sundials_config.h
 set(INDEX_TYPE "#define SUNDIALS_INT${SUNDIALS_INDEX_SIZE}_T 1")
 
-if(COMPILER_HAS_DEPRECATED_MSG)
+if(NOT SUNDIALS_ENABLE_DEPRECATED_WARNINGS)
+  set(SUNDIALS_DEPRECATED_MSG_MACRO "")
+elseif(COMPILER_HAS_DEPRECATED_MSG)
   set(SUNDIALS_DEPRECATED_MSG_MACRO "${COMPILER_DEPRECATED_MSG_ATTRIBUTE}")
 else()
-  set(SUNDIALS_DEPRECATED_MSG_MACRO "SUNDIALS_DEPRECATED")
+  set(SUNDIALS_DEPRECATED_MSG_MACRO "SUNDIALS_DEPRECATED_ATTRIBUTE")
 endif()
 
 if($ENV{CI_JOB_ID})
@@ -44,28 +49,28 @@ else()
   string(TIMESTAMP JOB_START_TIME "%Y%m%d%H%M%S")
 endif()
 
-
 # ============================================================================
-# Generate macros and substitution variables related to TPLs
-# that SUNDIALS is being built with.
+# Generate macros and substitution variables related to TPLs that SUNDIALS is
+# being built with.
 # ============================================================================
 
 # prepare substitution variables for modules that have been built
 set(SUNDIALS_CONFIGH_BUILDS "")
 foreach(_item ${SUNDIALS_BUILD_LIST})
   if(${${_item}})
-    string(REPLACE "BUILD_" "" _module ${_item})
+    string(REPLACE "SUNDIALS_ENABLE_" "" _module ${_item})
     string(APPEND SUNDIALS_CONFIGH_BUILDS "#define SUNDIALS_${_module} 1\n")
   endif()
 endforeach()
 
-# prepare substitution variable SUNDIALS_${TPL NAME}_ENABLED for sundials_config.h
+# prepare substitution variable SUNDIALS_${TPL NAME}_ENABLED for
+# sundials_config.h
 foreach(tpl ${SUNDIALS_TPL_LIST})
   set(SUNDIALS_${tpl}_ENABLED TRUE)
 endforeach()
 
 # prepare substitution variable SUNDIALS_TRILINOS_HAVE_MPI for sundials_config.h
-if(Trilinos_MPI)
+if(SUNDIALS_ENABLE_MPI)
   set(SUNDIALS_TRILINOS_HAVE_MPI TRUE)
 endif()
 
@@ -94,7 +99,5 @@ endif()
 # Generate the header file and place it in the binary dir.
 # =============================================================================
 
-configure_file(
-  ${PROJECT_SOURCE_DIR}/include/sundials/sundials_config.in
-  ${PROJECT_BINARY_DIR}/include/sundials/sundials_config.h
-  )
+configure_file(${PROJECT_SOURCE_DIR}/include/sundials/sundials_config.in
+               ${PROJECT_BINARY_DIR}/include/sundials/sundials_config.h)

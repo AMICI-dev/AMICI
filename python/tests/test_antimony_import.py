@@ -1,12 +1,15 @@
-import amici
 import numpy as np
-from amici.antimony_import import antimony2amici
+from amici.importers.antimony import antimony2amici
 from amici.testing import skip_on_valgrind
 
 
 @skip_on_valgrind
 def test_antimony_example(tempdir):
-    """If this example requires changes, please also update documentation/python_interface.rst."""
+    """If this example requires changes,
+    please also update documentation/python_interface.rst."""
+    from amici import import_model_module
+    from amici.sim.sundials import AMICI_SUCCESS, run_simulation
+
     ant_model = """
     model lotka_volterra
         # see https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations
@@ -32,11 +35,26 @@ def test_antimony_example(tempdir):
         model_name=module_name,
         output_dir=tempdir,
     )
-    model_module = amici.import_model_module(
+    model_module = import_model_module(
         module_name=module_name, module_path=tempdir
     )
-    amici_model = model_module.getModel()
-    amici_model.setTimepoints(np.linspace(0, 100, 200))
-    amici_solver = amici_model.getSolver()
-    rdata = amici.runAmiciSimulation(amici_model, amici_solver)
-    assert rdata.status == amici.AMICI_SUCCESS
+    amici_model = model_module.get_model()
+    amici_model.set_timepoints(np.linspace(0, 100, 200))
+    amici_solver = amici_model.create_solver()
+    rdata = run_simulation(amici_model, amici_solver)
+    assert rdata.status == AMICI_SUCCESS
+
+
+@skip_on_valgrind
+def test_long_model_name(tempdir):
+    """Models with long names can be compiled (Windows path length limit)."""
+    from amici import import_model_module
+    from amici.sim.sundials import AMICI_SUCCESS, run_simulation
+
+    module_name = "test_long_model_name_" + "x" * 40
+    antimony2amici(
+        "x = 1; x' = -x", model_name=module_name, output_dir=tempdir
+    )
+    model = import_model_module(module_name, tempdir).get_model()
+    rdata = run_simulation(model, model.create_solver())
+    assert rdata.status == AMICI_SUCCESS

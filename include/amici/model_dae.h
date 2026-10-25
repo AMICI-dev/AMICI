@@ -28,28 +28,25 @@ class Model_DAE : public Model {
 
     /**
      * @brief Constructor with model dimensions
+     *
      * @param model_dimensions Model dimensions
      * @param simulation_parameters Simulation parameters
      * @param o2mode second order sensitivity mode
      * @param idlist indexes indicating algebraic components (DAE only)
      * @param z2event mapping of event outputs to events
      * @param events Vector of events
-     * @param state_independent_events Map of events with state-independent
-     * triggers functions, mapping trigger timepoints to event indices.
      */
     Model_DAE(
         ModelDimensions const& model_dimensions,
         SimulationParameters simulation_parameters,
         SecondOrderMode const o2mode, std::vector<realtype> const& idlist,
-        std::vector<int> const& z2event, std::vector<Event> events = {},
-        std::map<realtype, std::vector<int>> state_independent_events = {}
+        std::vector<int> const& z2event, std::vector<Event> events = {}
     )
         : Model(
               model_dimensions, simulation_parameters, o2mode, idlist, z2event,
-              events, state_independent_events
+              events
           ) {
         SUNContext sunctx = derived_state_.sunctx_;
-        derived_state_.M_ = SUNMatrixWrapper(nx_solver, nx_solver, sunctx);
         auto const M_nnz = static_cast<sunindextype>(
             std::reduce(idlist.begin(), idlist.end())
         );
@@ -65,6 +62,7 @@ class Model_DAE : public Model {
 
     /**
      * @brief Jacobian of xdot with respect to states x
+     *
      * @param t timepoint
      * @param cj scaling factor, inverse of the step size
      * @param x Vector with the states
@@ -83,6 +81,7 @@ class Model_DAE : public Model {
 
     /**
      * @brief Jacobian of xBdot with respect to adjoint state xB
+     *
      * @param t timepoint
      * @param cj scaling factor, inverse of the step size
      * @param x Vector with the states
@@ -102,6 +101,7 @@ class Model_DAE : public Model {
 
     /**
      * @brief J in sparse form (for sparse solvers from the SuiteSparse Package)
+     *
      * @param t timepoint
      * @param cj scalar in Jacobian (inverse stepsize)
      * @param x Vector with the states
@@ -122,6 +122,7 @@ class Model_DAE : public Model {
     /**
      * @brief JB in sparse form (for sparse solvers from the SuiteSparse
      * Package)
+     *
      * @param t timepoint
      * @param cj scalar in Jacobian
      * @param x Vector with the states
@@ -137,6 +138,7 @@ class Model_DAE : public Model {
 
     /**
      * @brief Diagonal of the Jacobian (for preconditioning)
+     *
      * @param t timepoint
      * @param JDiag Vector to which the Jacobian diagonal will be written
      * @param cj scaling factor, inverse of the step size
@@ -151,11 +153,12 @@ class Model_DAE : public Model {
 
     void
     fJv(realtype t, AmiVector const& x, AmiVector const& dx,
-        AmiVector const& xdot, AmiVector const& v, AmiVector& nJv,
+        AmiVector const& xdot, AmiVector const& v, AmiVector& Jv,
         realtype cj) override;
 
     /**
      * @brief Matrix vector product of J with a vector v (for iterative solvers)
+     *
      * @param t timepoint
      * @param cj scaling factor, inverse of the step size
      * @param x Vector with the states
@@ -171,6 +174,7 @@ class Model_DAE : public Model {
     /**
      * @brief Matrix vector product of JB with a vector v (for iterative
      *solvers)
+     *
      * @param t timepoint
      * @param x Vector with the states
      * @param dx Vector with the derivative states
@@ -193,6 +197,7 @@ class Model_DAE : public Model {
 
     /**
      * @brief Event trigger function for events
+     *
      * @param t timepoint
      * @param x Vector with the states
      * @param dx Vector with the derivative states
@@ -207,8 +212,13 @@ class Model_DAE : public Model {
         realtype t, AmiVector const& x, AmiVector const& dx, AmiVector& xdot
     ) override;
 
+    void fdxdt(
+        realtype t, AmiVector const& x, AmiVector const& dx, AmiVector& dxdt
+    ) override;
+
     /**
      * @brief Residual function of the DAE
+     *
      * @param t timepoint
      * @param x Vector with the states
      * @param dx Vector with the derivative states
@@ -218,6 +228,7 @@ class Model_DAE : public Model {
 
     /**
      * @brief Right hand side of differential equation for adjoint state xB
+     *
      * @param t timepoint
      * @param x Vector with the states
      * @param dx Vector with the derivative states
@@ -232,6 +243,7 @@ class Model_DAE : public Model {
 
     /**
      * @brief Right hand side of integral equation for quadrature states qB
+     *
      * @param t timepoint
      * @param x Vector with the states
      * @param dx Vector with the derivative states
@@ -251,6 +263,7 @@ class Model_DAE : public Model {
     /**
      * @brief Implementation of fxBdot for steady state case at the N_Vector
      * level
+     *
      * @param t timepoint
      * @param xB Vector with the adjoint state
      * @param dxB Vector with the adjoint derivative states
@@ -262,6 +275,7 @@ class Model_DAE : public Model {
 
     /**
      * @brief Implementation of fqBdot for steady state at the N_Vector level
+     *
      * @param t timepoint
      * @param xB Vector with the adjoint states
      * @param dxB Vector with the adjoint derivative states
@@ -280,6 +294,7 @@ class Model_DAE : public Model {
     /**
      * @brief Computes the sparse backward Jacobian for steadystate integration
      * and writes it to the model member
+     *
      * @param t timepoint
      * @param cj scalar in Jacobian
      * @param x Vector with the states
@@ -288,22 +303,28 @@ class Model_DAE : public Model {
      * @param dxB Vector with the adjoint derivative states
      * @param xBdot Vector with the adjoint state right hand side
      */
-    void writeSteadystateJB(
+    void write_steady_state_JB(
         realtype t, realtype cj, AmiVector const& x, AmiVector const& dx,
         AmiVector const& xB, AmiVector const& dxB, AmiVector const& xBdot
     ) override;
 
     /**
      * @brief Sensitivity of dx/dt wrt model parameters p
+     *
      * @param t timepoint
      * @param x Vector with the states
      * @param dx Vector with the derivative states
      */
     void fdxdotdp(realtype t, const_N_Vector x, const_N_Vector dx);
+
+    void project_algebraic_objective_derivatives(
+        realtype t, AmiVector const& x, gsl::span<realtype> dJydx,
+        gsl::span<realtype> dJydp
+    ) override;
     void fdxdotdp(
         realtype const t, AmiVector const& x, AmiVector const& dx
     ) override {
-        fdxdotdp(t, x.getNVector(), dx.getNVector());
+        fdxdotdp(t, x.get_nvector(), dx.get_nvector());
     }
 
     void fsxdot(
@@ -313,6 +334,7 @@ class Model_DAE : public Model {
     /**
      * @brief Right hand side of differential equation for state sensitivities
      * sx
+     *
      * @param t timepoint
      * @param x Vector with the states
      * @param dx Vector with the derivative states
@@ -328,16 +350,40 @@ class Model_DAE : public Model {
 
     /**
      * @brief Mass matrix for DAE systems
+     *
      * @param t timepoint
      * @param x Vector with the states
      */
     void fM(realtype t, const_N_Vector x);
 
-    std::unique_ptr<Solver> getSolver() override;
+    std::unique_ptr<Solver> create_solver() override;
 
   protected:
     /**
+     * @brief Compute consistent initial derivatives of the differential
+     * states and of their sensitivities.
+     *
+     * These are the right-hand sides of the differential equations at the
+     * given states. The derivatives of the algebraic states are set to zero.
+     * If the algebraic states are consistent, this saves `IDACalcIC` from
+     * correcting the derivatives, which can fail for forward sensitivities
+     * at tight sensitivity tolerances.
+     *
+     * @param t Timepoint
+     * @param x Solver states
+     * @param dx Output buffer for the state derivatives
+     * @param sx Solver state sensitivities
+     * @param sdx Output buffer for the state sensitivity derivatives
+     * @param computeSensitivities Whether to compute `sdx`
+     */
+    void initialize_state_derivatives(
+        realtype t, AmiVector& x, AmiVector& dx, AmiVectorArray const& sx,
+        AmiVectorArray& sdx, bool computeSensitivities
+    ) override;
+
+    /**
      * @brief Model specific implementation for fJSparse
+     *
      * @param JSparse Matrix to which the Jacobian will be written
      * @param t timepoint
      * @param x Vector with the states
@@ -357,21 +403,25 @@ class Model_DAE : public Model {
 
     /**
      * @brief Model specific implementation for froot
+     *
      * @param root values of the trigger function
      * @param t timepoint
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
      * @param h Heaviside vector
+     * @param w vector with helper variables
      * @param dx Vector with the derivative states
      **/
     virtual void froot(
         realtype* root, realtype t, realtype const* x, double const* p,
-        double const* k, realtype const* h, realtype const* dx
+        double const* k, realtype const* h, realtype const* w,
+        realtype const* dx
     );
 
     /**
      * @brief Model specific implementation for fxdot
+     *
      * @param xdot residual function
      * @param t timepoint
      * @param x Vector with the states
@@ -388,27 +438,7 @@ class Model_DAE : public Model {
     ) = 0;
 
     /**
-     * @brief Model specific implementation of fdxdotdp
-     * @param dxdotdp partial derivative xdot wrt p
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h Heaviside vector
-     * @param ip parameter index
-     * @param dx Vector with the derivative states
-     * @param w vector with helper variables
-     * @param dwdp derivative of w wrt p
-     */
-    virtual void fdxdotdp(
-        realtype* dxdotdp, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, int ip, realtype const* dx,
-        realtype const* w, realtype const* dwdp
-    );
-
-    /**
      * @brief Model specific implementation of fdxdotdp_explicit, no w chainrule
-     * (Py)
      *
      * @param dxdotdp_explicit partial derivative xdot wrt p
      * @param t timepoint
@@ -441,14 +471,13 @@ class Model_DAE : public Model {
 
     /**
      * @brief Model specific implementation of fdxdotdx_explicit, no w chainrule
-     * (Py)
      *
      * @param dxdotdx_explicit partial derivative xdot wrt x
      * @param t timepoint
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
-     * @param h heavyside vector
+     * @param h Heaviside vector
      * @param dx Vector with the derivative states
      * @param w vector with helper variables
      */
@@ -474,6 +503,7 @@ class Model_DAE : public Model {
 
     /**
      * @brief Model specific implementation of fdxdotdw, data part
+     *
      * @param dxdotdw partial derivative xdot wrt w
      * @param t timepoint
      * @param x Vector with the states
@@ -491,18 +521,21 @@ class Model_DAE : public Model {
 
     /**
      * @brief Model specific implementation of fdxdotdw, colptrs part
+     *
      * @param dxdotdw sparse matrix to which colptrs will be written
      */
     virtual void fdxdotdw_colptrs(SUNMatrixWrapper& dxdotdw);
 
     /**
      * @brief Model specific implementation of fdxdotdw, rowvals part
+     *
      * @param dxdotdw sparse matrix to which rowvals will be written
      */
     virtual void fdxdotdw_rowvals(SUNMatrixWrapper& dxdotdw);
 
     /**
      * @brief Sensitivity of dx/dt wrt model parameters w
+     *
      * @param t timepoint
      * @param x Vector with the states
      * @param dx Vector with the derivative states
@@ -511,6 +544,7 @@ class Model_DAE : public Model {
 
     /**
      * @brief Model specific implementation of fM
+     *
      * @param M mass matrix
      * @param t timepoint
      * @param x Vector with the states

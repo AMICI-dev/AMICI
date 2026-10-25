@@ -6,7 +6,7 @@ from pathlib import Path
 import petab.v1 as petab
 import petabtests
 import pytest
-from amici.petab.simulator import PetabSimulator
+from amici.sim.sundials.petab.v1 import PetabSimulator
 from amici.testing import skip_on_valgrind
 
 
@@ -46,30 +46,28 @@ def test_subset_call(petab_problem):
     """
     Test the ability to customize AMICI methods, specifically:
     :py:func:`amici.petab_import.import_petab_problem` (`model_name`,
-    `model_output_dir`, import is skipped if `amici_model` is specified), and
+    `output_dir`, import is skipped if `amici_model` is specified), and
     :py:func:`amici.petab_objective.simulate_petab` (`amici_model`, `solver`).
     """
     model_name = "model_name_dummy"
-    model_output_dir = tempfile.mkdtemp()
+    output_dir = tempfile.mkdtemp()
 
     simulator0 = PetabSimulator(petab_problem)
-    assert not (Path(model_output_dir) / model_name).is_dir()
-    simulator0.simulate(
-        model_name=model_name, model_output_dir=model_output_dir
-    )
+    assert not (Path(output_dir) / model_name).is_dir()
+    simulator0.simulate(model_name=model_name, output_dir=output_dir)
     # Model name is handled correctly
-    assert simulator0.amici_model.getName() == model_name
+    assert simulator0.amici_model.get_name() == model_name
     # Check model output directory is created, by
     # :py:func:`amici.petab_import.import_petab_problem`
-    assert (Path(model_output_dir) / model_name).is_dir()
+    assert (Path(output_dir) / model_name).is_dir()
 
     simulator = PetabSimulator(petab_problem)
     simulator.simulate(amici_model=simulator0.amici_model)
     # AMICI model is handled correctly to skip import
-    assert simulator.amici_model.getName() == model_name
+    assert simulator.amici_model.get_name() == model_name
     simulator.simulate()
     # AMICI model persists between :py:func:`PetabSimulator.simulate` calls
-    assert simulator.amici_model.getName() == model_name
+    assert simulator.amici_model.get_name() == model_name
     # Erroneous solver raises an error
     with pytest.raises(TypeError):
         simulator.simulate(solver=False)

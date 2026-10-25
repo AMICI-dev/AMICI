@@ -1,7 +1,9 @@
-"""Tests related to amici.sbml_import"""
+"""Tests related to amici.importers.sbml"""
 
+import logging
 import os
 import re
+import subprocess
 import sys
 from numbers import Number
 from pathlib import Path
@@ -10,13 +12,40 @@ import amici
 import libsbml
 import numpy as np
 import pytest
-from amici.gradient_check import check_derivatives
-from amici.sbml_import import SbmlImporter
-from amici.testing import skip_on_valgrind
-from numpy.testing import assert_allclose, assert_array_equal
+import sympy as sp
 from amici import import_model_module
+from amici.importers.antimony import antimony2amici, antimony2sbml
+from amici.importers.sbml import SBMLException, SbmlImporter, SymbolId, splines
+from amici.importers.utils import (
+    MeasurementChannel as MC,
+)
+from amici.importers.utils import (
+    symbol_with_assumptions,
+)
+from amici.sim.sundials import (
+    AMICI_ERROR,
+    AMICI_SUCCESS,
+    Constraint,
+    ExpData,
+    InternalSensitivityMethod,
+    LogSeverity,
+    ModelModule,
+    ParameterScaling,
+    ReturnDataView,
+    SensitivityMethod,
+    SensitivityOrder,
+    SteadyStateComputationMode,
+    SteadyStateSensitivityMode,
+    parameter_scaling_from_int_vector,
+    run_simulation,
+    run_simulations,
+)
+from amici.sim.sundials.gradient_check import check_derivatives
 from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
+from amici.testing import skip_on_valgrind
 from conftest import MODEL_STEADYSTATE_SCALED_XML
+from numpy.testing import assert_allclose, assert_array_equal
+from requests import HTTPError
 
 
 def simple_sbml_model():
@@ -41,6 +70,22 @@ def simple_sbml_model():
     return document, model
 
 
+def test_event_trigger_to_root_function():
+    """Test that root functions for event triggers are generated correctly."""
+    from amici.importers.sbml import _parse_event_trigger as to_trig
+
+    a, b = sp.symbols("a b")
+
+    assert to_trig(None) == sp.Float(-1)
+    assert to_trig(sp.false) == sp.Float(-1)
+    assert to_trig(sp.true) == sp.Float(1)
+
+    assert to_trig(a > b) == a - b
+    assert to_trig(a >= b) == a - b
+    assert to_trig(a < b) == b - a
+    assert to_trig(a <= b) == b - a
+
+
 def test_sbml2amici_no_observables(tempdir):
     """Test model generation works for model without observables"""
     sbml_doc, sbml_model = simple_sbml_model()
@@ -49,13 +94,13 @@ def test_sbml2amici_no_observables(tempdir):
     sbml_importer.sbml2amici(
         model_name=model_name,
         output_dir=tempdir,
-        observables=None,
+        observation_model=None,
         compute_conservation_laws=False,
     )
 
     # Ensure import succeeds (no missing symbols)
     module_module = amici.import_model_module(model_name, tempdir)
-    assert hasattr(module_module, "getModel")
+    assert hasattr(module_module, "get_model")
 
 
 @skip_on_valgrind
@@ -69,10 +114,10 @@ def test_sbml2amici_nested_observables_fail(tempdir):
         sbml_importer.sbml2amici(
             model_name=model_name,
             output_dir=tempdir,
-            observables={
-                "outer": {"formula": "inner"},
-                "inner": {"formula": "S1"},
-            },
+            observation_model=[
+                MC("outer", formula="inner"),
+                MC("inner", formula="S1"),
+            ],
             compute_conservation_laws=False,
             generate_sensitivity_code=False,
             compile=False,
@@ -87,22 +132,20 @@ def test_nosensi(tempdir):
     sbml_importer.sbml2amici(
         model_name=model_name,
         output_dir=tempdir,
-        observables=None,
+        observation_model=None,
         compute_conservation_laws=False,
         generate_sensitivity_code=False,
+        verbose=True,
     )
 
     model_module = amici.import_model_module(
         module_name=model_name, module_path=tempdir
     )
 
-    model = model_module.getModel()
-    model.setTimepoints(np.linspace(0, 60, 61))
-    solver = model.getSolver()
-    solver.setSensitivityOrder(amici.SensitivityOrder.first)
-    solver.setSensitivityMethod(amici.SensitivityMethod.forward)
-    rdata = amici.runAmiciSimulation(model, solver)
-    assert rdata.status == amici.AMICI_ERROR
+    model = model_module.get_model()
+    model.set_timepoints(np.linspace(0, 60, 61))
+    rdata = model.simulate(sensi_order="first", sensi_method="forward")
+    assert rdata.status == AMICI_ERROR
 
 
 @pytest.fixture(scope="session")
@@ -125,14 +168,18 @@ def observable_dependent_error_model():
         sbml_importer.sbml2amici(
             model_name=model_name,
             output_dir=tmpdir,
-            observables={
-                "observable_s1": {"formula": "S1"},
-                "observable_s1_scaled": {"formula": "0.5 * S1"},
-            },
-            sigmas={
-                "observable_s1": "0.1 + relative_sigma * observable_s1",
-                "observable_s1_scaled": "0.02 * observable_s1_scaled",
-            },
+            observation_model=[
+                MC(
+                    "observable_s1",
+                    formula="S1",
+                    sigma="0.1 + relative_sigma * S1",
+                ),
+                MC(
+                    "observable_s1_scaled",
+                    formula="0.5 * S1",
+                    sigma="0.02 * observable_s1_scaled",
+                ),
+            ],
         )
         yield amici.import_model_module(
             module_name=model_name, module_path=tmpdir
@@ -145,12 +192,12 @@ def test_sbml2amici_observable_dependent_error(
 ):
     """Check gradients for model with observable-dependent error"""
     model_module = observable_dependent_error_model
-    model = model_module.getModel()
-    model.setTimepoints(np.linspace(0, 60, 61))
-    solver = model.getSolver()
+    model = model_module.get_model()
+    model.set_timepoints(np.linspace(0, 60, 61))
+    solver = model.create_solver()
 
     # generate artificial data
-    rdata = amici.runAmiciSimulation(model, solver)
+    rdata = run_simulation(model, solver)
     assert_allclose(
         rdata.sigmay[:, 0],
         0.1 + 0.05 * rdata.y[:, 0],
@@ -160,42 +207,279 @@ def test_sbml2amici_observable_dependent_error(
     assert_allclose(
         rdata.sigmay[:, 1], 0.02 * rdata.y[:, 1], rtol=1.0e-5, atol=1.0e-8
     )
-    edata = amici.ExpData(rdata, 1.0, 0.0)
-    edata.setObservedDataStdDev(np.nan)
+    edata = ExpData(rdata, 1.0, 0.0)
+    edata.set_noise_scales(np.nan)
 
     # check sensitivities
-    solver.setSensitivityOrder(amici.SensitivityOrder.first)
+    solver.set_sensitivity_order(SensitivityOrder.first)
     # FSA
-    solver.setSensitivityMethod(amici.SensitivityMethod.forward)
-    rdata = amici.runAmiciSimulation(model, solver, edata)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    rdata = run_simulation(model, solver, edata)
     assert np.any(rdata.ssigmay != 0.0)
-    check_derivatives(model, solver, edata)
+    check_derivatives(model, solver=solver, edata=edata)
     # ASA
-    solver.setSensitivityMethod(amici.SensitivityMethod.adjoint)
-    check_derivatives(model, solver, edata)
+    solver.set_sensitivity_method(SensitivityMethod.adjoint)
+    check_derivatives(model, solver=solver, edata=edata)
+
+
+@skip_on_valgrind
+def test_sigma_depending_on_assignment_rules(tempdir, monkeypatch):
+    """Check sigmas that depend on targets of assignment rules.
+
+    https://github.com/AMICI-dev/AMICI/issues/3384
+    """
+    ant_model = """
+    model test_sigma_depending_on_assignment_rules
+        compartment C = 1
+        species A in C = 1
+        species B in C = 0
+        k = 0.3; sd = 0.1; scale = 2
+        R1: A => B; k * A
+        readout := A
+        sd_rule := 2 * sd
+    end
+    """
+    model_name = "test_sigma_depending_on_assignment_rules"
+    observation_model = [
+        # state-dependent assignment rule
+        MC("obs_a", formula="readout", sigma="sd * readout"),
+        # state- and parameter-dependent assignment rules
+        MC(
+            "obs_a_scaled",
+            formula="scale * readout",
+            sigma="sd_rule * readout",
+        ),
+    ]
+
+    # With conservation laws, `A` is replaced by `tcl_A - B`, where `tcl_A`
+    #  is the conservation law total. Enable conservation laws for
+    #  non-constant species, so that this is independent of the environment.
+    monkeypatch.setenv("AMICI_EXPERIMENTAL_SBML_NONCONST_CLS", "1")
+    for compute_cls, unavailable in ((False, "A"), (True, "tcl_A")):
+        # a state-dependent sigma that cannot be expressed in terms of the
+        #  respective observable is rejected at import
+        sbml_importer = SbmlImporter(antimony2sbml(ant_model), from_file=False)
+        with pytest.raises(SBMLException) as excinfo:
+            sbml_importer.sbml2amici(
+                model_name=model_name,
+                output_dir=tempdir,
+                observation_model=[
+                    MC("obs_b", formula="B", sigma="sd * readout")
+                ],
+                compute_conservation_laws=compute_cls,
+                compile=False,
+            )
+        assert str(excinfo.value.__cause__).endswith(
+            f"the sigma of obs_b depends on {unavailable}."
+        )
+
+    # sigmas of observables of `A` can be expressed without `tcl_A`
+    sbml_importer = SbmlImporter(antimony2sbml(ant_model), from_file=False)
+    sbml_importer.sbml2amici(
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=observation_model,
+        compute_conservation_laws=True,
+        compile=False,
+    )
+
+    sbml_importer = SbmlImporter(antimony2sbml(ant_model), from_file=False)
+    sbml_importer.sbml2amici(
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=observation_model,
+        compute_conservation_laws=False,
+    )
+    model = amici.import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints(np.linspace(0, 10, 11))
+    solver = model.create_solver()
+    # the sigmas are small and proportional to the observables, which makes
+    #  the finite-difference check sensitive to integration errors
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-12)
+
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+    a = rdata.by_id("A")
+    assert_allclose(rdata.sigmay[:, 0], 0.1 * a, rtol=1e-10, atol=1e-14)
+    assert_allclose(rdata.sigmay[:, 1], 0.2 * a, rtol=1e-10, atol=1e-14)
+
+    # model sigmas are used, as no noise scales are set
+    edata = ExpData(model)
+    edata.set_measurements((1.1 * rdata.y).flatten())
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    for sensi_method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver.set_sensitivity_method(sensi_method)
+        check_derivatives(model, solver=solver, edata=edata)
+
+
+@skip_on_valgrind
+def test_root_depending_on_zero_assignment_rule(tempdir):
+    """Check roots that depend on an assignment rule with value zero."""
+    ant_model = """
+    model test_root_depending_on_zero_assignment_rule
+        c := 0
+        z = 0; z' = piecewise(1, c >= 0, 0)
+        v = 0; v' = 0
+        E: at (time >= 5) && (c >= 0), t0=false: v = 1
+    end
+    """
+    model_name = "test_root_depending_on_zero_assignment_rule"
+    antimony2amici(ant_model, model_name=model_name, output_dir=tempdir)
+    model = amici.import_model_module(model_name, tempdir).get_model()
+    assert model.get_expression_ids() == ("c",)
+    model.set_timepoints([0, 10])
+    rdata = run_simulation(model, model.create_solver())
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.by_id("z")[-1], 10, rtol=1e-6)
+    assert_array_equal(rdata.by_id("v"), [0, 1])
+
+
+@skip_on_valgrind
+def test_noise_formula_with_expression(tempdir):
+    """Test noise formulas that refer to model expressions, including
+    expressions that depend on the states, and event noise formulas.
+
+    https://github.com/AMICI-dev/AMICI/issues/3377
+    """
+    model_name = "test_noise_formula_with_expression"
+    antimony2amici(
+        """
+        k = 0.5; p = 3
+        x = 1
+        x' = -k * x
+        s := 0.1 * p
+        r := 2 * x
+        E1: at time > 1: x = x + 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[
+            MC("obs_x", formula="x", sigma="s"),
+            MC("obs_r", formula="r", sigma="p * r"),
+            MC("z1", formula="x", event_id="E1", sigma="2 * s"),
+        ],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_parameter_scale(ParameterScaling.none)
+    model.set_timepoints([0.5, 2])
+    assert model.get_free_parameter_ids() == ("k", "p")
+    edata = ExpData(model)
+    edata.set_measurements(np.ones(4))
+    mz = np.full(model.n_max_event() * model.nztrue, np.nan)
+    mz[0] = 1.0
+    edata.set_event_measurements(mz)
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    rdata = run_simulation(model, solver, edata)
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.sigmay[:, 0], 0.3)
+    assert_allclose(rdata.ssigmay[:, :, 0], [[0, 0.1], [0, 0.1]])
+    # sigma_r = p * r = p * obs_r
+    assert_allclose(rdata.sigmay[:, 1], 3 * rdata.y[:, 1])
+    assert np.all(np.abs(rdata.sy[:, 0, 1]) > 0.1)
+    assert_allclose(
+        rdata.ssigmay[:, :, 1],
+        3 * rdata.sy[:, :, 1] + np.column_stack([np.zeros(2), rdata.y[:, 1]]),
+    )
+    assert_allclose(rdata.sigmaz[0, 0], 0.6)
+
+
+def test_unsupported_sigmas_rejected(tempdir):
+    """Noise formulas that depend on quantities that are not available for
+    their evaluation are rejected at import.
+
+    https://github.com/AMICI-dev/AMICI/issues/3389
+    """
+
+    def assert_rejected(sbml_model, observation_model, expected):
+        sbml_importer = SbmlImporter(sbml_model, from_file=False)
+        with pytest.raises(SBMLException) as excinfo:
+            sbml_importer.sbml2amici(
+                model_name="test_unsupported_sigmas_rejected",
+                output_dir=tempdir,
+                observation_model=observation_model,
+                compile=False,
+            )
+        assert expected in str(excinfo.value.__cause__)
+
+    # piecewise functions
+    assert_rejected(
+        antimony2sbml("p = 3; x = 1; x' = -x; s := piecewise(1, time < 1, 2)"),
+        [MC("obs_x", formula="x", sigma="p * s")],
+        "the sigma of obs_x depends on Heaviside_",
+    )
+
+    # splines
+    sbml_doc = libsbml.SBMLReader().readSBMLFromString(
+        antimony2sbml("p = 3; x = 1; x' = -x; spl = 0")
+    )
+    sbml_model = sbml_doc.getModel()
+    splines.CubicHermiteSpline(
+        sbml_id="spl",
+        nodes=[0, 1, 2],
+        values_at_nodes=[sp.Symbol("p"), 4, 5],
+    ).add_to_sbml_model(sbml_model)
+    sbml_model.getElementBySId("spl").setConstant(False)
+    assert_rejected(
+        sbml_model,
+        [MC("obs_x", formula="x", sigma="spl")],
+        "the sigma of obs_x depends on spl_0.",
+    )
+
+    # event noise formulas that depend on the states or on the event
+    #  observable itself
+    ant_model_event = "p = 3; x = 1; x' = -x; E1: at time > 1: x = x + 1"
+    for sigma, expected in (
+        ("x * p", "the sigma of z1 depends on x."),
+        ("z1 * p", "the sigma of z1 depends on z1."),
+    ):
+        assert_rejected(
+            antimony2sbml(ant_model_event),
+            [
+                MC("obs_x", formula="x"),
+                MC("z1", formula="x", event_id="E1", sigma=sigma),
+            ],
+            expected,
+        )
 
 
 @skip_on_valgrind
 def test_logging_works(observable_dependent_error_model, caplog):
     """Check that warnings are forwarded to Python logging"""
     model_module = observable_dependent_error_model
-    model = model_module.getModel()
-    model.setTimepoints(np.linspace(0, 60, 61))
-    solver = model.getSolver()
+    model = model_module.get_model()
+    model.set_timepoints(np.linspace(0, 60, 61))
+    solver = model.create_solver()
 
     # this will prematurely stop the simulation
-    solver.setMaxSteps(1)
+    solver.set_max_steps(1)
 
-    rdata = amici.runAmiciSimulation(model, solver)
-    assert rdata.status != amici.AMICI_SUCCESS
+    rdata = run_simulation(model, solver)
+    assert rdata.status != AMICI_SUCCESS
+    # this is a DEBUG level message and should be there by default
     assert "mxstep steps taken" in caplog.text
+
+    caplog.clear()
+
+    # ensure that we can control amici.sim.sundials._swig_wrappers logging
+    #  via the public amici.sim.sundials logger
+    logger = logging.getLogger("amici.sim.sundials")
+    old_lvl = logger.level
+    try:
+        logger.setLevel(logging.WARNING)
+        rdata = run_simulation(model, solver)
+        assert rdata.status != AMICI_SUCCESS
+        assert "mxstep steps taken" not in caplog.text
+    finally:
+        logger.setLevel(old_lvl)
 
 
 @skip_on_valgrind
 def test_model_module_is_set(observable_dependent_error_model):
     model_module = observable_dependent_error_model
-    assert model_module.getModel().module is model_module
-    assert isinstance(model_module.getModel().module, amici.ModelModule)
+    assert model_module.get_model().module is model_module
+    assert isinstance(model_module.get_model().module, ModelModule)
 
 
 @pytest.fixture(scope="session")
@@ -203,22 +487,25 @@ def model_steadystate_module():
     sbml_file = MODEL_STEADYSTATE_SCALED_XML
     sbml_importer = amici.SbmlImporter(sbml_file)
 
-    observables = amici.assignmentRules2observables(
-        sbml_importer.sbml,
-        filter_function=lambda variable: variable.getId().startswith(
-            "observable_"
-        )
-        and not variable.getId().endswith("_sigma"),
+    observables = amici.assignment_rules_to_observables(
+        sbml_importer.sbml_model,
+        filter_function=lambda variable: (
+            variable.getId().startswith("observable_")
+            and not variable.getId().endswith("_sigma")
+        ),
+        as_dict=True,
     )
+    observables[
+        "observable_x1withsigma"
+    ].sigma = "observable_x1withsigma_sigma"
 
     module_name = "test_model_steadystate_scaled"
     with TemporaryDirectory(prefix=module_name) as outdir:
         sbml_importer.sbml2amici(
             model_name=module_name,
             output_dir=outdir,
-            observables=observables,
-            constant_parameters=["k0"],
-            sigmas={"observable_x1withsigma": "observable_x1withsigma_sigma"},
+            fixed_parameters=["k0"],
+            observation_model=list(observables.values()),
         )
 
         yield amici.import_model_module(
@@ -228,27 +515,129 @@ def model_steadystate_module():
 
 def test_presimulation(sbml_example_presimulation_module):
     """Test 'presimulation' test model"""
-    model = sbml_example_presimulation_module.getModel()
-    solver = model.getSolver()
-    model.setTimepoints(np.linspace(0, 60, 61))
-    model.setSteadyStateSensitivityMode(
-        amici.SteadyStateSensitivityMode.integrationOnly
+    model = sbml_example_presimulation_module.get_model()
+    solver = model.create_solver()
+    model.set_timepoints(np.linspace(0, 60, 61))
+    model.set_steady_state_sensitivity_mode(
+        SteadyStateSensitivityMode.integrationOnly
     )
-    solver.setSensitivityOrder(amici.SensitivityOrder.first)
-    model.setReinitializeFixedParameterInitialStates(True)
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    model.set_reinitialize_fixed_parameter_initial_states(True)
 
-    rdata = amici.runAmiciSimulation(model, solver)
-    edata = amici.ExpData(rdata, 0.1, 0.0)
-    edata.fixedParameters = [10, 2]
-    edata.fixedParametersPresimulation = [10, 2]
-    edata.fixedParametersPreequilibration = [3, 0]
-    assert isinstance(
-        amici.runAmiciSimulation(model, solver, edata), amici.ReturnDataView
+    rdata = run_simulation(model, solver)
+    edata = ExpData(rdata, 0.1, 0.0)
+    edata.fixed_parameters = [10, 2]
+    edata.fixed_parameters_presimulation = [10, 2]
+    edata.fixed_parameters_pre_equilibration = [3, 0]
+    assert isinstance(run_simulation(model, solver, edata), ReturnDataView)
+
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-12)
+    check_derivatives(model, solver=solver, edata=edata, epsilon=1e-4)
+
+
+@skip_on_valgrind
+def test_num_state_reinits(tempdir):
+    """Regression test for gh-3277.
+
+    A solver state whose initial value depends on a fixed parameter, and
+    which is not eliminated via a conservation law, must be counted by
+    ``Model.nx_reinit()``.
+    """
+    from amici.importers.antimony import antimony2amici
+
+    ant_model = """
+    model test_num_state_reinits
+        species A
+        A = k_init
+        A -> ; k1 * A
+        k_init = 1
+        k1 = 0.1
+    end
+    """
+    model = antimony2amici(
+        ant_model,
+        model_name="test_num_state_reinits",
+        output_dir=tempdir,
+        fixed_parameters=["k_init"],
+        observation_model=[MC("obs_A", formula="A")],
     )
+    assert model.nx_reinit() == 1
 
-    solver.setRelativeTolerance(1e-12)
-    solver.setAbsoluteTolerance(1e-12)
-    check_derivatives(model, solver, edata, epsilon=1e-4)
+    model.set_timepoints(np.linspace(0, 2, 3))
+
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.adjoint)
+    solver.set_sensitivity_method_pre_equilibration(SensitivityMethod.adjoint)
+
+    edata = ExpData(run_simulation(model, solver), 0.1, 0.0)
+    edata.fixed_parameters = [1.0]
+    edata.fixed_parameters_pre_equilibration = [2.0]
+    edata.reinitialize_fixed_parameter_initial_states = True
+
+    rdata = run_simulation(model, solver, edata)
+    assert rdata.status == AMICI_SUCCESS
+
+    # without reinitialization, adjoint preequilibration is supported
+    edata.reinitialize_fixed_parameter_initial_states = False
+    rdata = run_simulation(model, solver, edata)
+    assert rdata.status == AMICI_SUCCESS
+
+
+@skip_on_valgrind
+def test_num_state_reinits_conservation_law(tempdir, monkeypatch):
+    """A reinitialized state that was eliminated via a conservation law
+    involving other states is counted by ``Model.nx_reinit()``, since the
+    conserved total then depends on the remaining states."""
+    from amici.importers.antimony import antimony2amici
+
+    monkeypatch.setenv("AMICI_EXPERIMENTAL_SBML_NONCONST_CLS", "1")
+
+    # E + C is conserved; E is eliminated and reinitialized from init_E
+    ant_model = """
+    model test_num_state_reinits_conservation_law
+        species S = 0, E, C = 0, P = 0
+        E = init_E
+        -> S; ks
+        S + E -> C; k1 * S * E
+        C -> E + P; k2 * C
+        P -> ; k3 * P
+        init_E = 3
+        ks = 1; k1 = 1; k2 = 1; k3 = 1
+    end
+    """
+    model = antimony2amici(
+        ant_model,
+        model_name="test_num_state_reinits_conservation_law",
+        output_dir=tempdir,
+        fixed_parameters=["init_E"],
+        observation_model=[MC("obs_P", formula="P")],
+    )
+    assert model.ncl() == 1
+    assert "E" not in model.get_state_ids_solver()
+    assert model.nx_reinit() == 1
+
+    model.set_timepoints(np.linspace(0, 2, 3))
+
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.adjoint)
+    solver.set_sensitivity_method_pre_equilibration(SensitivityMethod.adjoint)
+
+    edata = ExpData(run_simulation(model, solver), 0.1, 0.0)
+    edata.fixed_parameters = [1.0]
+    edata.fixed_parameters_pre_equilibration = [3.0]
+    edata.reinitialize_fixed_parameter_initial_states = True
+
+    rdata = run_simulation(model, solver, edata)
+    assert rdata.status != AMICI_SUCCESS
+    assert any("conservation law" in msg.message for msg in rdata.messages)
+
+    # forward preequilibration with reinitialization is supported
+    solver.set_sensitivity_method_pre_equilibration(SensitivityMethod.forward)
+    rdata = run_simulation(model, solver, edata)
+    assert rdata.status == AMICI_SUCCESS
 
 
 @pytest.mark.filterwarnings(
@@ -257,7 +646,7 @@ def test_presimulation(sbml_example_presimulation_module):
 def test_presimulation_events(tempdir):
     """Test that events are handled during presimulation."""
 
-    from amici.antimony_import import antimony2amici
+    from amici.importers.antimony import antimony2amici
 
     model_name = "test_presim_events"
     antimony2amici(
@@ -276,7 +665,7 @@ def test_presimulation_events(tempdir):
     at time >= -one and presim_indicator == 1: presim_target_1 = presim_target_1 + one
     at time >= one and presim_indicator == 0: mainsim_target = mainsim_target + 1
     """,
-        constant_parameters=["presim_indicator"],
+        fixed_parameters=["presim_indicator"],
         model_name=model_name,
         output_dir=tempdir,
     )
@@ -284,39 +673,39 @@ def test_presimulation_events(tempdir):
     model_module = import_model_module(model_name, tempdir)
 
     model = model_module.get_model()
-    model.setTimepoints([0, 1, 2])
-    edata = amici.ExpData(model)
+    model.set_timepoints([0, 1, 2])
+    edata = ExpData(model)
     edata.t_presim = 2
-    edata.fixedParametersPresimulation = [1]
-    edata.fixedParameters = [0]
-    solver = model.getSolver()
+    edata.fixed_parameters_presimulation = [1]
+    edata.fixed_parameters = [0]
+    solver = model.create_solver()
 
     # generate artificial data
-    rdata = amici.runAmiciSimulation(model, solver, edata)
-    edata_tmp = amici.ExpData(rdata, 1, 0)
-    edata.setTimepoints(np.array(edata_tmp.getTimepoints()) + 0.1)
-    edata.setObservedData(edata_tmp.getObservedData())
-    edata.setObservedDataStdDev(edata_tmp.getObservedDataStdDev())
+    rdata = run_simulation(model, solver, edata)
+    edata_tmp = ExpData(rdata, 1, 0)
+    edata.set_timepoints(np.array(edata_tmp.get_timepoints()) + 0.1)
+    edata.set_measurements(edata_tmp.get_measurements())
+    edata.set_noise_scales(edata_tmp.get_noise_scales())
 
     # sensitivities w.r.t. t_initial_presim (trigger time of an initial event)
     #  are not supported
     edata.plist = [
         ip
-        for ip, p in enumerate(model.getParameterIds())
+        for ip, p in enumerate(model.get_free_parameter_ids())
         if p != "t_initial_presim"
     ]
-    solver.setSensitivityOrder(amici.SensitivityOrder.first)
+    solver.set_sensitivity_order(SensitivityOrder.first)
 
     for sensi_method in (
-        amici.SensitivityMethod.forward,
+        SensitivityMethod.forward,
         # FIXME: test with adjoints. currently there is some CVodeF issue
         #  that fails forward simulation with adjoint sensitivities
-        # amici.SensitivityMethod.adjoint,
+        # SensitivityMethod.adjoint,
     ):
-        solver.setSensitivityMethod(sensi_method)
-        rdata = amici.runAmiciSimulation(model, solver, edata)
+        solver.set_sensitivity_method(sensi_method)
+        rdata = run_simulation(model, solver, edata)
 
-        assert rdata.status == amici.AMICI_SUCCESS
+        assert rdata.status == AMICI_SUCCESS
         assert_allclose(
             rdata.by_id("some_time"), np.array([0, 1, 2]) + 0.1, atol=1e-14
         )
@@ -332,7 +721,7 @@ def test_presimulation_events(tempdir):
 
         check_derivatives(
             model,
-            solver,
+            solver=solver,
             edata=edata,
             atol=1e-6,
             rtol=1e-6,
@@ -347,10 +736,10 @@ def test_presimulation_events_and_sensitivities(tempdir):
     """Test that presimulation with adjoint sensitivities works
     and test that events are handled during presimulation."""
 
-    from amici.antimony_import import antimony2amici
+    from amici.importers.antimony import antimony2amici
 
     model_name = "test_presim_events2"
-    antimony2amici(
+    model = antimony2amici(
         """
     some_time = time
     some_time' = 1
@@ -358,62 +747,45 @@ def test_presimulation_events_and_sensitivities(tempdir):
 
     k_pre = 3
     k_main = 2
-    xx = 0
-    xx' = piecewise(k_pre, time < 0, k_main)
+    x = 0
+    x' = piecewise(k_pre, time < 0, k_main)
 
-    # this will trigger twice, once in presimulation
-    # and once in the main simulation
-    at time >= -1 , t0=false: some_time = some_time + bolus
+    at time < -1 , t0=false: some_time = some_time + bolus
     """,
         model_name=model_name,
         output_dir=tempdir,
     )
 
-    model_module = import_model_module(model_name, tempdir)
-
-    model = model_module.get_model()
-    model.setTimepoints([0, 1, 2])
-    edata = amici.ExpData(model)
+    model.set_timepoints([0, 1, 2])
+    edata = ExpData(model)
     edata.t_presim = 2
-    solver = model.getSolver()
+    solver = model.create_solver()
 
     # generate artificial data
-    rdata = amici.runAmiciSimulation(model, solver, edata)
-    edata_tmp = amici.ExpData(rdata, 1, 0)
-    edata.setTimepoints(np.array(edata_tmp.getTimepoints()) + 0.1)
-    edata.setObservedData(edata_tmp.getObservedData())
-    edata.setObservedDataStdDev(edata_tmp.getObservedDataStdDev())
+    rdata = run_simulation(model, solver, edata)
+    edata_tmp = ExpData(rdata, 1, 0)
+    edata.set_timepoints(np.array(edata_tmp.get_timepoints()) + 0.1)
+    edata.set_measurements(edata_tmp.get_measurements())
+    edata.set_noise_scales(edata_tmp.get_noise_scales())
 
-    solver.setSensitivityOrder(amici.SensitivityOrder.first)
+    solver.set_sensitivity_order(SensitivityOrder.first)
 
     for sensi_method in (
-        amici.SensitivityMethod.forward,
-        amici.SensitivityMethod.adjoint,
+        SensitivityMethod.forward,
+        SensitivityMethod.adjoint,
     ):
-        solver.setSensitivityMethod(sensi_method)
-        rdata = amici.runAmiciSimulation(model, solver, edata)
+        solver.set_sensitivity_method(sensi_method)
+        rdata = run_simulation(model, solver, edata)
 
-        assert rdata.status == amici.AMICI_SUCCESS
+        assert rdata.status == AMICI_SUCCESS
         assert_allclose(
-            rdata.by_id("some_time"), np.array([0, 1, 2]) + 2.1, atol=1e-14
+            rdata.by_id("some_time"), np.array([0, 1, 2]) + 1.1, atol=1e-14
         )
 
-        if sensi_method == amici.SensitivityMethod.forward:
-            model.requireSensitivitiesForAllParameters()
-        else:
-            # FIXME ASA with events:
-            #   https://github.com/AMICI-dev/AMICI/pull/1539
-            model.setParameterList(
-                [
-                    i
-                    for i, p in enumerate(model.getParameterIds())
-                    if p != "bolus"
-                ]
-            )
-
+        model.require_sensitivities_for_all_parameters()
         check_derivatives(
             model,
-            solver,
+            solver=solver,
             edata=edata,
             atol=1e-6,
             rtol=1e-6,
@@ -422,79 +794,27 @@ def test_presimulation_events_and_sensitivities(tempdir):
 
 
 def test_steadystate_simulation(model_steadystate_module):
-    model = model_steadystate_module.getModel()
-    model.setTimepoints(np.linspace(0, 60, 60))
-    solver = model.getSolver()
-    solver.setSensitivityOrder(amici.SensitivityOrder.first)
-    rdata = amici.runAmiciSimulation(model, solver)
-    edata = [amici.ExpData(rdata, 1, 0)]
+    model = model_steadystate_module.get_model()
+    model.set_timepoints(np.linspace(0, 60, 60))
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    rdata = run_simulation(model, solver)
+    edata = [ExpData(rdata, 1, 0)]
     edata[0].id = "some condition ID"
-    rdata = amici.runAmiciSimulations(model, solver, edata)
+    rdata = run_simulations(model, solver, edata)
 
-    assert rdata[0].status == amici.AMICI_SUCCESS
+    assert rdata[0].status == AMICI_SUCCESS
     assert rdata[0].id == edata[0].id
 
-    # check roundtripping of DataFrame conversion
-    df_edata = amici.getDataObservablesAsDataFrame(model, edata)
-    edata_reconstructed = amici.getEdataFromDataFrame(model, df_edata)
-
-    assert_allclose(
-        amici.ExpDataView(edata[0])["observedData"],
-        amici.ExpDataView(edata_reconstructed[0])["observedData"],
-        rtol=1.0e-5,
-        atol=1.0e-8,
-    )
-
-    assert_allclose(
-        amici.ExpDataView(edata[0])["observedDataStdDev"],
-        amici.ExpDataView(edata_reconstructed[0])["observedDataStdDev"],
-        rtol=1.0e-5,
-        atol=1.0e-8,
-    )
-
-    if len(edata[0].fixedParameters):
-        assert list(edata[0].fixedParameters) == list(
-            edata_reconstructed[0].fixedParameters
-        )
-
-    else:
-        assert list(model.getFixedParameters()) == list(
-            edata_reconstructed[0].fixedParameters
-        )
-
-    assert list(edata[0].fixedParametersPreequilibration) == list(
-        edata_reconstructed[0].fixedParametersPreequilibration
-    )
-
-    df_state = amici.getSimulationStatesAsDataFrame(model, edata, rdata)
-    assert_allclose(
-        rdata[0]["x"],
-        df_state[list(model.getStateIds())].values,
-        rtol=1.0e-5,
-        atol=1.0e-8,
-    )
-
-    df_obs = amici.getSimulationObservablesAsDataFrame(model, edata, rdata)
-    assert_allclose(
-        rdata[0]["y"],
-        df_obs[list(model.getObservableIds())].values,
-        rtol=1.0e-5,
-        atol=1.0e-8,
-    )
-    amici.getResidualsAsDataFrame(model, edata, rdata)
-
-    df_expr = amici.pandas.get_expressions_as_dataframe(model, edata, rdata)
-    assert_allclose(
-        rdata[0]["w"],
-        df_expr[list(model.getExpressionIds())].values,
-        rtol=1.0e-5,
-        atol=1.0e-8,
-    )
-
-    solver.setRelativeTolerance(1e-12)
-    solver.setAbsoluteTolerance(1e-12)
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-12)
     check_derivatives(
-        model, solver, edata[0], atol=1e-3, rtol=1e-3, epsilon=1e-4
+        model,
+        solver=solver,
+        edata=edata[0],
+        atol=1e-3,
+        rtol=1e-3,
+        epsilon=1e-4,
     )
 
     # Run some additional tests which need a working Model,
@@ -503,22 +823,22 @@ def test_steadystate_simulation(model_steadystate_module):
 
 
 def test_solver_reuse(model_steadystate_module):
-    model = model_steadystate_module.getModel()
-    model.setTimepoints(np.linspace(0, 60, 60))
-    solver = model.getSolver()
-    solver.setSensitivityOrder(amici.SensitivityOrder.first)
-    rdata = amici.runAmiciSimulation(model, solver)
-    edata = amici.ExpData(rdata, 1, 0)
+    model = model_steadystate_module.get_model()
+    model.set_timepoints(np.linspace(0, 60, 60))
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    rdata = run_simulation(model, solver)
+    edata = ExpData(rdata, 1, 0)
 
     for sensi_method in (
-        amici.SensitivityMethod.forward,
-        amici.SensitivityMethod.adjoint,
+        SensitivityMethod.forward,
+        SensitivityMethod.adjoint,
     ):
-        solver.setSensitivityMethod(sensi_method)
-        rdata1 = amici.runAmiciSimulation(model, solver, edata)
-        rdata2 = amici.runAmiciSimulation(model, solver, edata)
+        solver.set_sensitivity_method(sensi_method)
+        rdata1 = run_simulation(model, solver, edata)
+        rdata2 = run_simulation(model, solver, edata)
 
-        assert rdata1.status == amici.AMICI_SUCCESS
+        assert rdata1.status == AMICI_SUCCESS
 
         for attr in rdata1:
             if "time" in attr or attr == "messages":
@@ -526,10 +846,7 @@ def test_solver_reuse(model_steadystate_module):
 
             val1 = getattr(rdata1, attr)
             val2 = getattr(rdata2, attr)
-            msg = (
-                f"Values for {attr} do not match for sensitivity "
-                f"method {sensi_method}"
-            )
+            msg = f"Values for {attr} do not match for sensitivity method {sensi_method}"
             if isinstance(val1, np.ndarray):
                 assert_array_equal(val1, val2, err_msg=msg)
             elif isinstance(val1, Number) and np.isnan(val1):
@@ -545,36 +862,29 @@ def model_test_likelihoods(tempdir):
     sbml_file = MODEL_STEADYSTATE_SCALED_XML
     sbml_importer = amici.SbmlImporter(sbml_file)
 
-    # define observables
-    observables = {
-        "o1": {"formula": "x1"},
-        "o2": {"formula": "10^x1"},
-        "o3": {"formula": "10^x1"},
-        "o4": {"formula": "x1"},
-        "o5": {"formula": "10^x1"},
-        "o6": {"formula": "10^x1"},
-        "o7": {"formula": "x1"},
-    }
-
-    # define different noise models
-    noise_distributions = {
-        "o1": "normal",
-        "o2": "log-normal",
-        "o3": "log10-normal",
-        "o4": "laplace",
-        "o5": "log-laplace",
-        "o6": "log10-laplace",
-        "o7": lambda str_symbol: f"Abs({str_symbol} - m{str_symbol}) "
-        f"/ sigma{str_symbol}",
-    }
+    # define observation model
+    observation_model = [
+        MC("o1", formula="x1", noise_distribution="normal"),
+        MC("o2", formula="10^x1", noise_distribution="log-normal"),
+        MC("o3", formula="10^x1", noise_distribution="log10-normal"),
+        MC("o4", formula="x1", noise_distribution="laplace"),
+        MC("o5", formula="10^x1", noise_distribution="log-laplace"),
+        MC("o6", formula="10^x1", noise_distribution="log10-laplace"),
+        MC(
+            "o7",
+            formula="x1",
+            noise_distribution=lambda str_symbol: (
+                f"Abs({str_symbol} - m{str_symbol}) / sigma{str_symbol}"
+            ),
+        ),
+    ]
 
     module_name = "model_test_likelihoods"
     sbml_importer.sbml2amici(
         model_name=module_name,
         output_dir=tempdir,
-        observables=observables,
-        constant_parameters=["k0"],
-        noise_distributions=noise_distributions,
+        fixed_parameters=["k0"],
+        observation_model=observation_model,
     )
 
     yield amici.import_model_module(
@@ -585,61 +895,42 @@ def model_test_likelihoods(tempdir):
 @skip_on_valgrind
 def test_likelihoods(model_test_likelihoods):
     """Test the custom noise distributions used to define cost functions."""
-    model = model_test_likelihoods.getModel()
-    model.setTimepoints(np.linspace(0, 60, 60))
-    solver = model.getSolver()
-    solver.setSensitivityOrder(amici.SensitivityOrder.first)
+    model = model_test_likelihoods.get_model()
+    model.set_timepoints(np.linspace(0, 60, 60))
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
 
     # run model once to create an edata
 
-    rdata = amici.runAmiciSimulation(model, solver)
+    rdata = model.simulate(solver=solver)
     sigmas = rdata["y"].max(axis=0) * 0.05
-    edata = amici.ExpData(rdata, sigmas, [])
+    edata = ExpData(rdata, sigmas, [], 1)
     # just make all observables positive since some are logarithmic
-    while min(edata.getObservedData()) < 0:
-        edata = amici.ExpData(rdata, sigmas, [])
+    while min(edata.get_measurements()) < 0:
+        edata = ExpData(rdata, sigmas, [], 1)
 
     # and now run for real and also compute likelihood values
-    rdata = amici.runAmiciSimulations(model, solver, [edata])[0]
+    rdata = model.simulate(solver=solver, edata=[edata])[0]
 
     # check if the values make overall sense
     assert np.isfinite(rdata["llh"])
     assert np.all(np.isfinite(rdata["sllh"]))
     assert np.any(rdata["sllh"])
 
-    rdata_df = amici.getSimulationObservablesAsDataFrame(
-        model, edata, rdata, by_id=True
-    )
-    edata_df = amici.getDataObservablesAsDataFrame(model, edata, by_id=True)
-
-    # check correct likelihood value
-    llh_exp = -sum(
-        [
-            normal_nllh(edata_df["o1"], rdata_df["o1"], sigmas[0]),
-            log_normal_nllh(edata_df["o2"], rdata_df["o2"], sigmas[1]),
-            log10_normal_nllh(edata_df["o3"], rdata_df["o3"], sigmas[2]),
-            laplace_nllh(edata_df["o4"], rdata_df["o4"], sigmas[3]),
-            log_laplace_nllh(edata_df["o5"], rdata_df["o5"], sigmas[4]),
-            log10_laplace_nllh(edata_df["o6"], rdata_df["o6"], sigmas[5]),
-            custom_nllh(edata_df["o7"], rdata_df["o7"], sigmas[6]),
-        ]
-    )
-    assert np.isclose(rdata["llh"], llh_exp)
-
     # check gradient
     for sensi_method in [
-        amici.SensitivityMethod.forward,
-        amici.SensitivityMethod.adjoint,
+        SensitivityMethod.forward,
+        SensitivityMethod.adjoint,
     ]:
-        solver = model.getSolver()
-        solver.setSensitivityMethod(sensi_method)
-        solver.setSensitivityOrder(amici.SensitivityOrder.first)
-        solver.setRelativeTolerance(1e-12)
-        solver.setAbsoluteTolerance(1e-12)
+        solver = model.create_solver()
+        solver.set_sensitivity_method(sensi_method)
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_relative_tolerance(1e-12)
+        solver.set_absolute_tolerance(1e-12)
         check_derivatives(
             model,
-            solver,
-            edata,
+            solver=solver,
+            edata=edata,
             atol=1e-2,
             rtol=1e-2,
             epsilon=1e-5,
@@ -653,21 +944,16 @@ def test_likelihoods_error():
     sbml_file = MODEL_STEADYSTATE_SCALED_XML
     sbml_importer = amici.SbmlImporter(sbml_file)
 
-    # define observables
-    observables = {"o1": {"formula": "x1"}}
-
-    # define different noise models
-    noise_distributions = {"o1": "nörmal"}
-
     module_name = "test_likelihoods_error"
     outdir = "test_likelihoods_error"
     with pytest.raises(ValueError):
         sbml_importer.sbml2amici(
             model_name=module_name,
             output_dir=outdir,
-            observables=observables,
-            constant_parameters=["k0"],
-            noise_distributions=noise_distributions,
+            fixed_parameters=["k0"],
+            observation_model=[
+                MC("o1", formula="x1", noise_distribution="nörmal")
+            ],
         )
 
 
@@ -677,12 +963,12 @@ def test_units(model_units_module):
     """
     Test whether SBML import works for models using sbml:units annotations.
     """
-    model = model_units_module.getModel()
-    model.setTimepoints(np.linspace(0, 1, 101))
-    solver = model.getSolver()
+    model = model_units_module.get_model()
+    model.set_timepoints(np.linspace(0, 1, 101))
+    solver = model.create_solver()
 
-    rdata = amici.runAmiciSimulation(model, solver)
-    assert rdata["status"] == amici.AMICI_SUCCESS
+    rdata = run_simulation(model, solver)
+    assert rdata["status"] == AMICI_SUCCESS
 
 
 @skip_on_valgrind
@@ -691,16 +977,31 @@ def test_units(model_units_module):
 )
 def test_sympy_exp_monkeypatch(tempdir):
     """
-    This model contains a removeable discontinuity at t=0 that requires
+    This model contains a removable discontinuity at t=0 that requires
     monkeypatching sympy.Pow._eval_derivative in order to be able to compute
     non-nan sensitivities
     """
     import pooch
 
-    model_file = pooch.retrieve(
-        url="https://www.ebi.ac.uk/biomodels/model/download/BIOMD0000000529.2?filename=BIOMD0000000529_url.xml",
-        known_hash="md5:c6e0b298397485b93d7acfab80b21fd4",
-    )
+    downloader = pooch.HTTPDownloader(headers={"User-Agent": "Mozilla/5.0"})
+
+    try:
+        model_file = pooch.retrieve(
+            url="https://www.biomodels.org/model/download/BIOMD0000000529.2?filename=BIOMD0000000529_url.xml",
+            known_hash="md5:c6e0b298397485b93d7acfab80b21fd4",
+            downloader=downloader,
+        )
+    except HTTPError as e:
+        # When running on GHA, we might be subject to some rate limiting
+        #  or similar. In that case, skip instead of failing.
+        if (
+            "GITHUB_ACTIONS" in os.environ
+            and e.response is not None
+            and e.response.status_code in {403, 429, 503}
+        ):
+            pytest.skip(f"BioModels temporarily unavailable/rate-limited: {e}")
+        raise
+
     importer = amici.SbmlImporter(model_file)
     module_name = "BIOMD0000000529"
 
@@ -709,30 +1010,30 @@ def test_sympy_exp_monkeypatch(tempdir):
         module_name=module_name, module_path=tempdir
     )
 
-    model = model_module.getModel()
-    model.setTimepoints(np.linspace(0, 8, 250))
-    model.requireSensitivitiesForAllParameters()
-    model.setAlwaysCheckFinite(True)
-    model.setParameterScale(
-        amici.parameterScalingFromIntVector(
+    model = model_module.get_model()
+    model.set_timepoints(np.linspace(0, 8, 250))
+    model.require_sensitivities_for_all_parameters()
+    model.set_always_check_finite(True)
+    model.set_parameter_scale(
+        parameter_scaling_from_int_vector(
             [
-                amici.ParameterScaling.none
+                ParameterScaling.none
                 if re.match(r"n[0-9]+$", par_id)
-                else amici.ParameterScaling.log10
-                for par_id in model.getParameterIds()
+                else ParameterScaling.log10
+                for par_id in model.get_free_parameter_ids()
             ]
         )
     )
 
-    solver = model.getSolver()
-    solver.setSensitivityMethod(amici.SensitivityMethod.forward)
-    solver.setSensitivityOrder(amici.SensitivityOrder.first)
+    solver = model.create_solver()
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    solver.set_sensitivity_order(SensitivityOrder.first)
 
-    rdata = amici.runAmiciSimulation(model, solver)
+    rdata = run_simulation(model, solver)
 
     # print sensitivity-related results
-    assert rdata["status"] == amici.AMICI_SUCCESS
-    check_derivatives(model, solver, None, atol=1e-2, rtol=1e-2, epsilon=1e-3)
+    assert rdata.status == AMICI_SUCCESS
+    check_derivatives(model, solver=solver, atol=1e-2, rtol=1e-2, epsilon=1e-3)
 
 
 def normal_nllh(m, y, sigma):
@@ -780,27 +1081,27 @@ def custom_nllh(m, y, sigma):
 
 def _test_set_parameters_by_dict(model_module):
     """Test setting parameter via id/name => value dicts"""
-    model = model_module.getModel()
-    old_parameter_values = model.getParameters()
-    parameter_ids = model.getParameterIds()
-    change_par_id = parameter_ids[-1]
+    model = model_module.get_model()
+    old_parameter_values = model.get_free_parameters()
+    free_parameter_ids = model.get_free_parameter_ids()
+    change_par_id = free_parameter_ids[-1]
     new_par_val = 0.1234
-    old_par_val = model.getParameterById(change_par_id)
+    old_par_val = model.get_free_parameter_by_id(change_par_id)
 
-    assert model.getParameterById(change_par_id) != new_par_val
-    model.setParameterById({change_par_id: new_par_val})
-    assert model.getParameterById(change_par_id) == new_par_val
+    assert model.get_free_parameter_by_id(change_par_id) != new_par_val
+    model.set_free_parameter_by_id({change_par_id: new_par_val})
+    assert model.get_free_parameter_by_id(change_par_id) == new_par_val
     # reset and check we are back to original
-    model.setParameterById(change_par_id, old_par_val)
-    assert model.getParameters() == old_parameter_values
+    model.set_free_parameter_by_id(change_par_id, old_par_val)
+    assert model.get_free_parameters() == old_parameter_values
 
     # Same for by-name
-    parameter_names = model.getParameterNames()
+    parameter_names = model.get_free_parameter_names()
     change_par_name = parameter_names[-1]
-    model.setParameterByName({change_par_name: new_par_val})
-    assert model.getParameterByName(change_par_name) == new_par_val
-    model.setParameterByName(change_par_name, old_par_val)
-    assert model.getParameters() == old_parameter_values
+    model.set_free_parameter_by_name({change_par_name: new_par_val})
+    assert model.get_free_parameter_by_name(change_par_name) == new_par_val
+    model.set_free_parameter_by_name(change_par_name, old_par_val)
+    assert model.get_free_parameters() == old_parameter_values
 
 
 @skip_on_valgrind
@@ -819,7 +1120,7 @@ def test_code_gen_uses_cse(extract_cse, tempdir):
             output_dir=tempdir,
         )
         xdot = Path(tempdir, "xdot.cpp").read_text()
-        assert ("__amici_cse_0 = " in xdot) == extract_cse
+        assert ("amici_cse_0_ = " in xdot) == extract_cse
     finally:
         os.environ = old_environ
 
@@ -837,7 +1138,7 @@ def test_code_gen_uses_lhs_symbol_ids(tempdir):
         output_dir=tempdir,
     )
     dwdx = Path(tempdir, "dwdx.cpp").read_text()
-    assert "dobservable_x1_dx1 = " in dwdx
+    assert "dobservable_x1_dx1_ = " in dwdx
 
 
 @skip_on_valgrind
@@ -851,14 +1152,14 @@ def test_hardcode_parameters():
     assert sbml_model.getParameter("p1").getValue() != 0
 
     ode_model = sbml_importer._build_ode_model()
-    assert str(ode_model.parameters()) == "[p1]"
+    assert str(ode_model.free_parameters()) == "[p1]"
     assert ode_model.differential_states()[0].get_dt().name == "p1"
 
     ode_model = sbml_importer._build_ode_model(
-        constant_parameters=[],
+        fixed_parameters=[],
         hardcode_symbols=["p1"],
     )
-    assert str(ode_model.parameters()) == "[]"
+    assert str(ode_model.free_parameters()) == "[]"
     assert (
         ode_model.differential_states()[0].get_dt()
         == sbml_model.getParameter("p1").getValue()
@@ -867,15 +1168,14 @@ def test_hardcode_parameters():
     with pytest.raises(ValueError):
         sbml_importer._build_ode_model(
             # mutually exclusive
-            constant_parameters=["p1"],
+            fixed_parameters=["p1"],
             hardcode_symbols=["p1"],
         )
 
 
 def test_constraints(tempdir):
     """Test non-negativity constraint handling."""
-    from amici.antimony_import import antimony2amici
-    from amici import Constraint
+    from amici.importers.antimony import antimony2amici
 
     ant_model = """
     model test_non_negative_species
@@ -896,27 +1196,27 @@ def test_constraints(tempdir):
     model_module = amici.import_model_module(
         module_name=module_name, module_path=tempdir
     )
-    amici_model = model_module.getModel()
-    amici_model.setTimepoints(np.linspace(0, 100, 200))
-    amici_solver = amici_model.getSolver()
-    rdata = amici.runAmiciSimulation(amici_model, amici_solver)
-    assert rdata.status == amici.AMICI_SUCCESS
+    amici_model = model_module.get_model()
+    amici_model.set_timepoints(np.linspace(0, 100, 200))
+    amici_solver = amici_model.create_solver()
+    rdata = run_simulation(amici_model, amici_solver)
+    assert rdata.status == AMICI_SUCCESS
     # should be non-negative in theory, but is expected to become negative
     #  in practice
     assert np.any(rdata.x < 0)
 
-    amici_solver.setRelativeTolerance(1e-13)
-    amici_solver.setConstraints(
+    amici_solver.set_relative_tolerance(1e-13)
+    amici_solver.set_constraints(
         [Constraint.non_negative, Constraint.non_negative]
     )
-    rdata = amici.runAmiciSimulation(amici_model, amici_solver)
-    assert rdata.status == amici.AMICI_SUCCESS
+    rdata = run_simulation(amici_model, amici_solver)
+    assert rdata.status == AMICI_SUCCESS
     assert np.all(rdata.x >= 0)
     assert np.all(
         np.sum(rdata.x, axis=1) - np.sum(rdata.x[0])
         < max(
-            np.sum(rdata.x[0]) * amici_solver.getRelativeTolerance(),
-            amici_solver.getAbsoluteTolerance(),
+            np.sum(rdata.x[0]) * amici_solver.get_relative_tolerance(),
+            amici_solver.get_absolute_tolerance(),
         )
     )
 
@@ -925,7 +1225,7 @@ def test_constraints(tempdir):
 def test_import_same_model_name(tempdir):
     """Test for error when loading a model with the same extension name as an
     already loaded model."""
-    from amici.antimony_import import antimony2amici
+    from amici.importers.antimony import antimony2amici
 
     # create three versions of a toy model with different parameter values
     #  to detect which model was loaded
@@ -962,7 +1262,7 @@ def test_import_same_model_name(tempdir):
     model_module_1 = import_model_module(
         module_name=module_name, module_path=outdir_1
     )
-    assert model_module_1.get_model().getParameters()[0] == 1.0
+    assert model_module_1.get_model().get_free_parameters()[0] == 1.0
 
     # no error if the same model is loaded again without changes on disk
     model_module_1b = import_model_module(
@@ -971,13 +1271,13 @@ def test_import_same_model_name(tempdir):
     # downside: the modules will compare as different
     assert (model_module_1 == model_module_1b) is False
     assert model_module_1.__file__ == model_module_1b.__file__
-    assert model_module_1b.get_model().getParameters()[0] == 1.0
+    assert model_module_1b.get_model().get_free_parameters()[0] == 1.0
 
     model_module_2 = import_model_module(
         module_name=module_name, module_path=outdir_2
     )
-    assert model_module_1.get_model().getParameters()[0] == 1.0
-    assert model_module_2.get_model().getParameters()[0] == 2.0
+    assert model_module_1.get_model().get_free_parameters()[0] == 1.0
+    assert model_module_2.get_model().get_free_parameters()[0] == 2.0
 
     # import the third model, with the same name and location as the second
     #  model -- this is not supported, because there is some caching at
@@ -989,25 +1289,42 @@ def test_import_same_model_name(tempdir):
     if sys.platform == "win32":
         return
 
-    antimony2amici(
-        ant_model_3,
-        model_name=module_name,
-        output_dir=outdir_2,
-    )
+    with pytest.warns(Warning, match="in the same location"):
+        antimony2amici(
+            ant_model_3,
+            model_name=module_name,
+            output_dir=outdir_2,
+        )
 
-    with pytest.raises(RuntimeError, match="in the same location"):
+    with pytest.warns(Warning, match="in the same location"):
         import_model_module(module_name=module_name, module_path=outdir_2)
 
     # this should not affect the previously loaded models
-    assert model_module_1.get_model().getParameters()[0] == 1.0
-    assert model_module_2.get_model().getParameters()[0] == 2.0
+    assert model_module_1.get_model().get_free_parameters()[0] == 1.0
+    assert model_module_2.get_model().get_free_parameters()[0] == 2.0
 
     # test that we can still import the model classically if we wanted to:
     with amici.set_path(outdir_1):
         import test_same_extension as model_module_1c  # noqa: F401
 
-        assert model_module_1c.get_model().getParameters()[0] == 1.0
+        assert model_module_1c.get_model().get_free_parameters()[0] == 1.0
         assert model_module_1c.get_model().module is model_module_1c
+
+
+@pytest.mark.parametrize(
+    "model_name", ["x0", "Xdot", "main", "wrapfunctions", "swig"]
+)
+def test_model_name_of_generated_file(tempdir, model_name):
+    """Model names must not be names of generated files or directories."""
+    from amici.importers.antimony import antimony2amici
+
+    with pytest.raises(ValueError, match="generated source file"):
+        antimony2amici(
+            "x = 1; x' = -x",
+            model_name=model_name,
+            output_dir=tempdir,
+            compile=False,
+        )
 
 
 @skip_on_valgrind
@@ -1022,42 +1339,42 @@ def test_regression_2642(tempdir):
     module = amici.import_model_module(
         module_name=model_name, module_path=tempdir
     )
-    model = module.getModel()
-    solver = model.getSolver()
-    model.setTimepoints(np.linspace(0, 1, 3))
-    r = amici.runAmiciSimulation(model, solver)
+    model = module.get_model()
+    solver = model.create_solver()
+    model.set_timepoints(np.linspace(0, 1, 3))
+    r = run_simulation(model, solver)
     assert (
-        len(np.unique(r.w[:, model.getExpressionIds().index("binding")])) == 1
+        len(np.unique(r.w[:, model.get_expression_ids().index("binding")]))
+        == 1
     )
 
 
 @skip_on_valgrind
 def test_regression_2700(tempdir):
     """Check comparison operators."""
-    from amici.antimony_import import antimony2amici
+    from amici.importers.antimony import antimony2amici
 
     model_name = "regression_2700"
     antimony2amici(
         """
+    # we need some differential state, otherwise import will currently fail
+    x = 0
+    x' = 0
+
     a = 1
-    # condition is always true, so `pp` should be 1
-    pp := piecewise(1, a >= 1 && a <= 1, 0)
+    # condition is always true, so `p` should be 1
+    p := piecewise(1, a >= 1 && a <= 1, 0)
     """,
         model_name=model_name,
         output_dir=tempdir,
     )
 
     model_module = import_model_module(model_name, tempdir)
-
     model = model_module.get_model()
+    model.set_timepoints([0, 1, 2])
+    rdata = model.simulate()
 
-    model.setTimepoints([0, 1, 2])
-
-    solver = model.getSolver()
-
-    rdata = amici.runAmiciSimulation(model, solver)
-
-    assert np.all(rdata.by_id("pp") == [1, 1, 1])
+    assert np.all(rdata.by_id("p") == [1, 1, 1])
 
 
 def test_heaviside_init_values_and_bool_to_float_conversion(tempdir):
@@ -1067,7 +1384,7 @@ def test_heaviside_init_values_and_bool_to_float_conversion(tempdir):
     FIXME: Test that Heavisides for Boolean / piecewise functions use a correct
     initial value. https://github.com/AMICI-dev/AMICI/issues/2724
     """
-    from amici.antimony_import import antimony2amici
+    from amici.importers.antimony import antimony2amici
 
     model_name = "test_bool2float"
     antimony2amici(
@@ -1092,10 +1409,8 @@ def test_heaviside_init_values_and_bool_to_float_conversion(tempdir):
     model_module = import_model_module(model_name, tempdir)
 
     model = model_module.get_model()
-    model.setTimepoints([0, 1, 2])
-
-    solver = model.getSolver()
-    rdata = amici.runAmiciSimulation(model, solver)
+    model.set_timepoints([0, 1, 2])
+    rdata = model.simulate()
 
     assert np.all(rdata.by_id("a") == np.array([2, 2, 2])), rdata.by_id("a")
     assert np.all(rdata.by_id("b") == np.array([0, 1, 1])), rdata.by_id("b")
@@ -1105,7 +1420,7 @@ def test_heaviside_init_values_and_bool_to_float_conversion(tempdir):
 def test_t0(tempdir):
     """Test that a custom initial time for the simulation is applied correctly
     during species initialization."""
-    from amici.antimony_import import antimony2amici
+    from amici.importers.antimony import antimony2amici
 
     model_name = "test_t0"
     antimony2amici(
@@ -1120,9 +1435,926 @@ def test_t0(tempdir):
     model_module = import_model_module(model_name, tempdir)
 
     model = model_module.get_model()
-    model.setTimepoints([2])
-    model.setT0(2)
+    model.set_timepoints([2])
+    model.set_t0(2)
 
-    solver = model.getSolver()
-    rdata = amici.runAmiciSimulation(model, solver)
+    solver = model.create_solver()
+    rdata = run_simulation(model, solver)
     assert rdata.x == [[2.0]], rdata.x
+
+
+@skip_on_valgrind
+def test_contains_periodic_subexpression():
+    """Test that periodic subexpressions are detected."""
+    from amici.importers.utils import contains_periodic_subexpression as cps
+
+    t = sp.Symbol("t")
+
+    assert cps(t, t) is False
+    assert cps(sp.sin(t), t) is True
+    assert cps(sp.cos(t), t) is True
+    assert cps(t + sp.sin(t), t) is True
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize("compute_conservation_laws", [True, False])
+def test_time_dependent_initial_assignment(compute_conservation_laws: bool):
+    """Check that dynamic expressions for initial assignments are only
+    evaluated at t=t0."""
+    from amici.importers.antimony import antimony2sbml
+    from amici.importers.sbml import splines
+    from amici.importers.utils import amici_time_symbol
+
+    ant_model = """
+    x1' = 1
+    x1 = p0
+    p0 = 1
+    p1 = x1
+    x2 := x1
+    p2 = x2
+    spline1 = 0 # replaced by actual spline below
+    x3' = 0
+    x3 = spline1
+    """
+    sbml_str = antimony2sbml(ant_model)
+    sbml_reader = libsbml.SBMLReader()
+    sbml_document = sbml_reader.readSBMLFromString(sbml_str)
+    sbml_model = sbml_document.getModel()
+
+    spline = splines.CubicHermiteSpline(
+        sbml_id="spline1",
+        nodes=[0, 1, 2],
+        values_at_nodes=[3, 4, 5],
+    )
+    spline.add_to_sbml_model(sbml_model)
+    sbml_model.getElementBySId("spline1").setConstant(False)
+
+    si = SbmlImporter(sbml_model, from_file=False)
+    de_model = si._build_ode_model(
+        observation_model=[
+            MC("obs_p1", formula="p1"),
+            MC("obs_p2", formula="p2"),
+        ],
+        compute_conservation_laws=compute_conservation_laws,
+    )
+    # "species", because the initial assignment expression is time-dependent
+    assert (
+        symbol_with_assumptions("p2") in si._symbols[SymbolId.SPECIES].keys()
+    )
+    # "species", because differential state
+    assert (
+        symbol_with_assumptions("x1") in si._symbols[SymbolId.SPECIES].keys()
+    )
+
+    assert "p0" in [p.get_id() for p in de_model.free_parameters()]
+    assert "p1" not in [p.get_id() for p in de_model.free_parameters()]
+    assert "p2" not in [p.get_id() for p in de_model.free_parameters()]
+
+    assert list(de_model.sym("x_rdata")) == [
+        symbol_with_assumptions("p2"),
+        symbol_with_assumptions("x1"),
+        symbol_with_assumptions("x3"),
+    ]
+    assert list(de_model.eq("x0")) == [
+        symbol_with_assumptions("p0"),
+        symbol_with_assumptions("p0"),
+        amici_time_symbol * 1.0 + 3.0,
+    ]
+
+
+@skip_on_valgrind
+def test_initial_assignment_parameter_not_constant_folded():
+    """Regression test for #3214.
+
+    A parameter that both carries an ``initialAssignment`` with a
+    dependency-free (numeric) right-hand side and defines a species' initial
+    condition must not be constant-folded out of ``x0``. Such a parameter is
+    still offered as a free (differentiable) parameter, so folding its value
+    into ``x0`` would silently return a zero sensitivity for it.
+
+    This is the shape antimony produces for every parameter assignment whose
+    right-hand side is a compound expression (e.g. ``init_STAT = 10^0`` in
+    ``jakstat_adjoint``).
+    """
+    # `X0 = 6 * 1` is a compound expression, so antimony emits it as an
+    # initial assignment on the parameter X0 (a bare literal would not).
+    sbml_str = antimony2sbml("""
+        model test_ia_not_folded
+            species X;
+            X = X0;
+            X0 = 6 * 1;
+            k = 0.33;
+            degradation: X -> ; k * X;
+        end
+    """)
+    sbml_importer = SbmlImporter(sbml_source=sbml_str, from_file=False)
+    # The test only exercises the bug if X0 actually carries an initial
+    # assignment; guard against a future antimony/libSBML folding `6 * 1` to a
+    # plain value, which would silently turn this into a false negative.
+    assert sbml_importer.sbml_model.getInitialAssignment("X0") is not None
+
+    de_model = sbml_importer._build_ode_model()
+
+    # X0 is offered as a differentiable free parameter ...
+    assert "X0" in [p.get_id() for p in de_model.free_parameters()]
+    # ... so x0 must retain the symbolic dependence on it rather than folding
+    # in its nominal value.
+    (x0_x,) = de_model.eq("x0")
+    assert x0_x == symbol_with_assumptions("X0")
+    assert sp.diff(x0_x, symbol_with_assumptions("X0")) == 1
+
+
+@skip_on_valgrind
+def test_dae_forward_sensitivities_default_tolerances(tempdir):
+    """Forward sensitivities of a DAE with consistent initial values.
+
+    `IDACalcIC` used to fail to converge for this model with the default
+    sensitivity tolerances.
+    """
+    ant_model = """
+    model dae_fsa_calcic
+        const k = 0.5, p = 2, q = 0.3
+        x = 1; y = 2
+        x' = -k * y + q
+        0 = y - p * x
+    end
+    """
+    module_name = "dae_fsa_calcic"
+    SbmlImporter(antimony2sbml(ant_model), from_file=False).sbml2amici(
+        module_name, tempdir
+    )
+    model = import_model_module(module_name, tempdir).get_model()
+    t = np.linspace(0, 5, 6)
+    model.set_timepoints(t)
+    model.set_parameter_list([model.get_free_parameter_ids().index("k")])
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+
+    # x = c + (1 - c) * exp(-a * t), y = p * x, with a = k * p, c = q / a
+    k, p, q = 0.5, 2, 0.3
+    a, c = k * p, q / (k * p)
+    dx_da = c / a * (np.exp(-a * t) - 1) - (1 - c) * t * np.exp(-a * t)
+    dx_dk = p * dx_da
+    assert np.all(np.abs(dx_dk[1:]) > 0.1)
+    assert_allclose(
+        rdata.sx[:, 0, :],
+        np.column_stack([dx_dk, p * dx_dk]),
+        rtol=1e-5,
+        atol=1e-8,
+    )
+
+
+def _algebraic_rule_model(algebraic_rules: list[str]) -> str:
+    """SBML model with `x' = -k * x` and the given algebraic rules.
+
+    Built with libsbml instead of antimony, as the overdetermined test case
+    is invalid SBML, which antimony 3.1 rejects, whereas antimony 3.2
+    accepts it.
+    """
+    doc = libsbml.SBMLDocument(3, 2)
+    model = doc.createModel()
+    for par_id, value, constant in [
+        ("k", 0.5, True),
+        ("p", 2, False),
+        ("x", 1, False),
+        ("y", 2, False),
+        ("z", 0.5, False),
+        ("w", 0.5, False),
+    ]:
+        par = model.createParameter()
+        par.setId(par_id)
+        par.setValue(value)
+        par.setConstant(constant)
+    rule = model.createRateRule()
+    rule.setVariable("x")
+    rule.setMath(libsbml.parseL3Formula("-k * x"))
+    for formula in algebraic_rules:
+        model.createAlgebraicRule().setMath(libsbml.parseL3Formula(formula))
+    return libsbml.writeSBMLToString(doc)
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize(
+    "algebraic_rules",
+    [
+        # underdetermined: `p` is not constant
+        ["y - p * x"],
+        # structurally singular (overdetermined, invalid SBML):
+        # two rules for `y`, one for `z` and `w`
+        ["y - x", "y - 2 * x", "z + w - x"],
+    ],
+    ids=["underdetermined", "singular"],
+)
+def test_algebraic_rules_not_determined(algebraic_rules):
+    """Test that import fails if algebraic rules don't determine all
+    variables."""
+    sbml_importer = SbmlImporter(
+        _algebraic_rule_model(algebraic_rules), from_file=False
+    )
+    with pytest.raises(
+        SBMLException, match="algebraic rules do not determine"
+    ):
+        sbml_importer._build_ode_model()
+
+
+@skip_on_valgrind
+def test_chained_initial_assignment_parameter_not_constant_folded():
+    """Regression test for #3214 (chained-parameter variant).
+
+    ``X0`` is defined via an initial assignment referencing another parameter
+    ``X1`` whose own initial assignment has a dependency-free (numeric)
+    right-hand side. The dependence of the initial condition on ``X1`` must be
+    retained rather than folded into ``X1``'s nominal value while parameters
+    are being classified.
+    """
+    sbml_str = antimony2sbml("""
+        model test_chained_ia_not_folded
+            species X;
+            X = X0;
+            X0 = X1;
+            X1 = 5 * 1;
+            k = 0.33;
+            degradation: X -> ; k * X;
+        end
+    """)
+    sbml_importer = SbmlImporter(sbml_source=sbml_str, from_file=False)
+    assert sbml_importer.sbml_model.getInitialAssignment("X0") is not None
+    assert sbml_importer.sbml_model.getInitialAssignment("X1") is not None
+
+    de_model = sbml_importer._build_ode_model()
+
+    # X1 remains the differentiable free parameter; X0 becomes an expression
+    # for it rather than an independent, constant-folded parameter.
+    free_parameter_ids = [p.get_id() for p in de_model.free_parameters()]
+    assert "X1" in free_parameter_ids
+    assert "X0" not in free_parameter_ids
+
+    (x0_x,) = de_model.eq("x0")
+    assert x0_x == symbol_with_assumptions("X1")
+    assert sp.diff(x0_x, symbol_with_assumptions("X1")) == 1
+
+
+@pytest.fixture(scope="session")
+def dae_model_module(tmp_path_factory):
+    """A DAE model with an algebraic state that enters the differential
+    equation.
+
+    Free parameters ``k``, ``p``, ``q``, fixed parameters ``x0``, ``r``,
+    observables ``obs_x``, ``obs_y``.
+    """
+    sbml_str = antimony2sbml("""
+        model dae_shared
+            const k = 0.5, p = 2, q = 0.3, x0 = 1, r = 1
+            x = x0; y = 2
+            x' = -k * y + q
+            0 = y - r * p * x
+        end
+    """)
+    model_name = "dae_shared"
+    outdir = tmp_path_factory.mktemp(model_name)
+    SbmlImporter(sbml_str, from_file=False).sbml2amici(
+        model_name,
+        outdir,
+        fixed_parameters=["x0", "r"],
+        observation_model=[
+            MC("obs_x", formula="x"),
+            MC("obs_y", formula="y"),
+        ],
+    )
+    return import_model_module(model_name, outdir)
+
+
+def _dae_model_edata(model, observable_ids, value):
+    """Create ExpData for `dae_model_module`.
+
+    Measurements are `value` for the given observables and NaN for the
+    others.
+    """
+    measured = [oid in observable_ids for oid in model.get_observable_ids()]
+    measurements = np.tile(np.where(measured, value, np.nan), model.nt())
+    edata = ExpData(model)
+    edata.set_measurements(measurements)
+    edata.set_noise_scales(np.ones_like(measurements))
+    return edata
+
+
+@skip_on_valgrind
+def test_dae_adjoint_sensitivities_observed_algebraic_state(
+    dae_model_module,
+):
+    """Test adjoint sensitivities of a DAE with a measured algebraic
+    state."""
+    model = dae_model_module.get_model()
+    t = np.linspace(0, 5, 11)
+    model.set_timepoints(t)
+    model.set_parameter_scale(ParameterScaling.none)
+    edata = _dae_model_edata(model, ["obs_y"], 1.0)
+
+    sllh = {}
+    for method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver = model.create_solver()
+        solver.set_relative_tolerance(1e-12)
+        solver.set_absolute_tolerance(1e-12)
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(method)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS, method
+        sllh[method] = rdata.sllh
+
+    # all parameters have an effect
+    assert np.all(np.abs(sllh[SensitivityMethod.forward]) > 1e-2)
+    assert_allclose(
+        sllh[SensitivityMethod.adjoint],
+        sllh[SensitivityMethod.forward],
+        rtol=1e-6,
+    )
+
+
+@skip_on_valgrind
+def test_initial_assignment_fixed_parameter_not_constant_folded():
+    """Regression test for #3214 (fixed-parameter variant).
+
+    The same constant-folding must be avoided for a fixed (constant)
+    parameter: even though it is excluded from sensitivity analysis, its
+    symbol must be retained in ``x0`` so that changing the constant still
+    moves the initial condition, rather than being baked in as a literal.
+    """
+    sbml_str = antimony2sbml("""
+        model test_ia_not_folded_fixed
+            species X;
+            X = X0;
+            X0 = 6 * 1;
+            k = 0.33;
+            degradation: X -> ; k * X;
+        end
+    """)
+    sbml_importer = SbmlImporter(sbml_source=sbml_str, from_file=False)
+    assert sbml_importer.sbml_model.getInitialAssignment("X0") is not None
+
+    de_model = sbml_importer._build_ode_model(fixed_parameters=["X0"])
+
+    assert "X0" in [p.get_id() for p in de_model.fixed_parameters()]
+    assert "X0" not in [p.get_id() for p in de_model.free_parameters()]
+    (x0_x,) = de_model.eq("x0")
+    assert x0_x == symbol_with_assumptions("X0")
+
+
+@skip_on_valgrind
+def test_dae_reinitialization_after_preequilibration(dae_model_module):
+    """Test that algebraic states and their sensitivities are consistent
+    with the re-initialized differential states after pre-equilibration or
+    presimulation."""
+    model = dae_model_module.get_model()
+    assert model.get_state_ids() == ("x", "y")
+    model.set_timepoints([0.0, 1.0, 2.0])
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+
+    edata_ref = ExpData(model)
+    # x0, r
+    edata_ref.fixed_parameters = [1.0, 1.0]
+    rdata_ref = run_simulation(model, solver, edata_ref)
+    assert rdata_ref.status == AMICI_SUCCESS
+    assert_allclose(rdata_ref.x[0], [1.0, 2.0])
+    # d(x, y)(t=0)/d(k, p, q)
+    assert_allclose(rdata_ref.sx[0], [[0, 0], [0, 1], [0, 0]], atol=1e-12)
+
+    for pre in ("preequilibration", "presimulation"):
+        edata = ExpData(edata_ref)
+        if pre == "preequilibration":
+            edata.fixed_parameters_pre_equilibration = [0.8, 1.0]
+        else:
+            edata.fixed_parameters_presimulation = [0.8, 1.0]
+            edata.t_presim = 2.0
+        edata.reinitialize_fixed_parameter_initial_states = True
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS, pre
+        assert_allclose(rdata.x, rdata_ref.x, rtol=1e-6, err_msg=pre)
+        assert_allclose(
+            rdata.sx, rdata_ref.sx, rtol=1e-6, atol=1e-8, err_msg=pre
+        )
+
+
+@skip_on_valgrind
+def test_dae_fixed_parameters_changed_after_presimulation(dae_model_module):
+    """Test that algebraic states and their sensitivities are consistent
+    with the fixed parameters of the main simulation after
+    pre-equilibration or presimulation without re-initialization."""
+    model = dae_model_module.get_model()
+    assert model.get_state_ids() == ("x", "y")
+    assert model.get_free_parameter_ids() == ("k", "p", "q")
+    model.set_timepoints([0.0, 1.0])
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+
+    p, r = 2, 3
+    for pre in ("preequilibration", "presimulation"):
+        edata = ExpData(model)
+        # x0, r
+        edata.fixed_parameters = [1.0, r]
+        if pre == "preequilibration":
+            edata.fixed_parameters_pre_equilibration = [1.0, 1.0]
+        else:
+            edata.fixed_parameters_presimulation = [1.0, 1.0]
+            edata.t_presim = 2.0
+        edata.reinitialize_fixed_parameter_initial_states = False
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS, pre
+        x, y = rdata.x.T
+        sx, sy = rdata.sx[:, :, 0], rdata.sx[:, :, 1]
+        # y = r * p * x
+        assert_allclose(y, r * p * x, rtol=1e-6, err_msg=pre)
+        assert np.all(np.abs(sx) > 0.05), pre
+        sy_expected = r * p * sx
+        sy_expected[:, 1] += r * x
+        assert_allclose(sy, sy_expected, rtol=1e-6, err_msg=pre)
+
+
+@skip_on_valgrind
+def test_chained_initial_assignment_parameter_stays_expression():
+    """A chain of parameter initial assignments must not create states.
+
+    ``c`` is defined via an initial assignment referencing ``q``, which is
+    itself an expression. Since expressions may depend on other expressions,
+    ``c`` is representable as an expression too, and must not be turned into a
+    constant state (which would needlessly inflate the state vector, as it did
+    for ``C2ss``/``C3ss`` in the ``calvetti`` test model).
+    """
+    sbml_str = antimony2sbml("""
+        model test_chained_ia_stays_expression
+            species X;
+            X = 1;
+            kf = 0.5;
+            q = 1 - kf;
+            c = 2 / (q - 0.25 * kf);
+            k = 0.33;
+            degradation: X -> ; k * c * X;
+        end
+    """)
+    sbml_importer = SbmlImporter(sbml_source=sbml_str, from_file=False)
+    assert sbml_importer.sbml_model.getInitialAssignment("q") is not None
+    assert sbml_importer.sbml_model.getInitialAssignment("c") is not None
+
+    de_model = sbml_importer._build_ode_model()
+
+    # only X is a state; q and c are expressions
+    assert [s.get_id() for s in de_model.states()] == ["X"]
+    expression_ids = [e.get_id() for e in de_model.expressions()]
+    assert "q" in expression_ids
+    assert "c" in expression_ids
+
+
+@skip_on_valgrind
+def test_dae_consistent_initial_conditions_single_timepoint(tempdir):
+    """Inconsistent algebraic initial states are corrected for any `ts`."""
+    ant_model = """
+    model dae_single_timepoint
+        const k = 0.5, p = 2
+        x = 1; y = 1.5
+        x' = -k * x
+        0 = y - p * x
+    end
+    """
+    module_name = "dae_single_timepoint"
+    SbmlImporter(antimony2sbml(ant_model), from_file=False).sbml2amici(
+        module_name, tempdir
+    )
+    model = import_model_module(module_name, tempdir).get_model()
+
+    for ts in ([0.0], [5.0], [0.0, 5.0]):
+        model.set_timepoints(ts)
+        solver = model.create_solver()
+        solver.set_relative_tolerance(1e-10)
+        solver.set_absolute_tolerance(1e-12)
+        rdata = run_simulation(model, solver)
+        assert rdata.status == AMICI_SUCCESS, ts
+        x_exact = np.exp(-0.5 * np.asarray(ts))
+        assert_allclose(
+            rdata.x, np.column_stack([x_exact, 2 * x_exact]), rtol=1e-8
+        )
+
+
+@skip_on_valgrind
+def test_dae_steady_state(dae_model_module):
+    """Test steady-state computation and steady-state sensitivities for
+    DAEs."""
+    model = dae_model_module.get_model()
+    assert model.get_state_ids() == ("x", "y")
+    assert model.get_free_parameter_ids() == ("k", "p", "q")
+    model.set_parameter_scale(ParameterScaling.none)
+    # post-equilibration, after simulating to t=1, so that the state
+    # derivative is nonzero when the steady-state computation starts
+    model.set_timepoints([0, 1, np.inf])
+
+    k, p, q = 0.5, 2, 0.3
+    x_ss_expected = [q / (k * p), q / k]
+    sx_ss_expected = [
+        [-q / (k**2 * p), -q / k**2],
+        [-q / (k * p**2), 0],
+        [1 / (k * p), 1 / k],
+    ]
+    for computation_mode, sensitivity_mode, sensi_order in (
+        (
+            SteadyStateComputationMode.integrationOnly,
+            SteadyStateSensitivityMode.integrationOnly,
+            SensitivityOrder.none,
+        ),
+        (
+            SteadyStateComputationMode.integrationOnly,
+            SteadyStateSensitivityMode.integrationOnly,
+            SensitivityOrder.first,
+        ),
+        (
+            SteadyStateComputationMode.newtonOnly,
+            SteadyStateSensitivityMode.newtonOnly,
+            SensitivityOrder.first,
+        ),
+    ):
+        model.set_steady_state_computation_mode(computation_mode)
+        model.set_steady_state_sensitivity_mode(sensitivity_mode)
+        solver = model.create_solver()
+        solver.set_newton_max_steps(10)
+        solver.set_sensitivity_order(sensi_order)
+        solver.set_sensitivity_method(SensitivityMethod.forward)
+        rdata = run_simulation(model, solver)
+        assert rdata.status == AMICI_SUCCESS, computation_mode
+        assert_allclose(rdata.x[-1], x_ss_expected, rtol=1e-5)
+        if sensi_order == SensitivityOrder.first:
+            assert_allclose(rdata.sx[-1], sx_ss_expected, rtol=1e-4, atol=1e-5)
+
+
+@skip_on_valgrind
+def test_minmax_piecewise_is_converted_to_minmax():
+    """Test that _piecewise_to_minmax is applied during SBML import."""
+    sbml_str = antimony2sbml("""
+        x' = piecewise(a, a > b, b)
+        y' = piecewise(a, a < b, b)
+    """)
+    sbml_importer = SbmlImporter(sbml_source=sbml_str, from_file=False)
+    de_model = sbml_importer._build_ode_model()
+    # no events should be created for min/max
+    assert not de_model.events()
+    assert len(de_model.sym("h")) == 0
+    # min/max are present in the equations
+    xdot = de_model.eq("xdot")
+    assert xdot.has(sp.Min)
+    assert xdot.has(sp.Max)
+
+
+@skip_on_valgrind
+def test_dae_staggered_forward_sensitivities(tempdir):
+    """Staggered and simultaneous forward sensitivities agree for DAEs."""
+    ant_model = """
+    model dae_staggered
+        const k = 0.5, p = 2, q = 0.3
+        x = 1; y = 2
+        x' = -k * x + q
+        0 = y - p * x * x
+    end
+    """
+    module_name = "dae_staggered"
+    SbmlImporter(antimony2sbml(ant_model), from_file=False).sbml2amici(
+        module_name, tempdir
+    )
+    model = import_model_module(module_name, tempdir).get_model()
+    model.set_timepoints(np.linspace(0, 5, 6))
+
+    sx = {}
+    for ism in (
+        InternalSensitivityMethod.simultaneous,
+        InternalSensitivityMethod.staggered,
+    ):
+        solver = model.create_solver()
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(SensitivityMethod.forward)
+        solver.set_internal_sensitivity_method(ism)
+        solver.set_relative_tolerance(1e-10)
+        solver.set_absolute_tolerance(1e-12)
+        rdata = run_simulation(model, solver)
+        assert rdata.status == AMICI_SUCCESS
+        sx[ism] = rdata.sx
+
+    # all parameters have an effect
+    assert np.all(
+        np.any(sx[InternalSensitivityMethod.simultaneous] != 0, axis=(0, 2))
+    )
+    assert_allclose(
+        sx[InternalSensitivityMethod.staggered],
+        sx[InternalSensitivityMethod.simultaneous],
+        rtol=1e-6,
+        atol=1e-10,
+    )
+
+
+@pytest.fixture(scope="module")
+def dae_tout1_module(tmp_path_factory):
+    sbml_str = antimony2sbml("""
+        model test_dae_tout1
+            const k1 = 1, k2 = 0.5
+            x = 0.5; y = 0.5
+            x' = k2 * y
+            0 = x + y - k1
+        end
+    """)
+    model_name = "test_dae_tout1"
+    outdir = tmp_path_factory.mktemp(model_name)
+    SbmlImporter(sbml_str, from_file=False).sbml2amici(model_name, outdir)
+    return import_model_module(model_name, outdir)
+
+
+@pytest.mark.parametrize(
+    "timepoints",
+    [
+        [0.0, 0.0, 1.0],
+        [1.0, np.nextafter(1.0, 2.0), 2.0],
+        [1.0, np.inf],
+    ],
+    ids=["duplicate", "within_roundoff", "infinite"],
+)
+def test_dae_output_time_close_to_t0(dae_tout1_module, timepoints):
+    """Test DAE simulation with the second output time within roundoff
+    distance of the first one or infinite."""
+    model = dae_tout1_module.get_model()
+    model.set_t0(timepoints[0])
+    model.set_timepoints(timepoints)
+    model.set_parameter_scale(ParameterScaling.none)
+    solver = model.create_solver()
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-14)
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+
+    # y(t) = (k1 - x(t0)) * exp(-k2 * (t - t0)), x(t) = k1 - y(t)
+    k1, k2, x0 = 1.0, 0.5, 0.5
+    e = np.exp(-k2 * (np.asarray(timepoints) - timepoints[0]))
+    y = (k1 - x0) * e
+    assert_allclose(
+        rdata.x, np.column_stack((k1 - y, y)), rtol=1e-8, atol=1e-12
+    )
+    # dy/dk1 = exp(-k2 * (t - t0)), nonzero at t0
+    assert_allclose(rdata.sx[:, 0, 1], e, rtol=1e-8, atol=1e-12)
+
+
+@skip_on_valgrind
+def test_dae_forward_sensitivities_consistent_initial_conditions(tmp_path):
+    """Test that state sensitivities of algebraic states are consistent at
+    the initial time point."""
+    sbml_str = antimony2sbml("""
+        model test_dae_sx0
+            const k1 = 1, k2 = 0.5
+            x = 0.5; y = 0.5
+            x' = k2 * y
+            0 = x + y - k1
+        end
+    """)
+    model_name = "test_dae_sx0"
+    SbmlImporter(sbml_str, from_file=False).sbml2amici(model_name, tmp_path)
+    model = import_model_module(model_name, tmp_path).get_model()
+    t = np.linspace(0, 5, 6)
+    model.set_timepoints(t)
+    model.set_parameter_scale(ParameterScaling.none)
+    solver = model.create_solver()
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-14)
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+
+    # y(t) = (k1 - x(0)) * exp(-k2 * t), x(t) = k1 - y(t)
+    assert model.get_state_ids() == ("x", "y")
+    assert model.get_free_parameter_ids() == ("k1", "k2")
+    k1, k2, x0 = 1.0, 0.5, 0.5
+    e = np.exp(-k2 * t)
+    dy_dk1 = e
+    dy_dk2 = -(k1 - x0) * t * e
+    sx_expected = np.empty((len(t), 2, 2))
+    sx_expected[:, 0, 0] = 1 - dy_dk1
+    sx_expected[:, 0, 1] = dy_dk1
+    sx_expected[:, 1, 0] = -dy_dk2
+    sx_expected[:, 1, 1] = dy_dk2
+    assert_allclose(rdata.sx, sx_expected, rtol=1e-8, atol=1e-10)
+    assert_allclose(rdata.sx0, sx_expected[0], rtol=1e-8, atol=1e-10)
+
+
+@pytest.fixture(scope="module")
+def dae_asa_t0_module(tmp_path_factory):
+    """A DAE model whose differential initial state is a free parameter."""
+    sbml_str = antimony2sbml("""
+        model test_dae_asa_t0
+            const k = 0.5, p = 2, q = 0.3, x0 = 1
+            x = x0; y = 2
+            x' = -k * x + q
+            0 = y - p * x
+        end
+    """)
+    model_name = "test_dae_asa_t0"
+    outdir = tmp_path_factory.mktemp(model_name)
+    SbmlImporter(sbml_str, from_file=False).sbml2amici(
+        model_name, outdir, observation_model=[MC("obs_x", formula="x")]
+    )
+    return import_model_module(model_name, outdir)
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize("timepoints", [[0.0], [np.inf]], ids=["t0", "inf"])
+def test_dae_adjoint_without_forward_integration(
+    dae_asa_t0_module, timepoints
+):
+    """Test adjoint sensitivities for DAEs if the forward problem is not
+    integrated (all outputs at t0, or post-equilibration by Newton's
+    method)."""
+    model = dae_asa_t0_module.get_model()
+    assert model.get_free_parameter_ids() == ("k", "p", "q", "x0")
+    model.set_timepoints(timepoints)
+    model.set_parameter_scale(ParameterScaling.none)
+    model.set_steady_state_computation_mode(
+        SteadyStateComputationMode.newtonOnly
+    )
+    model.set_steady_state_sensitivity_mode(
+        SteadyStateSensitivityMode.newtonOnly
+    )
+    edata = ExpData(model)
+    edata.set_measurements(np.full(len(timepoints), 2.0))
+    edata.set_noise_scales(np.ones(len(timepoints)))
+
+    sllh = {}
+    for method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver = model.create_solver()
+        solver.set_newton_max_steps(10)
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(method)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS, method
+        sllh[method] = rdata.sllh
+    assert np.any(np.abs(sllh[SensitivityMethod.forward]) > 0.1)
+    assert_allclose(
+        sllh[SensitivityMethod.adjoint],
+        sllh[SensitivityMethod.forward],
+        rtol=1e-6,
+        atol=1e-8,
+    )
+
+
+def test_dae_free_solver_after_failed_adjoint_setup(dae_model_module):
+    """Test that an IDAS solver can be freed after an adjoint simulation
+    that failed before the first integration step."""
+    model = dae_model_module.get_model()
+    model.set_timepoints([0.0, 1.0])
+    edata = ExpData(model)
+    # x0, r
+    edata.fixed_parameters_pre_equilibration = [0.8, 1.0]
+    edata.fixed_parameters = [0.8, 1.0]
+
+    for _ in range(5):
+        # a successful run to leave non-zero freed memory on the heap
+        model.set_steady_state_computation_mode(
+            SteadyStateComputationMode.integrationOnly
+        )
+        model.set_steady_state_sensitivity_mode(
+            SteadyStateSensitivityMode.integrationOnly
+        )
+        solver = model.create_solver()
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(SensitivityMethod.adjoint)
+        assert run_simulation(model, solver, edata).status == AMICI_SUCCESS
+
+        # pre-equilibration fails before the first call to IDASolveF
+        model.set_steady_state_computation_mode(
+            SteadyStateComputationMode.newtonOnly
+        )
+        model.set_steady_state_sensitivity_mode(
+            SteadyStateSensitivityMode.newtonOnly
+        )
+        solver = model.create_solver()
+        solver.set_newton_max_steps(0)
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(SensitivityMethod.adjoint)
+        assert run_simulation(model, solver, edata).status == AMICI_ERROR
+        del solver
+
+
+@skip_on_valgrind
+def test_algebraic_state_order_is_deterministic():
+    """Test that the order of algebraic states is deterministic.
+
+    The order must not depend on string hashing (``PYTHONHASHSEED``).
+    """
+    # `z` is declared before `y`, so sorting by ID differs from the
+    # declaration order
+    sbml_str = antimony2sbml("""
+        model test_algebraic_state_order
+            const k = 0.5
+            x = 1; z = 0.5; y = 0.5
+            x' = -k * x
+            0 = y + z - x
+            0 = y - z
+        end
+    """)
+    script = """
+import sys
+from amici.importers.sbml import SbmlImporter
+
+de_model = SbmlImporter(sys.stdin.read(), from_file=False)._build_ode_model()
+print(",".join(str(s.get_id()) for s in de_model.states()))
+"""
+    for seed in range(6):
+        res = subprocess.run(
+            [sys.executable, "-c", script],
+            input=sbml_str,
+            env={**os.environ, "PYTHONHASHSEED": str(seed)},
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        assert res.stdout.strip() == "x,y,z", f"PYTHONHASHSEED={seed}"
+
+
+def test_dae_adjoint_sensitivities_algebraic_feedback(dae_model_module):
+    """Test adjoint sensitivities of a DAE whose algebraic state enters the
+    differential equation."""
+    model = dae_model_module.get_model()
+    t = np.linspace(0, 5, 11)
+    model.set_timepoints(t)
+    model.set_parameter_scale(ParameterScaling.none)
+    edata = _dae_model_edata(model, ["obs_x"], 1.0)
+
+    sllh = {}
+    for method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver = model.create_solver()
+        solver.set_relative_tolerance(1e-12)
+        solver.set_absolute_tolerance(1e-12)
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(method)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS, method
+        sllh[method] = rdata.sllh
+
+    # all parameters have an effect
+    assert np.all(np.abs(sllh[SensitivityMethod.forward]) > 1e-2)
+    assert_allclose(
+        sllh[SensitivityMethod.adjoint],
+        sllh[SensitivityMethod.forward],
+        rtol=1e-6,
+    )
+
+
+def test_failure_before_main_simulation(tempdir):
+    """A simulation that fails before the solver is set up doesn't report
+    the results or diagnostics of the solver's previous simulation."""
+    from amici.importers.antimony import antimony2amici
+
+    ant_model = """
+    model test_failure_before_main_simulation
+        x = x0
+        x' = -k * x
+        x0 = 2; k = 0.5
+    end
+    """
+    model = antimony2amici(
+        ant_model,
+        model_name="test_failure_before_main_simulation",
+        output_dir=tempdir,
+        fixed_parameters=["x0"],
+        observation_model=[MC("obs_x", formula="x")],
+    )
+    # many timepoints, so that the first simulation takes some CPU time
+    model.set_timepoints(np.linspace(0, 2, 1000))
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.adjoint)
+
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+    assert rdata.cpu_time > 0
+    assert np.all(rdata.numsteps[1:] > 0)
+
+    # adjoint presimulation with reinitialization is not supported and
+    # fails before the solver is set up
+    edata = ExpData(rdata, 0.1, 0.0)
+    edata.t_presim = 1.0
+    edata.fixed_parameters_presimulation = [3.0]
+    edata.reinitialize_fixed_parameter_initial_states = True
+    rdata = run_simulation(model, solver, edata)
+    assert rdata.status == AMICI_ERROR
+    # only the original error, no secondary errors from processing the
+    # results (debug builds additionally log a backtrace)
+    errors = [m for m in rdata.messages if m.severity == LogSeverity.error]
+    assert len(errors) == 1
+    assert "not yet implemented" in errors[0].message
+    assert rdata.cpu_time == 0
+    assert np.all(rdata.numsteps == 0)
+    assert np.isnan(rdata.t_last)
+    assert np.all(np.isnan(rdata.J))
+    assert np.all(np.isnan(rdata.xdot))
+    assert np.isnan(rdata.llh)
+    assert np.all(np.isnan(rdata.sllh))
+    assert np.all(np.isnan(rdata.x))
+    assert np.all(np.isnan(rdata.y))

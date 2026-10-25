@@ -41,32 +41,41 @@ void dxdotdp_explicit_rowvals_model_steadystate_py(SUNMatrixWrapper &dxdotdp_exp
 
 #include "amici/symbolic_functions.h"
 #include "amici/defines.h"
-#include "sundials/sundials_types.h"
 
-#include <gsl/gsl-lite.hpp>
 #include <algorithm>
-
-#include "x.h"
-#include "p.h"
-#include "k.h"
-#include "w.h"
-#include "dxdotdp_explicit.h"
+#include <sundials/sundials_types.h>
+#include <gsl/gsl-lite.hpp>
 
 namespace amici {
 namespace model_model_steadystate_py {
 
 void dxdotdp_explicit_model_steadystate_py(realtype *dxdotdp_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w){
-    ddx1dt_dp1 = -2*std::pow(x1, 2);  // dxdotdp_explicit[0]
-    ddx2dt_dp1 = std::pow(x1, 2);  // dxdotdp_explicit[1]
-    ddx1dt_dp2 = -x1*x2;  // dxdotdp_explicit[2]
-    ddx2dt_dp2 = -x1*x2;  // dxdotdp_explicit[3]
-    ddx3dt_dp2 = x1*x2;  // dxdotdp_explicit[4]
-    ddx1dt_dp3 = 2*x2;  // dxdotdp_explicit[5]
-    ddx2dt_dp3 = -x2;  // dxdotdp_explicit[6]
-    ddx1dt_dp4 = x3;  // dxdotdp_explicit[7]
-    ddx2dt_dp4 = x3;  // dxdotdp_explicit[8]
-    ddx3dt_dp4 = -x3;  // dxdotdp_explicit[9]
-    ddx1dt_dp5 = 1;  // dxdotdp_explicit[10]
+    const realtype x1_ = x[0];
+    const realtype x2_ = x[1];
+    const realtype x3_ = x[2];
+
+    realtype &ddx1dt_dp1_ = dxdotdp_explicit[0];
+    realtype &ddx2dt_dp1_ = dxdotdp_explicit[1];
+    realtype &ddx1dt_dp2_ = dxdotdp_explicit[2];
+    realtype &ddx2dt_dp2_ = dxdotdp_explicit[3];
+    realtype &ddx3dt_dp2_ = dxdotdp_explicit[4];
+    realtype &ddx1dt_dp3_ = dxdotdp_explicit[5];
+    realtype &ddx2dt_dp3_ = dxdotdp_explicit[6];
+    realtype &ddx1dt_dp4_ = dxdotdp_explicit[7];
+    realtype &ddx2dt_dp4_ = dxdotdp_explicit[8];
+    realtype &ddx3dt_dp4_ = dxdotdp_explicit[9];
+    realtype &ddx1dt_dp5_ = dxdotdp_explicit[10];
+    ddx1dt_dp1_ = -2*std::pow(x1_, 2);  // dxdotdp_explicit[0]
+    ddx2dt_dp1_ = std::pow(x1_, 2);  // dxdotdp_explicit[1]
+    ddx1dt_dp2_ = -x1_*x2_;  // dxdotdp_explicit[2]
+    ddx2dt_dp2_ = -x1_*x2_;  // dxdotdp_explicit[3]
+    ddx3dt_dp2_ = x1_*x2_;  // dxdotdp_explicit[4]
+    ddx1dt_dp3_ = 2*x2_;  // dxdotdp_explicit[5]
+    ddx2dt_dp3_ = -x2_;  // dxdotdp_explicit[6]
+    ddx1dt_dp4_ = x3_;  // dxdotdp_explicit[7]
+    ddx2dt_dp4_ = x3_;  // dxdotdp_explicit[8]
+    ddx3dt_dp4_ = -x3_;  // dxdotdp_explicit[9]
+    ddx1dt_dp5_ = 1;  // dxdotdp_explicit[10]
 }
 
 } // namespace model_model_steadystate_py

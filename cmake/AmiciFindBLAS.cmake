@@ -1,7 +1,6 @@
 # Find a BLAS
 #
-# AMICI requires BLAS, currently Intel MKL, CBLAS or MATLAB BLAS can be used.
-# The latter is not supported via CMake yet.
+# AMICI requires BLAS, currently at least Intel MKL, CBLAS can be used.
 #
 # This module defines the BLAS::BLAS IMPORTED target.
 
@@ -16,6 +15,11 @@ if(DEFINED ENV{AMICI_BLAS_USE_SCIPY_OPENBLAS})
       "Using AMICI_BLAS_USE_SCIPY_OPENBLAS=${AMICI_BLAS_USE_SCIPY_OPENBLAS} from environment variable."
   )
   set(AMICI_BLAS_USE_SCIPY_OPENBLAS $ENV{AMICI_BLAS_USE_SCIPY_OPENBLAS})
+elseif(NOT DEFINED AMICI_BLAS_USE_SCIPY_OPENBLAS
+       AND NOT AMICI_PYTHON_BUILD_EXT_ONLY)
+  # If were are not building the Python extension, it's unlikely that we want to
+  # use scipy-openblas
+  set(AMICI_BLAS_USE_SCIPY_OPENBLAS FALSE)
 endif()
 
 if((${BLAS} STREQUAL "MKL" OR DEFINED ENV{MKLROOT})

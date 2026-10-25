@@ -9,43 +9,31 @@ AMICI_PATH=$(cd $SCRIPT_PATH/.. && pwd)
 OUTDIR="${AMICI_PATH}/doc/build_doxygen"
 mkdir -p "$OUTDIR"
 
-# Set up Matlab filter
-cd ${AMICI_PATH}
-scripts/downloadAndBuildMtocpp.sh
-MTOC_CONFIG_PATH=${AMICI_PATH}/matlab/mtoc/config
+cd "${AMICI_PATH}"
 
 # Generate doxyfile
-DOXYFILE="${MTOC_CONFIG_PATH}/Doxyfile"
-cp "${MTOC_CONFIG_PATH}/Doxyfile.template" "${DOXYFILE}"
-DOXY_WARNING_FILE=${AMICI_PATH}/matlab/mtoc/warnings.log
+DOXYFILE="${AMICI_PATH}/doc/Doxyfile"
+cp "${AMICI_PATH}/doc/Doxyfile.template" "${DOXYFILE}"
+DOXY_WARNING_FILE=${AMICI_PATH}/doc/warnings.log
 
 # Replace some template values
 sed -i -e "s#_OutputDir_#$OUTDIR#g" ${DOXYFILE}
 sed -i -e "s#_SourceDir_#$AMICI_PATH#g" ${DOXYFILE}
-sed -i -e "s#_ConfDir_#${MTOC_CONFIG_PATH}#g" ${DOXYFILE}
+sed -i -e "s#_ConfDir_#${AMICI_PATH}/doc#g" ${DOXYFILE}
 sed -i -e "s#_ProjectName_#AMICI#g" ${DOXYFILE}
 sed -i -e "s#_ProjectDescription_#Advanced Multilanguage Interface for CVODES and IDAS#g" ${DOXYFILE}
 sed -i -e "s#_ProjectLogo_##g" ${DOXYFILE}
 sed -i -e "s#_ProjectVersion_##g" ${DOXYFILE}
-sed -i -e "s#_MTOCFILTER_#${MTOC_CONFIG_PATH}/mtocpp_filter.sh#g" ${DOXYFILE}
-sed -i -e "s#_LatexExtras_#${MTOC_CONFIG_PATH}/latexextras#g" ${DOXYFILE}
-sed -i -e "s#_GenLatex_#YES#g" ${DOXYFILE}
+sed -i -e "s#_GenLatex_#NO#g" ${DOXYFILE}
 sed -i -e "s#_HaveDot_#YES#g" ${DOXYFILE}
 # Fail if no replace was made
 sed -i -re "/WARN_LOGFILE(\s*)=.*/{s##WARN_LOGFILE\1= ${DOXY_WARNING_FILE}#g;h};\${x;/./{x;q0};x;q1}" ${DOXYFILE}
-
-# Generate latexextras
-cp ${MTOC_CONFIG_PATH}/latexextras.template ${MTOC_CONFIG_PATH}/latexextras.sty
-sed -i -e "s#_ConfDir_#${MTOC_CONFIG_PATH}#g" ${MTOC_CONFIG_PATH}/latexextras.sty
-export PATH=/Library/TeX/texbin:$PATH
 
 # Run doxygen
 doxygen "${DOXYFILE}"
 
 #cleanup
-#rm ${AMICI_PATH}/mtoc/config/latexextras.sty
 rm "${DOXYFILE}"
-rm "${MTOC_CONFIG_PATH}/mtocpp_filter.sh"
 
 # Build pdf
 #cd "${OUTDIR}/latex"

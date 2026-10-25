@@ -7,7 +7,7 @@ Caveats
 This section lists some caveats that are important to be aware of when using
 AMICI.
 
-See also the `list of known bugs <https://github.com/AMICI-dev/AMICI/issues?q=is%3Aissue%20state%3Aopen%20label%3Abug>`__.
+See also the `list of known bugs <https://github.com/AMICI-dev/AMICI/issues?q=is%3Aissue%20state%3Aopen%20(label%3Abug%20OR%20type%3ABug)>`__.
 
 Sensitivity analysis
 ====================
@@ -18,9 +18,6 @@ models. However, there are some limitations to be aware of:
 * Adjoint sensitivity analysis is not fully supported for models with
   discontinuities (e.g. events).
   See `this issue <https://github.com/AMICI-dev/AMICI/issues/18>`__.
-
-* Sensitivity analysis for DAE models with events is not supported.
-  See `this issue <https://github.com/AMICI-dev/AMICI/issues/2102>`__.
 
 * Sensitivities may be incorrect for models with cascading events, where
   secondary events have a bolus.
@@ -47,6 +44,8 @@ sensitivities. However, there are some limitations to be aware of:
   crosses the threshold before the discontinuity is reached.
   In this case, specify some large last output time instead of infinity to
   ensure that simulation does not stop prematurely.
+  Note that AMICI only checks the model state (`x`), but not observables (`y`)
+  or other model expressions (`w`) for steady state conditions.
 
 * When computing steady states using Newton's method, only initial events
   will be handled. Subsequent events will be ignored.

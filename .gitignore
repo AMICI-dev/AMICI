@@ -7,6 +7,7 @@ swig/python/build/*
 tests/cpp/build/*
 tests/cpp/build_xcode/*
 tests/cpp/Testing/*
+.cache/
 
 doc-venv/*
 fonts/*
@@ -37,6 +38,9 @@ models/model_robertson/build/*
 models/model_calvetti/build/*
 
 amici_models/
+
+# PEtab SciML test suite (downloaded dynamically)
+tests/sciml/testsuite/
 
 simulate_model_*_hdf.m
 simulate_model_*.m
@@ -138,8 +142,6 @@ tests/sbml/sbml-test-suite/
 */sbml-semantic-test-cases/*
 tests/sbml/SBMLTestModels/
 tests/benchmark_models/test_bmc
-tests/petab_test_suite
-petab_test_suite
 */tests/BIOMD0000000529/*
 
 python/examples/example_steadystate/model_steadystate_scaled/*
@@ -153,13 +155,13 @@ python/tests/piecewise_test/*
 
 python/sdist/amici.egg-info/*
 python/sdist/amici/version.txt
-python/sdist/amici/amici.py
-python/sdist/amici/amici_wrap.cxx
-python/sdist/amici/amici_without_hdf5.py
-python/sdist/amici/amici_wrap_without_hdf5.cxx
-python/sdist/amici/include/
-python/sdist/amici/lib/
-python/sdist/amici/share/
+python/sdist/amici/_installation/amici.py
+python/sdist/amici/_installation/amici_wrap.cxx
+python/sdist/amici/_installation/amici_without_hdf5.py
+python/sdist/amici/_installation/amici_wrap_without_hdf5.cxx
+python/sdist/amici/_installation/include/
+python/sdist/amici/_installation/lib/
+python/sdist/amici/_installation/share/
 python/sdist/build/*
 python/sdist/amici/git_version.txt
 
@@ -196,3 +198,6 @@ debug/*
 tests/benchmark_models/cache_fiddy/*
 venv/*
 .coverage
+tests/sciml/models/*
+amici_models
+doc/examples/example_petab_sciml/Dandekar_Patterns2020/

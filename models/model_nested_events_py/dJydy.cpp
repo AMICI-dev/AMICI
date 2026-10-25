@@ -41,24 +41,22 @@ void dJydy_rowvals_model_nested_events_py(SUNMatrixWrapper &dJydy, int index){
 
 #include "amici/symbolic_functions.h"
 #include "amici/defines.h"
-#include "sundials/sundials_types.h"
 
-#include <gsl/gsl-lite.hpp>
 #include <algorithm>
-
-#include "p.h"
-#include "y.h"
-#include "sigmay.h"
-#include "my.h"
-#include "dJydy.h"
+#include <sundials/sundials_types.h>
+#include <gsl/gsl-lite.hpp>
 
 namespace amici {
 namespace model_model_nested_events_py {
 
 void dJydy_model_nested_events_py(realtype *dJydy, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my){
+    const realtype obs_Virus_ = y[0];
+    const realtype sigma_obs_Virus_ = sigmay[0];
+    const realtype mobs_Virus_ = my[0];
+
     switch(iy) {
         case 0:
-            dJydy[0] = (-1.0*mobs_Virus + 1.0*obs_Virus)/std::pow(sigma_obs_Virus, 2);
+            dJydy[0] = (-1.0*mobs_Virus_ + 1.0*obs_Virus_)/std::pow(sigma_obs_Virus_, 2);
             break;
     }
 }

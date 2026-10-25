@@ -8,15 +8,15 @@ The following section describes building the AMICI C++ library:
 .. note::
 
    The AMICI C++ interface only supports simulation of models imported using
-   the :ref:`Python interface <python_interface>` and
-   :ref:`Matlab interface <matlab_interface>`. It cannot be used for model
-   import itself.
+   the :ref:`Python interface <python_interface>`.
+   It cannot be used for model import itself.
 
 Prerequisites:
 
 * CBLAS compatible BLAS library
 * a C++20 compatible compiler
 * a C compiler
+* CMake>=3.23
 * Optional:
 
   * HDF5 libraries

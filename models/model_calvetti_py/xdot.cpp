@@ -1,27 +1,35 @@
 #include "amici/symbolic_functions.h"
 #include "amici/defines.h"
-#include "sundials/sundials_types.h"
 
-#include <gsl/gsl-lite.hpp>
 #include <algorithm>
-
-#include "x.h"
-#include "k.h"
-#include "h.h"
-#include "dx.h"
-#include "w.h"
-#include "xdot.h"
 
 namespace amici {
 namespace model_model_calvetti_py {
 
 void xdot_model_calvetti_py(realtype *xdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const realtype *w){
-    de_0 = -dV1dt + rate_of_V1;  // xdot[0]
-    de_1 = -dV2dt + rate_of_V2;  // xdot[1]
-    de_2 = -dV3dt + rate_of_V3;  // xdot[2]
-    ae_0 = f0 - f1 - rate_of_V1;  // xdot[3]
-    ae_1 = f1 - f2 - rate_of_V2;  // xdot[4]
-    ae_2 = f2 - f3 - rate_of_V3;  // xdot[5]
+    const realtype f1_ = x[3];
+    const realtype f2_ = x[4];
+    const realtype f3_ = x[5];
+    const realtype dV1dt_ = dx[0];
+    const realtype dV2dt_ = dx[1];
+    const realtype dV3dt_ = dx[2];
+    const realtype f0_ = w[12];
+    const realtype rate_of_V1_ = w[13];
+    const realtype rate_of_V2_ = w[14];
+    const realtype rate_of_V3_ = w[15];
+
+    realtype &de_0_ = xdot[0];
+    realtype &de_1_ = xdot[1];
+    realtype &de_2_ = xdot[2];
+    realtype &ae_0_ = xdot[3];
+    realtype &ae_1_ = xdot[4];
+    realtype &ae_2_ = xdot[5];
+    de_0_ = -dV1dt_ + rate_of_V1_;  // xdot[0]
+    de_1_ = -dV2dt_ + rate_of_V2_;  // xdot[1]
+    de_2_ = -dV3dt_ + rate_of_V3_;  // xdot[2]
+    ae_0_ = f0_ - f1_ - rate_of_V1_;  // xdot[3]
+    ae_1_ = f1_ - f2_ - rate_of_V2_;  // xdot[4]
+    ae_2_ = f2_ - f3_ - rate_of_V3_;  // xdot[5]
 }
 
 } // namespace model_model_calvetti_py

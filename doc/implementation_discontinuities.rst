@@ -36,9 +36,9 @@ Solution Jump Discontinuities
 
 SUNDIALS by itself does not support solution jump discontinuities. We
 implement support by accessing private SUNDIALS API in
-:cpp:func:`amici::Solver::resetState`,
-:cpp:func:`amici::Solver::reInitPostProcess` and
-:cpp:func:`amici::Solver::reInitPostProcessB`. These functions reset interval
+:cpp:func:`amici::Solver::reset_state`,
+:cpp:func:`amici::Solver::reinit_post_process` and
+:cpp:func:`amici::Solver::reinit_post_process_b`. These functions reset interval
 variables to initial values to simulate a fresh integration start, but
 keep/update the solution history, which is important for adjoint solutions.
 
@@ -58,6 +58,14 @@ sensitivities will yield poor derivative approximations.
 To address these issues, we use the built-in rootfinding functionality in
 SUNDIALS, which pauses the solver at the locations of discontinuities and
 avoids overstepping or ignoring of discontinuities.
+
+Root-finding is not required if the trigger time of a discontinuity can be
+computed in advance, e.g., for `time >= t_on`. This applies if the trigger
+time only depends on parameters, constants, expressions thereof, and state
+variables with zero time derivative (e.g., parameters that are changed by
+events, which are converted to state variables). For such triggers, AMICI
+stops the integration exactly at the trigger time. The trigger times are
+re-evaluated after each event.
 
 Another difficulty comes with the evaluation of Heaviside functions. After
 or during processing of discontinuities, Heaviside functions need to be
@@ -86,7 +94,25 @@ Accordingly, the value of of the second helper variable is incorrect when
 simulation starts when the respective Heaviside function evaluates to zero
 at initialization and should generally not be used.
 
+States Around Discontinuities
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+At a discontinuity, several events may trigger at the same time and are
+applied one after another, and their assignments may trigger further events.
+The implementation distinguishes the following states, which all belong to
+the same timepoint:
+
+- ``*_at_trigger``: the state at which a discontinuity was reached, i.e.,
+  when its events triggered, before the Heaviside helper variables were
+  updated and before any event was applied. For events that are triggered
+  by the assignments of other events, this is the state right after those
+  assignments.
+- ``*_pre`` / ``*_post``: the state right before / after the assignments of
+  a single event were applied.
+- ``*_eval``: the state at which the assignments of an event are evaluated.
+  This is the ``*_at_trigger`` state for events that use values from the
+  trigger time (SBML ``useValuesFromTriggerTime="true"``), and the ``*_pre``
+  state otherwise.
 
 Right-Hand-Side Removable Discontinuities
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

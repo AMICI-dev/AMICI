@@ -2,24 +2,33 @@
 cmake_minimum_required(VERSION 3.22)
 cmake_policy(VERSION 3.22...3.31)
 
+# We aren't using C++20 modules, so disable scanning for them to avoid
+# clang-scan-deps-notfound errors.
+# See also https://discourse.cmake.org/t/cmake-3-28-cmake-cxx-compiler-clang-scan-deps-notfound-not-found/9244/3
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
+
 project(model_dirac_py)
 
-set(CMAKE_CXX_STANDARD 17)
+message(STATUS "CMAKE_CURRENT_SOURCE_DIR: ${CMAKE_CURRENT_SOURCE_DIR}")
+message(STATUS "CMAKE_BINARY_DIR: ${CMAKE_BINARY_DIR}")
+message(STATUS "CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
+message(STATUS "CMAKE_VERSION: ${CMAKE_VERSION}")
+message(STATUS "CMAKE_COMMAND: ${CMAKE_COMMAND}")
+
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-include(CheckCXXCompilerFlag)
-set(MY_CXX_FLAGS -Wall -Wno-unused-function -Wno-unused-variable)
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  list(APPEND MY_CXX_FLAGS -Wno-unused-but-set-variable)
-endif()
-foreach(flag ${MY_CXX_FLAGS})
-  unset(CUR_FLAG_SUPPORTED CACHE)
-  check_cxx_compiler_flag(${flag} CUR_FLAG_SUPPORTED)
-  if(${CUR_FLAG_SUPPORTED})
-    string(APPEND CMAKE_CXX_FLAGS " ${flag}")
+# -Wall/-Wno-unused-* are supported by every GCC/Clang version AMICI
+# targets, so skip the check_cxx_compiler_flag() probing (a full
+# try_compile() per flag, on every single model configure) and just gate
+# on the compiler family.
+if(CMAKE_CXX_COMPILER_ID MATCHES "^(GNU|Clang|AppleClang)$")
+  string(APPEND CMAKE_CXX_FLAGS " -Wall -Wno-unused-function -Wno-unused-variable")
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    string(APPEND CMAKE_CXX_FLAGS " -Wno-unused-but-set-variable")
   endif()
-endforeach()
+endif()
 
 if(DEFINED ENV{AMICI_CXXFLAGS})
   message(STATUS "Appending flags from AMICI_CXXFLAGS: $ENV{AMICI_CXXFLAGS}")
@@ -30,7 +39,7 @@ if(DEFINED ENV{AMICI_LDFLAGS})
   link_libraries("$ENV{AMICI_LDFLAGS}")
 endif()
 
-find_package(Amici 0.33.0 REQUIRED HINTS
+find_package(Amici 1.1.0 REQUIRED HINTS
              ${CMAKE_CURRENT_LIST_DIR}/../../build)
 message(STATUS "Found AMICI ${Amici_DIR}")
 set_target_properties(Upstream::amici PROPERTIES
@@ -57,45 +66,30 @@ endif()
 set(MODEL_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 set(SRC_LIST_LIB Jy.cpp 
-Jy.h 
 create_splines.cpp 
-dJydsigma.cpp 
+dJydsigmay.cpp 
 dJydy.cpp 
-dJydy.h 
-deltaqB.cpp 
 deltasx.cpp 
 deltax.cpp 
+deltaxB.cpp 
+deltaxB_at_trigger.cpp 
+dtaudp.cpp 
 dxdotdp_explicit.cpp 
-dxdotdp_explicit.h 
 dxdotdx_explicit.cpp 
-dxdotdx_explicit.h 
 dydx.cpp 
-h.h 
+explicit_roots.cpp 
 model_dirac_py.cpp 
 model_dirac_py.h 
-my.h 
-p.h 
 root.cpp 
 sigmay.cpp 
-sigmay.h 
 stau.cpp 
-stau.h 
-sx.h 
-w.h 
+stauB.cpp 
 wrapfunctions.cpp 
 wrapfunctions.h 
-x.h 
-xB.h 
-x_old.h 
 x_rdata.cpp 
-x_rdata.h 
 x_solver.cpp 
-x_solver.h 
 xdot.cpp 
-xdot.h 
-xdot_old.h 
-y.cpp 
-y.h  ${MODEL_DIR}/wrapfunctions.cpp)
+y.cpp  ${MODEL_DIR}/wrapfunctions.cpp)
 
 add_library(${PROJECT_NAME} ${SRC_LIST_LIB})
 

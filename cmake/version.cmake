@@ -9,9 +9,15 @@ if(Git_FOUND)
 endif()
 
 # get project root directory
-get_filename_component(CMAKE_PARENT_LIST_DIR ${CMAKE_PARENT_LIST_FILE}
+get_filename_component(CMAKE_PARENT_LIST_DIR ${CMAKE_CURRENT_LIST_DIR}
                        DIRECTORY)
-get_filename_component(CMAKE_PARENT_LIST_DIR ${CMAKE_PARENT_LIST_DIR} DIRECTORY)
+file(STRINGS "${CMAKE_PARENT_LIST_DIR}/version.txt" PROJECT_VERSION_RAW)
 
-file(STRINGS "${CMAKE_PARENT_LIST_DIR}/version.txt" PROJECT_VERSION)
+# try to extract major.minor.patch
+# (ignore any Python .dev, .post, etc. suffixes)
+string(REGEX MATCH "([0-9]+\\.[0-9]+\\.[0-9]+)" PROJECT_VERSION "${PROJECT_VERSION_RAW}")
+if(NOT PROJECT_VERSION)
+  message(FATAL_ERROR "Could not extract version number from version.txt")
+endif()
+
 message(DEBUG "Version number: ${PROJECT_VERSION}")

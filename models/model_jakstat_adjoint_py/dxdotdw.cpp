@@ -7,8 +7,8 @@
 namespace amici {
 namespace model_model_jakstat_adjoint_py {
 
-static constexpr std::array<sunindextype, 3> dxdotdw_colptrs_model_jakstat_adjoint_py_ = {
-    0, 2, 2
+static constexpr std::array<sunindextype, 2> dxdotdw_colptrs_model_jakstat_adjoint_py_ = {
+    0, 2
 };
 
 void dxdotdw_colptrs_model_jakstat_adjoint_py(SUNMatrixWrapper &dxdotdw){
@@ -41,23 +41,22 @@ void dxdotdw_rowvals_model_jakstat_adjoint_py(SUNMatrixWrapper &dxdotdw){
 
 #include "amici/symbolic_functions.h"
 #include "amici/defines.h"
-#include "sundials/sundials_types.h"
 
-#include <gsl/gsl-lite.hpp>
 #include <algorithm>
-
-#include "x.h"
-#include "p.h"
-#include "k.h"
-#include "w.h"
-#include "dxdotdw.h"
+#include <sundials/sundials_types.h>
+#include <gsl/gsl-lite.hpp>
 
 namespace amici {
 namespace model_model_jakstat_adjoint_py {
 
 void dxdotdw_model_jakstat_adjoint_py(realtype *dxdotdw, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w){
-    ddSTATdt_du = -STAT*p1;  // dxdotdw[0]
-    ddpSTATdt_du = STAT*p1;  // dxdotdw[1]
+    const realtype STAT_ = x[0];
+    const realtype p1_ = p[0];
+
+    realtype &ddSTATdt_du_ = dxdotdw[0];
+    realtype &ddpSTATdt_du_ = dxdotdw[1];
+    ddSTATdt_du_ = -STAT_*p1_;  // dxdotdw[0]
+    ddpSTATdt_du_ = STAT_*p1_;  // dxdotdw[1]
 }
 
 } // namespace model_model_jakstat_adjoint_py

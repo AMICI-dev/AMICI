@@ -41,39 +41,60 @@ void dxdotdx_explicit_rowvals_model_jakstat_adjoint_py(SUNMatrixWrapper &dxdotdx
 
 #include "amici/symbolic_functions.h"
 #include "amici/defines.h"
-#include "sundials/sundials_types.h"
 
-#include <gsl/gsl-lite.hpp>
 #include <algorithm>
-
-#include "x.h"
-#include "p.h"
-#include "k.h"
-#include "w.h"
-#include "dxdotdx_explicit.h"
+#include <sundials/sundials_types.h>
+#include <gsl/gsl-lite.hpp>
 
 namespace amici {
 namespace model_model_jakstat_adjoint_py {
 
 void dxdotdx_explicit_model_jakstat_adjoint_py(realtype *dxdotdx_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w){
-    ddSTATdt_dSTAT = -p1*u;  // dxdotdx_explicit[0]
-    ddpSTATdt_dSTAT = p1*u;  // dxdotdx_explicit[1]
-    ddpSTATdt_dpSTAT = -4*p2*pSTAT;  // dxdotdx_explicit[2]
-    ddpSTAT_pSTATdt_dpSTAT = 2*p2*pSTAT;  // dxdotdx_explicit[3]
-    ddpSTAT_pSTATdt_dpSTAT_pSTAT = -p3;  // dxdotdx_explicit[4]
-    ddnpSTAT_npSTATdt_dpSTAT_pSTAT = Omega_cyt*p3/Omega_nuc;  // dxdotdx_explicit[5]
-    ddnpSTAT_npSTATdt_dnpSTAT_npSTAT = -p4;  // dxdotdx_explicit[6]
-    ddnSTAT1dt_dnpSTAT_npSTAT = 2*p4;  // dxdotdx_explicit[7]
-    ddnSTAT1dt_dnSTAT1 = -p4;  // dxdotdx_explicit[8]
-    ddnSTAT2dt_dnSTAT1 = p4;  // dxdotdx_explicit[9]
-    ddnSTAT2dt_dnSTAT2 = -p4;  // dxdotdx_explicit[10]
-    ddnSTAT3dt_dnSTAT2 = p4;  // dxdotdx_explicit[11]
-    ddnSTAT3dt_dnSTAT3 = -p4;  // dxdotdx_explicit[12]
-    ddnSTAT4dt_dnSTAT3 = p4;  // dxdotdx_explicit[13]
-    ddnSTAT4dt_dnSTAT4 = -p4;  // dxdotdx_explicit[14]
-    ddnSTAT5dt_dnSTAT4 = p4;  // dxdotdx_explicit[15]
-    ddSTATdt_dnSTAT5 = Omega_nuc*p4/Omega_cyt;  // dxdotdx_explicit[16]
-    ddnSTAT5dt_dnSTAT5 = -p4;  // dxdotdx_explicit[17]
+    const realtype pSTAT_ = x[1];
+    const realtype p1_ = p[0];
+    const realtype p2_ = p[1];
+    const realtype p3_ = p[2];
+    const realtype p4_ = p[3];
+    const realtype Omega_cyt_ = k[0];
+    const realtype Omega_nuc_ = k[1];
+    const realtype u_ = w[0];
+
+    realtype &ddSTATdt_dSTAT_ = dxdotdx_explicit[0];
+    realtype &ddpSTATdt_dSTAT_ = dxdotdx_explicit[1];
+    realtype &ddpSTATdt_dpSTAT_ = dxdotdx_explicit[2];
+    realtype &ddpSTAT_pSTATdt_dpSTAT_ = dxdotdx_explicit[3];
+    realtype &ddpSTAT_pSTATdt_dpSTAT_pSTAT_ = dxdotdx_explicit[4];
+    realtype &ddnpSTAT_npSTATdt_dpSTAT_pSTAT_ = dxdotdx_explicit[5];
+    realtype &ddnpSTAT_npSTATdt_dnpSTAT_npSTAT_ = dxdotdx_explicit[6];
+    realtype &ddnSTAT1dt_dnpSTAT_npSTAT_ = dxdotdx_explicit[7];
+    realtype &ddnSTAT1dt_dnSTAT1_ = dxdotdx_explicit[8];
+    realtype &ddnSTAT2dt_dnSTAT1_ = dxdotdx_explicit[9];
+    realtype &ddnSTAT2dt_dnSTAT2_ = dxdotdx_explicit[10];
+    realtype &ddnSTAT3dt_dnSTAT2_ = dxdotdx_explicit[11];
+    realtype &ddnSTAT3dt_dnSTAT3_ = dxdotdx_explicit[12];
+    realtype &ddnSTAT4dt_dnSTAT3_ = dxdotdx_explicit[13];
+    realtype &ddnSTAT4dt_dnSTAT4_ = dxdotdx_explicit[14];
+    realtype &ddnSTAT5dt_dnSTAT4_ = dxdotdx_explicit[15];
+    realtype &ddSTATdt_dnSTAT5_ = dxdotdx_explicit[16];
+    realtype &ddnSTAT5dt_dnSTAT5_ = dxdotdx_explicit[17];
+    ddSTATdt_dSTAT_ = -p1_*u_;  // dxdotdx_explicit[0]
+    ddpSTATdt_dSTAT_ = p1_*u_;  // dxdotdx_explicit[1]
+    ddpSTATdt_dpSTAT_ = -4*p2_*pSTAT_;  // dxdotdx_explicit[2]
+    ddpSTAT_pSTATdt_dpSTAT_ = 2*p2_*pSTAT_;  // dxdotdx_explicit[3]
+    ddpSTAT_pSTATdt_dpSTAT_pSTAT_ = -p3_;  // dxdotdx_explicit[4]
+    ddnpSTAT_npSTATdt_dpSTAT_pSTAT_ = Omega_cyt_*p3_/Omega_nuc_;  // dxdotdx_explicit[5]
+    ddnpSTAT_npSTATdt_dnpSTAT_npSTAT_ = -p4_;  // dxdotdx_explicit[6]
+    ddnSTAT1dt_dnpSTAT_npSTAT_ = 2*p4_;  // dxdotdx_explicit[7]
+    ddnSTAT1dt_dnSTAT1_ = -p4_;  // dxdotdx_explicit[8]
+    ddnSTAT2dt_dnSTAT1_ = p4_;  // dxdotdx_explicit[9]
+    ddnSTAT2dt_dnSTAT2_ = -p4_;  // dxdotdx_explicit[10]
+    ddnSTAT3dt_dnSTAT2_ = p4_;  // dxdotdx_explicit[11]
+    ddnSTAT3dt_dnSTAT3_ = -p4_;  // dxdotdx_explicit[12]
+    ddnSTAT4dt_dnSTAT3_ = p4_;  // dxdotdx_explicit[13]
+    ddnSTAT4dt_dnSTAT4_ = -p4_;  // dxdotdx_explicit[14]
+    ddnSTAT5dt_dnSTAT4_ = p4_;  // dxdotdx_explicit[15]
+    ddSTATdt_dnSTAT5_ = Omega_nuc_*p4_/Omega_cyt_;  // dxdotdx_explicit[16]
+    ddnSTAT5dt_dnSTAT5_ = -p4_;  // dxdotdx_explicit[17]
 }
 
 } // namespace model_model_jakstat_adjoint_py

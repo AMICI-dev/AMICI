@@ -2,12 +2,17 @@
 
 import numpy as np
 import pytest
+from amici import import_model_module
+from amici.importers.antimony import antimony2amici
+from amici.sim.sundials import AMICI_SUCCESS, run_simulation
+from amici.testing import skip_on_valgrind
+from amici.testing.models import create_amici_model, create_sbml_model
+from numpy.testing import assert_allclose
 from util import (
     check_trajectories_with_adjoint_sensitivities,
     check_trajectories_with_forward_sensitivities,
     check_trajectories_without_sensitivities,
 )
-from amici.testing.models import create_sbml_model, create_amici_model
 
 pytestmark = pytest.mark.filterwarnings(
     # https://github.com/AMICI-dev/AMICI/issues/18
@@ -52,7 +57,7 @@ def model(request):
         sbml_model=sbml_model,
         model_name=request.param,
     )
-    amici_model.setTimepoints(timepoints)
+    amici_model.set_timepoints(timepoints)
 
     return amici_model, parameters, timepoints, x_expected, sx_expected
 
@@ -73,10 +78,7 @@ def test_models(model):
         amici_model, result_expected_x, result_expected_sx
     )
 
-    # FIXME: For a few parameters of these models, adjoint sensitivities
-    # are somewhat off. This needs to be investigated further.
-    asa_xfail = amici_model.getName() in ("state_and_param_dep_heavisides",)
-    check_trajectories_with_adjoint_sensitivities(amici_model, asa_xfail)
+    check_trajectories_with_adjoint_sensitivities(amici_model)
 
 
 def get_model_definition(model_name):
@@ -357,11 +359,129 @@ def model_definition_piecewise_many_conditions():
     )
 
 
+@skip_on_valgrind
+def test_nested_piecewise_in_condition(tempdir):
+    """Test a piecewise expression inside the condition of another one.
+
+    The condition of the outer piecewise expression depends (via `p3`) on the
+    value of the inner one. This requires the Heaviside variable of the outer
+    expression to be initialized based on the *updated* value of the inner one.
+
+    See https://github.com/AMICI-dev/AMICI/issues/3233.
+    """
+    ant_model = """
+    model nested_piecewise
+      p1 := 0.001;
+      p2 := piecewise(0, p1 < 0, p1);
+      p3 := p2 - 0.0001;
+      p4 := piecewise(0, p3 < 0, p3);
+      # three levels of nesting
+      p5 := p4 - 0.0001;
+      p6 := piecewise(0, p5 < 0, p5);
+      x = 0;
+      x' = p6;
+    end
+    """
+    module_name = "test_nested_piecewise_in_condition"
+    antimony2amici(
+        ant_model,
+        model_name=module_name,
+        output_dir=tempdir,
+    )
+    amici_model = import_model_module(
+        module_name=module_name, module_path=tempdir
+    ).get_model()
+    amici_model.set_timepoints([0.0, 1.0])
+    rdata = run_simulation(amici_model, amici_model.create_solver())
+    assert rdata.status == AMICI_SUCCESS
+
+    expr_ids = list(amici_model.get_expression_ids())
+    w = np.asarray(rdata.w).reshape(len(rdata.ts), -1)
+    expected = {
+        "p1": 0.001,
+        "p2": 0.001,
+        "p3": 0.0009,
+        "p4": 0.0009,
+        "p5": 0.0008,
+        "p6": 0.0008,
+    }
+    for expr_id, expected_val in expected.items():
+        assert_allclose(
+            w[:, expr_ids.index(expr_id)],
+            expected_val,
+            rtol=1e-10,
+            atol=1e-14,
+            err_msg=f"Unexpected value for {expr_id}",
+        )
+
+    # dx/dt == p6 == const
+    assert_allclose(
+        np.asarray(rdata.x).flatten(),
+        expected["p6"] * np.asarray(rdata.ts),
+        rtol=1e-8,
+        atol=1e-14,
+    )
+
+
+@skip_on_valgrind
+def test_adjoint_sensitivities_heaviside_dependent_observable(tempdir):
+    """Test adjoint sensitivities for an observable that depends on a
+    Heaviside function that changes during the simulation."""
+    from amici import MeasurementChannel as MC
+    from amici.sim.sundials import (
+        ExpData,
+        ParameterScaling,
+        SensitivityMethod,
+        SensitivityOrder,
+    )
+
+    model_name = "heaviside_observable_asa"
+    antimony2amici(
+        """
+        k = 0.5; p = 3
+        x = 1
+        x' = -k * x
+        o := piecewise(p * x, time < 2, x)
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[MC("obs", formula="o")],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_parameter_scale(ParameterScaling.none)
+    assert model.get_free_parameter_ids() == ("k", "p")
+    t = np.linspace(0.5, 4, 8)
+    model.set_timepoints(t)
+    edata = ExpData(model)
+    edata.set_measurements(np.ones(len(t)))
+    edata.set_noise_scales(np.ones(len(t)))
+
+    # analytical solution
+    k, p = 0.5, 3
+    x = np.exp(-k * t)
+    y = np.where(t < 2, p * x, x)
+    dydk = -t * y
+    dydp = np.where(t < 2, x, 0)
+    sllh_expected = -np.array([(y - 1) @ dydk, (y - 1) @ dydp])
+
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-12)
+    for sensi_meth in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver.set_sensitivity_method(sensi_meth)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS
+        assert_allclose(
+            rdata.sllh, sllh_expected, rtol=1e-8, err_msg=sensi_meth
+        )
+
+
 def test_parse_piecewise_c1_no_heaviside():
     """_parse_piecewise_to_heaviside should keep C1 piecewise expressions."""
 
     import sympy as sp
-    from amici.import_utils import (
+    from amici.importers.utils import (
         _parse_piecewise_to_heaviside,
         amici_time_symbol,
         symbol_with_assumptions,
@@ -390,7 +510,7 @@ def test_parse_piecewise_discontinuous_to_heaviside():
     """_parse_piecewise_to_heaviside should convert discontinuous piecewise."""
 
     import sympy as sp
-    from amici.import_utils import (
+    from amici.importers.utils import (
         _parse_piecewise_to_heaviside,
         amici_time_symbol,
         symbol_with_assumptions,
@@ -419,7 +539,7 @@ def test_parse_piecewise_c1_constant_zero():
     """Piecewise expressions evaluating to zero should simplify to zero."""
 
     import sympy as sp
-    from amici.import_utils import (
+    from amici.importers.utils import (
         _parse_piecewise_to_heaviside,
         symbol_with_assumptions,
     )

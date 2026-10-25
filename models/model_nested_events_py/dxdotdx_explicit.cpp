@@ -41,22 +41,21 @@ void dxdotdx_explicit_rowvals_model_nested_events_py(SUNMatrixWrapper &dxdotdx_e
 
 #include "amici/symbolic_functions.h"
 #include "amici/defines.h"
-#include "sundials/sundials_types.h"
 
-#include <gsl/gsl-lite.hpp>
 #include <algorithm>
-
-#include "x.h"
-#include "p.h"
-#include "h.h"
-#include "w.h"
-#include "dxdotdx_explicit.h"
+#include <sundials/sundials_types.h>
+#include <gsl/gsl-lite.hpp>
 
 namespace amici {
 namespace model_model_nested_events_py {
 
 void dxdotdx_explicit_model_nested_events_py(realtype *dxdotdx_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w){
-    ddVirusdt_dVirus = Heaviside_1*rho_V - delta_V;  // dxdotdx_explicit[0]
+    const realtype rho_V_ = p[3];
+    const realtype delta_V_ = p[4];
+    const realtype Heaviside_1_ = h[0];
+
+    realtype &ddVirusdt_dVirus_ = dxdotdx_explicit[0];
+    ddVirusdt_dVirus_ = Heaviside_1_*rho_V_ - delta_V_;  // dxdotdx_explicit[0]
 }
 
 } // namespace model_model_nested_events_py

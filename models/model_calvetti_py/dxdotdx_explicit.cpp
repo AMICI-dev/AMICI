@@ -41,27 +41,25 @@ void dxdotdx_explicit_rowvals_model_calvetti_py(SUNMatrixWrapper &dxdotdx_explic
 
 #include "amici/symbolic_functions.h"
 #include "amici/defines.h"
-#include "sundials/sundials_types.h"
 
-#include <gsl/gsl-lite.hpp>
 #include <algorithm>
-
-#include "x.h"
-#include "k.h"
-#include "h.h"
-#include "dx.h"
-#include "w.h"
-#include "dxdotdx_explicit.h"
+#include <sundials/sundials_types.h>
+#include <gsl/gsl-lite.hpp>
 
 namespace amici {
 namespace model_model_calvetti_py {
 
 void dxdotdx_explicit_model_calvetti_py(realtype *dxdotdx_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const realtype *w){
-    dae_0_df1 = -1;  // dxdotdx_explicit[0]
-    dae_1_df1 = 1;  // dxdotdx_explicit[1]
-    dae_1_df2 = -1;  // dxdotdx_explicit[2]
-    dae_2_df2 = 1;  // dxdotdx_explicit[3]
-    dae_2_df3 = -1;  // dxdotdx_explicit[4]
+    realtype &dae_0_df1_ = dxdotdx_explicit[0];
+    realtype &dae_1_df1_ = dxdotdx_explicit[1];
+    realtype &dae_1_df2_ = dxdotdx_explicit[2];
+    realtype &dae_2_df2_ = dxdotdx_explicit[3];
+    realtype &dae_2_df3_ = dxdotdx_explicit[4];
+    dae_0_df1_ = -1;  // dxdotdx_explicit[0]
+    dae_1_df1_ = 1;  // dxdotdx_explicit[1]
+    dae_1_df2_ = -1;  // dxdotdx_explicit[2]
+    dae_2_df2_ = 1;  // dxdotdx_explicit[3]
+    dae_2_df3_ = -1;  // dxdotdx_explicit[4]
 }
 
 } // namespace model_model_calvetti_py

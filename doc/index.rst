@@ -33,7 +33,6 @@ Welcome to AMICI's documentation!
 
 .. include:: PYTHON.rst
 .. include:: CPP.rst
-.. include:: MATLAB.rst
 
 .. toctree::
    :maxdepth: 2

@@ -1,13 +1,13 @@
 import copy
-from pathlib import Path
 import sys
-
-import pytest
-import petab.v1 as petab
-from petab.v1.lint import measurement_table_has_timepoint_specific_mappings
+from pathlib import Path
 
 import benchmark_models_petab
-from amici.petab.petab_import import import_petab_problem
+import petab.v1 as petab
+import pytest
+from amici import get_model_root_dir
+from amici.importers.petab.v1 import import_petab_problem
+from petab.v1.lint import measurement_table_has_timepoint_specific_mappings
 
 script_dir = Path(__file__).parent.resolve()
 if str(script_dir) not in sys.path:
@@ -15,8 +15,7 @@ if str(script_dir) not in sys.path:
 
 from test_petab_benchmark import problems
 
-repo_root = script_dir.parent.parent
-benchmark_outdir = repo_root / "test_bmc"
+benchmark_outdir = get_model_root_dir() / "test_bmc"
 
 
 @pytest.fixture(scope="session", params=problems, ids=problems)
@@ -32,6 +31,6 @@ def benchmark_problem(request):
 
     amici_model = import_petab_problem(
         flat_petab_problem,
-        model_output_dir=benchmark_outdir / problem_id,
+        output_dir=benchmark_outdir / problem_id,
     )
     return problem_id, flat_petab_problem, petab_problem, amici_model

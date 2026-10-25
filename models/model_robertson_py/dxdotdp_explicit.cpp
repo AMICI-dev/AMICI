@@ -41,27 +41,29 @@ void dxdotdp_explicit_rowvals_model_robertson_py(SUNMatrixWrapper &dxdotdp_expli
 
 #include "amici/symbolic_functions.h"
 #include "amici/defines.h"
-#include "sundials/sundials_types.h"
 
-#include <gsl/gsl-lite.hpp>
 #include <algorithm>
-
-#include "x.h"
-#include "p.h"
-#include "k.h"
-#include "dx.h"
-#include "w.h"
-#include "dxdotdp_explicit.h"
+#include <sundials/sundials_types.h>
+#include <gsl/gsl-lite.hpp>
 
 namespace amici {
 namespace model_model_robertson_py {
 
 void dxdotdp_explicit_model_robertson_py(realtype *dxdotdp_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const realtype *w){
-    dde_0_dp1 = -x1;  // dxdotdp_explicit[0]
-    dde_1_dp1 = x1;  // dxdotdp_explicit[1]
-    dde_0_dp2 = x2*x3;  // dxdotdp_explicit[2]
-    dde_1_dp2 = -x2*x3;  // dxdotdp_explicit[3]
-    dde_1_dp3 = -std::pow(x2, 2);  // dxdotdp_explicit[4]
+    const realtype x1_ = x[0];
+    const realtype x2_ = x[1];
+    const realtype x3_ = x[2];
+
+    realtype &dde_0_dp1_ = dxdotdp_explicit[0];
+    realtype &dde_1_dp1_ = dxdotdp_explicit[1];
+    realtype &dde_0_dp2_ = dxdotdp_explicit[2];
+    realtype &dde_1_dp2_ = dxdotdp_explicit[3];
+    realtype &dde_1_dp3_ = dxdotdp_explicit[4];
+    dde_0_dp1_ = -x1_;  // dxdotdp_explicit[0]
+    dde_1_dp1_ = x1_;  // dxdotdp_explicit[1]
+    dde_0_dp2_ = x2_*x3_;  // dxdotdp_explicit[2]
+    dde_1_dp2_ = -x2_*x3_;  // dxdotdp_explicit[3]
+    dde_1_dp3_ = -std::pow(x2_, 2);  // dxdotdp_explicit[4]
 }
 
 } // namespace model_model_robertson_py

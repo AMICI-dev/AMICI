@@ -1116,3 +1116,83 @@
    fun:PyUFunc_AddLoopFromSpec_int
    ...
 }
+
+{
+   pybind11
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:_PyObject_New
+   fun:_ZN8pybind1112cpp_function18initialize_genericEOSt10unique_ptrINS_6detail15function_recordENS0_33InitializingFunctionRecordDeleterEEPKcPKPKSt9type_infom
+   ...
+}
+
+{
+   pydantic
+   Memcheck:Leak
+   match-leak-kinds: definite
+   ...
+   fun:PyInit__pydantic_core
+   ...
+}
+
+{
+   pydantic_core-2.46.0
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:realloc
+   obj:*/pydantic_core/_pydantic_core.cpython-*
+   ...
+   fun:PyModule_ExecDef
+   ...
+}
+
+{
+   libsbml
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:_PyObject_New
+   fun:PyInit__libsbml
+   fun:_PyImport_RunModInitFunc
+   ...
+}
+
+{
+   h5py_3.15
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:_PyLong_New
+   fun:PyLong_FromSsize_t
+   fun:__Pyx_DelItemInt_Fast
+   fun:__pyx_pf_4h5py_8_objects_8ObjectID_4_dealloc
+   fun:__pyx_pw_4h5py_8_objects_8ObjectID_5_dealloc
+   fun:__Pyx_CyFunction_Vectorcall_FASTCALL_KEYWORDS
+   fun:_PyObject_VectorcallTstate
+   fun:PyObject_VectorcallMethod
+   fun:__pyx_pf_4h5py_8_objects_8ObjectID_2__dealloc__
+   fun:__pyx_pw_4h5py_8_objects_8ObjectID_3__dealloc__
+   fun:__pyx_tp_dealloc_4h5py_8_objects_ObjectID
+   ...
+}
+
+{
+   SWIG (probably libsbml-5.21.1)
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:_PyObject_New
+   fun:_ZL13SWIG_mod_execP7_object
+   fun:PyModule_ExecDef
+   ...
+}
+
+{
+   Matplotlib 3.10.9
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:_Znwm
+   fun:_ZL14PyFT2Font_initN8pybind116objectElSt8optionalISt6vectorIP9PyFT2FontSaIS4_EEEi.lto_priv.0
+   ...
+}

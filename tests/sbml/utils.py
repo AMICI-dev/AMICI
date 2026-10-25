@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 from pathlib import Path
 
+import amici.sim.sundials as asd
 import libsbml as sbml
 import numpy as np
 import pandas as pd
@@ -7,7 +10,15 @@ from amici.constants import SymbolId
 from numpy.testing import assert_allclose
 
 
-def verify_results(settings, rdata, expected, wrapper, model, atol, rtol):
+def verify_results(
+    settings,
+    rdata: asd.ReturnData,
+    expected,
+    wrapper,
+    model: asd.Model,
+    atol,
+    rtol,
+):
     """Verify test results"""
     amount_species, variables = get_amount_and_variables(settings)
 
@@ -16,7 +27,7 @@ def verify_results(settings, rdata, expected, wrapper, model, atol, rtol):
         rdata["y"],
         columns=[
             obs["name"]
-            for obs in wrapper.symbols[SymbolId.OBSERVABLE].values()
+            for obs in wrapper._symbols[SymbolId.OBSERVABLE].values()
         ],
     )
     simulated["time"] = rdata["ts"]
@@ -24,17 +35,19 @@ def verify_results(settings, rdata, expected, wrapper, model, atol, rtol):
     parameter_data = {}
 
     # collect parameters
-    for par in model.getParameterIds():
-        parameter_data[par] = rdata["ts"] * 0 + model.getParameterById(par)
+    for par in model.get_free_parameter_ids():
+        parameter_data[par] = rdata["ts"] * 0 + model.get_free_parameter_by_id(
+            par
+        )
 
     expression_data = {}
 
-    for expr_idx, expr_id in enumerate(model.getExpressionIds()):
+    for expr_idx, expr_id in enumerate(model.get_expression_ids()):
         if expr_id.startswith("flux_"):
             new_key = expr_id.removeprefix("flux_")
         else:
             new_key = expr_id
-            if expr_id.removeprefix("amici_") in simulated.columns:
+            if expr_id in simulated.columns:
                 continue  # skip if already present
         expression_data[new_key] = rdata.w[:, expr_idx]
 
@@ -46,12 +59,6 @@ def verify_results(settings, rdata, expected, wrapper, model, atol, rtol):
             pd.DataFrame(parameter_data),
         ],
         axis=1,
-    )
-
-    # handle renamed reserved symbols
-    simulated.rename(
-        columns={c: c.replace("amici_", "") for c in simulated.columns},
-        inplace=True,
     )
 
     # SBML test suite case 01308 defines species with initialAmount and
@@ -68,8 +75,8 @@ def verify_results(settings, rdata, expected, wrapper, model, atol, rtol):
     concentration_species = [
         str(state_id)
         for state_id, state in {
-            **wrapper.symbols[SymbolId.SPECIES],
-            **wrapper.symbols[SymbolId.ALGEBRAIC_STATE],
+            **wrapper._symbols[SymbolId.SPECIES],
+            **wrapper._symbols[SymbolId.ALGEBRAIC_STATE],
         }.items()
         if str(state_id) in requested_concentrations
         and state.get("amount", False)
@@ -132,7 +139,7 @@ def concentrations_to_amounts(
 ):
     """Convert AMICI simulated concentrations to amounts"""
     for species in amount_species:
-        s = wrapper.sbml.getElementBySId(species)
+        s = wrapper.sbml_model.getElementBySId(species)
         # Skip species that are marked to only have substance units since
         # they are already simulated as amounts
         if not isinstance(s, sbml.Species):
@@ -150,9 +157,7 @@ def concentrations_to_amounts(
         ) or comp is None:
             continue
 
-        simulated.loc[:, species] *= simulated.loc[
-            :, comp if comp in simulated.columns else f"amici_{comp}"
-        ]
+        simulated.loc[:, species] *= simulated.loc[:, comp]
 
 
 def write_result_file(
@@ -168,7 +173,13 @@ def write_result_file(
 
     result_path.mkdir(parents=True, exist_ok=True)
     filename = result_path / f"{test_id}.csv"
-    simulated.to_csv(filename, index=False)
+    (
+        simulated
+        # see https://github.com/sbmlteam/sbml-test-suite/blob/473e119dd57226c3a7a729d598f9007f06f781c3/cases/semantic/README.md?plain=1#L211-L215
+        .replace({np.nan: "NaN", np.inf: "INF", -np.inf: "-INF"}).to_csv(
+            filename, index=False
+        )
+    )
 
 
 def get_amount_and_variables(settings):
@@ -187,7 +198,9 @@ def get_amount_and_variables(settings):
     return amount_species, variables
 
 
-def apply_settings(settings, solver, model, test_id: str):
+def apply_settings(
+    settings, solver: asd.Solver, model: asd.Model, test_id: str
+):
     """Apply model and solver settings as specified in the test case"""
     # start/duration/steps may be empty
     ts = np.linspace(
@@ -198,14 +211,14 @@ def apply_settings(settings, solver, model, test_id: str):
     atol = float(settings["absolute"])
     rtol = float(settings["relative"])
 
-    model.setTimepoints(ts)
-    solver.setMaxSteps(int(1e6))
-    solver.setRelativeTolerance(rtol / 1e4)
+    model.set_timepoints(ts)
+    solver.set_max_steps(int(1e6))
+    solver.set_relative_tolerance(rtol / 1e4)
 
     if test_id == "01148":
-        solver.setAbsoluteTolerance(atol / 1e6)
+        solver.set_absolute_tolerance(atol / 1e6)
     else:
-        solver.setAbsoluteTolerance(atol / 1e4)
+        solver.set_absolute_tolerance(atol / 1e4)
 
     return atol, rtol
 

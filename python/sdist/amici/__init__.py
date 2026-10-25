@@ -1,22 +1,26 @@
 """
-AMICI
------
-
-The AMICI Python module provides functionality for importing SBML or PySB
-models and turning them into C++ Python extensions.
+Top-level module.
 """
 
 import contextlib
-import importlib.util
 import importlib
+import importlib.util
 import os
-import re
+import subprocess
 import sys
+import warnings
+from collections.abc import Callable
 from pathlib import Path
 from types import ModuleType
 from typing import Any
-from collections.abc import Callable
-import warnings
+
+__all__ = [
+    "import_model_module",
+    "AmiciVersionError",
+    "get_model_root_dir",
+    "get_model_dir",
+    "__version__",
+]
 
 
 def _get_amici_path():
@@ -31,23 +35,28 @@ def _get_amici_path():
 
 
 def _get_commit_hash():
-    """Get commit hash from file"""
-    basedir = os.path.dirname(os.path.dirname(os.path.dirname(amici_path)))
-    commitfile = next(
-        (
-            file
-            for file in [
-                os.path.join(basedir, ".git", "FETCH_HEAD"),
-                os.path.join(basedir, ".git", "ORIG_HEAD"),
-            ]
-            if os.path.isfile(file)
-        ),
-        None,
-    )
+    """Get commit hash via git
 
-    if commitfile:
-        with open(commitfile) as f:
-            return str(re.search(r"^([\w]*)", f.read().strip()).group())
+    Only trusted if ``basedir`` itself is the root of the discovered
+    repository -- otherwise git's upward directory search could pick up
+    an unrelated ancestor repository (e.g. a venv installed inside some
+    other git-tracked directory) and return its commit hash instead.
+    """
+    basedir = os.path.dirname(os.path.dirname(os.path.dirname(amici_path)))
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel", "HEAD"],
+            cwd=basedir,
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        if result.returncode == 0:
+            toplevel, commit_hash = result.stdout.strip().split("\n")
+            if os.path.realpath(toplevel) == os.path.realpath(basedir):
+                return commit_hash
+    except (OSError, subprocess.SubprocessError, ValueError):
+        pass
     return "unknown"
 
 
@@ -76,6 +85,56 @@ def _imported_from_setup() -> bool:
     return False
 
 
+def get_model_root_dir() -> Path:
+    """Get the default root directory for AMICI models.
+
+    Get the default root directory for AMICI models for the current AMICI
+    version.
+
+    :return:
+        The model root directory.
+        This defaults to `{base_dir}/{amici_version}`.
+        If the environment variable `AMICI_MODELS_ROOT` is set,
+        it is used as `base_dir`, otherwise `amici_models` in the current
+        working directory.
+    """
+    try:
+        base_dir = Path(os.environ["AMICI_MODELS_ROOT"])
+    except KeyError:
+        base_dir = Path("amici_models")
+
+    return base_dir / __version__
+
+
+def get_model_dir(model_id: str | None = None, jax: bool = False) -> Path:
+    """Get the default directory for the model with the given ID.
+
+    :param model_id:
+        The model ID.
+    :param jax:
+        Whether to get the model directory for a JAX model.
+        If `True`, a suffix `_jax` is appended to the `model_id`.
+    :return:
+        The model directory.
+        This defaults to `{root_dir}/{model_id}`, where `root_dir` is
+        determined via :func:`get_model_root_dir`.
+        If `model_id` is `None`, a temporary directory is created in
+        `{base_dir}/{amici_version}` and returned.
+    """
+    base_dir = get_model_root_dir()
+
+    suffix = "_jax" if jax else ""
+
+    if model_id is None:
+        import tempfile
+
+        # mkdtemp requires the parent directory to exist
+        base_dir.mkdir(parents=True, exist_ok=True)
+        return Path(tempfile.mkdtemp(dir=base_dir, suffix=suffix))
+
+    return base_dir / (model_id + suffix)
+
+
 # Initialize AMICI paths
 #: absolute root path of the amici repository or Python package
 amici_path = _get_amici_path()
@@ -85,77 +144,25 @@ amiciSwigPath = os.path.join(amici_path, "swig")
 amiciSrcPath = os.path.join(amici_path, "src")
 #: absolute root path of the amici module
 amiciModulePath = os.path.dirname(__file__)
-#: boolean indicating if this is the full package with swig interface or
-#  the raw package without extension
-has_clibs: bool = any(
-    os.path.isfile(os.path.join(amici_path, wrapper))
-    for wrapper in ["amici.py", "amici_without_hdf5.py"]
-)
-#: boolean indicating if amici was compiled with hdf5 support
-hdf5_enabled: bool = False
+
 
 # Get version number from file
-with open(os.path.join(amici_path, "version.txt")) as f:
+with open(os.path.join(amici_path, "_installation", "version.txt")) as f:
     __version__ = f.read().strip()
 
 __commit__ = _get_commit_hash()
 
-# Import SWIG module and swig-dependent submodules if required and available
 if not _imported_from_setup():
-    if has_clibs:
-        # prevent segfaults under pytest
-        #  see also:
-        #  https://github.com/swig/swig/issues/2881
-        #  https://github.com/AMICI-dev/AMICI/issues/2565
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore",
-                category=DeprecationWarning,
-                message="builtin type .* has no __module__ attribute",
-            )
-            from . import amici
-
-        from .amici import *
-
-        # has to be done before importing readSolverSettingsFromHDF5
-        #  from .swig_wrappers
-        hdf5_enabled = "readSolverSettingsFromHDF5" in dir()
-        # These modules require the swig interface and other dependencies
-        from .numpy import ExpDataView, ReturnDataView  # noqa: F401
-        from .pandas import *
-        from .swig_wrappers import *
-
-    # These modules don't require the swig interface
-    from typing import Protocol, runtime_checkable
-
-    from .de_export import DEExporter  # noqa: F401
-    from .sbml_import import (  # noqa: F401
+    from .importers.sbml import (  # noqa: F401
         SbmlImporter,
-        assignmentRules2observables,
+        assignment_rules_to_observables,
     )
+    from .importers.utils import MeasurementChannel  # noqa: F401
 
     try:
         from .jax import JAXModel
     except (ImportError, ModuleNotFoundError):
         JAXModel = object
-
-    @runtime_checkable
-    class ModelModule(Protocol):  # noqa: F811
-        """Type of AMICI-generated model modules.
-
-        To enable static type checking."""
-
-        def getModel(self) -> amici.Model:
-            """Create a model instance."""
-            ...
-
-        def get_model(self) -> amici.Model:
-            """Create a model instance."""
-            ...
-
-    AmiciModel = Union[amici.Model, amici.ModelPtr]
-else:
-    ModelModule = ModuleType
 
 
 class add_path:
@@ -216,11 +223,14 @@ def _module_from_path(module_name: str, module_path: Path | str) -> ModuleType:
     return module
 
 
+ModelModule = ModuleType
+
+
 def import_model_module(
     module_name: str, module_path: Path | str
 ) -> ModelModule:
     """
-    Import Python module of an AMICI model
+    Import Python module of an AMICI model.
 
     :param module_name:
         Name of the python package of the model
@@ -239,13 +249,13 @@ def import_model_module(
 
     module_path = Path(model_root, module_name, "__init__.py")
 
-    # We may want to import a matlab-generated model where the extension
+    # We may want to import an externally compiled model where the extension
     #  is in a different directory. This is not a regular use case. It's only
     #  used in the amici tests and can be removed at any time.
     #  The models (currently) use the default swig-import and require
     #  modifying sys.path.
-    module_path_matlab = Path(model_root, f"{module_name}.py")
-    if not module_path.is_file() and module_path_matlab.is_file():
+    module_path_external = Path(model_root, f"{module_name}.py")
+    if not module_path.is_file() and module_path_external.is_file():
         with set_path(model_root):
             # prevent segfaults under pytest
             #  see also:
@@ -257,7 +267,7 @@ def import_model_module(
                     category=DeprecationWarning,
                     message="builtin type .* has no __module__ attribute",
                 )
-                return _module_from_path(module_name, module_path_matlab)
+                return _module_from_path(module_name, module_path_external)
 
     module = _module_from_path(module_name, module_path)
     module._self = module

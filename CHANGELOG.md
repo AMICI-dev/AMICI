@@ -2,7 +2,389 @@
 
 See also our [versioning policy](https://amici.readthedocs.io/en/latest/versioning_policy.html).
 
+Changes that are not released yet are collected in
+[`changelog.d/`](https://github.com/AMICI-dev/AMICI/tree/main/changelog.d).
+
+## v1.X Series
+
+<!-- towncrier release notes start -->
+
+### v1.1 (2026-09-03)
+
+**BREAKING CHANGES**
+
+* `PetabSimulationResult.res` (PEtab v2) is a property now, for consistency
+  with `PetabSimulationResult.llh`. Replace `result.res()` by `result.res`.
+* Require Python >= 3.12, following [NEP 29](https://numpy.org/neps/nep-0029-deprecation_policy.html#drop-schedule)
+  (#3180).
+
+**Features**
+
+* The PEtab v2 simulator now aggregates the residual sensitivities of all
+  experiments: `PetabSimulationResult.sres` contains the sensitivities of the
+  residuals returned by `PetabSimulationResult.res` with respect to the
+  estimated PEtab problem parameters.
+* Added a `checkpoints` parameter to the JAX PEtab simulation interface
+  (`run_simulation`/`run_simulations`), controlling the number of checkpoints
+  `diffrax`'s `RecursiveCheckpointAdjoint` uses for reverse-mode gradients.
+  Defaults to `None` (diffrax's automatic choice), preserving previous
+  behavior (#3217).
+* PEtab SciML: added support for importing `equinox` modules (#3179).
+* PEtab SciML: implemented additional PyTorch-style layer types
+  (`BatchNorm`, `InstanceNorm`, `AlphaDropout`, `Bilinear`) (#3176).
+* PEtab SciML: updated support to PEtab v2 (#3165).
+* Sped up parallel model import (`AMICI_IMPORT_NPROCS` > 1) considerably.
+  Previously, a new worker pool was created for every parallelized operation,
+  and every worker of every pool had to import sympy and amici from scratch.
+  Now, a single pool is created lazily and reused, and its workers are forked
+  from a `forkserver` process that performs these imports only once. For small
+  operations, where the inter-process communication overhead outweighs any
+  speed-up, processing stays serial. Previously, parallel import could be
+  slower than serial import for all but the largest models.
+
+**Fixes**
+
+* Fixed both simulation backends selecting the wrong branch of a piecewise
+  expression whose condition depends on the value of another piecewise
+  expression. The Heaviside variables were initialized in a single pass, so
+  the outer condition was evaluated using the not-yet-updated value of the
+  inner expression. They are now iterated to a fixed point, which also makes
+  the result independent of the (previously differing) value the Heaviside
+  variables happened to be seeded with in either backend (#3233).
+* Demote the module import mtime check during sundials model import to a
+  warning, as it can lead to false positives in some environments
+  (e.g., when using network file systems with not synchronized clocks).
+  If you encounter this warning, and you are sure that the model was not
+  modified since the last import, you can safely ignore it.
+* Fixed SBML import constant-folding a parameter out of the initial conditions
+  when that parameter both carried an `initialAssignment` with a numeric
+  right-hand side and defined a species' initial value. The parameter remained
+  in the free-parameter list, so its (initial-condition) sensitivity was
+  silently reported as zero (e.g. `init_STAT` in `jakstat_adjoint`). This also
+  covers the transitive case, where such a parameter is reached through a chain
+  of parameter initial assignments (#3214).
+* Fixed the JAX model exporter writing floating-point numbers with only 15
+  significant digits, which is not enough to round-trip a double. Values were
+  silently perturbed in the last bits, which mattered wherever a model compares
+  values exactly (e.g. a parameter with value `pi` no longer tested equal to
+  `pi`).
+* `amici.sim.sundials.petab.PetabSimulator.simulate` no longer fails for
+  PEtab v2 problems with non-Gaussian noise models or for the
+  `RDataReporting.residuals` reporting mode. The respective unavailable
+  aggregated results (`sllh`, `s2llh`, `res`, `sres`) are `None` now.
+  Experiments without measurements no longer suppress the residuals of all
+  other experiments.
+* The residuals (`ReturnData.res`), their sensitivities (`ReturnData.sres`)
+  and the Fisher information matrix (`ReturnData.FIM`) of failed simulations
+  are invalidated now. Previously, the residuals of the timepoints that were
+  not reached stayed at their initial value of 0.0, i.e., they looked like a
+  perfect fit, and the FIM contained a partial sum.
+* `PetabSimulationResult.res` (PEtab v2) returns `None` if any experiment
+  failed to simulate.
+* Fixed SBML import turning a parameter into a constant state when its
+  `initialAssignment` referenced another parameter that becomes an AMICI
+  expression. Such chains are now resolved to a fixed point, so those
+  parameters stay expressions instead of inflating the state vector (e.g.
+  `C2ss`/`C3ss` in `calvetti`).
+* Fixed an `AttributeError` when importing a model module without having
+  first imported something else from `amici.sim.sundials` (#3200).
+* Fixed PEtab problem flattening not substituting the old observable ID in
+  the noise formula; updated the error message shown when importing a
+  non-flattened PEtab problem that requires flattening (#3177).
+* Fixed a spurious `AssertionError` from the conservation-law computation for
+  models with condition-dependent compartment sizes, caused by comparing a
+  simplified and an unsimplified but mathematically equivalent expression
+  (#3202).
+* Fixed a `NameError` in JAX-exported models when an explicit
+  (time-triggered) event trigger depends on a model expression (`w`) rather
+  than only on parameters (#3195).
+* JAX PEtab backend: fixed condition-name-based preequilibration detection,
+  which only worked for AMICI's own synthetic condition names and produced
+  incorrect or crashing results for PEtab problems using arbitrary condition
+  names for preequilibration (#3205).
+* JAX PEtab backend: fixed `JAXProblem.save()`/`load()`, which no longer
+  matched the current `petab.v2` API (#3204).
+* JAX PEtab backend: fixed condition-table state-reinitialization lookup,
+  noise-distribution handling, and differentiability of condition-table
+  target values (#3207).
+* JAX PEtab backend: fixed discontinuity stepping, PEtab v1 problems (now
+  auto-upgraded to v2), noise/observable placeholder substitution, and event
+  assignments silently dropped for models with an odd number of roots
+  (#3196).
+* JAX PEtab backend: fixed measurement/override parsing and parameter-scaling
+  bugs that caused JAX benchmark simulations to fail or diverge from
+  SUNDIALS (#3210).
+
+**Performance**
+
+* Reduced JAX PEtab gradient-compilation time for benchmark models with
+  large repeated subexpressions (e.g. analytic steady-state initial values)
+  by adding common-subexpression elimination to the JAX code printer and
+  switching to `ImplicitAdjoint` (#3212).
+* Avoided unnecessary JAX recompilation caused by `diffrax.steady_state_event()`
+  returning a new closure (compared by identity) on every call; equivalent
+  settings now share the compiled executable (#3197).
+* Sped up importing/building models with CMake, most noticeably when
+  importing many independent models in one go (e.g. test suites, benchmark
+  collections, or PEtab batch imports): skip redundant HDF5 (#3220) and
+  compiler-flag (#3221) detection that was previously repeated on every
+  single model configure.
+
+**Documentation**
+
+* Added a PEtab SciML example notebook demonstrating problem loading,
+  simulation, and a basic training loop, using the Dandekar PEtab SciML
+  benchmark (#3208).
+
+### v1.0.1 (2026-03-13)
+
+**Fixes**
+
+* Fixed an issue that resulted in failure to import the `PetabImporter` if
+  the jax-dependencies weren't installed.
+* Fixed a pandas>=3.0 compatibility issue in the PEtab importer which resulted
+  in incorrect selection of fixed parameters.
+* Fixed logger configuration for simulation warnings/errors, such that users
+  can adjust the log level or simulations with, e.g.,
+  `logging.getLogger("amici.sim.sundials").setLevel(logging.ERROR)`
+* Fixed various broken links and outdated function names in the documentation.
+
+### v1.0.0 (2026-02-26)
+
+**BREAKING CHANGES**
+
+*Removed functionality*
+
+The following functionality has been removed without replacement:
+
+* The complete MATLAB interface has been removed.
+* `amici.sbml_import.species_to_parameters` has been removed.
+
+*API changes*
+
+* For a more consistent API, all function names are now `snake_case` instead of
+  `camelCase`.
+* The package has been reorganized.
+  * All importers have been moved to `amici.importers` subpackages.
+    For example, all functionality from `amici.sbml_import` is now available in
+    `amici.importers.sbml`.
+  * All simulation-related functionality has been moved to `amici.sim.sundials`
+    for the SUNDIALS interface, and `amici.sim.jax` for the JAX interface.
+  * A number of functions and modules have been made private
+    (i.e., their name starts with `_` or they are excluded from `__all__`),
+    as they are not intended for public use and may change without deprecation.
+* The naming of free and fixed parameters has been harmonized across the API:
+  AMICI differentiates between parameters with respect to which a model
+  can compute sensitivities ("free parameters") and parameters with respect to
+  which no sensitivities can be computed ("fixed parameters").
+  "Free" and "fixed" are to be understood in the context of parameter
+  estimation, where free parameters are optimized,
+  while fixed parameters remain constant.
+  Free parameters were previously referred to as just "parameters", and
+  fixed parameters as "fixed parameters", "constant parameters",
+  or "constants". This has now been harmonized to "free" and "fixed" across the
+  API. E.g., `Model.setParameters()` is now `Model.set_free_parameters()`.
+* `ReturnDataView.posteq_numsteps` and `ReturnDataView.preeq_numsteps` now
+  return a one-dimensional array of shape `(num_timepoints,)` instead of a
+  two-dimensional array of shape `(1, num_timepoints)`.
+* `ReturnDataView.posteq_status` and `ReturnDataView.preeq_status` now
+  return `list[SteadyStateStatus]` instead of an `ndarray[int]` of shape
+  `(1, 3)`.
+* The way the observation model is passed to the different import functions
+  (`sbml2amici`, `pysb2amici`, ...) has changed:
+  The information previously split across `observables`, `sigmas`,
+  `noise_distributions`, `event_observables`, `event_sigmas`, and
+  `event_noise_distributions` dicts is now passed as a single
+  `observation_model: list[MeasurementChannel]` argument.
+* `assignmentRules2observables` has been renamed to
+  `assignment_rules_to_observables` and now returns `list[MeasurementChannel]`
+  to be passed to the import functions.
+* `AmiVector::getLength` and `AmiVectorArray::getLength` have been renamed to
+  `size` to be more consistent with STL containers.
+* `amici.petab.petab_import.import_model` has been removed.
+  Use `amici.importers.petab.v1.import_petab_problem` instead.
+* `Model.getSolver` has been renamed to `Model.create_solver`,
+  emphasizing that a new `Solver` instance is created on each call.
+* `amici.runAmiciSimulation` and `amici.runAmiciSimulations` have been renamed
+   to `amici.sim.sundials.run_simulation` and
+  `amici.sim.sundials.run_simulations`, respectively.
+* The following deprecated functionality has been removed:
+  * `NonlinearSolverIteration::functional` has been removed,
+    use `NonlinearSolverIteration::fixedpoint` instead.
+  * The deprecated argument `log_as_log10` to `SbmlImporter.sbml2amici` and
+    `SbmlImporter.sbml2jax` has been removed. Just remove this argument, as
+    this never had any effect.
+  * Deprecated imports from `amici.petab.*` in `amici.petab.simulations`
+    have been removed. Import those functions directly from their respective
+    modules.
+  * The `force_compile` argument to `import_petab_problem` has been removed.
+    See the `compile_` argument.
+* Model output directory keyword arguments have been harmonized:
+  What was previously `model_output_dir`, `output_dir`, `outdir` is now
+  consistently called `output_dir` across the API.
+* Plotting functions have been moved from `amici.plotting` to
+  `amici.sim.sundials.plotting`. The `model` argument has been removed.
+
+**Features**
+
+* Support for the PEtab data format v2.0.0
+  ([draft](https://petab.readthedocs.io/en/latest/v2/documentation_data_format.html))
+  for the JAX and SUNDIALS interfaces.
+
+  See `amici.importers.petab.PetabImporter` and examples for
+  [JAX](https://amici.readthedocs.io/en/latest/examples/example_jax_petab/ExampleJaxPEtab.html)
+  and [SUNDIALS](https://amici.readthedocs.io/en/latest/examples/example_petab/petab_v2.html).
+
+  For JAX-based models, the interface can be considered stable;
+  for SUNDIALS-based models, the API may still change.
+
+  SBML- and PySB-based PEtab problems are currently supported.
+  For PySB-based PEtab problems, only species and `pysb.Expression` are
+  supported as condition table targets (i.e., no parameters yet).
+
+  PEtab v1 import for SUNDIALS-based models is still available via
+  `amici.importers.petab.v1`. Once PEtab v2 import has been stabilized,
+  PEtab v1 import for SUNDIALS-based models will be removed.
+* Many relevant `ReturnData` fields are now available as `xarray.DataArray`
+  via `ReturnData.xr.{x,y,w,x0,sx,...}`.
+  `DataArray`s include the identifiers and are often more convenient than the
+  plain numpy arrays. This allows for easy subselection and plotting of the
+  results, and conversion to DataFrames.
+* `Model.simulate()` has been added as a convenience function to run
+  simulations without having to create a `Solver` object explicitly.
+  This is a wrapper for both `amici.sim.sundials.run_simulation` and
+  `amici.sim.sundials.run_simulations`,
+  depending on the type of the `edata` argument.
+  It also supports passing some `Solver` options as keyword arguments.
+  This is intended for interactive use; for better full control and
+  performance, it is still recommended to create a `Solver` object and call
+  `amici.sim.sundials.{run_simulation,run_simulations}` directly.
+* Improved `pickle` support for
+  `amici.sim.sundials.{Model,ModelPtr,Solver,ExpData}`.
+  Note that AMICI's pickling support is only intended for short-term storage
+  or inter-process communication.
+  Reading pickled objects after updating AMICI or the model code will almost
+  certainly fail.
+  * `Model`and `ModelPtr` now support sufficient pickling for use
+    in multiprocessing contexts. This works only if the amici-generated model
+    package exists in the same file system location and does not change until
+    unpickling.
+  * `Solver` is now picklable if amici was built with HDF5 support.
+    This only works on shared file systems, as the solver state is stored in a
+    temporary HDF5 file.
+  * `ExpData` is now picklable.
+* The import function `sbml2amici`, `pysb2amici`, and `antimony2amici` now
+  return an instance of the generated model class if called with `compile=True`
+  (default).
+* The default directory for model import changed, and a base directory
+  can now be specified via the `AMICI_MODELS_ROOT` environment variable.
+  See `amici.get_model_dir` for details.
+* IDs and names of model entities are now not only accessible via
+  `amici.sim.sundials.Model`, but also via `amici.sim.sundials.ReturnData`
+  (`ReturnData.{free_parameter_ids,observable_ids,...}`,
+  `ReturnData.{free_parameter_names,observable_names,...}`).
+
+**Fixes**
+
+* Fixed a bug that potentially results in incorrect handling of
+  discontinuities their location depends on a state variable
+  that is subject to an event assignment but otherwise constant.
+
 ## v0.X Series
+
+### v0.34.2 (2025-11-03)
+
+Bugfix release.
+
+* Python 3.14 compatibility
+* Swig 4.4.0 compatibility
+* Fixes type annotations in swig wrappers
+* Fixes a bug that resulted in incorrect processing of initial assignments
+  containing (amici-)splines
+* Fixes an SBML import error during the handling of algebraic rules
+* Fixes a CMake error with certain CMake versions
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.34.1...v0.34.2
+
+### v0.34.1 (2025-08-25)
+
+Bugfix release.
+
+* Fixed a bug that would lead to incorrect model initialization in SBML models
+  with initial assignments that depend on dynamic entities
+  (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2939)
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.34.0...v0.34.1
+
+### v0.34.0 (2025-07-29)
+
+This will probably be the last release to include the MATLAB interface.
+
+**Fixes**
+
+* **Breaking changes** Events are now also handled during pre-equilibration,
+  presimulation, and post-equilibration.
+  This may be a breaking change, as it may lead to different results for models
+  with events that may trigger during these periods. This change is
+  considered a bugfix, as it was not intended to ignore events during these
+  periods.
+
+  (by @dweindl in #2777, #2780, #2859, #2881, #2889, #2920, #2921, #2925)
+* Fixed various issues related to adjoint sensitivity analysis for models with
+  events.
+  While many cases are now supported, it is still highly recommended to
+  check the ASA results for models with events against forward sensitivities
+  or finite differences.
+  * Adjoint sensitivities for Python-imported models with events
+    (by @paulstapor & @dweindl in https://github.com/AMICI-dev/AMICI/pull/1539)
+  * Fix Model::addAdjointQuadratureEventUpdate
+    (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2787)
+  * Fix indexing errors for adjoint quadratures during event updates
+    (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2796)
+  * Fix deltaxB dimensions (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2803)
+  * Fix (some) ASA event handling (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2797)
+* Fixed a number of issues related to the handling of events or discontinuities
+  in general:
+  * Fixed import of DAE models with events (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2897)
+  * Fixed root functions for events with initialValue=trigger=false (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2910)
+  * Fixed check for sign change, fix Heaviside update (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2927)
+* Fixed sign of residuals (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2896)
+* Updated the steady state notebook to match the current implementation
+  (by @plakrisenko & @dweindl in https://github.com/AMICI-dev/AMICI/pull/2891)
+* Improved sigma<=0 error reporting (by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2829)
+* Fixed sensitivities for the total abundances of conservation laws
+  (only relevant if `AMICI_EXPERIMENTAL_SBML_NONCONST_CLS` is enabled)
+  (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2782)
+* Fix sensitivities w.r.t. unused log-scaled NaN parameters (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2903)
+
+**Features**
+
+* AMICI should now be pip-installable without pre-installing SWIG or BLAS
+  (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2774,
+  https://github.com/AMICI-dev/AMICI/pull/2772)
+* Event/discontinuity handling for JAX models
+  * Track discontinuities in JAX & fix gradient for models with parameter
+    dependent roots (by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2815)
+  * Improve JAX event integration (by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2841)
+  * mask event functions in jax (by @FFroehlich in https://github.com/AMICI-dev/AMICI/pull/2863)
+* Handle state-independent, parameter-dependent event triggers without root-finding
+  (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2913)
+* Presimulation is now also supported in combination with adjoint sensitivities
+  (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2786)
+* It is now possible to set a separate $t_0$ for pre-equilibration and main
+  simulation (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2793)
+* Sensitivity analysis for `AlgebraicRule` / DAE models is now also supported
+  for Python-imported models
+  (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2101)
+* An optional random generator seed can now be passed to
+  `ExpData::ExpData(ReturnData const&, ...)` when generating synthetic
+  measurements (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2802)
+* Added `ReturnData::plist` (by @dweindl in https://github.com/AMICI-dev/AMICI/pull/2874)
+
+... and extended tests, documentation, and many changes under the hood.
+
+**Full Changelog**: https://github.com/AMICI-dev/AMICI/compare/v0.33.0...v0.34.0
+
 
 ### v0.33.0 (2025-06-11)
 

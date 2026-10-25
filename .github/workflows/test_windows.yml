@@ -23,15 +23,17 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [ "3.11" ]
+        python-version: [ "3.12" ]
 
     steps:
+    - uses: dweindl/gha-runner-diagnostics@v1
+
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         lfs: true
     - run: git fetch --prune --unshallow
@@ -54,7 +56,13 @@ jobs:
     - name: Install sdist
       working-directory: python/sdist
       shell: bash
-      run: pip install -v $(ls -t dist/amici-*.tar.gz | head -1)[petab,test]
+      run: |
+        pip install -v --group pyproject.toml:test \
+          $(ls -t dist/amici-*.tar.gz | head -1)[petab,jax]
+
+    - name: Install fiddy from GitHub
+      shell: bash
+      run: pip install --group python/sdist/pyproject.toml:fiddy
 
     - run: python -m amici
 
@@ -65,7 +73,7 @@ jobs:
       shell: bash
 
     - name: Cache Pooch Directory
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: ${{ env.pooch-cache }}
         key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}

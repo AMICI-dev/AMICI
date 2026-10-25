@@ -9,14 +9,26 @@ import pytest
 
 pysb = pytest.importorskip("pysb")
 
+from pathlib import Path
+
 import amici
 import numpy as np
 import pysb.examples  # noqa: F811
 import pytest
 import sympy as sp
-from amici import ParameterScaling, parameterScalingFromIntVector
-from amici.gradient_check import check_derivatives
-from amici.pysb_import import pysb2amici
+from amici import MeasurementChannel, import_model_module
+from amici._symbolic.de_model_components import Event
+from amici.importers.pysb import pysb2amici
+from amici.importers.utils import amici_time_symbol, symbol_with_assumptions
+from amici.sim.sundials import (
+    ExpData,
+    ParameterScaling,
+    SensitivityOrder,
+    SteadyStateSensitivityMode,
+    parameter_scaling_from_int_vector,
+    run_simulation,
+)
+from amici.sim.sundials.gradient_check import check_derivatives
 from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
 from numpy.testing import assert_allclose
 from pysb.simulator import ScipyOdeSimulator
@@ -28,7 +40,7 @@ def test_compare_to_sbml_import(
 ):
     # -------------- PYSB -----------------
 
-    model_pysb = pysb_example_presimulation_module.getModel()
+    model_pysb = pysb_example_presimulation_module.get_model()
 
     edata = get_data(model_pysb)
 
@@ -36,7 +48,7 @@ def test_compare_to_sbml_import(
 
     # -------------- SBML -----------------
 
-    model_sbml = sbml_example_presimulation_module.getModel()
+    model_sbml = sbml_example_presimulation_module.get_model()
 
     rdata_sbml = get_results(model_sbml, edata)
 
@@ -45,44 +57,47 @@ def test_compare_to_sbml_import(
         [rdata_sbml, rdata_pysb], [model_sbml, model_pysb], ["sbml", "pysb"]
     ):
         # check equilibrium fixed parameters
-        assert np.isclose(
+        assert_allclose(
             [sum(rdata["x_ss"][[1, 3]]), sum(rdata["x_ss"][[2, 4]])],
-            edata.fixedParametersPreequilibration,
+            edata.fixed_parameters_pre_equilibration,
             atol=1e-6,
             rtol=1e-6,
-        ).all(), f"{importer} preequilibration"
+            err_msg=f"{importer} preequilibration",
+        )
 
         # check equilibrium initial parameters
-        assert np.isclose(
+        assert_allclose(
             sum(rdata["x_ss"][[0, 3, 4, 5]]),
-            model.getParameterByName("PROT_0"),
+            model.get_free_parameter_by_name("PROT_0"),
             atol=1e-6,
             rtol=1e-6,
-        ), f"{importer} preequilibration"
+            err_msg=f"{importer} preequilibration",
+        )
 
         # check reinitialization with fixed parameter after
         # presimulation
-        assert np.isclose(
+        assert_allclose(
             [rdata["x0"][1], rdata["x0"][2]],
-            edata.fixedParameters,
+            edata.fixed_parameters,
             atol=1e-6,
             rtol=1e-6,
-        ).all(), f"{importer} presimulation"
+            err_msg=f"{importer} presimulation",
+        )
 
     skip_attrs = [
         "ptr",
         "preeq_t",
         "numsteps",
         "preeq_numsteps",
-        "numrhsevals",
-        "numerrtestfails",
+        "num_rhs_evals",
+        "num_err_test_fails",
         "order",
         "J",
         "xdot",
         "preeq_wrms",
         "preeq_cpu_time",
         "cpu_time",
-        "cpu_timeB",
+        "cpu_time_b",
         "cpu_time_total",
         "w",
     ]
@@ -137,14 +152,12 @@ custom_models = [
 @skip_on_valgrind
 @pytest.mark.parametrize("example", pysb_models + custom_models)
 def test_compare_to_pysb_simulation(example):
-    atol = 1e-8
-    rtol = 1e-8
+    atol = 1e-12
+    rtol = 1e-10
 
     with amici.add_path(os.path.dirname(pysb.examples.__file__)):
         with amici.add_path(
-            os.path.join(
-                os.path.dirname(__file__), "..", "tests", "pysb_test_models"
-            )
+            Path(__file__).parents[1] / "tests" / "pysb_test_models"
         ):
             # load example
             pysb.SelfExporter.cleanup()  # reset pysb
@@ -185,25 +198,28 @@ def test_compare_to_pysb_simulation(example):
                     outdir,
                     verbose=logging.INFO,
                     compute_conservation_laws=compute_conservation_laws,
-                    observables=list(pysb_model.observables.keys()),
+                    observation_model=list(
+                        map(
+                            MeasurementChannel,
+                            pysb_model.observables.keys(),
+                        )
+                    ),
                 )
 
-                amici_model_module = amici.import_model_module(
+                amici_model_module = import_model_module(
                     pysb_model.name, outdir
                 )
-                model_pysb = amici_model_module.getModel()
-                model_pysb.setTimepoints(tspan)
+                model_pysb = amici_model_module.get_model()
+                model_pysb.set_timepoints(tspan)
 
-                solver = model_pysb.getSolver()
-                solver.setMaxSteps(int(1e6))
-                solver.setAbsoluteTolerance(atol)
-                solver.setRelativeTolerance(rtol)
-                rdata = amici.runAmiciSimulation(model_pysb, solver)
+                solver = model_pysb.create_solver()
+                solver.set_max_steps(int(1e6))
+                solver.set_absolute_tolerance(atol)
+                solver.set_relative_tolerance(rtol)
+                rdata = run_simulation(model_pysb, solver)
 
                 # check agreement of species simulations
-                assert np.isclose(
-                    rdata["x"], pysb_simres.species, 1e-4, 1e-4
-                ).all()
+                assert_allclose(rdata["x"], pysb_simres.species, 1e-4, 1e-4)
 
                 if example not in [
                     "fricker_2010_apoptosis",
@@ -219,26 +235,26 @@ def test_compare_to_pysb_simulation(example):
                         "bngwiki_enzymatic_cycle_mm",
                         "bngwiki_simple",
                     ]:
-                        solver.setAbsoluteTolerance(1e-14)
-                        solver.setRelativeTolerance(1e-14)
+                        solver.set_absolute_tolerance(1e-14)
+                        solver.set_relative_tolerance(1e-14)
                         epsilon = 1e-4
                     else:
-                        solver.setAbsoluteTolerance(1e-10)
-                        solver.setRelativeTolerance(1e-10)
+                        solver.set_absolute_tolerance(1e-10)
+                        solver.set_relative_tolerance(1e-10)
                         epsilon = 1e-3
-                    model_pysb.setParameterScale(
-                        parameterScalingFromIntVector(
+                    model_pysb.set_parameter_scale(
+                        parameter_scaling_from_int_vector(
                             [
                                 ParameterScaling.log10
                                 if p > 0
                                 else ParameterScaling.none
-                                for p in model_pysb.getParameters()
+                                for p in model_pysb.get_free_parameters()
                             ]
                         )
                     )
                     check_derivatives(
                         model_pysb,
-                        solver,
+                        solver=solver,
                         epsilon=epsilon,
                         rtol=1e-2,
                         atol=1e-2,
@@ -247,38 +263,38 @@ def test_compare_to_pysb_simulation(example):
 
 
 def get_data(model):
-    solver = model.getSolver()
-    model.setTimepoints(np.linspace(0, 60, 61))
-    model.setSteadyStateSensitivityMode(
-        amici.SteadyStateSensitivityMode.integrateIfNewtonFails
+    solver = model.create_solver()
+    model.set_timepoints(np.linspace(0, 60, 61))
+    model.set_steady_state_sensitivity_mode(
+        SteadyStateSensitivityMode.integrateIfNewtonFails
     )
 
-    rdata = amici.runAmiciSimulation(model, solver)
-    edata = amici.ExpData(rdata, 0.1, 0.0)
+    rdata = run_simulation(model, solver)
+    edata = ExpData(rdata, 0.1, 0.0)
     edata.t_presim = 2
-    edata.fixedParameters = [10, 2]
-    edata.fixedParametersPresimulation = [3, 2]
-    edata.fixedParametersPreequilibration = [3, 0]
-    edata.reinitializeFixedParameterInitialStates = True
+    edata.fixed_parameters = [10, 2]
+    edata.fixed_parameters_presimulation = [3, 2]
+    edata.fixed_parameters_pre_equilibration = [3, 0]
+    edata.reinitialize_fixed_parameter_initial_states = True
     return edata
 
 
 def get_results(model, edata):
-    solver = model.getSolver()
-    solver.setSensitivityOrder(1)
-    edata.reinitializeFixedParameterInitialStates = True
-    model.setTimepoints(np.linspace(0, 60, 61))
-    model.setSteadyStateSensitivityMode(
-        amici.SteadyStateSensitivityMode.integrateIfNewtonFails
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    edata.reinitialize_fixed_parameter_initial_states = True
+    model.set_timepoints(np.linspace(0, 60, 61))
+    model.set_steady_state_sensitivity_mode(
+        SteadyStateSensitivityMode.integrateIfNewtonFails
     )
-    return amici.runAmiciSimulation(model, solver, edata)
+    return run_simulation(model, solver, edata)
 
 
 @skip_on_valgrind
 def test_names_and_ids(pysb_example_presimulation_module):
-    model_pysb = pysb_example_presimulation_module.getModel()
+    model_pysb = pysb_example_presimulation_module.get_model()
     expected = {
-        "ExpressionIds": (
+        "expression_ids": (
             "__s2",
             "__s1",
             "__s5",
@@ -289,11 +305,11 @@ def test_names_and_ids(pysb_example_presimulation_module):
             "initKin",
             "pPROT_obs",
         ),
-        "FixedParameterIds": ("DRUG_0", "KIN_0"),
-        "FixedParameterNames": ("DRUG_0", "KIN_0"),
-        "ObservableIds": ("pPROT_obs",),
-        "ObservableNames": ("pPROT_obs",),
-        "ParameterIds": (
+        "fixed_parameter_ids": ("DRUG_0", "KIN_0"),
+        "fixed_parameter_names": ("DRUG_0", "KIN_0"),
+        "observable_ids": ("pPROT_obs",),
+        "observable_names": ("pPROT_obs",),
+        "free_parameter_ids": (
             "PROT_0",
             "kon_prot_drug",
             "koff_prot_drug",
@@ -301,8 +317,8 @@ def test_names_and_ids(pysb_example_presimulation_module):
             "kphospho_prot_kin",
             "kdephospho_prot",
         ),
-        "StateIds": ("__s0", "__s1", "__s2", "__s3", "__s4", "__s5"),
-        "StateNames": (
+        "state_ids": ("__s0", "__s1", "__s2", "__s3", "__s4", "__s5"),
+        "state_names": (
             "PROT(kin=None, drug=None, phospho='u')",
             "DRUG(bound=None)",
             "KIN(bound=None)",
@@ -312,16 +328,16 @@ def test_names_and_ids(pysb_example_presimulation_module):
         ),
     }
     # Names and IDs are the same here
-    expected["ExpressionNames"] = expected["ExpressionIds"]
-    expected["ParameterNames"] = expected["ParameterIds"]
+    expected["expression_names"] = expected["expression_ids"]
+    expected["free_parameter_names"] = expected["free_parameter_ids"]
 
     for field_name, cur_expected in expected.items():
-        actual = getattr(model_pysb, f"get{field_name}")()
+        actual = getattr(model_pysb, f"get_{field_name}")()
         assert actual == cur_expected
 
 
 @skip_on_valgrind
-def test_heavyside_and_special_symbols():
+def test_heaviside_and_special_symbols():
     pysb.SelfExporter.cleanup()  # reset pysb
     pysb.SelfExporter.do_export = True
 
@@ -338,12 +354,13 @@ def test_heavyside_and_special_symbols():
     )
 
     with TemporaryDirectoryWinSafe(prefix=model.name) as outdir:
-        pysb2amici(model, outdir, verbose=True, observables=["a"])
-
-        model_module = amici.import_model_module(
-            module_name=model.name, module_path=outdir
+        amici_model = pysb2amici(
+            model,
+            outdir,
+            verbose=True,
+            observation_model=[MeasurementChannel("a")],
         )
-        amici_model = model_module.getModel()
+
         assert amici_model.ne
 
 
@@ -373,15 +390,172 @@ def test_energy():
     with TemporaryDirectoryWinSafe(prefix=model_pysb.name) as outdir:
         pysb2amici(model_pysb, output_dir=outdir)
 
-        model_module = amici.import_model_module(
+        model_module = import_model_module(
             module_name=model_pysb.name, module_path=outdir
         )
-        amici_model = model_module.getModel()
-        amici_model.setTimepoints(np.logspace(-4, 5, 10))
-        solver = amici_model.getSolver()
-        solver.setRelativeTolerance(1e-14)
-        solver.setAbsoluteTolerance(1e-14)
+        amici_model = model_module.get_model()
+        amici_model.set_timepoints(np.logspace(-4, 5, 10))
+        solver = amici_model.create_solver()
+        solver.set_relative_tolerance(1e-14)
+        solver.set_absolute_tolerance(1e-14)
 
         check_derivatives(
-            amici_model, solver, epsilon=1e-4, rtol=1e-2, atol=1e-2
+            amici_model, solver=solver, epsilon=1e-4, rtol=1e-2, atol=1e-2
         )
+
+
+@skip_on_valgrind
+def test_pysb_event(tempdir):
+    """Test adding events to PySB models."""
+    pysb.SelfExporter.cleanup()  # reset pysb
+    pysb.SelfExporter.do_export = True
+
+    model = pysb.Model("pysb_event_test")
+    a = pysb.Monomer("A")
+    pysb.Initial(a(), pysb.Parameter("a0"))
+    pysb.Rule("deg", a() >> None, pysb.Parameter("k", 1.0))
+
+    events = [
+        Event(
+            # note that unlike for SBML import, we must omit the real=True here
+            symbol=symbol_with_assumptions("event1"),
+            name="Event1",
+            value=amici_time_symbol - 5,
+            assignments={
+                symbol_with_assumptions("__s0"): symbol_with_assumptions(
+                    "__s0"
+                )
+                + 1000
+            },
+            use_values_from_trigger_time=False,
+        )
+    ]
+
+    outdir = tempdir
+    pysb2amici(
+        model,
+        outdir,
+        verbose=True,
+        observation_model=[MeasurementChannel("a")],
+        compute_conservation_laws=False,
+        _events=events,
+    )
+
+    model_module = import_model_module(
+        module_name=model.name, module_path=outdir
+    )
+    amici_model = model_module.get_model()
+    assert amici_model.ne
+    amici_model.set_timepoints([0, 4, 5])
+
+    np.testing.assert_allclose(
+        amici_model.simulate().x, np.array([[0.0], [0.0], [1000.0]])
+    )
+
+
+@skip_on_valgrind
+def test_pysb_reserved_names(tempdir):
+    """Model quantities literally named one of AMICI's reserved
+    array-parameter names (x, p, k, h, w, y) are renamed internally and
+    have their original ids restored everywhere they're reported --
+    mirrors SBML import's handling of the same collision class, see
+    test_reserved_symbols.py."""
+    pysb.SelfExporter.cleanup()  # reset pysb
+    pysb.SelfExporter.do_export = True
+
+    model = pysb.Model("pysb_reserved_names_test")
+    a = pysb.Monomer("A")
+    pysb.Initial(a(), pysb.Parameter("a0", 1.0))
+    pysb.Rule("deg", a() >> None, pysb.Parameter("p", 0.5))
+    # reference "p" here too, so its renamed symbol survives substitution
+    # into another expression
+    pysb.Expression("h", 2 * model.parameters["p"])
+    pysb.Observable("y", a())
+
+    outdir = tempdir
+    pysb2amici(
+        model,
+        outdir,
+        observation_model=[MeasurementChannel("y")],
+        compute_conservation_laws=False,
+    )
+
+    model_module = import_model_module(
+        module_name=model.name, module_path=outdir
+    )
+    amici_model = model_module.get_model()
+
+    assert amici_model.get_observable_ids() == ("y",)
+    assert "p" in amici_model.get_free_parameter_ids()
+    assert "h" in amici_model.get_expression_ids()
+
+    amici_model.set_timepoints([0, 1, 2])
+    solver = amici_model.create_solver()
+    rdata = run_simulation(amici_model, solver)
+    assert rdata.status == amici.sim.sundials.AMICI_SUCCESS
+    assert np.all(np.isfinite(rdata.x))
+
+
+@skip_on_valgrind
+def test_pysb_derived_name_collisions(tempdir):
+    """Model quantities literally named after AMICI-internally-derived
+    symbols (a conservation-law total `tcl_s{n}`, or an observable's
+    measurement/sigma symbols `m{obs}`/`sigma_{obs}`) must not collide
+    with them -- the derived symbol is disambiguated instead, with the
+    user's own parameter keeping its original id. See
+    https://github.com/AMICI-dev/AMICI/issues/3240 and the analogous SBML
+    coverage in test_derived_symbol_collisions.py."""
+    pysb.SelfExporter.cleanup()  # reset pysb
+    pysb.SelfExporter.do_export = True
+
+    model = pysb.Model("pysb_derived_name_collision_test")
+    a = pysb.Monomer("A", ["b"])
+    b = pysb.Monomer("B", ["a"])
+    pysb.Parameter("A_0", 10)
+    pysb.Parameter("B_0", 5)
+    pysb.Parameter("kf", 1.0)
+    pysb.Parameter("kr", 0.5)
+    # decoys: whichever species index ends up being the conservation-law
+    # target, one of these collides with its `tcl_s{n}` total-abundance
+    # symbol
+    for i in range(4):
+        pysb.Parameter(f"tcl_s{i}", 42.0)
+    # decoys colliding with the observable's derived measurement/sigma
+    # symbols (`m{obs}` / `sigma_{obs}`)
+    pysb.Parameter("mobs_a", 1.0)
+    pysb.Parameter("sigma_obs_a", 1.0)
+
+    pysb.Initial(a(b=None), model.parameters["A_0"])
+    pysb.Initial(b(a=None), model.parameters["B_0"])
+    pysb.Rule(
+        "bind",
+        a(b=None) + b(a=None) | a(b=1) % b(a=1),
+        model.parameters["kf"],
+        model.parameters["kr"],
+    )
+    pysb.Observable("obs_a", a())
+
+    outdir = tempdir
+    pysb2amici(
+        model,
+        outdir,
+        observation_model=[MeasurementChannel("obs_a")],
+        compute_conservation_laws=True,
+    )
+
+    model_module = import_model_module(
+        module_name=model.name, module_path=outdir
+    )
+    amici_model = model_module.get_model()
+
+    # the decoy parameters kept their own original ids
+    free_ids = amici_model.get_free_parameter_ids()
+    assert all(f"tcl_s{i}" in free_ids for i in range(4))
+    assert "mobs_a" in free_ids
+    assert "sigma_obs_a" in free_ids
+
+    amici_model.set_timepoints([0, 1, 2, 5])
+    solver = amici_model.create_solver()
+    rdata = run_simulation(amici_model, solver)
+    assert rdata.status == amici.sim.sundials.AMICI_SUCCESS
+    assert np.all(np.isfinite(rdata.x))

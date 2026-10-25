@@ -2,24 +2,12 @@
 # SuiteSparse/CMakeLists.txt:  root CMake build rules
 #-------------------------------------------------------------------------------
 
-# Copyright (c) 2023-2024, Timothy A. Davis, All Rights Reserved.
+# Copyright (c) 2023-2025, Timothy A. Davis, All Rights Reserved.
 # Just this particular file is under the Apache-2.0 license; each package has
 # its own license.
 # SPDX-License-Identifier: Apache-2.0
 
-# This file and most packages in SuiteSparse require cmake 3.22 or later.  Some
-# packages can be built as stand-alone packages with their own CMakeLists.txt
-# files, with older versions of cmake (GraphBLAS, LAGraph, and CSparse):
-#
-#   GraphBLAS and LAGraph: 3.20
-#   CSparse: 3.13
-#   GraphBLAS jitifyer (for end user JIT kernels): 3.13
-#
-# Other CMakeLists.txt files inside SuiteSparse are from dependent packages
-# (LAGraph/deps/json_h, GraphBLAS/cpu_features, and CHOLMOD/SuiteSparse_metis
-# which is a slightly revised copy of METIS 5.0.1) but none of those
-# CMakeLists.txt files are used to build any package in SuiteSparse.
-cmake_minimum_required ( VERSION 3.22 )
+cmake_minimum_required ( VERSION 3.23 )
 
 project ( "SuiteSparse" )
 
@@ -64,6 +52,7 @@ endforeach ( )
 
 # CHOLMOD options affecting dependencies
 option ( CHOLMOD_CAMD "ON (default): use CAMD/CCOLAMD.  OFF: do not use CAMD/CCOLAMD" ON )
+option ( CHOLMOD_SUPERNODAL "ON (default): use Supernodal Module.  OFF: do not use Supernodal Module" ON )
 
 # KLU options affecting dependencies
 option ( KLU_USE_CHOLMOD "ON (default): use CHOLMOD in KLU.  OFF: do not use CHOLMOD in KLU" ON )
@@ -111,7 +100,7 @@ include ( SuiteSparsePolicy )
 
 if ( SUITESPARSE_USE_SYSTEM_GRAPHBLAS )
     list ( REMOVE_ITEM SUITESPARSE_ENABLE_PROJECTS "graphblas" )
-    find_package ( GraphBLAS 9.3.1 REQUIRED )
+    find_package ( GraphBLAS 10.1.0 REQUIRED )
 else ( )
     if ( "lagraph" IN_LIST SUITESPARSE_ENABLE_PROJECTS )
         # LAGraph requires GraphBLAS.
@@ -124,7 +113,7 @@ endif ( )
 
 if ( SUITESPARSE_USE_SYSTEM_BTF )
     list ( REMOVE_ITEM SUITESPARSE_ENABLE_PROJECTS "btf" )
-    find_package ( BTF 2.3.2 REQUIRED )
+    find_package ( BTF 2.3.3 REQUIRED )
 else ( )
     if ( "klu" IN_LIST SUITESPARSE_ENABLE_PROJECTS )
         # KLU requires BTF.
@@ -137,7 +126,7 @@ endif ( )
 
 if ( SUITESPARSE_USE_SYSTEM_UMFPACK )
     list ( REMOVE_ITEM SUITESPARSE_ENABLE_PROJECTS "umfpack" )
-    find_package ( UMFPACK 6.3.4 REQUIRED )
+    find_package ( UMFPACK 6.3.6 REQUIRED )
 else ( )
     if ( "paru" IN_LIST SUITESPARSE_ENABLE_PROJECTS )
         # ParU requires UMFPACK.
@@ -150,7 +139,7 @@ endif ( )
 
 if ( SUITESPARSE_USE_SYSTEM_CHOLMOD )
     list ( REMOVE_ITEM SUITESPARSE_ENABLE_PROJECTS "cholmod" )
-    find_package ( CHOLMOD 5.3.0 REQUIRED )
+    find_package ( CHOLMOD 5.3.4 REQUIRED )
 else ( )
     if ( ( KLU_USE_CHOLMOD AND "klu" IN_LIST SUITESPARSE_ENABLE_PROJECTS )
             OR ( UMFPACK_USE_CHOLMOD AND "umfpack" IN_LIST SUITESPARSE_ENABLE_PROJECTS )
@@ -168,7 +157,7 @@ endif ( )
 
 if ( SUITESPARSE_USE_SYSTEM_AMD )
     list ( REMOVE_ITEM SUITESPARSE_ENABLE_PROJECTS "amd" )
-    find_package ( AMD 3.3.3 REQUIRED )
+    find_package ( AMD 3.3.4 REQUIRED )
 else ( )
     if ( "cholmod" IN_LIST SUITESPARSE_ENABLE_PROJECTS
             OR "ldl" IN_LIST SUITESPARSE_ENABLE_PROJECTS
@@ -184,7 +173,7 @@ endif ( )
 
 if ( SUITESPARSE_USE_SYSTEM_COLAMD )
     list ( REMOVE_ITEM SUITESPARSE_ENABLE_PROJECTS "colamd" )
-    find_package ( COLAMD 3.3.4 REQUIRED )
+    find_package ( COLAMD 3.3.5 REQUIRED )
 else ( )
     if ( "cholmod" IN_LIST SUITESPARSE_ENABLE_PROJECTS
             OR "spex" IN_LIST SUITESPARSE_ENABLE_PROJECTS )
@@ -198,7 +187,7 @@ endif ( )
 
 if ( SUITESPARSE_USE_SYSTEM_CAMD )
     list ( REMOVE_ITEM SUITESPARSE_ENABLE_PROJECTS "camd" )
-    find_package ( CAMD 3.3.3 REQUIRED )
+    find_package ( CAMD 3.3.5 REQUIRED )
 else ( )
     if ( CHOLMOD_CAMD AND "cholmod" IN_LIST SUITESPARSE_ENABLE_PROJECTS )
         # CHOLMOD can optionally use CAMD.
@@ -211,7 +200,7 @@ endif ( )
 
 if ( SUITESPARSE_USE_SYSTEM_CCOLAMD )
     list ( REMOVE_ITEM SUITESPARSE_ENABLE_PROJECTS "ccolamd" )
-    find_package ( CCOLAMD 3.3.4 REQUIRED )
+    find_package ( CCOLAMD 3.3.5 REQUIRED )
 else ( )
     if ( CHOLMOD_CAMD AND "cholmod" IN_LIST SUITESPARSE_ENABLE_PROJECTS )
         # CHOLMOD can optionally use CCOLAMD.
@@ -224,7 +213,7 @@ endif ( )
 
 if ( SUITESPARSE_USE_SYSTEM_SUITESPARSE_CONFIG )
     list ( REMOVE_ITEM SUITESPARSE_ENABLE_PROJECTS "suitesparse_config" )
-    find_package ( SuiteSparse_config 7.8.2 REQUIRED )
+    find_package ( SuiteSparse_config 7.11.0 REQUIRED )
 else ( )
     if ( "mongoose" IN_LIST SUITESPARSE_ENABLE_PROJECTS
             OR "amd" IN_LIST SUITESPARSE_ENABLE_PROJECTS
@@ -265,6 +254,19 @@ if ( CMAKE_VERSION VERSION_LESS 3.24 )
     endif ( )
 endif ( )
 
+
+# BLAS is only required for some sub-projects
+option ( SUITESPARSE_REQUIRE_BLAS "Must not be set to OFF if any SuiteSparse project requires BLAS functions" ON )
+
+if ( ("cholmod" IN_LIST SUITESPARSE_ENABLE_PROJECTS AND CHOLMOD_SUPERNODAL)
+        OR "paru" IN_LIST SUITESPARSE_ENABLE_PROJECTS
+        OR "spqr" IN_LIST SUITESPARSE_ENABLE_PROJECTS
+        OR "umfpack" IN_LIST SUITESPARSE_ENABLE_PROJECTS )
+    if ( NOT SUITESPARSE_REQUIRE_BLAS )
+        message ( FATAL_ERROR "SUITESPARSE_REQUIRE_BLAS must not be set to OFF when building CHOLMOD with SUPERNODAL, ParU, SPQR, or UMFPACK." )
+    endif ( )
+
+endif ( )
 
 #-------------------------------------------------------------------------------
 # include selected projects
@@ -518,7 +520,7 @@ include ( SuiteSparseReport )
 
 # Currently, only LAGraph, Mongoose, and CHOLMOD have ctests.
 
-# FIXME: convert more of the existing demos to ctests.
+# Fixme: convert more of the existing demos to ctests.
 
 # Most packages have a ./Tcov folder with a full statement coverage test,
 # but these are not imported into cmake yet.

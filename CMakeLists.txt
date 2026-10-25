@@ -6,6 +6,11 @@ cmake_minimum_required(VERSION 3.22)
 # src/CMakeLists.template.cmake
 cmake_policy(VERSION 3.22...3.31)
 
+# We aren't using C++20 modules, so disable scanning for them to avoid
+# clang-scan-deps-notfound errors.
+# See also https://discourse.cmake.org/t/cmake-3-28-cmake-cxx-compiler-clang-scan-deps-notfound-not-found/9244/3
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
+
 project(amici)
 
 # misc options
@@ -26,6 +31,8 @@ option(BUILD_TESTS "Build integration tests?" ON)
 message(STATUS "CMAKE_CURRENT_SOURCE_DIR: ${CMAKE_CURRENT_SOURCE_DIR}")
 message(STATUS "CMAKE_BINARY_DIR: ${CMAKE_BINARY_DIR}")
 message(STATUS "CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
+message(STATUS "CMAKE_VERSION: ${CMAKE_VERSION}")
+message(STATUS "CMAKE_COMMAND: ${CMAKE_COMMAND}")
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -43,14 +50,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Compiler flags
 include(CheckCXXCompilerFlag)
-set(MY_CXX_FLAGS -Wall)
-foreach(flag ${MY_CXX_FLAGS})
-  unset(CUR_FLAG_SUPPORTED CACHE)
-  check_cxx_compiler_flag(${flag} CUR_FLAG_SUPPORTED)
-  if(${CUR_FLAG_SUPPORTED})
-    string(APPEND CMAKE_CXX_FLAGS " ${flag}")
-  endif()
-endforeach()
+# -Wall is supported by every GCC/Clang version AMICI targets; skip the
+# check_cxx_compiler_flag() try_compile() and just gate on the compiler
+# family.
+if(CMAKE_CXX_COMPILER_ID MATCHES "^(GNU|Clang|AppleClang)$")
+  string(APPEND CMAKE_CXX_FLAGS " -Wall")
+endif()
 
 if(MSVC)
   set(MY_CXX_FLAGS
@@ -117,8 +122,7 @@ endif()
 include(GNUInstallDirs)
 
 include(AmiciFindBLAS)
-find_package(OpenMP)
-find_package(Boost COMPONENTS chrono)
+find_package(OpenMP COMPONENTS CXX)
 
 if(ENABLE_HDF5)
   find_package(
@@ -127,6 +131,18 @@ if(ENABLE_HDF5)
     REQUIRED)
 elseif(AMICI_TRY_ENABLE_HDF5)
   find_package(HDF5 COMPONENTS C HL CXX)
+endif()
+
+if(HDF5_FOUND)
+  # Extract the plain library paths for hdf5/hdf5_cpp/hdf5_hl/hdf5_hl_cpp
+  # (dropping the transitive system libs like crypto/curl/z that
+  # HDF5_C_LIBRARIES/HDF5_CXX_LIBRARIES also list) so that AmiciConfig.cmake
+  # can bake them in as fixed imported targets, instead of every downstream
+  # model re-running FindHDF5.cmake's compiler-wrapper interrogation.
+  list(GET HDF5_C_LIBRARIES 0 AMICI_HDF5_C_LIBRARY)
+  list(GET HDF5_CXX_LIBRARIES 0 AMICI_HDF5_CXX_LIBRARY)
+  list(GET HDF5_C_HL_LIBRARIES 0 AMICI_HDF5_HL_LIBRARY)
+  list(GET HDF5_CXX_HL_LIBRARIES 0 AMICI_HDF5_HL_CXX_LIBRARY)
 endif()
 
 set(VENDORED_SUNDIALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/sundials)
@@ -142,7 +158,8 @@ else()
   set(VENDORED_SUNDIALS_INSTALL_DIR ${VENDORED_SUNDIALS_BUILD_DIR})
 endif()
 set(SUNDIALS_ROOT "${VENDORED_SUNDIALS_INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}")
-find_package(SUNDIALS 7.1.1 REQUIRED CONFIG PATHS "${SUNDIALS_ROOT}/cmake/sundials/" )
+find_package(SUNDIALS 7.9.0 REQUIRED CONFIG PATHS
+             "${SUNDIALS_ROOT}/cmake/sundials/")
 message(STATUS "Found SUNDIALS: ${SUNDIALS_DIR}")
 
 set(GSL_LITE_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/gsl")
@@ -171,7 +188,6 @@ set(AMICI_SRC_LIST
     src/edata.cpp
     src/exception.cpp
     src/simulation_parameters.cpp
-    src/spline.cpp
     src/solver.cpp
     src/solver_cvodes.cpp
     src/solver_idas.cpp
@@ -212,7 +228,6 @@ set(AMICI_SRC_LIST
     include/amici/solver_cvodes.h
     include/amici/solver.h
     include/amici/solver_idas.h
-    include/amici/spline.h
     include/amici/splinefunctions.h
     include/amici/steadystateproblem.h
     include/amici/sundials_linsol_wrapper.h
@@ -262,9 +277,6 @@ if("$ENV{ENABLE_AMICI_DEBUGGING}"
   endforeach()
 endif()
 
-target_compile_definitions(
-  ${PROJECT_NAME} PUBLIC $<$<BOOL:${Boost_CHRONO_FOUND}>:HAS_BOOST_CHRONO>)
-
 target_link_libraries(
   ${PROJECT_NAME}
   PUBLIC SUNDIALS::nvecserial_static
@@ -277,8 +289,7 @@ target_link_libraries(
          SUNDIALS::sunlinsolsptfqmr_static
          SUNDIALS::cvodes_static
          SUNDIALS::idas_static
-         $<$<BOOL:${Boost_CHRONO_FOUND}>:Boost::chrono>
-         $<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX>
+         $<$<BOOL:${OpenMP_CXX_FOUND}>:OpenMP::OpenMP_CXX>
          ${CMAKE_DL_LIBS}
   PRIVATE
     BLAS::BLAS
@@ -307,51 +318,25 @@ if(AMICI_PYTHON_BUILD_EXT_ONLY)
                           "gsl_CONFIG_NARROW_THROWS_ON_TRUNCATION=1")
 endif()
 
-# Create targets to make the sources show up in IDEs for convenience
-
-# For matlab interface
 if(NOT AMICI_PYTHON_BUILD_EXT_ONLY)
-
-  set(MATLAB_SOURCES
-      src/interface_matlab.cpp src/returndata_matlab.cpp
-      include/amici/interface_matlab.h include/amici/returndata_matlab.h)
-  find_package(Matlab)
-  # In case we can find Matlab, we create a respective library to compile the
-  # extension from cmake. Otherwise we just create a dummy target for the files
-  # to show up inside IDEs. (Set the Matlab_ROOT_DIR cmake variable if CMake
-  # cannot find your Matlab installation)
-  if(${Matlab_FOUND})
-    add_library(matlabInterface ${MATLAB_SOURCES})
-    set_target_properties(matlabInterface PROPERTIES INCLUDE_DIRECTORIES
-                                                     "${Matlab_INCLUDE_DIRS}")
-    target_link_libraries(matlabInterface PUBLIC amici)
-  else()
-    add_custom_target(
-      matlabInterface
-      SOURCES ${MATLAB_SOURCES}
-      COMMENT "Dummy target for MATLAB interface files")
-  endif()
-  set_property(
-    TARGET matlabInterface
-    APPEND
-    PROPERTY INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/include/")
+  # Create targets to make the sources show up in IDEs for convenience For
+  # template files
+  set(template_dir "python/sdist/amici/exporters/sundials/templates")
+  add_custom_target(
+    fileTemplates
+    SOURCES ${template_dir}/CMakeLists.template.cmake
+            ${template_dir}//main.template.cpp
+            ${template_dir}//model_header.template.h
+            ${template_dir}//model.template.cpp
+            ${template_dir}//wrapfunctions.template.h
+            ${template_dir}//wrapfunctions.template.cpp
+            ${template_dir}//CMakeLists_model.cmake
+            ${template_dir}//modelname.template.i
+    COMMENT "Dummy target for SWIG files")
+  set_target_properties(
+    fileTemplates PROPERTIES INCLUDE_DIRECTORIES
+                             "${CMAKE_CURRENT_SOURCE_DIR}/include/")
 endif()
-
-# For template files
-add_custom_target(
-  fileTemplates
-  SOURCES src/CMakeLists.template.cmake
-          src/main.template.cpp
-          src/model_header.template.h
-          src/model.template.cpp
-          src/wrapfunctions.template.h
-          src/wrapfunctions.template.cpp
-          swig/CMakeLists_model.cmake
-          swig/modelname.template.i
-  COMMENT "Dummy target for SWIG files")
-set_target_properties(
-  fileTemplates PROPERTIES INCLUDE_DIRECTORIES
-                           "${CMAKE_CURRENT_SOURCE_DIR}/include/")
 
 if(NOT AMICI_PYTHON_BUILD_EXT_ONLY)
   include(clang-tools)

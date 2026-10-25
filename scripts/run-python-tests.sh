@@ -8,7 +8,7 @@ amici_path=$(cd "$script_path"/.. && pwd)
 set -e
 
 if [[ -z "${BNGPATH}" ]]; then
-    export BNGPATH=${amici_path}/ThirdParty/BioNetGen-2.7.0
+    export BNGPATH=${amici_path}/ThirdParty/BioNetGen-2.9.2
 fi
 
 cd "${amici_path}"/python/tests

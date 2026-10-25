@@ -127,12 +127,13 @@ class IntegrationFailureB : public AmiException {
   public:
     /**
      * @brief Constructor
-     * @param code error code returned by cvode/ida
+     *
+     * @param code error code returned by CVODES/IDAS
      * @param t time of integration failure
      */
     IntegrationFailureB(int code, realtype t);
 
-    /** error code returned by cvode/ida */
+    /** error code returned by CVODES/IDAS */
     int error_code;
 
     /** time of integration failure */
@@ -150,6 +151,7 @@ class SetupFailure : public AmiException {
   public:
     /**
      * @brief Constructor with printf style interface
+     *
      * @param fmt error message with printf format
      * @param ... printf formatting variables
      */
@@ -167,6 +169,7 @@ class NewtonFailure : public AmiException {
   public:
     /**
      * @brief Constructor, simply calls AmiException constructor
+     *
      * @param function name of the function in which the error occurred
      * @param code error code
      */

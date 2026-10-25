@@ -6,8 +6,8 @@
 using namespace amici;
 %}
 
-%ignore processSimulationObjects;
-%ignore ModelContext;
+%ignore process_simulation_objects;
+// ModelContext is already ignored globally in amici.i
 
 // Process symbols in header
 %include "amici/rdata.h"

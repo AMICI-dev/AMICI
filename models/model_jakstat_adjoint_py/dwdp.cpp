@@ -41,30 +41,33 @@ void dwdp_rowvals_model_jakstat_adjoint_py(SUNMatrixWrapper &dwdp){
 
 #include "amici/symbolic_functions.h"
 #include "amici/defines.h"
-#include "sundials/sundials_types.h"
 
-#include <gsl/gsl-lite.hpp>
 #include <algorithm>
-
-#include "x.h"
-#include "p.h"
-#include "k.h"
-#include "w.h"
-#include "spl.h"
-#include "sspl.h"
-#include "dwdp.h"
+#include <sundials/sundials_types.h>
+#include <gsl/gsl-lite.hpp>
 
 namespace amici {
 namespace model_model_jakstat_adjoint_py {
 
 void dwdp_model_jakstat_adjoint_py(realtype *dwdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl, const realtype *dtcldp, const realtype *spl, const realtype *sspl, bool include_static){
+    const realtype sspl_0_5_ = sspl[5];
+    const realtype sspl_0_6_ = sspl[6];
+    const realtype sspl_0_7_ = sspl[7];
+    const realtype sspl_0_8_ = sspl[8];
+    const realtype sspl_0_9_ = sspl[9];
+
+    realtype &du_dsp1_ = dwdp[0];
+    realtype &du_dsp2_ = dwdp[1];
+    realtype &du_dsp3_ = dwdp[2];
+    realtype &du_dsp4_ = dwdp[3];
+    realtype &du_dsp5_ = dwdp[4];
 
     // dynamic expressions
-    du_dsp1 = sspl_0_5;  // dwdp[0]
-    du_dsp2 = sspl_0_6;  // dwdp[1]
-    du_dsp3 = sspl_0_7;  // dwdp[2]
-    du_dsp4 = sspl_0_8;  // dwdp[3]
-    du_dsp5 = sspl_0_9;  // dwdp[4]
+    du_dsp1_ = sspl_0_5_;  // dwdp[0]
+    du_dsp2_ = sspl_0_6_;  // dwdp[1]
+    du_dsp3_ = sspl_0_7_;  // dwdp[2]
+    du_dsp4_ = sspl_0_8_;  // dwdp[3]
+    du_dsp5_ = sspl_0_9_;  // dwdp[4]
 }
 
 } // namespace model_model_jakstat_adjoint_py

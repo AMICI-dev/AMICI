@@ -1,17 +1,25 @@
 import logging
 from functools import partial
 
-import numpy as np
-import pytest
+import diffrax
+import equinox as eqx
 import jax
 import jax.numpy as jnp
-import equinox as eqx
+import numpy as np
+import petab.v1 as petab
+import pytest
+from amici.importers.petab.v1 import (
+    import_petab_problem,
+)
+from amici.sim.jax.petab import run_simulations
+from amici.sim.sundials import SensitivityMethod, SensitivityOrder
+from amici.sim.sundials.petab.v1 import (
+    LLH,
+    SLLH,
+    simulate_petab,
+)
 from beartype import beartype
-
-import amici
-from amici.jax.petab import run_simulations, JAXProblem
-from amici.petab.petab_import import import_petab_problem
-from amici.petab.simulations import simulate_petab, LLH, SLLH
+from petab.v1.parameters import unscale
 from test_petab_benchmark import (
     benchmark_outdir,
     problems_for_gradient_check,
@@ -25,21 +33,48 @@ jax.config.update("jax_enable_x64", True)
     "ignore:The following problem parameters were not used *",
     "ignore: The environment variable *",
     "ignore:Adjoint sensitivity analysis for models with discontinuous ",
+    # v1->v2 auto-upgrade rewrites unsupported log10-normal priors/noise to
+    # log-normal and drops initialisation priors; both are benign for the data
+    # likelihood checked here (priors/init are not part of the objective).
+    "ignore:.*Using `log-normal` instead.*:UserWarning",
+    "ignore:.*Initialisation priors in parameter table are not supported.*:UserWarning",
 )
 def test_jax_llh(benchmark_problem):
     problem_id, flat_petab_problem, petab_problem, amici_model = (
         benchmark_problem
     )
-    if problem_id == "Smith_BMCSystBiol2013":
+
+    # Models with event assignments that use implicit triggers, which the JAX
+    # backend does not yet support.
+    events_not_supported = [
+        "Liu_IFACPapersOnLine2025",
+        "Smith_BMCSystBiol2013",
+    ]
+    if problem_id in events_not_supported:
         pytest.skip(
-            "Skipping Smith_BMCSystBiol2013 due to non-supported events in JAX."
+            f"Skipping {problem_id} due to non-supported events in JAX."
         )
 
-    amici_solver = amici_model.getSolver()
+    # PEtab v2 has no log10-normal noise: the v1->v2 upgrade rewrites
+    # log10-normal to log-normal (a genuinely different likelihood, since the
+    # noise parameter is not rescaled by ln(10)), so the JAX (v2) result cannot
+    # match the log10-normal SUNDIALS reference. Mirrors the SUNDIALS v2 test
+    # (test_petab_benchmark.py::test_nominal_parameters_llh_v2).
+    obs_df = flat_petab_problem.observable_df
+    if (
+        petab.C.OBSERVABLE_TRANSFORMATION in obs_df
+        and petab.C.LOG10 in obs_df[petab.C.OBSERVABLE_TRANSFORMATION].unique()
+    ):
+        pytest.skip(
+            f"Skipping {problem_id}: log10-normal noise is not supported in "
+            "PEtab v2."
+        )
+
+    amici_solver = amici_model.create_solver()
     cur_settings = settings[problem_id]
-    amici_solver.setAbsoluteTolerance(1e-8)
-    amici_solver.setRelativeTolerance(1e-8)
-    amici_solver.setMaxSteps(10_000)
+    amici_solver.set_absolute_tolerance(1e-8)
+    amici_solver.set_relative_tolerance(1e-8)
+    amici_solver.set_max_steps(10_000)
 
     simulate_amici = partial(
         simulate_petab,
@@ -57,9 +92,9 @@ def test_jax_llh(benchmark_problem):
     if problem_id in problems_for_gradient_check:
         point = flat_petab_problem.x_nominal_free_scaled
         for _ in range(20):
-            amici_solver.setSensitivityMethod(amici.SensitivityMethod.forward)
-            amici_solver.setSensitivityOrder(amici.SensitivityOrder.first)
-            amici_model.setSteadyStateSensitivityMode(
+            amici_solver.set_sensitivity_method(SensitivityMethod.forward)
+            amici_solver.set_sensitivity_order(SensitivityOrder.first)
+            amici_model.set_steady_state_sensitivity_mode(
                 cur_settings.ss_sensitivity_mode
             )
             point_noise = (
@@ -82,43 +117,108 @@ def test_jax_llh(benchmark_problem):
         r_amici = simulate_amici()
     llh_amici = r_amici[LLH]
 
-    jax_model = import_petab_problem(
-        petab_problem,
-        model_output_dir=benchmark_outdir / (problem_id + "_jax"),
-        jax=True,
-    )
-    jax_problem = JAXProblem(jax_model, petab_problem)
-    if problem_parameters:
-        jax_problem = eqx.tree_at(
-            lambda x: x.parameters,
-            jax_problem,
-            jnp.array(
-                [problem_parameters[pid] for pid in jax_problem.parameter_ids]
-            ),
+    try:
+        jax_problem = import_petab_problem(
+            petab_problem,
+            output_dir=benchmark_outdir / (problem_id + "_jax"),
+            jax=True,
         )
+        if problem_parameters:
+            # ``problem_parameters`` holds scaled (e.g. log10) values, as fed to
+            # the SUNDIALS reference with ``scaled_parameters=True``. The PEtab
+            # v2 JAX backend operates on *linear* parameters, so unscale before
+            # injecting to evaluate both backends at the same physical point.
+            jax_problem = eqx.tree_at(
+                lambda x: x.parameters,
+                jax_problem,
+                jnp.array(
+                    [
+                        unscale(
+                            problem_parameters[pid],
+                            flat_petab_problem.parameter_df.loc[
+                                pid, petab.C.PARAMETER_SCALE
+                            ],
+                        )
+                        for pid in jax_problem.parameter_ids
+                    ]
+                ),
+            )
 
-    if problem_id in problems_for_gradient_check:
-        beartype(run_simulations)(jax_problem)
-        (llh_jax, _), sllh_jax = eqx.filter_value_and_grad(
-            run_simulations, has_aux=True
-        )(jax_problem)
-    else:
-        llh_jax, _ = beartype(run_simulations)(jax_problem)
+        if problem_id in problems_for_gradient_check:
+            if problem_id == "Weber_BMC2015":
+                atol = cur_settings.atol_sim
+                rtol = cur_settings.rtol_sim
+                max_steps = 4 * 10**7
+            else:
+                atol = 1e-8
+                rtol = 1e-8
+                max_steps = 2 * 10**5
+            # A single reverse-mode call compiles and runs the whole graph; a
+            # separate forward-only warm-up would just pay a second, unrelated
+            # compilation (different static ``max_steps``/controller, and
+            # forward-only vs. forward+backward are distinct XLA executables).
+            (llh_jax, _), sllh_jax = eqx.filter_value_and_grad(
+                run_simulations, has_aux=True
+            )(
+                jax_problem,
+                max_steps=max_steps,
+                controller=diffrax.PIDController(
+                    atol=atol,
+                    rtol=rtol,
+                ),
+            )
+        else:
+            llh_jax, _ = beartype(run_simulations)(
+                jax_problem,
+                max_steps=2 * 10**5,
+            )
 
-    np.testing.assert_allclose(
-        llh_jax,
-        llh_amici,
-        rtol=1e-3,
-        atol=1e-3,
-        err_msg=f"LLH mismatch for {problem_id}",
-    )
-
-    if problem_id in problems_for_gradient_check:
-        sllh_amici = r_amici[SLLH]
         np.testing.assert_allclose(
-            sllh_jax.parameters,
-            np.array([sllh_amici[pid] for pid in jax_problem.parameter_ids]),
-            rtol=1e-2,
-            atol=1e-2,
-            err_msg=f"SLLH mismatch for {problem_id}, {dict(zip(jax_problem.parameter_ids, sllh_jax.parameters))}",
+            llh_jax,
+            llh_amici,
+            rtol=1e-3,
+            atol=1e-3,
+            err_msg=f"LLH mismatch for {problem_id}",
         )
+
+        if problem_id in problems_for_gradient_check:
+            sllh_amici = r_amici[SLLH]
+            # SUNDIALS returns the gradient w.r.t. the *scaled* parameters
+            # (scaled_gradients=True), while JAX differentiates w.r.t. the
+            # *linear* parameters. Convert the JAX gradient to the estimation
+            # scale via the chain rule
+            #   d(llh)/d(scaled) = d(llh)/d(linear) * d(linear)/d(scaled),
+            # with d(linear)/d(scaled) = p*ln(10) for log10, p for log, 1 for lin.
+            scales = [
+                flat_petab_problem.parameter_df.loc[
+                    pid, petab.C.PARAMETER_SCALE
+                ]
+                for pid in jax_problem.parameter_ids
+            ]
+            p_lin = np.asarray(jax_problem.parameters)
+            chain = np.array(
+                [
+                    p * np.log(10.0)
+                    if s == petab.C.LOG10
+                    else p
+                    if s == petab.C.LOG
+                    else 1.0
+                    for s, p in zip(scales, p_lin)
+                ]
+            )
+            sllh_jax_scaled = np.asarray(sllh_jax.parameters) * chain
+            np.testing.assert_allclose(
+                sllh_jax_scaled,
+                np.array(
+                    [sllh_amici[pid] for pid in jax_problem.parameter_ids]
+                ),
+                rtol=1e-2,
+                atol=1e-2,
+                err_msg=f"SLLH mismatch for {problem_id}, {dict(zip(jax_problem.parameter_ids, sllh_jax_scaled))}",
+            )
+    except (NotImplementedError, TypeError) as err:
+        if "JAXProblem does not support PEtab v1 problems" in str(err):
+            pytest.skip(str(err))
+        elif "The JAX backend does not support" in str(err):
+            pytest.skip(str(err))
+        raise err

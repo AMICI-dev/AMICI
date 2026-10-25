@@ -8,7 +8,7 @@ Short guide
 
 Installation of the AMICI Python package has the following prerequisites:
 
-* Python>=3.11
+* Python>=3.12
 * a C++20 compatible C++ compiler and a C compiler
   (e.g., g++>=10.1, clang>=13, Intel C++ compiler, mingw)
 
@@ -52,8 +52,8 @@ Install the AMICI dependencies via ``apt``
    # optionally for HDF5 support:
    sudo apt install libhdf5-serial-dev
 
-   # optionally for boost support (thread-specific CPU times, extended math functions, serialization)
-   sudo apt install libboost-chrono-dev libboost-math-dev libboost-serialization-dev
+   # optionally for boost support (extended math functions, serialization)
+   sudo apt install libboost-math-dev libboost-serialization-dev
 
 Install AMICI:
 
@@ -114,7 +114,7 @@ Install the AMICI dependencies using homebrew:
     # followed by either `brew link openmp` once,
     # or `export OpenMP_ROOT=$(brew --prefix)/opt/libomp"` where `OpenMP_ROOT` will have to be set during every re-installation of AMICI or any new model import
 
-    # optionally for boost support (thread-specific CPU times, extended math functions, serialization)
+    # optionally for boost support (extended math functions, serialization)
     brew install boost && export BOOST_ROOT=$(brew --prefix)/opt/boost
     # followed by either `brew link boost` once,
     # or `export BOOST_ROOT=$(brew --prefix)/opt/boost"` where `BOOST_ROOT` will have to be set during every re-installation of AMICI or any new model import
@@ -249,12 +249,6 @@ Installation under conda
 There is no amici conda recipe available yet. However, you can install AMICI
 using pip in a conda environment.
 
-.. note::
-
-   It is possible, but we currently don't recommend using conda for installing
-   AMICI, as it commonly leads to conflicts with system installations of
-   libraries and compilers.
-
 Create a minimal conda environment via:
 
 .. code-block:: bash
@@ -286,25 +280,13 @@ Now, you are ready to use AMICI in the virtual environment.
 
    **conda on Mac**
 
-   If the above installation does not work for you, try installing AMICI via:
+   If the above installation does not work for you, try installing AMICI
+   using clang compilers provided by conda:
 
    .. code-block:: bash
 
-      CFLAGS="-stdlib=libc++" CC=clang CXX=clang pip3 install --verbose amici
-
-   This will use the ``clang`` compiler.
-
-   You will have to pass the same options when compiling any model later
-   on. This can be done by inserting the following code before model import:
-
-   .. code-block:: python
-
-      import os
-      os.environ['CC'] = 'clang'
-      os.environ['CXX'] = 'clang'
-      os.environ['CFLAGS'] = '-stdlib=libc++'
-
-   (For further discussion see https://github.com/AMICI-dev/AMICI/issues/357)
+      conda install -c conda-forge compilers
+      pip install amici --no-cache
 
 Known issues:
 

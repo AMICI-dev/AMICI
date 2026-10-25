@@ -6,6 +6,7 @@
 #include "amici/model_dimensions.h"
 #include "amici/sundials_matrix_wrapper.h"
 
+#include <cmath>
 #include <vector>
 
 namespace amici {
@@ -27,8 +28,8 @@ struct ModelState {
         h.resize(dim.ne, 0.0);
         total_cl.resize(dim.nx_rdata - dim.nx_solver, 0.0);
         stotal_cl.resize((dim.nx_rdata - dim.nx_solver) * dim.np, 0.0);
-        unscaledParameters.resize(dim.np);
-        fixedParameters.resize(dim.nk);
+        unscaled_parameters.resize(dim.np);
+        fixed_parameters.resize(dim.nk);
     }
 
     /**
@@ -46,10 +47,10 @@ struct ModelState {
     std::vector<realtype> stotal_cl;
 
     /** Unscaled parameters (dimension: `np`) */
-    std::vector<realtype> unscaledParameters;
+    std::vector<realtype> unscaled_parameters;
 
     /** Constants (dimension: `nk`) */
-    std::vector<realtype> fixedParameters;
+    std::vector<realtype> fixed_parameters;
 
     /**
      * Indexes of parameters wrt to which sensitivities are computed
@@ -61,8 +62,8 @@ struct ModelState {
 inline bool operator==(ModelState const& a, ModelState const& b) {
     return is_equal(a.h, b.h) && is_equal(a.total_cl, b.total_cl)
            && is_equal(a.stotal_cl, b.stotal_cl)
-           && is_equal(a.unscaledParameters, b.unscaledParameters)
-           && is_equal(a.fixedParameters, b.fixedParameters)
+           && is_equal(a.unscaled_parameters, b.unscaled_parameters)
+           && is_equal(a.fixed_parameters, b.fixed_parameters)
            && a.plist == b.plist;
 }
 
@@ -77,12 +78,13 @@ struct ModelStateDerived {
 
     /**
      * @brief Constructor from model dimensions.
+     *
      * @param dim Model dimensions
      */
     explicit ModelStateDerived(ModelDimensions const& dim);
 
     /**
-     * Copy constructor
+     * @brief Copy constructor
      *
      * @param other ModelStateDerived object to copy
      */
@@ -93,7 +95,6 @@ struct ModelStateDerived {
         , dxdotdw_(other.dxdotdw_)
         , dwdx_(other.dwdx_)
         , dwdp_(other.dwdp_)
-        , M_(other.M_)
         , MSparse_(other.MSparse_)
         , dfdx_(other.dfdx_)
         , dxdotdp_full(other.dxdotdp_full)
@@ -104,16 +105,14 @@ struct ModelStateDerived {
         , dx_rdatadx_solver(other.dx_rdatadx_solver)
         , dx_rdatadtcl(other.dx_rdatadtcl)
         , dtotal_cldx_rdata(other.dtotal_cldx_rdata)
-        , dxdotdp(other.dxdotdp)
         , dJydy_(other.dJydy_)
-        , dJydy_matlab_(other.dJydy_matlab_)
-        , dJydsigma_(other.dJydsigma_)
+        , dJydsigmay_(other.dJydsigmay_)
         , dJydx_(other.dJydx_)
         , dJydp_(other.dJydp_)
         , dJzdz_(other.dJzdz_)
-        , dJzdsigma_(other.dJzdsigma_)
-        , dJrzdz_(other.dJrzdz_)
-        , dJrzdsigma_(other.dJrzdsigma_)
+        , dJzdsigmaz_(other.dJzdsigmaz_)
+        , dJrzdrz_(other.dJrzdrz_)
+        , dJrzdsigmaz_(other.dJrzdsigmaz_)
         , dJzdx_(other.dJzdx_)
         , dJzdp_(other.dJzdp_)
         , dzdx_(other.dzdx_)
@@ -152,7 +151,6 @@ struct ModelStateDerived {
         dxdotdw_.set_ctx(sunctx_);
         dwdx_.set_ctx(sunctx_);
         dwdp_.set_ctx(sunctx_);
-        M_.set_ctx(sunctx_);
         MSparse_.set_ctx(sunctx_);
         dfdx_.set_ctx(sunctx_);
         dxdotdp_full.set_ctx(sunctx_);
@@ -163,7 +161,6 @@ struct ModelStateDerived {
         dx_rdatadx_solver.set_ctx(sunctx_);
         dx_rdatadtcl.set_ctx(sunctx_);
         dtotal_cldx_rdata.set_ctx(sunctx_);
-        dxdotdp.set_ctx(sunctx_);
 
         for (auto& dJydy : dJydy_) {
             dJydy.set_ctx(sunctx_);
@@ -209,13 +206,6 @@ struct ModelStateDerived {
 
     /** Sparse dwdp temporary storage (dimension: `nw` x `np`, nnz: `ndwdp`) */
     SUNMatrixWrapper dwdp_;
-
-    /**
-     * Dense Mass matrix (dimension: `nx_solver` x `nx_solver`)
-     *
-     * MATLAB-generated-only, DEPRECATED.
-     */
-    SUNMatrixWrapper M_;
 
     /**
      * Sparse Mass matrix, Python-generated-only
@@ -286,26 +276,15 @@ struct ModelStateDerived {
     SUNMatrixWrapper dtotal_cldx_rdata;
 
     /**
-     * Temporary storage of `dxdotdp` data across functions, Matlab only
-     * (dimension: `nplist` x `nx_solver` , row-major)
-     */
-    AmiVectorArray dxdotdp;
-
-    /** Sparse observable derivative of data likelihood, only used if
-     * `pythonGenerated` == `true` (dimension `nytrue`, `nJ` x `ny`, row-major)
+     * Sparse observable derivative of data likelihood
+     * (dimension `nytrue`, `nJ` x `ny`, row-major)
      */
     std::vector<SUNMatrixWrapper> dJydy_;
-
-    /** Observable derivative of data likelihood, only used if
-     * `pythonGenerated` == `false` (dimension `nJ` x `ny` x `nytrue` ,
-     * row-major)
-     */
-    std::vector<realtype> dJydy_matlab_;
 
     /** Observable sigma derivative of data likelihood
      * (dimension nJ x ny x nytrue, row-major)
      */
-    std::vector<realtype> dJydsigma_;
+    std::vector<realtype> dJydsigmay_;
 
     /** State derivative of data likelihood
      * (dimension `nJ` x `nx_solver`, row-major)
@@ -325,20 +304,20 @@ struct ModelStateDerived {
     /** event sigma derivative of event likelihood
      * (dimension nJ x nz x nztrue, row-major)
      */
-    std::vector<realtype> dJzdsigma_;
+    std::vector<realtype> dJzdsigmaz_;
 
     /** event output derivative of event likelihood at final timepoint
      * (dimension nJ x nz x nztrue, row-major)
      */
-    std::vector<realtype> dJrzdz_;
+    std::vector<realtype> dJrzdrz_;
 
     /** event sigma derivative of event likelihood at final timepoint
      * (dimension nJ x nz x nztrue, row-major)
      */
-    std::vector<realtype> dJrzdsigma_;
+    std::vector<realtype> dJrzdsigmaz_;
 
     /** state derivative of event likelihood
-     * (dimension `nJ` x `nx_solver`, row-major)
+     * (dimension `nJ` x `nx_solver`, column-major)
      */
     std::vector<realtype> dJzdx_;
 
@@ -472,7 +451,7 @@ struct ModelStateDerived {
  * @brief Container for the IVP solution state at a specific timepoint.
  */
 struct SolutionState {
-    /** timepoint */
+    /** timepoint, NaN if not set by a simulation */
     realtype t{NAN};
     /**
      * partial state vector, excluding states eliminated from conservation laws
@@ -493,6 +472,7 @@ struct SolutionState {
 
     /**
      * @brief Constructor.
+     *
      * @param t_ Current timepoint.
      * @param nx_solver Number of solver state variables.
      * @param nplist Number of parameter w.r.t. which to compute sensitivities.
@@ -517,6 +497,16 @@ struct SimulationState {
 
     /** state of the model that was used for simulation */
     ModelState mod;
+
+    /**
+     * @brief Whether this state was set by a simulation.
+     *
+     * This is not the case for the states of a simulation period that failed
+     * before it started.
+     *
+     * @return Whether this state was set by a simulation
+     */
+    [[nodiscard]] bool has_solution() const { return !std::isnan(sol.t); }
 };
 
 } // namespace amici

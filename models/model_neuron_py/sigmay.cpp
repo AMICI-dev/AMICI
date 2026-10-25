@@ -1,20 +1,14 @@
 #include "amici/symbolic_functions.h"
 #include "amici/defines.h"
-#include "sundials/sundials_types.h"
 
-#include <gsl/gsl-lite.hpp>
 #include <algorithm>
-
-#include "p.h"
-#include "k.h"
-#include "y.h"
-#include "sigmay.h"
 
 namespace amici {
 namespace model_model_neuron_py {
 
 void sigmay_model_neuron_py(realtype *sigmay, const realtype t, const realtype *p, const realtype *k, const realtype *y){
-    sigma_y1 = 1.0;  // sigmay[0]
+    realtype &sigma_y1_ = sigmay[0];
+    sigma_y1_ = 1.0;  // sigmay[0]
 }
 
 } // namespace model_model_neuron_py

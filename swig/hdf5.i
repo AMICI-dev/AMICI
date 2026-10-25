@@ -1,12 +1,12 @@
 %module hdf5
 
 %rename("$ignore", regextarget=1, fullname=1) "amici::hdf5::.*$";
-%rename("%s") amici::hdf5::readModelDataFromHDF5;
-%rename("%s") amici::hdf5::readSimulationExpData;
-%rename("%s") amici::hdf5::readSolverSettingsFromHDF5;
-%rename("%s") amici::hdf5::writeReturnData;
-%rename("%s") amici::hdf5::writeSimulationExpData;
-%rename("%s") amici::hdf5::writeSolverSettingsToHDF5;
+%rename("%s") amici::hdf5::read_model_data_from_hdf5;
+%rename("%s") amici::hdf5::read_exp_data_from_hdf5;
+%rename("%s") amici::hdf5::read_solver_settings_from_hdf5;
+%rename("%s") amici::hdf5::write_return_data_to_hdf5;
+%rename("%s") amici::hdf5::write_exp_data_to_hdf5;
+%rename("%s") amici::hdf5::write_solver_settings_to_hdf5;
 
 // Add necessary symbols to generated header
 %{

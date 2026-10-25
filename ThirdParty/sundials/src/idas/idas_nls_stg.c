@@ -2,8 +2,11 @@
  * Programmer(s): David J. Gardner @ LLNL
  * -----------------------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2024, Lawrence Livermore National Security
+ * Copyright (c) 2025-2026, Lawrence Livermore National Security,
+ * University of Maryland Baltimore County, and the SUNDIALS contributors.
+ * Copyright (c) 2013-2025, Lawrence Livermore National Security
  * and Southern Methodist University.
+ * Copyright (c) 2002-2013, Lawrence Livermore National Security.
  * All rights reserved.
  *
  * See the top-level LICENSE and NOTICE files for details.
@@ -19,9 +22,8 @@
 #include "sundials/sundials_nvector_senswrapper.h"
 
 /* constant macros */
-#define PT0001 SUN_RCONST(0.0001) /* real 0.0001 */
-#define ONE    SUN_RCONST(1.0)    /* real 1.0    */
-#define TWENTY SUN_RCONST(20.0)   /* real 20.0   */
+#define ONE    SUN_RCONST(1.0)  /* real 1.0    */
+#define TWENTY SUN_RCONST(20.0) /* real 20.0   */
 
 /* nonlinear solver parameters */
 #define MAXIT 4 /* default max number of nonlinear iterations    */
@@ -36,6 +38,7 @@ static int idaNlsLSolveSensStg(N_Vector delta, void* ida_mem);
 static int idaNlsConvTestSensStg(SUNNonlinearSolver NLS, N_Vector ycor,
                                  N_Vector del, sunrealtype tol, N_Vector ewt,
                                  void* ida_mem);
+static SUNErrCode idaNlsGetUpdateNormSensStg(sunrealtype* delnrm, void* ida_mem);
 
 /* -----------------------------------------------------------------------------
  * Exported functions
@@ -124,6 +127,15 @@ int IDASetNonlinearSolverSensStg(void* ida_mem, SUNNonlinearSolver NLS)
   {
     IDAProcessError(IDA_mem, IDA_ILL_INPUT, __LINE__, __func__, __FILE__,
                     "Setting convergence test function failed");
+    return (IDA_ILL_INPUT);
+  }
+
+  retval = SUNNonlinSolSetGetUpdateNormFn(IDA_mem->NLSstg,
+                                          idaNlsGetUpdateNormSensStg, ida_mem);
+  if (retval != IDA_SUCCESS)
+  {
+    IDAProcessError(IDA_mem, IDA_ILL_INPUT, __LINE__, __func__, __FILE__,
+                    "Setting update-norm getter failed");
     return (IDA_ILL_INPUT);
   }
 
@@ -259,6 +271,7 @@ static int idaNlsLSetupSensStg(SUNDIALS_MAYBE_UNUSED sunbooleantype jbad,
   IDA_mem->ida_cjratio = ONE;
   IDA_mem->ida_ss      = TWENTY;
   IDA_mem->ida_ssS     = TWENTY;
+  IDA_mem->ida_delnrmS = SUN_RCONST(0.0);
 
   if (retval < 0) { return (IDA_LSETUP_FAIL); }
   if (retval > 0) { return (IDA_LSETUP_RECVR); }
@@ -326,6 +339,17 @@ static int idaNlsResidualSensStg(N_Vector ycorStg, N_Vector resStg, void* ida_me
   return (IDA_SUCCESS);
 }
 
+static SUNErrCode idaNlsGetUpdateNormSensStg(sunrealtype* delnrm, void* ida_mem)
+{
+  IDAMem IDA_mem;
+
+  if (ida_mem == NULL) { return SUN_ERR_ARG_CORRUPT; }
+  IDA_mem = (IDAMem)ida_mem;
+
+  *delnrm = IDA_mem->ida_delnrmS;
+  return SUN_SUCCESS;
+}
+
 static int idaNlsConvTestSensStg(SUNNonlinearSolver NLS,
                                  SUNDIALS_MAYBE_UNUSED N_Vector ycor,
                                  N_Vector del, sunrealtype tol, N_Vector ewt,
@@ -333,7 +357,6 @@ static int idaNlsConvTestSensStg(SUNNonlinearSolver NLS,
 {
   IDAMem IDA_mem;
   int m, retval;
-  sunrealtype delnrm;
   sunrealtype rate;
 
   if (ida_mem == NULL)
@@ -344,7 +367,7 @@ static int idaNlsConvTestSensStg(SUNNonlinearSolver NLS,
   IDA_mem = (IDAMem)ida_mem;
 
   /* compute the norm of the correction */
-  delnrm = N_VWrmsNorm(del, ewt);
+  IDA_mem->ida_delnrmS = N_VWrmsNorm(del, ewt);
 
   /* get the current nonlinear solver iteration count */
   retval = SUNNonlinSolGetCurIter(NLS, &m);
@@ -353,17 +376,17 @@ static int idaNlsConvTestSensStg(SUNNonlinearSolver NLS,
   /* test for convergence, first directly, then with rate estimate. */
   if (m == 0)
   {
-    IDA_mem->ida_oldnrm = delnrm;
-    if (delnrm <= IDA_mem->ida_toldel) { return (SUN_SUCCESS); }
+    IDA_mem->ida_oldnrm = IDA_mem->ida_delnrmS;
+    if (IDA_mem->ida_delnrmS <= IDA_mem->ida_toldel) { return (SUN_SUCCESS); }
   }
   else
   {
-    rate = SUNRpowerR(delnrm / IDA_mem->ida_oldnrm, ONE / m);
+    rate = SUNRpowerR(IDA_mem->ida_delnrmS / IDA_mem->ida_oldnrm, ONE / m);
     if (rate > RATEMAX) { return (SUN_NLS_CONV_RECVR); }
     IDA_mem->ida_ssS = rate / (ONE - rate);
   }
 
-  if (IDA_mem->ida_ssS * delnrm <= tol) { return (SUN_SUCCESS); }
+  if (IDA_mem->ida_ssS * IDA_mem->ida_delnrmS <= tol) { return (SUN_SUCCESS); }
 
   /* not yet converged */
   return (SUN_NLS_CONTINUE);

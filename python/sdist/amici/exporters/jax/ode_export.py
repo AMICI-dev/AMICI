@@ -1,0 +1,508 @@
+"""
+JAX Export
+----------
+This module provides all necessary functionality to specify an ordinary
+differential equation model and generate executable jax simulation code.
+The user generally won't have to directly call any function from this module
+as this will be done by
+:py:func:`amici.importers.pysb.pysb2jax`,
+:py:func:`amici.importers.sbml.SbmlImporter.` and
+:py:func:`amici.petab_import.import_model`.
+"""
+
+from __future__ import annotations
+
+import logging
+import os
+from collections.abc import Callable
+from pathlib import Path
+
+import numpy as np
+import sympy as sp
+
+from amici._symbolic.de_model import DEModel
+from amici._symbolic.sympy_utils import (
+    _monkeypatch_sympy,
+)
+from amici.exporters.jax.nn import generate_equinox
+from amici.exporters.sundials.de_export import is_valid_identifier
+from amici.exporters.template import apply_template
+from amici.logging import get_logger, log_execution_time, set_log_level
+from amici.sim.jax.model import JAXModel
+
+from .jaxcodeprinter import (
+    AmiciJaxCodePrinter,
+    _jnp_array_str,
+    generic_measurement_symbol,
+)
+
+#: python log manager
+logger = get_logger(__name__, logging.ERROR)
+
+
+def _jax_variable_assignments(
+    model: DEModel,
+    code_printer: AmiciJaxCodePrinter,
+    sym_names: tuple[str, ...],
+) -> dict:
+    return {
+        f"{sym_name.upper()}_SYMS": "".join(
+            # local variable names, so mangled -- never the entity id, which
+            # could shadow the array argument it's unpacked from
+            f"{code_printer.doprint(s)}, "
+            for s in model.sym(sym_name)
+        )
+        if model.sym(sym_name)
+        else "_"
+        for sym_name in sym_names
+    }
+
+
+def _jax_variable_equations(
+    model: DEModel,
+    code_printer: AmiciJaxCodePrinter,
+    eq_names: tuple[str, ...],
+    subs: dict,
+    indent: int,
+    transforms: dict[str, Callable[[sp.Matrix], sp.Matrix]] | None = None,
+) -> dict:
+    transforms = transforms or {}
+    return {
+        f"{eq_name.upper()}_EQ": "\n".join(
+            code_printer._get_sym_lines(
+                # pass Symbols (not names) so CSE dependency toposort can match
+                # target symbols against the free symbols of other equations
+                model.sym(eq_name),
+                # sp.Matrix to support event assignments which are lists
+                transforms.get(eq_name, lambda eq: eq)(
+                    sp.Matrix(model.eq(eq_name)).subs(subs)
+                ),
+                indent,
+            )
+        )[indent:]  # remove indent for first line
+        for eq_name in eq_names
+    }
+
+
+def _jax_return_variables(
+    model: DEModel,
+    code_printer: AmiciJaxCodePrinter,
+    eq_names: tuple[str, ...],
+) -> dict:
+    return {
+        f"{eq_name.upper()}_RET": _jnp_array_str(
+            model.sym(eq_name), code_printer
+        )
+        if model.sym(eq_name) and sp.Matrix(model.eq(eq_name)).shape[0]
+        else "jnp.array([])"
+        for eq_name in eq_names
+    }
+
+
+def _jax_variable_ids(model: DEModel, sym_names: tuple[str, ...]) -> dict:
+    original_ids = model.reserved_symbol_original_ids
+    return {
+        f"{sym_name.upper()}_IDS": "".join(
+            # public ids must stay exactly as the user named them, even if
+            # amici had to rename the entity internally (an entity named
+            # `t`, the one name that still collides -- see RESERVED_SYMBOLS)
+            f'"{original_ids.get(s.name, s.name)}", '
+            for s in model.sym(sym_name)
+        )
+        if model.sym(sym_name)
+        else "tuple()"
+        for sym_name in sym_names
+    }
+
+
+class ODEExporter:
+    """
+    The ODEExporter class generates AMICI jax files for a model as
+    defined in _symbolic expressions.
+
+    :ivar model:
+        DE definition
+
+    :ivar verbose:
+        more verbose output if True
+
+    :ivar model_name:
+        name of the model that will be used for compilation
+
+    :ivar model_path:
+        path to the generated model specific files
+
+    :ivar _code_printer:
+        Code printer to generate JAX code
+    """
+
+    def __init__(
+        self,
+        ode_model: DEModel,
+        output_dir: Path | str | None = None,
+        verbose: bool | int | None = False,
+        model_name: str | None = "model",
+        hybridization: dict[str, dict] = None,
+    ):
+        """
+        Generate AMICI jax files for the ODE provided to the constructor.
+
+        :param ode_model:
+            DE model definition
+
+        :param output_dir:
+            see :meth:`amici.de_export.DEExporter.set_paths`
+
+        :param verbose:
+            verbosity level for logging, ``True``/``False`` default to
+            :data:`logging.Error`/:data:`logging.DEBUG`
+
+        :param model_name:
+            name of the model to be used during code generation
+
+        :param hybridization:
+            dict representation of the hybridization information in the PEtab YAML file, see
+            https://petab-sciml.readthedocs.io/latest/format.html#problem-yaml-file
+        """
+        set_log_level(logger, verbose)
+
+        if ode_model.has_algebraic_states():
+            raise NotImplementedError(
+                "The JAX backend does not support models with algebraic states."
+            )
+
+        if ode_model.has_priority_events():
+            raise NotImplementedError(
+                "The JAX backend does not support event priorities."
+            )
+
+        if ode_model.has_implicit_event_assignments():
+            raise NotImplementedError(
+                "The JAX backend does not support event assignments with implicit triggers."
+            )
+
+        self.verbose: bool = logger.getEffectiveLevel() <= logging.DEBUG
+
+        self.model_path: Path = Path()
+
+        self.set_name(model_name)
+        self.set_paths(output_dir)
+
+        self.model: DEModel = ode_model
+
+        self.hybridization = hybridization if hybridization is not None else {}
+
+        self._code_printer = AmiciJaxCodePrinter()
+
+    @_monkeypatch_sympy
+    @log_execution_time("generating jax code", logger)
+    def generate_model_code(self) -> None:
+        """
+        Generates the jax code for the loaded model
+        """
+        self._prepare_model_folder()
+        self._generate_jax_code()
+        self._generate_nn_code()
+
+    def _prepare_model_folder(self) -> None:
+        """
+        Create model directory or remove all files if the output directory
+        already exists.
+        """
+        self.model_path.mkdir(parents=True, exist_ok=True)
+
+        for file in self.model_path.glob("*"):
+            if file.is_file():
+                file.unlink()
+
+    @log_execution_time("generating jax code", logger)
+    def _generate_jax_code(self) -> None:
+        eq_names = (
+            "xdot",
+            "w",
+            "x0",
+            "y",
+            "sigmay",
+            "Jy",
+            "x_solver",
+            "x_rdata",
+            "total_cl",
+            "eroot",
+            "iroot",
+            "deltax",
+        )
+        sym_names = (
+            "p",
+            "k",
+            "np",
+            "op",
+            "x",
+            "tcl",
+            "ih",
+            "h",
+            "w",
+            "my",
+            "y",
+            "sigmay",
+            "x_rdata",
+            "iroot",
+            "x_eval",
+        )
+
+        indent = 8
+
+        # Explicit (time-triggered) Heaviside variables are kept as tracked
+        # heaviside variables (like implicit ones) rather than being inlined as
+        # symbolic Heaviside functions of time. This keeps the vector field
+        # smooth within each integration segment; the variables are toggled at
+        # the (root-found, known-discontinuity-clipped) event times.
+
+        # replaces observables with a generic my variable
+        subs_observables = dict(
+            zip(
+                self.model.sym("my"),
+                [generic_measurement_symbol] * len(self.model.sym("my")),
+                strict=True,
+            )
+        )
+        subs = subs_observables
+
+        array_inputs_init = self._generate_array_inputs_init()
+
+        tpl_data = {
+            # assign named variable using corresponding algebraic formula (function body)
+            **_jax_variable_equations(
+                self.model,
+                self._code_printer,
+                eq_names,
+                subs,
+                indent,
+                transforms={"deltax": self._root_heavisides_to_h},
+            ),
+            # create jax array from concatenation of named variables
+            **_jax_return_variables(self.model, self._code_printer, eq_names),
+            # assign named variables from a jax array
+            **_jax_variable_assignments(
+                self.model, self._code_printer, sym_names
+            ),
+            # tuple of variable names (ids as they are unique)
+            **_jax_variable_ids(self.model, ("p", "k", "y", "w", "x_rdata")),
+            "P_VALUES": _jnp_array_str(
+                self.model.val("p"), self._code_printer
+            ),
+            "ALL_P_VALUES": _jnp_array_str(
+                self.model.val("p") + self.model.val("k"), self._code_printer
+            ),
+            "ALL_P_IDS": "".join(
+                f'"{self.model.reserved_symbol_original_ids.get(s.name, s.name)}", '
+                for s in self._get_all_p_syms()
+            )
+            if self._get_all_p_syms()
+            else "tuple()",
+            "ALL_P_SYMS": "".join(
+                f"{self._code_printer.doprint(s)}, "
+                for s in self._get_all_p_syms()
+            )
+            if self._get_all_p_syms()
+            else "_",
+            "ROOTS": _jnp_array_str(
+                sorted(self._get_known_discs()), self._code_printer
+            ),
+            "N_IEVENTS": str(len(self.model.get_implicit_roots())),
+            "N_EEVENTS": str(
+                self.model.num_events() - self.model.num_events_solver()
+            ),
+            "EVENT_INITIAL_VALUES": _jnp_array_str(
+                [e.get_initial_value() for e in self.model._events],
+                self._code_printer,
+            ),
+            **{
+                "MODEL_NAME": self.model_name,
+                # keep track of the API version that the model was generated with so we
+                # can flag conflicts in the future
+                "MODEL_API_VERSION": f"'{JAXModel.MODEL_API_VERSION}'",
+            },
+            "NET_IMPORTS": "\n".join(
+                f"{net} = _module_from_path('{net}', Path(__file__).parent / '{net}.py')"
+                for net in self.hybridization.keys()
+            ),
+            "NETS": ",\n".join(
+                f'"{net}": {net}.net(jr.PRNGKey(0))'
+                for net in self.hybridization.keys()
+            ),
+            "ARRAY_INPUTS_INIT": array_inputs_init,
+        }
+
+        apply_template(
+            Path(__file__).parent / "jax.template.py",
+            self.model_path / "__init__.py",
+            tpl_data,
+        )
+
+    def _generate_array_inputs_init(self) -> str:
+        """Generate code to initialize array inputs from HDF5 data.
+
+        Reads array data from HDF5 files at code-generation time and
+        embeds them as jnp.array constants in the generated model code.
+
+        :return:
+            Python code string for initializing self._array_inputs
+        """
+        array_entries = []
+        for _, net in self.hybridization.items():
+            if net.get("pre_initialization", False):
+                continue
+            for petab_id, hdf5_path in net.get("array_inputs", {}).items():
+                import h5py
+
+                with h5py.File(hdf5_path, "r") as f:
+                    group = f["inputs"][petab_id]
+                    keys = sorted(group.keys())
+                    # Stack with experiment dimension first
+                    data = np.stack([group[k][:] for k in keys])
+                    rows = []
+                    for row in data:
+                        rows.append(
+                            "[" + ", ".join(str(float(v)) for v in row) + "]"
+                        )
+                    data_str = ", ".join(rows)
+
+                array_entries.append(f"'{petab_id}': jnp.array([{data_str}])")
+
+        if not array_entries:
+            return "self._array_inputs = {}"
+
+        entries_str = ", ".join(array_entries)
+        return f"self._array_inputs = {{{entries_str}}}"
+
+    def _get_all_p_syms(self) -> list[sp.Symbol]:
+        return list(self.model.sym("p")) + list(self.model.sym("k"))
+
+    def _get_known_discs(self) -> set[str]:
+        """Known discontinuity time points for use in ``_known_discs``.
+
+        ``_known_discs`` only has access to ``p`` (and ``k``, unpacked from
+        ``p``), so explicit trigger times may only depend on those symbols.
+        Trigger times that depend on *static* ``w`` expressions (i.e.
+        expressions that do not depend on time, states, or Heaviside
+        variables) are resolved by recursively substituting in their
+        defining formulas. Trigger times that depend on any other
+        (non-static) symbols cannot be expressed in terms of ``p``/``k``
+        alone and are excluded here; they are still handled correctly at
+        runtime via root-finding in ``_root_cond_fn``.
+        """
+        static_syms = self.model.static_symbols
+        p_k_syms = set(self.model.sym("p")) | set(self.model.sym("k"))
+        w_subs = dict(
+            zip(self.model.sym("w"), self.model.eq("w"), strict=True)
+        )
+
+        known_discs = set()
+        for e in self.model._events:
+            for root in e.get_trigger_times():
+                if not root.free_symbols.issubset(static_syms):
+                    continue
+                resolved = root
+                for _ in range(len(w_subs) + 1):
+                    if resolved.free_symbols.issubset(p_k_syms):
+                        if resolved.is_number:
+                            # force a float literal: under jax_enable_x64,
+                            # jnp.array([5]) infers int64, but `known_discs`
+                            # is used as `jump_ts` in
+                            # diffrax.ClipStepSizeController, which requires
+                            # floating point
+                            known_discs.add(repr(float(resolved)))
+                        else:
+                            known_discs.add(
+                                self._code_printer.doprint(resolved)
+                            )
+                        break
+                    resolved = resolved.subs(w_subs)
+        return known_discs
+
+    def _root_heavisides_to_h(self, expr: sp.Matrix) -> sp.Matrix:
+        """Replace Heaviside functions of root functions by Heaviside
+        variables.
+
+        Event assignments are evaluated at the root found by the solver,
+        which may lie just before the switch. The Heaviside variables are
+        updated for the discontinuity, so conditions that switch at the event
+        time take their value after the switch, as in the C++ backend.
+        """
+        substitute_w = self.model._get_expression_substituter()
+        x_to_x_eval = dict(
+            zip(self.model.sym("x"), self.model.sym("x_eval"), strict=True)
+        )
+        roots = []
+        for event, h in zip(self.model._events, self.model.sym("h")):
+            root = substitute_w(event.get_val())
+            # `x_eval` in assignments using values from the trigger time
+            roots.extend([(root, h), (root.subs(x_to_x_eval), h)])
+
+        def to_h(heaviside: sp.Heaviside) -> sp.Expr:
+            arg = heaviside.args[0]
+            # Prefer the Heaviside variable of the negated root over `1 - h`,
+            # which differs if the root is zero, e.g., at t0.
+            for root, h in roots:
+                if (arg - root).is_zero:
+                    return h
+            for root, h in roots:
+                if (arg + root).is_zero:
+                    return 1 - h
+            return heaviside
+
+        return expr.replace(lambda e: isinstance(e, sp.Heaviside), to_h)
+
+    def _generate_nn_code(self) -> None:
+        for net_name, net in self.hybridization.items():
+            generate_equinox(
+                net["model"],
+                self.model_path / f"{net_name}.py",
+                net["frozen_layers"],
+            )
+
+    def _implicit_roots(self) -> list[sp.Expr]:
+        """Return root functions that require rootfinding."""
+        roots = []
+        for root in self.model.get_implicit_roots():
+            if any(
+                sp.simplify(root + r) == 0 or sp.simplify(root - r) == 0
+                for r in roots
+            ):
+                continue
+            roots.append(root)
+        return roots
+
+    def set_paths(self, output_dir: str | Path | None = None) -> None:
+        """
+        Set output paths for the model and create if necessary
+
+        :param output_dir:
+            relative or absolute path where the generated model
+            code is to be placed. If ``None``, this will default to
+            ``amici-{self.model_name}`` in the current working directory.
+            will be created if it does not exist.
+
+        """
+        if output_dir is None:
+            output_dir = Path(os.getcwd()) / f"amici-{self.model_name}"
+
+        self.model_path = Path(output_dir).resolve()
+        self.model_path.mkdir(parents=True, exist_ok=True)
+
+    def set_name(self, model_name: str) -> None:
+        """
+        Sets the model name
+
+        :param model_name:
+            name of the model (may only contain upper and lower case letters,
+            digits and underscores, and must not start with a digit)
+        """
+        if not is_valid_identifier(model_name):
+            raise ValueError(
+                f"'{model_name}' is not a valid model name. "
+                "Model name may only contain upper and lower case letters, "
+                "digits and underscores, and must not start with a digit."
+            )
+
+        self.model_name = model_name

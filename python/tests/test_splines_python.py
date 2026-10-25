@@ -6,18 +6,31 @@ the true analytical values.
 """
 
 import math
+import xml.etree.ElementTree as ET
 
-import amici
+import pytest
 import sympy as sp
+from amici.importers.sbml.splines import (
+    AbstractSpline,
+    CubicHermiteSpline,
+    UniformGrid,
+)
+from amici.importers.sbml.utils import create_sbml_model
+from amici.importers.utils import (
+    amici_time_symbol,
+    sbml_time_symbol,
+    symbol_with_assumptions,
+)
 from amici.testing import skip_on_valgrind
+from sbmlmath import TimeSymbol, sbml_math_to_sympy
 
 
 @skip_on_valgrind
 def test_SplineUniform():
-    spline = amici.splines.CubicHermiteSpline(
+    spline = CubicHermiteSpline(
         sbml_id="f",
-        evaluate_at=amici.sbml_utils.amici_time_symbol,
-        nodes=amici.splines.UniformGrid(0, 1, number_of_nodes=4),
+        evaluate_at=amici_time_symbol,
+        nodes=UniformGrid(0, 1, number_of_nodes=4),
         values_at_nodes=[0.0, 2.0, 0.5, 1.0],
     )
     assert math.isclose(float(spline.evaluate(0.0)), 0.0)
@@ -31,9 +44,9 @@ def test_SplineUniform():
 
 @skip_on_valgrind
 def test_SplineNonUniform():
-    spline = amici.splines.CubicHermiteSpline(
+    spline = CubicHermiteSpline(
         sbml_id="f",
-        evaluate_at=amici.sbml_utils.amici_time_symbol,
+        evaluate_at=amici_time_symbol,
         nodes=[0.0, 0.1, 0.5, 1.0],
         values_at_nodes=[0.0, 2.0, 0.5, 1.0],
     )
@@ -48,10 +61,10 @@ def test_SplineNonUniform():
 
 @skip_on_valgrind
 def test_SplineExplicit():
-    spline = amici.splines.CubicHermiteSpline(
+    spline = CubicHermiteSpline(
         sbml_id="f",
-        evaluate_at=amici.sbml_utils.amici_time_symbol,
-        nodes=amici.splines.UniformGrid(0, 1, number_of_nodes=5),
+        evaluate_at=amici_time_symbol,
+        nodes=UniformGrid(0, 1, number_of_nodes=5),
         values_at_nodes=[0.0, 2.0, 0.5, 1.0, 0.75],
         derivatives_at_nodes=[1.0, 0.0, 0.1, -0.1, 0.0],
     )
@@ -68,10 +81,10 @@ def test_SplineExplicit():
 
 @skip_on_valgrind
 def test_SplineZeroBC():
-    spline = amici.splines.CubicHermiteSpline(
+    spline = CubicHermiteSpline(
         sbml_id="f",
-        evaluate_at=amici.sbml_utils.amici_time_symbol,
-        nodes=amici.splines.UniformGrid(0, 1, number_of_nodes=4),
+        evaluate_at=amici_time_symbol,
+        nodes=UniformGrid(0, 1, number_of_nodes=4),
         values_at_nodes=[0.0, 2.0, 0.5, 1.0],
         bc="zeroderivative",
     )
@@ -84,10 +97,10 @@ def test_SplineZeroBC():
 
 @skip_on_valgrind
 def test_SplineLogarithmic():
-    spline = amici.splines.CubicHermiteSpline(
+    spline = CubicHermiteSpline(
         sbml_id="f",
-        evaluate_at=amici.sbml_utils.amici_time_symbol,
-        nodes=amici.splines.UniformGrid(0, 1, number_of_nodes=5),
+        evaluate_at=amici_time_symbol,
+        nodes=UniformGrid(0, 1, number_of_nodes=5),
         values_at_nodes=[0.2, 2.0, 0.5, 1.0, 0.75],
         logarithmic_parametrization=True,
     )
@@ -104,10 +117,10 @@ def test_SplineLogarithmic():
 
 @skip_on_valgrind
 def test_SplineUniformConstantExtrapolation():
-    spline = amici.splines.CubicHermiteSpline(
+    spline = CubicHermiteSpline(
         sbml_id="f",
-        evaluate_at=amici.sbml_utils.amici_time_symbol,
-        nodes=amici.splines.UniformGrid(0, 1, number_of_nodes=4),
+        evaluate_at=amici_time_symbol,
+        nodes=UniformGrid(0, 1, number_of_nodes=4),
         values_at_nodes=[0.0, 2.0, 0.5, 1.0],
         extrapolate="constant",
     )
@@ -126,10 +139,10 @@ def test_SplineUniformConstantExtrapolation():
 
 @skip_on_valgrind
 def test_SplineUniformLinearExtrapolation():
-    spline = amici.splines.CubicHermiteSpline(
+    spline = CubicHermiteSpline(
         sbml_id="f",
-        evaluate_at=amici.sbml_utils.amici_time_symbol,
-        nodes=amici.splines.UniformGrid(0, 1, number_of_nodes=4),
+        evaluate_at=amici_time_symbol,
+        nodes=UniformGrid(0, 1, number_of_nodes=4),
         values_at_nodes=[0.0, 2.0, 0.5, 1.0],
         extrapolate="linear",
     )
@@ -148,10 +161,10 @@ def test_SplineUniformLinearExtrapolation():
 
 @skip_on_valgrind
 def test_SplineUniformPolynomialExtrapolation():
-    spline = amici.splines.CubicHermiteSpline(
+    spline = CubicHermiteSpline(
         sbml_id="f",
-        evaluate_at=amici.sbml_utils.amici_time_symbol,
-        nodes=amici.splines.UniformGrid(0, 1, number_of_nodes=4),
+        evaluate_at=amici_time_symbol,
+        nodes=UniformGrid(0, 1, number_of_nodes=4),
         values_at_nodes=[0.0, 2.0, 0.5, 1.0],
         extrapolate="polynomial",
     )
@@ -170,10 +183,10 @@ def test_SplineUniformPolynomialExtrapolation():
 
 @skip_on_valgrind
 def test_SplineUniformPeriodicExtrapolation():
-    spline = amici.splines.CubicHermiteSpline(
+    spline = CubicHermiteSpline(
         sbml_id="f",
-        evaluate_at=amici.sbml_utils.amici_time_symbol,
-        nodes=amici.splines.UniformGrid(0, 1, number_of_nodes=4),
+        evaluate_at=amici_time_symbol,
+        nodes=UniformGrid(0, 1, number_of_nodes=4),
         values_at_nodes=[1.0, 2.0, 0.5, 1.0],
         extrapolate="periodic",
     )
@@ -192,9 +205,9 @@ def test_SplineUniformPeriodicExtrapolation():
 
 @skip_on_valgrind
 def test_SplineNonUniformPeriodicExtrapolation():
-    spline = amici.splines.CubicHermiteSpline(
+    spline = CubicHermiteSpline(
         sbml_id="f",
-        evaluate_at=amici.sbml_utils.amici_time_symbol,
+        evaluate_at=amici_time_symbol,
         nodes=[0.0, 0.1, 0.5, 1.0],
         values_at_nodes=[1.0, 2.0, 0.5, 1.0],
         extrapolate="periodic",
@@ -229,10 +242,10 @@ def check_gradient(spline, t, params, params_values, expected, rel_tol=1e-9):
 def test_SplineUniformSensitivity():
     params = (a, b, c) = sp.symbols("a b c")
     params_values = [0.5, 1.0, 2.5]
-    spline = amici.splines.CubicHermiteSpline(
+    spline = CubicHermiteSpline(
         sbml_id="f",
-        evaluate_at=amici.sbml_utils.amici_time_symbol,
-        nodes=amici.splines.UniformGrid(0, 1, number_of_nodes=4),
+        evaluate_at=amici_time_symbol,
+        nodes=UniformGrid(0, 1, number_of_nodes=4),
         values_at_nodes=[3 * a + b, c**2 - 3, 1, sp.log(b) + 3 * c - 6 * a],
     )
     check_gradient(spline, 0.00, params, params_values, [3.0, 1.0, 0.0])
@@ -264,9 +277,9 @@ def test_SplineUniformSensitivity():
 def test_SplineNonUniformSensitivity():
     params = (a, b, c) = sp.symbols("a b c")
     params_values = [0.5, 1.0, 2.5]
-    spline = amici.splines.CubicHermiteSpline(
+    spline = CubicHermiteSpline(
         sbml_id="f",
-        evaluate_at=amici.sbml_utils.amici_time_symbol,
+        evaluate_at=amici_time_symbol,
         nodes=[0.0, 0.1, 0.5, 1.0],
         values_at_nodes=[3 * a + b, c**2 - 3, 1, sp.log(b) + 3 * c - 6 * a],
     )
@@ -292,10 +305,10 @@ def test_SplineNonUniformSensitivity():
 def test_SplineExplicitSensitivity():
     params = (a, b, c) = sp.symbols("a b c")
     params_values = [0.5, 1.0, 2.5]
-    spline = amici.splines.CubicHermiteSpline(
+    spline = CubicHermiteSpline(
         sbml_id="f",
-        evaluate_at=amici.sbml_utils.amici_time_symbol,
-        nodes=amici.splines.UniformGrid(0, 1, number_of_nodes=4),
+        evaluate_at=amici_time_symbol,
+        nodes=UniformGrid(0, 1, number_of_nodes=4),
         values_at_nodes=[3 * a + b, c**2 - 3, 1, sp.log(b) + 3 * c - 6 * a],
         derivatives_at_nodes=[
             c**3 - 2,
@@ -335,13 +348,81 @@ def test_SplineExplicitSensitivity():
 
 
 @skip_on_valgrind
+def test_spline_annotation_roundtrip():
+    """A spline's AMICI annotation round-trips through SBML unchanged,
+    including rational node/value literals, which must come back as
+    ``sp.Rational`` (``is_Number == True``) for
+    ``AbstractSpline.__init__``'s validation checks to apply."""
+    spline = CubicHermiteSpline(
+        "spline1",
+        nodes=[0, sp.Rational(1, 3), 2],
+        values_at_nodes=[0, sp.Rational(2, 7), 4],
+        derivatives_at_nodes=[1, 2, 3],
+    )
+
+    _, model = create_sbml_model("test_model")
+    spline.add_to_sbml_model(model, auto_add="spline")
+
+    rule = model.getRuleByVariable("spline1")
+    assert rule is not None
+
+    annotation = AbstractSpline.get_annotation(rule)
+    assert annotation is not None
+    spline_read = AbstractSpline.from_annotation(
+        sp.Symbol("spline1", real=True), annotation, locals_={}
+    )
+
+    assert list(spline_read.nodes) == list(spline.nodes)
+    assert list(spline_read.values_at_nodes) == list(spline.values_at_nodes)
+    assert list(spline_read.derivatives_at_nodes) == list(
+        spline.derivatives_at_nodes
+    )
+    assert all(n.is_Number for n in spline_read.nodes)
+    assert all(v.is_Number for v in spline_read.values_at_nodes)
+
+
+@skip_on_valgrind
+def test_spline_fallback_formula_roundtrip():
+    """A spline's fallback assignment-rule formula round-trips to an
+    equivalent function, with model time as a proper SBML `<csymbol>`."""
+    spline = CubicHermiteSpline(
+        "spline1",
+        nodes=[0, 1, 2],
+        values_at_nodes=[0, 1, 4],
+        derivatives_at_nodes=[1, 2, 3],
+    )
+
+    _, model = create_sbml_model("test_model")
+    spline.add_to_sbml_model(model, auto_add="spline")
+    rule = model.getRuleByVariable("spline1")
+
+    parsed = sbml_math_to_sympy(
+        rule.getMath(),
+        symbol_kwargs={"real": True},
+        ignore_units=True,
+        evaluate=False,
+    )
+    # time must be a proper `<csymbol>`, not just a symbol named "time"
+    assert parsed.atoms(TimeSymbol) == {TimeSymbol("time")}
+    read_back = parsed.replace(TimeSymbol, lambda *args: sbml_time_symbol)
+
+    # mathml_formula already has `sbml_time_symbol` substituted in
+    original = spline.mathml_formula
+
+    for t in [-0.5, 0, 0.3, 1.0, 1.7, 2.0, 2.5]:
+        expected = float(original.subs(sbml_time_symbol, t))
+        actual = float(read_back.subs(sbml_time_symbol, t))
+        assert actual == expected, (t, actual, expected)
+
+
+@skip_on_valgrind
 def test_SplineLogarithmicSensitivity():
     params = (a, b, c) = sp.symbols("a b c")
     params_values = [0.5, 1.0, 2.5]
-    spline = amici.splines.CubicHermiteSpline(
+    spline = CubicHermiteSpline(
         sbml_id="f",
-        evaluate_at=amici.sbml_utils.amici_time_symbol,
-        nodes=amici.splines.UniformGrid(0, 1, number_of_nodes=4),
+        evaluate_at=amici_time_symbol,
+        nodes=UniformGrid(0, 1, number_of_nodes=4),
         values_at_nodes=[3 * a + b, c**2 - 3, 1, sp.log(b) + 3 * c - 6 * a],
         logarithmic_parametrization=True,
     )
@@ -373,3 +454,69 @@ def test_SplineLogarithmicSensitivity():
         rel_tol=1e-5,
     )
     check_gradient(spline, 1.00, params, params_values, [-6.0, 1.0, 3.0])
+
+
+@skip_on_valgrind
+def test_construction_from_strings_matches_canonical_symbols():
+    """Node/value strings referencing model symbols must resolve to the
+    same ``Symbol`` objects as :func:`symbol_with_assumptions`, not to a
+    plain, non-matching ``sp.sympify`` result."""
+    p1 = symbol_with_assumptions("p1")
+    spline = CubicHermiteSpline(
+        sbml_id="f",
+        evaluate_at=amici_time_symbol,
+        nodes=UniformGrid(0, 1, number_of_nodes=2),
+        values_at_nodes=["p1", 2.0],
+    )
+    assert spline.values_at_nodes[0] == p1
+    assert spline._parameters() == {p1}
+
+
+@skip_on_valgrind
+def test_construction_from_strings_avoids_sympy_builtin_clash():
+    """A node/value string like ``"I"`` must not be silently reinterpreted
+    as a sympy builtin (``ImaginaryUnit``, ``Exp1``, ...)."""
+    i_sym = symbol_with_assumptions("I")
+    spline = CubicHermiteSpline(
+        sbml_id="f",
+        evaluate_at=amici_time_symbol,
+        nodes=UniformGrid(0, 1, number_of_nodes=2),
+        values_at_nodes=["I", 2.0],
+    )
+    assert spline.values_at_nodes[0] == i_sym
+    assert spline.values_at_nodes[0].is_Symbol
+
+
+@skip_on_valgrind
+def test_construction_from_invalid_string_raises_value_error():
+    with pytest.raises(ValueError):
+        CubicHermiteSpline(
+            sbml_id="f",
+            evaluate_at=amici_time_symbol,
+            nodes=UniformGrid(0, 1, number_of_nodes=2),
+            values_at_nodes=["1 +", 2.0],
+        )
+
+
+@skip_on_valgrind
+def test_from_annotation_substitutes_local_symbols():
+    """``locals_`` passed to ``AbstractSpline.from_annotation`` must be
+    substituted into the parsed formulas, analogous to
+    ``SbmlImporter._sympify``."""
+    my_reaction = symbol_with_assumptions("my_reaction")
+    kinetic_law = sp.sympify("2 * p1 * p2")
+
+    original = CubicHermiteSpline(
+        sbml_id="f",
+        evaluate_at=amici_time_symbol,
+        nodes=UniformGrid(0, 1, number_of_nodes=2),
+        values_at_nodes=[my_reaction, 2.0],
+    )
+    annotation = ET.fromstring(original.amici_annotation)
+    parsed = AbstractSpline.from_annotation(
+        symbol_with_assumptions("f"),
+        annotation,
+        locals_={"my_reaction": kinetic_law},
+    )
+    assert parsed.values_at_nodes[0] == kinetic_law
+    assert float(parsed.values_at_nodes[1]) == 2.0

@@ -5,20 +5,20 @@ import shutil
 from pathlib import Path
 
 import amici
+import diffrax
 import jax
 import jax.numpy as jnp
-import diffrax
-import optimistix
 import numpy as np
+import optimistix
 import pandas as pd
 import pytest
-from amici.jax.petab import DEFAULT_CONTROLLER_SETTINGS
-
+from amici.sim.jax.petab import DEFAULT_CONTROLLER_SETTINGS
+from amici.sim.sundials import AMICI_SUCCESS
 from utils import (
-    verify_results,
-    write_result_file,
     find_model_file,
     read_settings_file,
+    verify_results,
+    write_result_file,
 )
 
 jax.config.update("jax_enable_x64", True)
@@ -34,24 +34,24 @@ class DummyModel:
         self.jax_model = jax_model
         self.importer = importer
 
-    def getParameterIds(self):
+    def get_free_parameter_ids(self):
         return list(self.jax_model.parameter_ids)
 
-    def getParameterById(self, pid: str):
+    def get_free_parameter_by_id(self, pid: str):
         return float(
             self.jax_model.parameters[
                 list(self.jax_model.parameter_ids).index(pid)
             ]
         )
 
-    def getExpressionIds(self):
+    def get_expression_ids(self):
         return list(self.jax_model.expression_ids)
 
 
 def compile_model_jax(sbml_dir: Path, test_id: str, model_dir: Path):
     model_dir.mkdir(parents=True, exist_ok=True)
     sbml_file = find_model_file(sbml_dir, test_id)
-    sbml_importer = amici.SbmlImporter(sbml_file)
+    sbml_importer = amici.SbmlImporter(sbml_file, jax=True)
     model_name = f"SBMLTest{test_id}_jax"
     sbml_importer.sbml2jax(model_name, output_dir=model_dir)
     model_module = amici.import_model_module(model_dir.name, model_dir.parent)
@@ -87,7 +87,7 @@ def run_jax_simulation(model, importer, ts, atol, rtol, tol_factor=1e2):
         diffrax.DirectAdjoint(),
         diffrax.SteadyStateEvent(),
         2**10,
-        ret=amici.jax.ReturnValue.x,
+        ret=amici.sim.jax.ReturnValue.x,
     )
     y = jax.vmap(
         lambda t, x_solver, x_rdata, hs: model._y(
@@ -112,7 +112,7 @@ def run_jax_simulation(model, importer, ts, atol, rtol, tol_factor=1e2):
         ts=np.asarray(ts_jnp).copy(),
         y=np.asarray(y).copy(),
         w=np.asarray(w).copy(),
-        status=amici.AMICI_SUCCESS,
+        status=AMICI_SUCCESS,
     )
 
 
@@ -124,9 +124,8 @@ def test_sbml_testsuite_case_jax(
         current_test_path = sbml_semantic_cases_dir / test_id
         results_file = current_test_path / f"{test_id}-results.csv"
         results = pd.read_csv(results_file, delimiter=",")
-        results.rename(
+        results = results.rename(
             columns={c: c.replace(" ", "") for c in results.columns},
-            inplace=True,
         )
 
         model, wrapper = compile_model_jax(
@@ -159,6 +158,9 @@ def test_sbml_testsuite_case_jax(
             276,
             277,
             279,
+            356,
+            357,
+            752,
             1148,
             1159,
             1160,
@@ -171,7 +173,7 @@ def test_sbml_testsuite_case_jax(
             settings, rdata, results, wrapper, dummy, atol, rtol
         )
         write_result_file(simulated, test_id, result_path_jax)
-    except amici.sbml_import.SBMLException as err:
+    except amici.importers.sbml.SBMLException as err:
         pytest.skip(str(err))
     except NotImplementedError as err:
         if "The JAX backend does not support" in str(err):

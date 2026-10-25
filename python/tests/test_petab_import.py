@@ -51,7 +51,7 @@ def get_fixed_parameters_model():
     p8' = 1
     p9 := p8
     """
-    from amici.antimony_import import antimony2sbml
+    from amici.importers.antimony import antimony2sbml
 
     sbml_str = antimony2sbml(ant_model)
     sbml_doc = libsbml.SBMLReader().readSBMLFromString(sbml_str)
@@ -73,7 +73,7 @@ def test_get_fixed_parameters(get_fixed_parameters_model):
     p8: not fixed (rate rule target)
     p9: not fixed (assignment rule target)
     """
-    from amici.petab.sbml_import import (
+    from amici.importers.petab.v1._sbml_import import (
         _get_fixed_parameters_sbml as get_fixed_parameters,
     )
     from petab.v1.models.sbml_model import SbmlModel
@@ -116,7 +116,7 @@ def test_get_fixed_parameters(get_fixed_parameters_model):
 
 @skip_on_valgrind
 def test_default_output_parameters(simple_sbml_model, tempdir):
-    from amici.petab.petab_import import import_model
+    from amici.importers.petab.v1._petab_import import import_model_sbml
     from petab.v1.models.sbml_model import SbmlModel
 
     sbml_doc, sbml_model = simple_sbml_model
@@ -146,23 +146,23 @@ def test_default_output_parameters(simple_sbml_model, tempdir):
         observable_df=observable_df,
     )
 
-    sbml_importer = import_model(
+    sbml_importer = import_model_sbml(
         petab_problem=petab_problem,
         output_parameter_defaults={"observableParameter1_obs1": 1.0},
         compile=False,
-        model_output_dir=tempdir,
+        output_dir=tempdir,
     )
     assert (
         1.0
-        == sbml_importer.sbml.getParameter(
+        == sbml_importer.sbml_model.getParameter(
             "observableParameter1_obs1"
         ).getValue()
     )
 
     with pytest.raises(ValueError):
-        import_model(
+        import_model_sbml(
             petab_problem=petab_problem,
             output_parameter_defaults={"nonExistentParameter": 1.0},
             compile=False,
-            model_output_dir=tempdir,
+            output_dir=tempdir,
         )

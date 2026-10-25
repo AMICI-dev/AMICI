@@ -1,0 +1,194 @@
+"""
+Plotting
+--------
+Plotting related functions
+"""
+
+from collections.abc import Iterable, Sequence
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from matplotlib.axes import Axes
+
+from . import ExpData, ExpDataView, ReturnDataView
+from ._numpy import StrOrExpr, evaluate
+
+__all__ = [
+    "plot_state_trajectories",
+    "plot_observable_trajectories",
+    "plot_jacobian",
+    "plot_expressions",
+]
+
+
+def plot_state_trajectories(
+    rdata: ReturnDataView,
+    *,
+    state_indices: Sequence[int] | None = None,
+    ax: Axes | None = None,
+    prefer_names: bool = True,
+    marker=None,
+) -> None:
+    """
+    Plot state trajectories.
+
+    :param rdata:
+        AMICI simulation results as returned by
+        :func:`amici.sim.sundials.run_simulation`.
+    :param state_indices:
+        Indices of state variables for which trajectories are to be plotted.
+    :param ax:
+        :class:`matplotlib.axes.Axes` instance to plot into.
+    :param prefer_names:
+        Whether state variable names should be preferred over IDs,
+        if available.
+    :param marker:
+        Point marker for plotting (see
+        `matplotlib documentation <https://matplotlib.org/stable/api/markers_api.html>`_).
+    """
+    if not ax:
+        fig, ax = plt.subplots()
+    if not state_indices:
+        state_indices = range(rdata["x"].shape[1])
+
+    if marker is None:
+        # Show marker if only one time point is available,
+        #  otherwise nothing will be shown
+        marker = "o" if len(rdata.t) == 1 else None
+
+    labels = None
+    if prefer_names:
+        labels = np.asarray(rdata.state_names)[list(state_indices)]
+    if (labels is None or not labels.size) and (state_ids := rdata.state_ids):
+        labels = np.asarray(state_ids)[list(state_indices)]
+    if labels is None or not labels.size:
+        labels = [f"$x_{{{ix}}}$" for ix in state_indices]
+
+    for ix, label in zip(state_indices, labels, strict=True):
+        ax.plot(rdata["t"], rdata["x"][:, ix], marker=marker, label=label)
+
+    ax.set_xlabel("$t$")
+    ax.set_ylabel("$x(t)$")
+    ax.legend()
+
+    title = "State trajectories"
+    if rdata.id:
+        title += f" – {rdata.id}"
+    ax.set_title(title)
+
+
+def plot_observable_trajectories(
+    rdata: ReturnDataView,
+    *,
+    observable_indices: Iterable[int] | None = None,
+    ax: Axes | None = None,
+    prefer_names: bool = True,
+    marker=None,
+    edata: ExpData | ExpDataView = None,
+) -> None:
+    """
+    Plot observable trajectories.
+
+    :param rdata:
+        AMICI simulation results as returned by
+        :func:`amici.sim.sundials.run_simulation`.
+    :param observable_indices:
+        Indices of observables for which trajectories are to be plotted.
+    :param ax:
+        :class:`matplotlib.axes.Axes` instance to plot into.
+    :param prefer_names:
+        Whether observable names should be preferred over IDs, if available.
+    :param marker:
+        Point marker for plotting (see
+        `matplotlib documentation <https://matplotlib.org/stable/api/markers_api.html>`_).
+    :param edata:
+        Experimental data to be plotted (no event observables yet).
+    """
+    if isinstance(edata, ExpData):
+        edata = ExpDataView(edata)
+
+    if not ax:
+        fig, ax = plt.subplots()
+    if not observable_indices:
+        observable_indices = range(rdata.ny)
+
+    if marker is None:
+        # Show marker if only one time point is available,
+        #  otherwise nothing will be shown
+        marker = "o" if len(rdata.t) == 1 else None
+
+    labels = None
+    if prefer_names:
+        labels = np.asarray(rdata.observable_names)[list(observable_indices)]
+    if (labels is None or not labels.size) and (
+        observable_ids := rdata.observable_ids
+    ):
+        labels = np.asarray(observable_ids)[list(observable_indices)]
+    if labels is None or not labels.size:
+        labels = [f"$y_{{{ix}}}$" for ix in observable_indices]
+
+    for iy, label in zip(observable_indices, labels, strict=True):
+        (l,) = ax.plot(
+            rdata["t"], rdata["y"][:, iy], marker=marker, label=label
+        )
+
+        if edata is not None:
+            ax.plot(
+                edata.ts,
+                edata.measurements[:, iy],
+                "x",
+                label=f"exp. {label}",
+                color=l.get_color(),
+            )
+            ax.errorbar(
+                edata.ts,
+                edata.measurements[:, iy],
+                yerr=rdata.sigmay[:, iy],
+                fmt="none",
+                color=l.get_color(),
+            )
+
+    ax.set_xlabel("$t$")
+    ax.set_ylabel("$y(t)$")
+    ax.legend()
+
+    title = "Observable trajectories"
+    if rdata.id:
+        title += f" – {rdata.id}"
+    ax.set_title(title)
+
+
+def plot_jacobian(rdata: ReturnDataView):
+    """Plot Jacobian as heatmap."""
+    df = pd.DataFrame(
+        data=rdata.J,
+        index=rdata.state_ids_solver,
+        columns=rdata.state_ids_solver,
+    )
+    sns.heatmap(df, center=0.0)
+    plt.title("Jacobian")
+
+
+def plot_expressions(
+    exprs: Sequence[StrOrExpr] | StrOrExpr, rdata: ReturnDataView
+) -> None:
+    """Plot the given expressions evaluated on the given simulation outputs.
+
+    :param exprs:
+        A symbolic expression, e.g., a sympy expression or a string that can be
+        sympified. It Can include state variable, expression, and
+        observable IDs, depending on whether the respective data is available
+        in the simulation results. Parameters are not yet supported.
+    :param rdata:
+        The simulation results.
+    """
+    if not isinstance(exprs, Sequence) or isinstance(exprs, str):
+        exprs = [exprs]
+
+    for expr in exprs:
+        plt.plot(rdata.t, evaluate(expr, rdata), label=str(expr))
+
+    plt.legend()
+    plt.gca().set_xlabel("$t$")

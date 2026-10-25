@@ -41,26 +41,27 @@ void dxdotdx_explicit_rowvals_model_neuron_py(SUNMatrixWrapper &dxdotdx_explicit
 
 #include "amici/symbolic_functions.h"
 #include "amici/defines.h"
-#include "sundials/sundials_types.h"
 
-#include <gsl/gsl-lite.hpp>
 #include <algorithm>
-
-#include "x.h"
-#include "p.h"
-#include "k.h"
-#include "h.h"
-#include "w.h"
-#include "dxdotdx_explicit.h"
+#include <sundials/sundials_types.h>
+#include <gsl/gsl-lite.hpp>
 
 namespace amici {
 namespace model_model_neuron_py {
 
 void dxdotdx_explicit_model_neuron_py(realtype *dxdotdx_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w){
-    ddvdt_dv = (2.0/25.0)*v + 5;  // dxdotdx_explicit[0]
-    ddudt_dv = a*b;  // dxdotdx_explicit[1]
-    ddvdt_du = -1;  // dxdotdx_explicit[2]
-    ddudt_du = -a;  // dxdotdx_explicit[3]
+    const realtype v_ = x[0];
+    const realtype a_ = p[0];
+    const realtype b_ = p[1];
+
+    realtype &ddvdt_dv_ = dxdotdx_explicit[0];
+    realtype &ddudt_dv_ = dxdotdx_explicit[1];
+    realtype &ddvdt_du_ = dxdotdx_explicit[2];
+    realtype &ddudt_du_ = dxdotdx_explicit[3];
+    ddvdt_dv_ = (2.0/25.0)*v_ + 5;  // dxdotdx_explicit[0]
+    ddudt_dv_ = a_*b_;  // dxdotdx_explicit[1]
+    ddvdt_du_ = -1;  // dxdotdx_explicit[2]
+    ddudt_du_ = -a_;  // dxdotdx_explicit[3]
 }
 
 } // namespace model_model_neuron_py

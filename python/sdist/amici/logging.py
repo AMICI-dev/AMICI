@@ -108,7 +108,8 @@ def _setup_logger(
 
     log.debug("OS Platform: %s", platform.platform())
     log.debug("Python version: %s", platform.python_version())
-    log.debug("Hostname: %s", socket.getfqdn())
+    # not `getfqdn()`, which can block for >30s on DNS/mDNS lookups
+    log.debug("Hostname: %s", socket.gethostname())
 
     if capture_warnings:
         logging.captureWarnings(capture_warnings)
@@ -118,19 +119,35 @@ def _setup_logger(
     return log
 
 
-def set_log_level(logger: logging.Logger, log_level: int | bool) -> None:
+def set_log_level(
+    logger: logging.Logger,
+    log_level: int | bool | None,
+    log_change: bool = True,
+) -> None:
+    """
+    Set the log level for a logger.
+
+    :param logger: The logger for which to set the log level.
+    :param log_level: The log level to set.
+        If ``None`` or ``False``, the log level will not be changed.
+        If ``True``, the log level will be set to ``logging.DEBUG``.
+        If an integer, it will be used directly as the log level.
+    :param log_change:
+        If ``True`` (default), a debug message will be logged if the log level
+        is changed.
+    """
     if log_level is not None and log_level is not False:
         if isinstance(log_level, bool):
             log_level = logging.DEBUG
         elif not isinstance(log_level, int):
             raise ValueError("log_level must be a boolean, integer or None")
 
-        if logger.getEffectiveLevel() != log_level:
-            logger.debug(
-                f"Changing log_level from {logger.getEffectiveLevel()} "
-                f"to {log_level}"
-            )
+        if (old_level := logger.getEffectiveLevel()) != log_level:
             logger.setLevel(log_level)
+            if log_change:
+                logger.debug(
+                    f"Changed log_level from {old_level} to {log_level}"
+                )
 
 
 def get_logger(
@@ -139,33 +156,33 @@ def get_logger(
     **kwargs,
 ) -> logging.Logger:
     """
-    Returns (if extistant) or creates an AMICI logger
+    Returns (if exists) or creates an AMICI logger
 
     If the AMICI base logger has already been set up, this method will
     return it or any of its descendant loggers without overriding the
     settings - i.e. any values supplied as kwargs will be ignored.
 
     :param logger_name:
-        Get a logger for a specific namespace, typically __name__
-        for code outside of classes or self.__module__ inside a class
+        Get a logger for a specific namespace, typically ``__name__``
+        for code outside of classes or ``self.__module__`` inside a class
 
     :param log_level:
         Override the default or preset log level for the requested logger.
-        None or False uses the default or preset value. True evaluates to
-        logging.DEBUG. Any integer is used directly.
+        ``None`` or ``False`` uses the default or preset value. ``True`` evaluates to
+        ``logging.DEBUG``. Any integer is used directly.
 
     :param console_output:
-        Set up a default console log handler if True (default). Only used when
+        Set up a default console log handler if ``True`` (default). Only used when
         the AMICI logger hasn't been set up yet.
 
     :param file_output:
         Supply a filename to copy all log output to that file, or set to
-        False to disable (default). Only used when the AMICI logger hasn't
+        ``False`` to disable (default). Only used when the AMICI logger hasn't
         been set up yet.
 
     :param capture_warnings:
         Capture warnings from Python's warnings module if True (default).
-        Only used when the AMICI logger hasn't been set up yet..
+        Only used when the AMICI logger hasn't been set up yet.
 
     :return:
         A logging.Logger object with the requested name
@@ -179,9 +196,10 @@ def get_logger(
             stacklevel=2,
         )
 
+    logger_existed = logger_name in logging.Logger.manager.loggerDict.keys()
     logger = logging.getLogger(logger_name)
 
-    set_log_level(logger, log_level)
+    set_log_level(logger, log_level, log_change=logger_existed)
 
     return logger
 

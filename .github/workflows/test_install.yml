@@ -7,19 +7,21 @@ jobs:
   archive:
     name: Archive Install
 
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
 
     strategy:
       matrix:
-        python-version: ["3.11"]
+        python-version: ["3.12"]
 
     steps:
+    - uses: dweindl/gha-runner-diagnostics@v1
+
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - run: git fetch --prune --unshallow
 
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
@@ -48,19 +50,21 @@ jobs:
   sdist_ubuntu:
     name: sdist Install Ubuntu
 
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
 
     strategy:
       matrix:
-        python-version: ["3.11"]
+        python-version: ["3.12"]
 
     steps:
+    - uses: dweindl/gha-runner-diagnostics@v1
+
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - run: git fetch --prune --unshallow
 
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
@@ -85,15 +89,17 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ["3.11"]
+        python-version: ["3.12"]
 
     steps:
+    - uses: dweindl/gha-runner-diagnostics@v1
+
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - run: git fetch --prune --unshallow
 
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV

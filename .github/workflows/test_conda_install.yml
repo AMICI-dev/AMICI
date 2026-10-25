@@ -1,0 +1,54 @@
+name: Conda installation
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '48 4 * * *'
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  conda:
+    name: Conda installation
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-26.04, macos-latest]
+        python-version: ['3.12', '3.13', '3.14']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: dweindl/gha-runner-diagnostics@v1
+
+      - uses: actions/checkout@v7
+      - name: Set up Miniconda
+        uses: conda-incubator/setup-miniconda@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          auto-update-conda: true
+          activate-environment: amici
+      - name: Install requirements
+        shell: bash -l {0}
+        run: |
+          conda install -c conda-forge compilers cmake
+      - name: Install AMICI
+        shell: bash -l {0}
+        run: |
+          pip3 install --upgrade pip
+          pip3 install -v --group python/sdist/pyproject.toml:test ./python/sdist
+      - name: Show environment
+        shell: bash -l {0}
+        run: |
+          python -c "import os; import pprint; pprint.pprint(dict(os.environ))"
+          which cmake
+          which ninja
+          ls -l /Users/runner/miniconda3/envs/amici/bin || true
+      - name: Test import
+        shell: bash -l {0}
+        run: |
+          python -c "from amici._installation import _amici; print(_amici)"
+          python -m amici
+      - name: Run SBML import test
+        shell: bash -l {0}
+        run: |
+          cd python/tests
+          pytest test_sbml_import.py::test_steadystate_simulation -sv

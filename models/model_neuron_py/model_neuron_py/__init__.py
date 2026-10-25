@@ -1,0 +1,48 @@
+"""AMICI-generated module for model model_neuron_py"""
+
+import sys
+import warnings
+from pathlib import Path
+
+import amici
+
+# Ensure we are binary-compatible, see #556
+if "1.1.0" != amici.__version__:
+    raise amici.AmiciVersionError(
+        f"Cannot use model `model_neuron_py` in {Path(__file__).parent}, "
+        "generated with amici==1.1.0, "
+        f"together with amici=={amici.__version__} "
+        "which is currently installed. To use this model, install "
+        "amici==1.1.0 or re-import the model with the amici "
+        "version currently installed."
+    )
+
+# prevent segfaults under pytest
+#  see also:
+#  https://github.com/swig/swig/issues/2881
+#  https://github.com/AMICI-dev/AMICI/issues/2565
+with warnings.catch_warnings():
+    warnings.filterwarnings(
+        "ignore",
+        category=DeprecationWarning,
+        message="builtin type .* has no __module__ attribute",
+    )
+
+    model_neuron_py = amici._module_from_path(
+        "model_neuron_py.model_neuron_py",
+        Path(__file__).parent / "model_neuron_py.py",
+    )
+
+for var in dir(model_neuron_py):
+    if not var.startswith("_"):
+        globals()[var] = getattr(model_neuron_py, var)
+
+try:
+    # _self: this module; will be set during import
+    #  via amici.import_model_module
+    model_neuron_py._model_module = _self  # noqa: F821
+except NameError:
+    # when the model package is imported via `import`
+    model_neuron_py._model_module = sys.modules[__name__]
+
+__version__ = "0.1.0"

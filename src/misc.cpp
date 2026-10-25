@@ -4,6 +4,7 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
+#include <ctime>
 #include <sstream>
 
 #if defined(_WIN32)
@@ -18,13 +19,17 @@
 #include <execinfo.h>
 #endif
 
+#if !defined(_WIN32)
+#include <time.h> // for clock_gettime
+#endif
+
 namespace amici {
 
-void writeSlice(AmiVector const& s, gsl::span<realtype> b) {
-    writeSlice(s.getVector(), b);
+void write_slice(AmiVector const& s, gsl::span<realtype> const b) {
+    write_slice(s.get_vector(), b);
 }
 
-double getUnscaledParameter(
+double unscale_parameter(
     double const scaledParameter, ParameterScaling const scaling
 ) {
     switch (scaling) {
@@ -39,20 +44,23 @@ double getUnscaledParameter(
     throw AmiException("Invalid value for ParameterScaling.");
 }
 
-void unscaleParameters(
-    gsl::span<realtype const> bufferScaled,
-    gsl::span<ParameterScaling const> pscale, gsl::span<realtype> bufferUnscaled
+void unscale_parameters(
+    gsl::span<realtype const> const bufferScaled,
+    gsl::span<ParameterScaling const> const pscale,
+    gsl::span<realtype> const bufferUnscaled
 ) {
     Expects(bufferScaled.size() == pscale.size());
     Expects(bufferScaled.size() == bufferUnscaled.size());
 
     for (gsl::span<realtype>::index_type ip = 0; ip < bufferScaled.size();
          ++ip) {
-        bufferUnscaled[ip] = getUnscaledParameter(bufferScaled[ip], pscale[ip]);
+        bufferUnscaled[ip] = unscale_parameter(bufferScaled[ip], pscale[ip]);
     }
 }
 
-double getScaledParameter(double unscaledParameter, ParameterScaling scaling) {
+double scale_parameter(
+    double const unscaledParameter, ParameterScaling const scaling
+) {
     switch (scaling) {
     case ParameterScaling::log10:
         return log10(unscaledParameter);
@@ -65,20 +73,21 @@ double getScaledParameter(double unscaledParameter, ParameterScaling scaling) {
     throw AmiException("Invalid value for ParameterScaling.");
 }
 
-void scaleParameters(
-    gsl::span<realtype const> bufferUnscaled,
-    gsl::span<ParameterScaling const> pscale, gsl::span<realtype> bufferScaled
+void scale_parameters(
+    gsl::span<realtype const> const bufferUnscaled,
+    gsl::span<ParameterScaling const> const pscale,
+    gsl::span<realtype> const bufferScaled
 ) {
     Expects(bufferScaled.size() == pscale.size());
     Expects(bufferScaled.size() == bufferUnscaled.size());
 
     for (gsl::span<realtype>::index_type ip = 0; ip < bufferUnscaled.size();
          ++ip) {
-        bufferScaled[ip] = getScaledParameter(bufferUnscaled[ip], pscale[ip]);
+        bufferScaled[ip] = scale_parameter(bufferUnscaled[ip], pscale[ip]);
     }
 }
 
-std::string backtraceString(int const maxFrames, int const first_frame) {
+std::string get_backtrace_string(int const maxFrames, int const first_frame) {
     std::ostringstream trace_buf;
 
 #ifdef PLATFORM_WINDOWS
@@ -127,7 +136,8 @@ std::string backtraceString(int const maxFrames, int const first_frame) {
     return trace_buf.str();
 }
 
-std::string regexErrorToString(std::regex_constants::error_type err_type) {
+std::string
+regex_error_to_string(std::regex_constants::error_type const err_type) {
     switch (err_type) {
     case std::regex_constants::error_collate:
         return "error_collate";
@@ -160,7 +170,7 @@ std::string regexErrorToString(std::regex_constants::error_type err_type) {
     }
 }
 
-std::string printfToString(char const* fmt, va_list ap) {
+std::string printf_to_string(char const* fmt, va_list ap) {
     // Get size of string
     va_list ap_count;
     va_copy(ap_count, ap);
@@ -177,8 +187,30 @@ std::string printfToString(char const* fmt, va_list ap) {
     return str;
 }
 
-std::pair<size_t, size_t> unravel_index(size_t flat_idx, size_t num_cols) {
+std::pair<size_t, size_t>
+unravel_index(size_t const flat_idx, size_t const num_cols) {
     return {flat_idx / num_cols, flat_idx % num_cols};
+}
+
+// Windows' per-thread CPU time (GetThreadTimes) only advances with the
+// scheduler tick (about 15.6 ms), which is too coarse for timing single
+// simulations. There, std::clock is used instead.
+bool const CpuTimer::uses_thread_clock =
+#if !defined(_WIN32) && defined(CLOCK_THREAD_CPUTIME_ID)
+    true;
+#else
+    false;
+#endif
+
+double CpuTimer::now_seconds() {
+#if !defined(_WIN32) && defined(CLOCK_THREAD_CPUTIME_ID)
+    timespec ts{};
+    clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ts);
+    return static_cast<double>(ts.tv_sec)
+           + static_cast<double>(ts.tv_nsec) * 1e-9;
+#else
+    return static_cast<double>(std::clock()) / CLOCKS_PER_SEC;
+#endif
 }
 
 } // namespace amici

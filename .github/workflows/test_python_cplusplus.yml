@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - 'release*'
   merge_group:
   workflow_dispatch:
   pull_request:
@@ -12,26 +13,28 @@ on:
 jobs:
   ubuntu-cpp-python-tests:
     name: C++/Python tests Ubuntu
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
 
     strategy:
       matrix:
-        python-version: [ "3.12" ]
+        python-version: [ "3.14" ]
 
     steps:
+    - uses: dweindl/gha-runner-diagnostics@v1
+
     - name: Cache
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: |
           ~/.cache/pooch
         key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         lfs: true
     - run: git fetch --prune --unshallow
@@ -50,10 +53,18 @@ jobs:
       run: scripts/run-cpp-tests.sh
 
     - name: Install python package
+      env:
+          CMAKE_EXPORT_COMPILE_COMMANDS: "ON"
       run: scripts/installAmiciSource.sh
 
     - name: Check OpenMP support
-      run: source venv/bin/activate && python -c "import amici; import sys; sys.exit(not amici.compiledWithOpenMP())"
+      run: source venv/bin/activate && python -c "from amici.sim.sundials import compiled_with_openmp; import sys; sys.exit(not compiled_with_openmp())"
+
+    - name: Check that test models are up to date
+      # Regenerating all test models is slow, so only run this as part of
+      # the merge queue gate, not on every push/PR run.
+      if: ${{ github.event_name == 'merge_group' }}
+      run: source venv/bin/activate && scripts/run-check-test-models.sh
 
     - name: Python tests (part 1)
       run: |
@@ -81,8 +92,8 @@ jobs:
           ${AMICI_DIR}/python/tests/test_splines.py
 
     - name: Codecov Python
-      if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
-      uses: codecov/codecov-action@v5
+      if: (github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev') && github.actor != 'dependabot[bot]'
+      uses: codecov/codecov-action@v7
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: build/coverage_py.xml
@@ -98,11 +109,12 @@ jobs:
         && lcov --compat-libtool --no-external \
         -d ${AMICI_DIR}/python/sdist/build/temp_amici/CMakeFiles/amici.dir/src \
         -b ${AMICI_DIR}/python/sdist -c -o coverage_py.info \
-        && lcov -a coverage_cpp.info -a coverage_py.info -o coverage.info
+        && lcov --ignore-errors inconsistent \
+        -a coverage_cpp.info -a coverage_py.info -o coverage.info
 
     - name: Codecov CPP
-      if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
-      uses: codecov/codecov-action@v5
+      if: (github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev') && github.actor != 'dependabot[bot]'
+      uses: codecov/codecov-action@v7
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: coverage.info
@@ -116,31 +128,33 @@ jobs:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       run: |
         sonar-scanner \
-         -Dsonar.cfamily.build-wrapper-output=bw-output \
+         -Dsonar.cfamily.compile-commands=bw-output/compile_commands.json \
          -Dsonar.projectVersion="$(git describe --abbrev=4 --dirty=-dirty --always --tags | tr -d '\n')"
 
   ubuntu-python-tests:
     name: Python tests Ubuntu
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
 
     strategy:
       matrix:
-        python-version: [ "3.12" ]
+        python-version: [ "3.14" ]
 
     steps:
+    - uses: dweindl/gha-runner-diagnostics@v1
+
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
 
     - name: Cache
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: |
           ~/.cache/pooch
         key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - run: git fetch --prune --unshallow
 
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
@@ -149,6 +163,8 @@ jobs:
       uses: ./.github/actions/setup-amici-cpp
 
     - name: Install python package
+      env:
+        CMAKE_EXPORT_COMPILE_COMMANDS: "ON"
       run: scripts/installAmiciSource.sh
 
     - name: Python tests
@@ -163,8 +179,8 @@ jobs:
           ${AMICI_DIR}/python/tests/test_splines_short.py
 
     - name: Codecov Python
-      if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
-      uses: codecov/codecov-action@v5
+      if: (github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev') && github.actor != 'dependabot[bot]'
+      uses: codecov/codecov-action@v7
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: build/coverage_py.xml
@@ -180,50 +196,42 @@ jobs:
         && lcov --compat-libtool --no-external \
         -d ${AMICI_DIR}/python/sdist/build/temp_amici/CMakeFiles/amici.dir/src \
         -b ${AMICI_DIR}/python/sdist -c -o coverage_py.info \
-        && lcov -a coverage_cpp.info -a coverage_py.info -o coverage.info
+        && lcov --ignore-errors inconsistent \
+        -a coverage_cpp.info -a coverage_py.info -o coverage.info
 
     - name: Codecov CPP
-      if: github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev'
-      uses: codecov/codecov-action@v5
+      if: (github.event_name == 'pull_request' || github.repository_owner == 'AMICI-dev') && github.actor != 'dependabot[bot]'
+      uses: codecov/codecov-action@v7
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: coverage.info
         flags: cpp_python
         fail_ci_if_error: true
 
-    - name: Run sonar-scanner
-      if: ${{ env.SONAR_TOKEN != '' }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run: |
-        sonar-scanner \
-         -Dsonar.cfamily.build-wrapper-output=bw-output \
-         -Dsonar.projectVersion="$(git describe --abbrev=4 --dirty=-dirty --always --tags | tr -d '\n')"
-
-
   ubuntu-notebook-tests:
     name: Notebook tests Ubuntu
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
 
     strategy:
       matrix:
-        python-version: [ "3.11" ]
+        python-version: [ "3.12" ]
 
     steps:
+    - uses: dweindl/gha-runner-diagnostics@v1
+
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
 
     - name: Cache
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: |
           ~/.cache/pooch
         key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - run: git fetch --prune --unshallow
 
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
@@ -233,6 +241,11 @@ jobs:
 
     - name: Install python package
       run: scripts/installAmiciSource.sh
+
+    - name: Install torch (for PEtab-SciML notebook)
+      run: |
+        source ./venv/bin/activate \
+          && python -m pip install --group python/sdist/pyproject.toml:petab-sciml-torch
 
     - name: example notebooks
       run: scripts/runNotebook.sh doc/examples/example_*/
@@ -249,12 +262,14 @@ jobs:
       PYTHONFAULTHANDLER: "1"
 
     steps:
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.11"
+    - uses: dweindl/gha-runner-diagnostics@v1
 
-    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v7
+      with:
+        python-version: "3.12"
+
+    - uses: actions/checkout@v7
       with:
         lfs: true
 
@@ -273,7 +288,7 @@ jobs:
       run: scripts/installAmiciSource.sh
 
     - name: Check OpenMP support
-      run: source venv/bin/activate && python -c "import amici; import sys; sys.exit(not amici.compiledWithOpenMP())"
+      run: source venv/bin/activate && python -c "from amici.sim.sundials import compiled_with_openmp; import sys; sys.exit(not compiled_with_openmp())"
 
     - name: cppcheck
       run: scripts/run-cppcheck.sh
@@ -287,7 +302,7 @@ jobs:
         echo "pooch-cache=$(source venv/bin/activate && python -c 'import pooch; print(pooch.os_cache("pooch"))')" >> $GITHUB_ENV
 
     - name: Cache Pooch Directory
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: ${{ env.pooch-cache }}
         key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
@@ -307,19 +322,21 @@ jobs:
       PYTHONFAULTHANDLER: "1"
 
     steps:
+    - uses: dweindl/gha-runner-diagnostics@v1
+
     - name: Cache
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: |
           ~/Library/Caches/pooch
         key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
 
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
-        python-version: "3.11"
+        python-version: "3.12"
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         lfs: true
     - run: git fetch --prune --unshallow
@@ -333,7 +350,7 @@ jobs:
         scripts/installAmiciSource.sh
 
     - name: Check OpenMP support
-      run: source venv/bin/activate && python -c "import amici; import sys; sys.exit(not amici.compiledWithOpenMP())"
+      run: source venv/bin/activate && python -c "from amici.sim.sundials import compiled_with_openmp; import sys; sys.exit(not compiled_with_openmp())"
 
     - name: Get BioNetGen
       run: scripts/buildBNGL.sh
@@ -345,16 +362,15 @@ jobs:
         echo "pooch-cache=$(source venv/bin/activate && python -c 'import pooch; print(pooch.os_cache("pooch"))')" >> $GITHUB_ENV
 
     - name: Cache Pooch Directory
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: ${{ env.pooch-cache }}
         key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
 
     - name: Install PEtab benchmark collection
       run: |
-        git clone --depth 1 https://github.com/benchmarking-initiative/Benchmark-Models-PEtab.git \
-          && export BENCHMARK_COLLECTION="$(pwd)/Benchmark-Models-PEtab/Benchmark-Models/" \
-          && source venv/bin/activate && python -m pip install -e $BENCHMARK_COLLECTION/../src/python
+        source venv/bin/activate \
+          && python -m pip install --group python/sdist/pyproject.toml:benchmark-models-petab
 
     - name: Python tests
       run: |

@@ -19,79 +19,77 @@ SBML import
 -----------
 
 AMICI can import :term:`SBML` models via the
-:py:func:`amici.sbml_import.SbmlImporter` class.
+:py:func:`amici.importers.sbml.SbmlImporter` class.
 
 .. _amici_python_sbml_support:
 
 Status of SBML support in Python-AMICI
 ++++++++++++++++++++++++++++++++++++++
 
-Python-AMICI currently **passes 1273 out of the 1821 (~70%) test cases** from
+Python-AMICI currently **passes 1290 out of the 1823 (~71%) test cases** from
 the semantic
 `SBML Test Suite <https://github.com/sbmlteam/sbml-test-suite/>`_
 (`current status <https://github.com/AMICI-dev/AMICI/actions>`_).
 
 The following SBML test suite tags are currently supported
-(i.e., at least one test case with the respective test passes;
+(i.e., at least one test case with the respective tag passes;
 `tag descriptions <https://github.com/sbmlteam/sbml-test-suite/blob/master/docs/tags-documentation/all-tags.txt>`_):
 
-**Component tags:**
-
-* AlgebraicRule
-* AssignmentRule
-* comp
-* Compartment
-* CSymbolAvogadro
-* CSymbolRateOf
-* CSymbolTime
-* Deletion
-* EventNoDelay
-* ExternalModelDefinition
-* FunctionDefinition
-* InitialAssignment
-* ModelDefinition
-* Parameter
-* Port
-* RateRule
-* Reaction
-* ReplacedBy
-* ReplacedElement
-* SBaseRef
-* Species
-* Submodel
-
-**Test tags:**
-
 * 0D-Compartment
+* AlgebraicRule
 * Amount
 * AssignedConstantStoichiometry
 * AssignedVariableStoichiometry
+* AssignmentRule
 * BoolNumericSwap
 * BoundaryCondition
-* comp
+* CSymbolAvogadro
+* CSymbolRateOf
+* CSymbolTime
+* Compartment
 * Concentration
 * ConstantSpecies
 * ConversionFactor
 * ConversionFactors
 * DefaultValue
+* Deletion
+* EventIsPersistent
+* EventNoDelay
+* EventPriority
 * EventT0Firing
+* EventUsesAssignmentTimeValues
+* EventUsesTriggerTimeValues
 * ExtentConversionFactor
+* ExternalModelDefinition
+* FunctionDefinition
 * HasOnlySubstanceUnits
+* InitialAssignment
 * InitialValueReassigned
 * L3v2MathML
 * LocalParameters
+* ModelDefinition
 * MultiCompartment
 * NoMathML
 * NonConstantCompartment
 * NonConstantParameter
 * NonUnityCompartment
 * NonUnityStoichiometry
+* Parameter
+* Port
+* RateRule
+* Reaction
+* ReplacedBy
+* ReplacedElement
 * ReversibleReaction
+* SBaseRef
+* Species
 * SpeciesReferenceInMath
+* Submodel
 * SubmodelOutput
 * TimeConversionFactor
 * UncommonMathML
 * VolumeConcentrationRates
+* comp
 
 Additional support may be added in the future. However, the following features are
 unlikely to be supported:
@@ -113,13 +111,13 @@ PySB import
 -----------
 
 AMICI can import :term:`PySB` models via
-:py:func:`amici.pysb_import.pysb2amici`.
+:py:func:`amici.importers.pysb.pysb2amici`.
 
 BNGL import
 -----------
 
 AMICI can import :term:`BNGL` models via
-:py:func:`amici.bngl_import.bngl2amici`.
+:py:func:`amici.importers.bngl.bngl2amici`.
 
 PEtab import
 ------------
@@ -162,7 +160,7 @@ An example using Antimony to specify the Lotka-Volterra equations is shown below
     end
     """
     module_name = "test_antimony_example_lv"
-    from amici.antimony_import import antimony2amici
+    from amici.importers.antimony import antimony2amici
     antimony2amici(
         ant_model,
         model_name=module_name,
@@ -171,12 +169,11 @@ An example using Antimony to specify the Lotka-Volterra equations is shown below
     model_module = amici.import_model_module(
         module_name=module_name, module_path=outdir
     )
-    amici_model = model_module.getModel()
-    amici_model.setTimepoints(np.linspace(0, 100, 200))
-    amici_solver = amici_model.getSolver()
-    rdata = amici.runAmiciSimulation(amici_model, amici_solver)
+    amici_model = model_module.get_model()
+    amici_model.set_timepoints(np.linspace(0, 100, 200))
+    rdata = amici_model.simulate()
 
-    from amici.plotting import plot_state_trajectories
+    from amici.sim.sundials.plotting import plot_state_trajectories
     plot_state_trajectories(rdata, model=amici_model)
 
 
@@ -218,7 +215,7 @@ variables control various behaviours during model import and compilation:
      - ``AMICI_IMPORT_NPROCS=4``
    * - ``AMICI_EXPERIMENTAL_SBML_NONCONST_CLS``
      - Compute conservation laws for non-constant species. SBML-import only.
-       See :py:func:`amici.sbml_import.SbmlImporter.sbml2amici`.
+       See :py:meth:`amici.sbml_import.SbmlImporter.sbml2amici`.
      -
 
 
@@ -238,7 +235,7 @@ On Linux and OSX this is enabled by default. This can be verified using:
 .. code-block:: python
 
    import amici
-   amici.compiledWithOpenMP()
+   amici.compiled_with_openmp()
 
 If not already enabled by default, you can enable OpenMP support by setting
 the environment variables ``AMICI_CXXFLAGS`` and ``AMICI_LDFLAGS`` to the

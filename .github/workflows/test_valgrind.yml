@@ -5,6 +5,7 @@ on:
       - python/tests/valgrind-python.supp
       - scripts/run-valgrind-cpp.sh
       - scripts/run-valgrind-py.sh
+      - .github/workflows/test_valgrind.yml
   pull_request:
     branches:
       - update_valgrind_supp
@@ -19,7 +20,7 @@ jobs:
     if: github.repository == 'AMICI-dev/AMICI' ||
         github.event_name != 'schedule'
 
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
 
     strategy:
       matrix:
@@ -29,20 +30,25 @@ jobs:
       ENABLE_AMICI_DEBUGGING: "TRUE"
 
     steps:
+    - uses: dweindl/gha-runner-diagnostics@v1
+
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
 
     - name: Checkout code (scheduled)
       if: github.event_name == 'schedule'
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         ref: main
+        lfs: true
 
     - name: Checkout code (manual, push, pull request)
       if: github.event_name != 'schedule'
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
+      with:
+        lfs: true
 
     - run: git fetch --prune --unshallow
 
@@ -70,7 +76,7 @@ jobs:
     if: github.repository == 'AMICI-dev/AMICI' ||
         github.event_name != 'schedule'
 
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
 
     strategy:
       matrix:
@@ -80,12 +86,16 @@ jobs:
       ENABLE_AMICI_DEBUGGING: "TRUE"
 
     steps:
+    - uses: dweindl/gha-runner-diagnostics@v1
+
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
+      with:
+        lfs: true
     - run: git fetch --prune --unshallow
 
     - name: Install apt dependencies

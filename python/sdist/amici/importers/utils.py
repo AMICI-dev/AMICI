@@ -1,0 +1,1305 @@
+"""Miscellaneous functions related to model import, independent of any specific
+model format"""
+
+import enum
+import numbers
+import sys
+from collections.abc import Callable, Hashable, Iterable, Mapping, Sequence
+from typing import SupportsFloat
+
+import sympy as sp
+from sympy.core.relational import Relational
+from sympy.functions.elementary.piecewise import ExprCondPair
+from sympy.logic.boolalg import BooleanAtom
+from toposort import toposort
+
+__all__ = [
+    "MeasurementChannel",
+]
+
+# Symbols reserved by AMICI: model entities with these IDs will be renamed.
+#
+# `t` is merged into the model's expression graph as an actual sympy.Symbol
+# (amici.importers.sbml._process_time), so it must never collide with a
+# model entity: created with amici's canonical assumptions, a model entity
+# named `t` would not merely *print* like the time symbol, it would *be* the
+# very same sympy symbol. The two could in principle be kept apart by giving
+# them different assumptions (as sbmlmath does, before the time symbol is
+# substituted), but every symbol for a given name having the same
+# assumptions is an invariant the rest of amici relies on, so the entity is
+# renamed instead.
+#
+# Nothing else needs reserving. A name that's merely unsafe *in the
+# generated code* -- a keyword, a stdlib macro, one of the fixed argument
+# names the generated functions are written with (`x`, `p`, `k`, `h`, `w`,
+# `y`, `tcl`, `self`, `jnp`, ...) -- is handled where it actually matters,
+# by each backend's code printer mangling every identifier it prints
+# (amici.exporters._mangling.IdentifierMangler). That keeps such names an
+# implementation detail of code generation instead of something the model
+# representation, and everything reporting ids out of it, has to know
+# about.
+RESERVED_SYMBOLS = [
+    "t",
+]
+
+
+def resolve_reserved_symbol_renames(all_names: set[str]) -> dict[str, str]:
+    """
+    Decide non-colliding replacement names for any of ``RESERVED_SYMBOLS``
+    that collide with a name already in use in the model.
+
+    Each importer is responsible for actually renaming the corresponding
+    symbol everywhere it's used (before it's embedded in any expression)
+    and for recording the mapping so the original id can be restored for
+    anything reported outward (state/parameter ids, PEtab mapping, ...).
+
+    :param all_names:
+        every symbol name already used in the model. Used both to detect
+        which reserved names actually collide, and to disambiguate the
+        replacement (e.g. if the model already defines "amici_t" itself).
+
+    :return:
+        mapping from a colliding reserved name to a new, guaranteed-free
+        replacement name (``amici_{name}``, or ``amici_{name}_{n}`` if
+        that's already taken too). Only contains entries for names that
+        actually collide with something in ``all_names``.
+    """
+    all_names = set(all_names)  # local copy; we add newly chosen names below
+    renames: dict[str, str] = {}
+    for sym in RESERVED_SYMBOLS:
+        if sym not in all_names:
+            continue
+
+        new_name, n = f"amici_{sym}", 2
+        while new_name in all_names:
+            new_name = f"amici_{sym}_{n}"
+            n += 1
+        all_names.add(new_name)
+        renames[sym] = new_name
+
+    return renames
+
+
+def make_name_unique(name: str, taken: set[str]) -> str:
+    """
+    Disambiguate an AMICI-internally-derived name against everything
+    already claimed in the model.
+
+    See https://github.com/AMICI-dev/AMICI/issues/3240: many internal
+    symbol names are derived by string-formatting a pattern
+    around an existing model entity's own id (e.g. a reaction flux id
+    ``flux_{reaction_id}``, a conservation-law total ``tcl_{state_id}``,
+    an observable's measurement/sigma symbol ``m{obs_id}``/
+    ``sigma_{obs_id}``). If that generated string happens to already
+    denote some other, unrelated model entity, nothing distinguishes them
+    once both are minted with AMICI's canonical (identical) assumptions,
+    so any two colliding here would silently become one and the same
+    symbol throughout the entire model. This disambiguates the derived
+    name itself (not the pre-existing entity's), matching the precedent
+    already established for ``RESERVED_SYMBOLS`` above, generalized to
+    any name and any point in the import pipeline.
+
+    :param name:
+        the candidate derived name.
+    :param taken:
+        every name already claimed in the model so far; mutated in place
+        to additionally reserve the returned name.
+    :return:
+        ``name`` unchanged if free, otherwise a numeric-suffixed variant
+        (``f"{name}_2"``, ``f"{name}_3"``, ...) that isn't in ``taken``.
+    """
+    candidate, n = name, 2
+    while candidate in taken:
+        candidate = f"{name}_{n}"
+        n += 1
+    taken.add(candidate)
+    return candidate
+
+
+class SBMLException(Exception):
+    """Exception for SBML related errors.
+
+    Raised, for example, for unsupported SBML features.
+    """
+
+    pass
+
+
+SymbolDef = dict[sp.Symbol, dict[str, sp.Expr] | sp.Expr]
+
+
+# Monkey-patch toposort CircularDependencyError to handle non-sortable objects,
+#  such as sympy objects
+class CircularDependencyError(ValueError):
+    def __init__(self, data):
+        # Sort the data just to make the output consistent, for use in
+        #  error messages.  That's convenient for doctests.
+        s = "Circular dependencies exist among these items: {{{}}}".format(
+            ", ".join(
+                f"{key!r}:{value!r}"
+                for key, value in sorted(
+                    {str(k): v for k, v in data.items()}.items()
+                )
+            )
+        )
+        super().__init__(s)
+        self.data = data
+
+
+setattr(
+    sys.modules["toposort"], "CircularDependencyError", CircularDependencyError
+)
+
+annotation_namespace = "https://github.com/AMICI-dev/AMICI"
+
+
+class ObservableTransformation(enum.StrEnum):
+    """
+    Different modes of observable transformation.
+    """
+
+    LOG10 = "log10"
+    LOG = "log"
+    LIN = "lin"
+
+
+class MeasurementChannel:
+    """
+    A measurement channel (observable) definition.
+
+    Measurement channels define how model state and parameters are mapped to
+    observables, including any associated noise models.
+
+    Measurement channels can be time-resolved (i.e., defined over the course of
+    a simulation) or event-resolved (i.e., defined at specific events during
+    a simulation). Event-resolved observables are associated with a specific
+    event via the `event_id` attribute.
+
+    Example usage:
+
+    >>> # Time-resolved observable
+    >>> mc1 = MeasurementChannel(
+    ...     id_="obs1",
+    ...     name="Observable 1",
+    ...     formula="k1 * x1 + k2",
+    ...     noise_distribution="log-normal",
+    ...     sigma="sigma1"
+    ... )
+    >>> mc1  # doctest: +NORMALIZE_WHITESPACE
+    MeasurementChannel(id_='obs1', name='Observable 1', \
+formula='k1 * x1 + k2', noise_distribution='log-normal', \
+sigma='sigma1', event_id=None)
+    >>> mc1.is_time_resolved
+    True
+    >>> mc1.is_event_resolved
+    False
+    >>> # Event-resolved observable
+    >>> mc2 = MeasurementChannel(
+    ...     id_="obs2",
+    ...     name="Observable 2",
+    ...     formula="x3",
+    ...     noise_distribution="log-normal",
+    ...     sigma="sigma1",
+    ...     event_id="event1"
+    ... )
+    >>> mc2  # doctest: +NORMALIZE_WHITESPACE
+    MeasurementChannel(id_='obs2', name='Observable 2', formula='x3', \
+noise_distribution='log-normal', sigma='sigma1', event_id='event1')
+    >>> mc2.is_event_resolved
+    True
+    >>> mc2.is_time_resolved
+    False
+    """
+
+    def __init__(
+        self,
+        id_: str,
+        *,
+        name: str | None = None,
+        formula: str | sp.Expr | None = None,
+        noise_distribution: str | Callable[[str], str] | None = None,
+        sigma: str | sp.Expr | float | None = None,
+        event_id: str | None = None,
+    ):
+        """
+        Initialize a measurement channel.
+
+
+
+        The noise distributions listed in the following are supported.
+        :math:`m` denotes the measurement, :math:`y` the simulation,
+        and :math:`\\sigma` a distribution scale parameter
+        (currently, AMICI only supports a single distribution parameter).
+
+        - `'normal'`, `'lin-normal'`: A normal distribution:
+
+          .. math::
+             \\pi(m|y,\\sigma) = \\frac{1}{\\sqrt{2\\pi}\\sigma}\\
+             exp\\left(-\\frac{(m-y)^2}{2\\sigma^2}\\right)
+
+        - `'log-normal'`: A log-normal distribution (i.e. log(m) is
+          normally distributed):
+
+          .. math::
+             \\pi(m|y,\\sigma) = \\frac{1}{\\sqrt{2\\pi}\\sigma m}\\
+             exp\\left(-\\frac{(\\log m - \\log y)^2}{2\\sigma^2}\\right)
+
+        - `'log10-normal'`: A log10-normal distribution (i.e. log10(m) is
+          normally distributed):
+
+          .. math::
+             \\pi(m|y,\\sigma) = \\frac{1}{\\sqrt{2\\pi}\\sigma m \\log(10)}\\
+             exp\\left(-\\frac{(\\log_{10} m - \\log_{10} y)^2}{2\\sigma^2}\\right)
+
+        - `'laplace'`, `'lin-laplace'`: A laplace distribution:
+
+          .. math::
+             \\pi(m|y,\\sigma) = \\frac{1}{2\\sigma}
+             \\exp\\left(-\\frac{|m-y|}{\\sigma}\\right)
+
+        - `'log-laplace'`: A log-Laplace distribution (i.e. log(m) is Laplace
+          distributed):
+
+          .. math::
+             \\pi(m|y,\\sigma) = \\frac{1}{2\\sigma m}
+             \\exp\\left(-\\frac{|\\log m - \\log y|}{\\sigma}\\right)
+
+        - `'log10-laplace'`: A log10-Laplace distribution (i.e. log10(m) is
+          Laplace distributed):
+
+          .. math::
+             \\pi(m|y,\\sigma) = \\frac{1}{2\\sigma m \\log(10)}
+             \\exp\\left(-\\frac{|\\log_{10} m - \\log_{10} y|}{\\sigma}\\right)
+
+        - `'binomial'`, `'lin-binomial'`: A (continuation of a discrete) binomial
+          distribution, parameterized via the success probability
+          :math:`p=\\sigma`:
+
+          .. math::
+             \\pi(m|y,\\sigma) = \\operatorname{Heaviside}(y-m) \\cdot
+                    \\frac{\\Gamma(y+1)}{\\Gamma(m+1) \\Gamma(y-m+1)}
+                    \\sigma^m (1-\\sigma)^{(y-m)}
+
+        - `'negative-binomial'`, `'lin-negative-binomial'`: A (continuation of a
+          discrete) negative binomial distribution, with `mean = y`,
+          parameterized via success probability `p`:
+
+          .. math::
+
+             \\pi(m|y,\\sigma) = \\frac{\\Gamma(m+r)}{\\Gamma(m+1) \\Gamma(r)}
+                (1-\\sigma)^m \\sigma^r
+
+          where
+
+          .. math::
+             r = \\frac{1-\\sigma}{\\sigma} y
+
+        The distributions above are for a single data point.
+        For a collection :math:`D=\\{m_i\\}_i` of data points and corresponding
+        simulations :math:`Y=\\{y_i\\}_i` and noise parameters
+        :math:`\\Sigma=\\{\\sigma_i\\}_i`, AMICI assumes independence,
+        i.e. the full distributions is
+
+        .. math::
+           \\pi(D|Y,\\Sigma) = \\prod_i\\pi(m_i|y_i,\\sigma_i)
+
+        AMICI uses the logarithm :math:`\\log(\\pi(m|y,\\sigma)`.
+
+        .. note::
+
+            When providing expressions for (event) observables and their sigmas
+            as strings (see below), those will be passed to
+            :func:`sympy.core.sympify.sympify`.
+            The supported grammar is not well-defined.
+            Note there can be issues with, for example, ``==`` or n-ary (n>2)
+            comparison operators.
+            Also note that operator precedence and function names may differ
+            from SBML L3 formulas or PEtab math expressions.
+            Passing a sympy expression directly will
+            be the safer option for more complex expressions.
+
+        .. note::
+
+            In any math expressions passed to this function, ``time`` will
+            be interpreted as the time symbol.
+
+        :param id_:
+            Unique identifier for the measurement channel.
+        :param name:
+            Human-readable name for the measurement channel.
+        :param formula:
+            Expression defining how the observable is computed from model state
+            and parameters.
+        :param noise_distribution:
+            Noise distribution associated with the observable.
+            This is usually a string identifier:
+
+            {`'normal'`, `'lin-normal'`, `'log-normal'`, `'log10-normal'`,
+            `'laplace'`, `'lin-laplace'`, `'log-laplace'`, `'log10-laplace'`,
+            `'binomial'`, `'lin-binomial'`, `'negative-binomial'`,
+            `'lin-negative-binomial'`}
+
+            For the meaning of the values see above.
+
+            Alternatively, a callable can be passed to account for a
+            custom noise model. The callable must take a single argument
+            ``str_symbol``, and return a string defining the negative
+            log-likelihood contribution for a single data point, using
+            variables ``{str_symbol}``, ``m{str_symbol}``, and
+            ``sigma{str_symbol}`` for the simulation, measurement, and
+            scale parameter, respectively.
+        :param sigma:
+            Expression representing the scale parameter of the noise
+            distribution. This can be a numeric value, a sympy expression,
+            or an expression string that will be passed to
+            :func:`sympy.core.sympify.sympify`.
+        :param event_id:
+            Identifier of the associated event for event-resolved observables.
+            `None` for time-resolved observables.
+        """
+        self.id = id_
+        self.name = name
+        self.formula = formula
+        self.noise_distribution = noise_distribution or "normal"
+        self.sigma = sigma
+        self.event_id = event_id
+
+    def __repr__(self):
+        return (
+            f"{self.__class__.__name__}(id_={self.id!r}, name={self.name!r}, "
+            f"formula={self.formula!r}, noise_distribution="
+            f"{self.noise_distribution!r}, sigma={self.sigma!r}, "
+            f"event_id={self.event_id!r})"
+        )
+
+    @property
+    def is_time_resolved(self):
+        """Whether this is a time-resolved observable."""
+        return self.event_id is None
+
+    @property
+    def is_event_resolved(self) -> bool:
+        """Whether this is an event-resolved observable."""
+        return self.event_id is not None
+
+
+def noise_distribution_to_observable_transformation(
+    noise_distribution: str | Callable,
+) -> ObservableTransformation:
+    """
+    Parse noise distribution string and extract observable transformation
+
+    :param noise_distribution:
+        see :func:`noise_distribution_to_cost_function`
+
+    :return:
+        observable transformation
+    """
+    if isinstance(noise_distribution, str):
+        if noise_distribution.startswith("log-"):
+            return ObservableTransformation.LOG
+        if noise_distribution.startswith("log10-"):
+            return ObservableTransformation.LOG10
+
+    return ObservableTransformation.LIN
+
+
+def noise_distribution_to_cost_function(
+    noise_distribution: str | Callable,
+) -> Callable[[str], str]:
+    """
+    Parse noise distribution string to a cost function definition amici can
+    work with.
+
+    The noise distributions listed in the following are supported. :math:`m`
+    denotes the measurement, :math:`y` the simulation, and :math:`\\sigma` a
+    distribution scale parameter
+    (currently, AMICI only supports a single distribution parameter).
+
+    - `'normal'`, `'lin-normal'`: A normal distribution:
+
+      .. math::
+         \\pi(m|y,\\sigma) = \\frac{1}{\\sqrt{2\\pi}\\sigma}\\
+         exp\\left(-\\frac{(m-y)^2}{2\\sigma^2}\\right)
+
+    - `'log-normal'`: A log-normal distribution (i.e. log(m) is
+      normally distributed):
+
+      .. math::
+         \\pi(m|y,\\sigma) = \\frac{1}{\\sqrt{2\\pi}\\sigma m}\\
+         exp\\left(-\\frac{(\\log m - \\log y)^2}{2\\sigma^2}\\right)
+
+    - `'log10-normal'`: A log10-normal distribution (i.e. log10(m) is
+      normally distributed):
+
+      .. math::
+         \\pi(m|y,\\sigma) = \\frac{1}{\\sqrt{2\\pi}\\sigma m \\log(10)}\\
+         exp\\left(-\\frac{(\\log_{10} m - \\log_{10} y)^2}{2\\sigma^2}\\right)
+
+    - `'laplace'`, `'lin-laplace'`: A laplace distribution:
+
+      .. math::
+         \\pi(m|y,\\sigma) = \\frac{1}{2\\sigma}
+         \\exp\\left(-\\frac{|m-y|}{\\sigma}\\right)
+
+    - `'log-laplace'`: A log-Laplace distribution (i.e. log(m) is Laplace
+      distributed):
+
+      .. math::
+         \\pi(m|y,\\sigma) = \\frac{1}{2\\sigma m}
+         \\exp\\left(-\\frac{|\\log m - \\log y|}{\\sigma}\\right)
+
+    - `'log10-laplace'`: A log10-Laplace distribution (i.e. log10(m) is
+      Laplace distributed):
+
+      .. math::
+         \\pi(m|y,\\sigma) = \\frac{1}{2\\sigma m \\log(10)}
+         \\exp\\left(-\\frac{|\\log_{10} m - \\log_{10} y|}{\\sigma}\\right)
+
+    - `'binomial'`, `'lin-binomial'`: A (continuation of a discrete) binomial
+      distribution, parameterized via the success probability
+      :math:`p=\\sigma`:
+
+      .. math::
+         \\pi(m|y,\\sigma) = \\operatorname{Heaviside}(y-m) \\cdot
+                \\frac{\\Gamma(y+1)}{\\Gamma(m+1) \\Gamma(y-m+1)}
+                \\sigma^m (1-\\sigma)^{(y-m)}
+
+    - `'negative-binomial'`, `'lin-negative-binomial'`: A (continuation of a
+      discrete) negative binomial distribution, with with `mean = y`,
+      parameterized via success probability `p`:
+
+      .. math::
+
+         \\pi(m|y,\\sigma) = \\frac{\\Gamma(m+r)}{\\Gamma(m+1) \\Gamma(r)}
+            (1-\\sigma)^m \\sigma^r
+
+      where
+
+      .. math::
+         r = \\frac{1-\\sigma}{\\sigma} y
+
+    The distributions above are for a single data point.
+    For a collection :math:`D=\\{m_i\\}_i` of data points and corresponding
+    simulations :math:`Y=\\{y_i\\}_i` and noise parameters
+    :math:`\\Sigma=\\{\\sigma_i\\}_i`, AMICI assumes independence,
+    i.e. the full distributions is
+
+    .. math::
+       \\pi(D|Y,\\Sigma) = \\prod_i\\pi(m_i|y_i,\\sigma_i)
+
+    AMICI uses the logarithm :math:`\\log(\\pi(m|y,\\sigma)`.
+
+    In addition to the above-mentioned distributions, it is also possible to
+    pass a function taking a symbol string and returning a log-distribution
+    string with variables '{str_symbol}', 'm{str_symbol}', 'sigma{str_symbol}'
+    for y, m, sigma, respectively.
+
+    :param noise_distribution: An identifier specifying a noise model.
+        Possible values are
+
+        {`'normal'`, `'lin-normal'`, `'log-normal'`, `'log10-normal'`,
+        `'laplace'`, `'lin-laplace'`, `'log-laplace'`, `'log10-laplace'`,
+        `'binomial'`, `'lin-binomial'`, `'negative-binomial'`,
+        `'lin-negative-binomial'`, `<Callable>`}
+
+        For the meaning of the values see above.
+
+    :return: A function that takes a strSymbol and then creates a cost
+        function string (negative log-likelihood) from it, which can be
+        sympified.
+    """
+
+    if isinstance(noise_distribution, Callable):
+        return noise_distribution
+
+    if noise_distribution in ["normal", "lin-normal"]:
+        y_string = "0.5*log(2*pi*{sigma}**2) + 0.5*(({y} - {m}) / {sigma})**2"
+    elif noise_distribution == "log-normal":
+        y_string = (
+            "0.5*log(2*pi*{sigma}**2*{m}**2) "
+            "+ 0.5*((log({y}) - log({m})) / {sigma})**2"
+        )
+    elif noise_distribution == "log10-normal":
+        y_string = (
+            "0.5*log(2*pi*{sigma}**2*{m}**2*log(10)**2) "
+            "+ 0.5*((log({y}, 10) - log({m}, 10)) / {sigma})**2"
+        )
+    elif noise_distribution in ["laplace", "lin-laplace"]:
+        y_string = "log(2*{sigma}) + Abs({y} - {m}) / {sigma}"
+    elif noise_distribution == "log-laplace":
+        y_string = "log(2*{sigma}*{m}) + Abs(log({y}) - log({m})) / {sigma}"
+    elif noise_distribution == "log10-laplace":
+        y_string = (
+            "log(2*{sigma}*{m}*log(10)) "
+            "+ Abs(log({y}, 10) - log({m}, 10)) / {sigma}"
+        )
+    elif noise_distribution in ["binomial", "lin-binomial"]:
+        # Binomial noise model parameterized via success probability p
+        y_string = (
+            "- log(Heaviside({y} - {m})) - loggamma({y}+1) "
+            "+ loggamma({m}+1) + loggamma({y}-{m}+1) "
+            "- {m} * log({sigma}) - ({y} - {m}) * log(1-{sigma})"
+        )
+    elif noise_distribution in ["negative-binomial", "lin-negative-binomial"]:
+        # Negative binomial noise model of the number of successes m
+        # (data) before r=(1-sigma)/sigma * y failures occur,
+        # with mean number of successes y (simulation),
+        # parameterized via success probability p = sigma.
+        r = "{y} * (1-{sigma}) / {sigma}"
+        y_string = (
+            f"- loggamma({{m}}+{r}) + loggamma({{m}}+1) "
+            f"+ loggamma({r}) - {r} * log(1-{{sigma}}) "
+            f"- {{m}} * log({{sigma}})"
+        )
+    else:
+        raise ValueError(
+            f"Cost identifier {noise_distribution} not recognized."
+        )
+
+    def nllh_y_string(str_symbol):
+        y, m, sigma = _get_str_symbol_identifiers(str_symbol)
+        return y_string.format(y=y, m=m, sigma=sigma)
+
+    return nllh_y_string
+
+
+def _get_str_symbol_identifiers(str_symbol: str) -> tuple:
+    """Get identifiers for simulation, measurement, and sigma."""
+    y, m, sigma = f"{str_symbol}", f"m{str_symbol}", f"sigma{str_symbol}"
+    return y, m, sigma
+
+
+def smart_subs_dict(
+    sym: sp.Expr,
+    subs: SymbolDef,
+    field: str | None = None,
+    reverse: bool = True,
+    flatten_first: bool | None = None,
+) -> sp.Expr:
+    """
+    Substitutes expressions completely flattening them out. Requires
+    sorting of expressions with toposort.
+
+    :param sym:
+        Symbolic expression in which expressions will be substituted
+
+    :param subs:
+        Substitutions
+
+    :param field:
+        Field of substitution expressions in subs.values(), if applicable
+
+    :param reverse:
+        Whether ordering in subs should be reversed. Note that substitution
+        requires the reverse order of what is required for evaluation.
+
+    :param flatten_first:
+        Choice of algorithm: Flatten the substitution expressions first, then
+        substitute them simultaneously into `sym` (``True``), or substitute
+        them one by one into `sym` (``False``).
+
+    :return:
+        Substituted symbolic expression
+    """
+    if field is None:
+        s = list(subs.items())
+    else:
+        s = [(eid, expr[field]) for eid, expr in subs.items()]
+
+    # We have the choice to flatten the replacement expressions first or to
+    #  substitute them one by one into `sym`. Flattening first is usually
+    #  more efficient if `sym` is large (e.g., a matrix with many elements)
+    #  and `subs` is cascading (i.e., substitutions depend on other
+    #  substitutions). Otherwise, substituting one by one is usually more
+    #  efficient, because flattening scales quadratically with the number of
+    #  substitutions.
+    #  The exact threshold is somewhat arbitrary and may need to be
+    #  adjusted in the future.
+    if flatten_first is None:
+        flatten_first = (
+            isinstance(sym, sp.MatrixBase) and sym.rows * sym.cols > 20
+        )
+
+    if flatten_first:
+        if not reverse:
+            # counter-intuitive, but on this branch, we need to reverse the
+            #  order for `reverse=False`
+            s.reverse()
+
+        with sp.evaluate(False):
+            # The new expressions may themselves contain symbols to be
+            #  substituted. We flatten them out first, so that the
+            #  substitutions in `sym` can be performed simultaneously,
+            #  which can be more efficient than repeatedly substituting into
+            #  `sym`.
+            # TODO(performance): This could probably be made more efficient by
+            #  combining with toposort used to order `subs` in the first
+            #  place.
+            #  Some substitutions could be combined, and some terms not
+            #  present in `sym` could be skipped.
+            #  Furthermore, this would provide information on recursion depth,
+            #  which might help decide which strategy is more efficient.
+            #  For flat hierarchies, substituting one by one is most likely
+            #  more efficient.
+            for i in range(len(s) - 1):
+                for j in range(i + 1, len(s)):
+                    if s[j][1].has(s[i][0]):
+                        s[j] = s[j][0], s[j][1].xreplace({s[i][0]: s[i][1]})
+
+            s = dict(s)
+            sym = sym.xreplace(s)
+        return sym
+
+    else:
+        if reverse:
+            s.reverse()
+
+        with sp.evaluate(False):
+            for old, new in s:
+                # note that substitution may change free symbols,
+                #  so we have to do this recursively
+                if sym.has(old):
+                    sym = sym.xreplace({old: new})
+        return sym
+
+
+def smart_subs(element: sp.Expr, old: sp.Symbol, new: sp.Expr) -> sp.Expr:
+    """
+    Optimized substitution that checks whether anything needs to be done first
+
+    :param element:
+        substitution target
+
+    :param old:
+        to be substituted
+
+    :param new:
+        substitution value
+
+    :return:
+        substituted expression
+    """
+    return element.subs(old, new) if element.has(old) else element
+
+
+def toposort_symbols(
+    symbols: SymbolDef, field: str | None = None
+) -> SymbolDef:
+    """
+    Topologically sort symbol definitions according to their interdependency
+
+    :param symbols:
+        symbol definitions
+
+    :param field:
+        field of definition.values() that is used to compute interdependency
+
+    :return:
+        ordered symbol definitions
+    """
+    sorted_symbols = toposort(
+        {
+            identifier: {
+                s
+                for s in (
+                    definition[field] if field is not None else definition
+                ).free_symbols
+                if s in symbols
+            }
+            for identifier, definition in symbols.items()
+        }
+    )
+    return {
+        s: symbols[s]
+        for symbol_group in sorted_symbols
+        for s in sorted(symbol_group, key=str)
+    }
+
+
+def maximum_bipartite_matching[L: Hashable, R: Hashable](
+    edges: Mapping[L, Iterable[R]],
+) -> dict[L, R]:
+    """Find a maximum matching in a bipartite graph.
+
+    Uses depth-first search for augmenting paths, without recursion, cf.
+    `Duff (1981) <https://doi.org/10.1145/355958.355963>`_.
+
+    :param edges:
+        For each left vertex, the right vertices it is connected to.
+    :return:
+        The matching as a mapping from left to right vertices.
+    """
+    # right vertex -> left vertex
+    match_right: dict[R, L] = {}
+    no_neighbor = object()
+
+    for root in edges:
+        # depth-first search for an augmenting path starting at `root`
+        visited = set()
+        stack = [(root, iter(edges[root]))]
+        # the edges (left, right) leading to the left vertices on the stack
+        path = []
+        while stack:
+            left, neighbors = stack[-1]
+            right = next(
+                (r for r in neighbors if r not in visited), no_neighbor
+            )
+            if right is no_neighbor:
+                stack.pop()
+                if path:
+                    path.pop()
+                continue
+            visited.add(right)
+            if right in match_right:
+                path.append((left, right))
+                next_left = match_right[right]
+                stack.append((next_left, iter(edges[next_left])))
+                continue
+            # free right vertex found: flip the edges along the path
+            match_right[right] = left
+            for path_left, path_right in path:
+                match_right[path_right] = path_left
+            break
+
+    return {left: right for right, left in match_right.items()}
+
+
+def _parse_special_functions(
+    sym: sp.Expr,
+    parameters: Iterable[sp.Symbol],
+    toplevel: bool = True,
+) -> sp.Expr:
+    """
+    Recursively checks the symbolic expression for functions which have be
+    to parsed in a special way, such as piecewise functions
+
+    :param sym:
+        symbolic expressions
+
+    :param parameters:
+        parameters with respect to which piecewise functions need to be
+        continuously differentiable to be kept as piecewise functions,
+        see :func:`_parse_piecewise_to_heaviside`
+
+    :param toplevel:
+        as this is called recursively, are we in the top level expression?
+    """
+    args = tuple(
+        _parse_special_functions(arg, parameters, False) for arg in sym.args
+    )
+
+    fun_mappings = {
+        "times": sp.Mul,
+        "xor": sp.Xor,
+        "abs": sp.Abs,
+        "min": sp.Min,
+        "max": sp.Max,
+        "ceil": sp.functions.ceiling,
+        "floor": sp.functions.floor,
+        "factorial": sp.functions.factorial,
+        "arcsin": sp.functions.asin,
+        "arccos": sp.functions.acos,
+        "arctan": sp.functions.atan,
+        "arccot": sp.functions.acot,
+        "arcsec": sp.functions.asec,
+        "arccsc": sp.functions.acsc,
+        "arcsinh": sp.functions.asinh,
+        "arccosh": sp.functions.acosh,
+        "arctanh": sp.functions.atanh,
+        "arccoth": sp.functions.acoth,
+        "arcsech": sp.functions.asech,
+        "arccsch": sp.functions.acsch,
+        "lt": sp.StrictLessThan,
+        "gt": sp.StrictGreaterThan,
+        "geq": sp.GreaterThan,
+        "leq": sp.LessThan,
+    }
+
+    if sym.__class__.__name__ in fun_mappings:
+        return fun_mappings[sym.__class__.__name__](*args)
+
+    elif isinstance(sym, sp.Piecewise):
+        return _parse_piecewise_to_heaviside(args, parameters)
+
+    if sym.__class__.__name__ == "plus" and not sym.args:
+        return sp.Float(0.0)
+
+    if isinstance(sym, (sp.Function | sp.Mul | sp.Add | sp.Pow)):
+        sym._args = args
+
+    elif toplevel and isinstance(sym, BooleanAtom):
+        # Replace boolean constants by numbers so they can be differentiated
+        #  must not replace in Piecewise function. Therefore, we only replace
+        #  it the complete expression consists only of a Boolean value.
+        sym = sp.Float(int(bool(sym)))
+
+    return sym
+
+
+def _is_c1_piecewise(
+    pw: sp.Piecewise, parameters: Sequence[sp.Symbol]
+) -> bool:
+    """Return ``True`` if ``pw`` is continuously differentiable with respect to
+    ``parameters``.
+
+    This check ensures that piecewise expressions which are already smooth are
+    not transformed into events.
+    """
+
+    from sympy.calculus.util import continuous_domain
+
+    pieces = pw.args
+
+    # collect boundaries appearing in the conditions
+    boundaries: list[tuple[sp.Symbol, sp.Expr]] = []
+    for _, cond in pieces:
+        if cond in (True, False, sp.true, sp.false):
+            continue
+        if not isinstance(cond, Relational):
+            return False
+        if isinstance(cond.lhs, sp.Symbol) and not cond.rhs.has(cond.lhs):
+            boundaries.append((cond.lhs, cond.rhs))
+        elif isinstance(cond.rhs, sp.Symbol) and not cond.lhs.has(cond.rhs):
+            boundaries.append((cond.rhs, cond.lhs))
+        else:
+            return False
+
+    # check that each piece and its derivatives are continuous on R
+    for expr, _ in pieces:
+        for var in parameters:
+            try:
+                if continuous_domain(expr, var, sp.S.Reals) != sp.S.Reals:
+                    return False
+            except NotImplementedError:
+                return False
+            try:
+                dexpr = sp.diff(expr, var)
+                if continuous_domain(dexpr, var, sp.S.Reals) != sp.S.Reals:
+                    return False
+            except NotImplementedError:
+                return False
+
+    # check continuity and derivative continuity at boundaries
+    for (sym, boundary), (expr_left, _), (expr_right, _) in zip(
+        boundaries, pieces[:-1], pieces[1:]
+    ):
+        if not sp.simplify(
+            expr_left.subs(sym, boundary) - expr_right.subs(sym, boundary)
+        ).is_zero:
+            return False
+        for var in parameters:
+            if not sp.simplify(
+                sp.diff(expr_left, var).subs(sym, boundary)
+                - sp.diff(expr_right, var).subs(sym, boundary)
+            ).is_zero:
+                return False
+
+    return True
+
+
+def _parse_piecewise_to_heaviside(
+    args: Iterable[ExprCondPair],
+    parameters: Sequence[sp.Symbol] | None = None,
+) -> sp.Expr:
+    """
+    Piecewise functions cannot be transformed into C++ right away, but AMICI
+    has a special interface for Heaviside functions, so we transform them.
+    Piecewise functions that are continuously differentiable with respect to
+    ``parameters`` are returned as is, as they do not require events.
+
+    :param args:
+        condition-expression pairs of the piecewise function
+
+    :param parameters:
+        parameters with respect to which the piecewise function needs to be
+        continuously differentiable to be kept as is
+    """
+    pw = sp.Piecewise(*args)
+
+    if parameters is None:
+        parameters = []
+
+    if _is_c1_piecewise(pw, parameters):
+        return pw
+
+    formula = sp.Integer(0)
+    not_condition = sp.Integer(1)
+
+    for coeff, trigger in args:
+        if isinstance(coeff, BooleanAtom):
+            coeff = sp.Integer(int(bool(coeff)))
+
+        if trigger == sp.true:
+            return formula + coeff * not_condition
+
+        if trigger == sp.false:
+            continue
+
+        tmp = _parse_heaviside_trigger(trigger)
+        formula += coeff * sp.simplify(not_condition * tmp)
+        not_condition *= sp.Integer(1) - tmp
+
+    return formula
+
+
+def _parse_heaviside_trigger(trigger: sp.Expr) -> sp.Expr:
+    """
+    Recursively translates a boolean trigger function into a real valued
+    root function
+
+    :param trigger:
+    :return: real valued root function expression
+    """
+    if trigger.is_Relational:
+        root = trigger.args[0] - trigger.args[1]
+        _check_unsupported_functions(root, "sympy.Expression")
+
+        # normalize such that we always implement <,
+        # this ensures that we can correctly evaluate the condition if
+        # simulation starts at H(0). This is achieved by translating
+        # conditionals into Heaviside functions H that is implemented as unit
+        # step with H(0) = 1
+        if isinstance(trigger, sp.core.relational.StrictLessThan):
+            # x < y => x - y < 0 => r < 0
+            return sp.Integer(1) - sp.Heaviside(root, 1)
+        if isinstance(trigger, sp.core.relational.LessThan):
+            # x <= y => not(y < x) => not(y - x < 0) => not -r < 0
+            return sp.Heaviside(-root, 1)
+        if isinstance(trigger, sp.core.relational.StrictGreaterThan):
+            # y > x => y - x < 0 => -r < 0
+            return sp.Integer(1) - sp.Heaviside(-root, 1)
+        if isinstance(trigger, sp.core.relational.GreaterThan):
+            # y >= x => not(x < y) => not(x - y < 0) => not r < 0
+            return sp.Heaviside(root, 1)
+
+    # rewrite n-ary XOR to OR to be handled below:
+    trigger = trigger.replace(sp.Xor, _xor_to_or)
+    # rewrite ==, !==
+    trigger = trigger.replace(sp.Eq, _eq_to_and)
+    trigger = trigger.replace(sp.Ne, _ne_to_or)
+
+    # or(x,y) = not(and(not(x),not(y))
+    if isinstance(trigger, sp.Or):
+        return sp.Integer(1) - sp.Mul(
+            *[
+                sp.Integer(1) - _parse_heaviside_trigger(arg)
+                for arg in trigger.args
+            ]
+        )
+
+    if isinstance(trigger, sp.And):
+        return sp.Mul(*[_parse_heaviside_trigger(arg) for arg in trigger.args])
+
+    raise RuntimeError(
+        "AMICI can not parse piecewise/event trigger functions with argument "
+        f"{trigger}."
+    )
+
+
+def _xor_to_or(*args):
+    """
+    Replace XOR by OR expression.
+
+    ``xor(x, y, ...) = (x & ~y & ...) | (~x & y & ...) | ...``.
+
+    to be used in ``trigger = trigger.replace(sp.Xor, _xor_to_or)``.
+    """
+    res = sp.false
+    for i in range(len(args)):
+        res = sp.Or(
+            res,
+            sp.And(
+                *(arg if i == j else sp.Not(arg) for j, arg in enumerate(args))
+            ),
+        )
+    return res.simplify()
+
+
+def _eq_to_and(*args):
+    """
+    Replace equality expression with numerical arguments by inequalities.
+
+    ``Eq(x, y) = (x >= y) & (x <= y)``.
+
+    to be used in ``trigger = trigger.replace(sp.Eq, _eq_to_and)``.
+    """
+    x, y = args
+    return (x >= y) & (x <= y)
+
+
+def _ne_to_or(*args):
+    """
+    Replace not-equal expression with numerical arguments by inequalities.
+
+    ``Ne(x, y) = (x > y) | (x < y)``.
+
+    to be used in ``trigger = trigger.replace(sp.Ne, _ne_to_or)``.
+
+    This expects x and y to be not-NaN. No model should rely on NaN semantics
+    anyways: In sympy, NaNs are equal, but they don't support <, >, >=, <=.
+    In SBML, NaNs are equal, but support all comparisons. In IEEE 754, NaNs
+    are not equal, but support all comparisons.
+    """
+    x, y = args
+    return (x > y) | (x < y)
+
+
+def _check_unsupported_functions(
+    sym: sp.Expr, expression_type: str, full_sym: sp.Expr | None = None
+):
+    """
+    Recursively checks the symbolic expression for unsupported symbolic
+    functions
+
+    :param sym:
+        symbolic expressions
+
+    :param expression_type:
+        type of expression, only used when throwing errors
+
+    :param full sym:
+        outermost symbolic expression in recursive checks, only used for errors
+    """
+    if full_sym is None:
+        full_sym = sym
+
+    # note that sp.functions.factorial, sp.functions.ceiling,
+    # sp.functions.floor applied to numbers should be simplified out and
+    # thus pass this test
+    unsupported_functions = (
+        sp.functions.factorial,
+        sp.functions.ceiling,
+        sp.functions.floor,
+        sp.functions.tan,
+        sp.functions.sec,
+        sp.functions.csc,
+        sp.functions.cot,
+        sp.functions.asec,
+        sp.functions.acsc,
+        sp.functions.acot,
+        sp.functions.acsch,
+        sp.functions.acoth,
+        sp.Mod,
+        sp.core.function.UndefinedFunction,
+    )
+
+    if (
+        isinstance(sym.func, unsupported_functions)
+        or isinstance(sym, unsupported_functions)
+    ) and getattr(sym.func, "name", "") != "rateOf":
+        raise RuntimeError(
+            f"Encountered unsupported expression "
+            f'"{sym.func}" of type '
+            f'"{type(sym.func)}" as part of a '
+            f'{expression_type}: "{full_sym}"!'
+        )
+    for arg in list(sym.args):
+        _check_unsupported_functions(arg, expression_type)
+
+
+def cast_to_sym(
+    value: SupportsFloat | sp.Expr | BooleanAtom, input_name: str
+) -> sp.Expr:
+    """
+    Typecasts the value to :py:class:`sympy.Float` if possible, and ensures the
+    value is a symbolic expression.
+
+    :param value:
+        value to be cast
+
+    :param input_name:
+        name of input variable
+
+    :return:
+        typecast value
+    """
+    if isinstance(value, (sp.RealNumber | numbers.Number)):
+        value = sp.Float(float(value))
+    elif isinstance(value, BooleanAtom):
+        value = sp.Float(float(bool(value)))
+
+    if not isinstance(value, sp.Expr):
+        raise TypeError(
+            f"Couldn't cast {input_name} to sympy.Expr, was {type(value)}"
+        )
+
+    return value
+
+
+def generate_measurement_symbol(
+    observable_id: str | sp.Symbol, taken_names: set[str] | None = None
+):
+    """
+    Generates the appropriate measurement symbol for the provided observable
+
+    :param observable_id:
+        symbol (or string representation) of the observable
+    :param taken_names:
+        if given, every name already claimed in the model; the derived
+        name is disambiguated against it (and reserved in it) if it would
+        otherwise collide, see :func:`make_name_unique`
+
+    :return:
+        symbol for the corresponding measurement
+    """
+    if not isinstance(observable_id, str):
+        observable_id = (
+            observable_id.name
+            if isinstance(observable_id, sp.Symbol)
+            else observable_id
+        )
+    name = f"m{observable_id}"
+    if taken_names is not None:
+        name = make_name_unique(name, taken_names)
+    return symbol_with_assumptions(name)
+
+
+def generate_regularization_symbol(
+    observable_id: str | sp.Symbol, taken_names: set[str] | None = None
+):
+    """
+    Generates the appropriate regularization symbol for the provided observable
+
+    :param observable_id:
+        symbol (or string representation) of the observable
+    :param taken_names:
+        if given, every name already claimed in the model; the derived
+        name is disambiguated against it (and reserved in it) if it would
+        otherwise collide, see :func:`make_name_unique`
+
+    :return:
+        symbol for the corresponding regularization
+    """
+    if not isinstance(observable_id, str):
+        observable_id = (
+            observable_id.name
+            if isinstance(observable_id, sp.Symbol)
+            else observable_id
+        )
+    name = f"r{observable_id}"
+    if taken_names is not None:
+        name = make_name_unique(name, taken_names)
+    return symbol_with_assumptions(name)
+
+
+def generate_flux_symbol(
+    reaction_index: int, name: str | None = None
+) -> sp.Symbol:
+    """
+    Generate identifier symbol for a reaction flux.
+    This function will always return the same unique python object for a
+    given entity.
+
+    :param reaction_index:
+        index of the reaction to which the flux corresponds
+    :param name:
+        an optional identifier of the reaction to which the flux corresponds
+    :return:
+        identifier symbol
+    """
+    if name is not None:
+        return symbol_with_assumptions(name)
+
+    return symbol_with_assumptions(f"flux_r{reaction_index}")
+
+
+def symbol_with_assumptions(name: str):
+    """
+    Central function to create symbols with consistent, canonical assumptions
+
+    :param name:
+        name of the symbol
+
+    :return:
+        symbol with canonical assumptions
+    """
+    return sp.Symbol(name, real=True)
+
+
+def substitute_local_symbols(
+    expr: sp.Basic, local_symbols: dict[str, sp.Basic]
+) -> sp.Basic:
+    """
+    Substitute free symbols to match assumptions of other model
+    entities where necessary, and replace parameters by values in case
+    of hardcoded parameters.
+
+    :param expr:
+        Expression to substitute into.
+    :param local_symbols:
+        Mapping of symbol names to their substitute expression.
+    :return:
+        ``expr`` with matching free symbols replaced.
+    """
+    return expr.subs(
+        {
+            sym: local
+            for sym in expr.free_symbols
+            if (local := local_symbols.get(str(sym), sym)) != sym
+        }
+    )
+
+
+def unique_preserve_order(seq: Sequence) -> list:
+    """Return a list of unique elements in Sequence, keeping only the first
+    occurrence of each element
+
+    Parameters:
+        seq: Sequence to prune
+
+    Returns:
+        List of unique elements in ``seq``
+    """
+    seen = set()
+    seen_add = seen.add
+    return [x for x in seq if not (x in seen or seen_add(x))]
+
+
+sbml_time_symbol = symbol_with_assumptions("time")
+amici_time_symbol = symbol_with_assumptions("t")
+
+
+def _default_simplify(x):
+    """Default simplification applied in DEModel"""
+    # We need this as a free function instead of a lambda to have it picklable
+    #  for parallel simplification
+    return sp.powsimp(x, deep=True)
+
+
+def contains_periodic_subexpression(expr: sp.Expr, symbol: sp.Symbol) -> bool:
+    """
+    Check if a sympy expression contains any periodic subexpression.
+
+    :param expr: The sympy expression to check.
+    :param symbol: The variable with respect to which periodicity is checked.
+    :return: `True` if the expression contains a periodic subexpression,
+        `False` otherwise.
+    """
+    for subexpr in expr.atoms(sp.Function):
+        if sp.periodicity(subexpr, symbol) is not None:
+            return True
+    return False
+
+
+def _expr_to_amici(
+    expr: sp.Basic | sp.MatrixBase, renames: dict[str, str] | None = None
+):
+    """Convert the given sympy expression to an AMICI-compatible expression.
+
+    Replaces all symbols by plain sympy symbols with the expected
+    assumptions.
+
+    :param expr: The sympy expression to convert.
+    :param renames:
+        optional mapping from a symbol's current name to a replacement
+        name (e.g. from `resolve_reserved_symbol_renames`), applied while
+        converting.
+    :return: The AMICI-compatible sympy expression.
+    """
+    renames = renames or {}
+    replacements = {
+        s: symbol_with_assumptions(renames.get(s.name, s.name))
+        for s in expr.free_symbols
+    }
+    return expr.xreplace(replacements)

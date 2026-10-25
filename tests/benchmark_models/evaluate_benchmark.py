@@ -5,11 +5,11 @@ Aggregate computation times from different benchmarks and plot
 """
 
 import os
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
-from pathlib import Path
 
 # read benchmark results for different models
 
@@ -26,7 +26,7 @@ df = pd.concat(
         if f != outfile
     ]
 )
-df.sort_values("np", inplace=True)
+df = df.sort_values("np")
 
 df.to_csv(outfile)
 

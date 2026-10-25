@@ -8,19 +8,24 @@ import math
 import os
 import platform
 import uuid
+from collections.abc import Sequence
 from tempfile import mkdtemp
 from typing import Any
-from collections.abc import Sequence
 
 import amici
 import numpy as np
 import pandas as pd
 import petab.v1 as petab
 import sympy as sp
-from amici.gradient_check import _check_results
-from amici.petab.petab_import import import_petab_problem
-from amici.petab.simulations import EDATAS, LLH, RDATAS, SLLH, simulate_petab
-from amici.sbml_utils import (
+from amici.importers.petab.v1 import (
+    import_petab_problem,
+)
+from amici.importers.sbml.splines import (
+    AbstractSpline,
+    CubicHermiteSpline,
+    UniformGrid,
+)
+from amici.importers.sbml.utils import (
     add_compartment,
     add_inflow,
     add_parameter,
@@ -29,7 +34,15 @@ from amici.sbml_utils import (
     amici_time_symbol,
     create_sbml_model,
 )
-from amici.splines import AbstractSpline, CubicHermiteSpline, UniformGrid
+from amici.sim.sundials import run_simulation
+from amici.sim.sundials.gradient_check import _check_results
+from amici.sim.sundials.petab.v1 import (
+    EDATAS,
+    LLH,
+    RDATAS,
+    SLLH,
+    simulate_petab,
+)
 from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
 from petab.v1.models.sbml_model import SbmlModel
 
@@ -63,7 +76,7 @@ def integrate_spline(
 def create_condition_table() -> pd.DataFrame:
     """Create a PEtab condition table."""
     condition_df = pd.DataFrame({"conditionId": ["condition1"]})
-    condition_df.set_index(["conditionId"], inplace=True)
+    condition_df = condition_df.set_index(["conditionId"])
     return condition_df
 
 
@@ -74,7 +87,7 @@ def create_parameter_table(**columns) -> pd.DataFrame:
     columns.setdefault("parameterScale", "lin")
     columns.setdefault("estimate", 1)
     parameter_df = pd.DataFrame(columns)
-    parameter_df.set_index(["parameterId"], inplace=True)
+    parameter_df = parameter_df.set_index(["parameterId"])
     return parameter_df
 
 
@@ -85,7 +98,7 @@ def create_observable_table(**columns) -> pd.DataFrame:
     columns.setdefault("observableTransformation", "lin")
     columns.setdefault("noiseDistribution", "normal")
     observable_df = pd.DataFrame(columns)
-    observable_df.set_index(["observableId"], inplace=True)
+    observable_df = observable_df.set_index(["observableId"])
     return observable_df
 
 
@@ -294,7 +307,7 @@ def simulate_splines(
     use_adjoint: bool = False,
     skip_sensitivity: bool = False,
     petab_problem=None,
-    amici_model=None,
+    amici_model: amici.sim.sundials.Model = None,
     **kwargs,
 ):
     """
@@ -349,6 +362,8 @@ def simulate_splines(
     :param kwargs:
         passed to `create_petab_problem`
     """
+    from amici.sim.sundials import SensitivityMethod, SensitivityOrder
+
     # If no working directory is given, create a temporary one
     if folder is None:
         if keep_temporary:
@@ -401,21 +416,21 @@ def simulate_splines(
         amici_model = import_petab_problem(
             petab_problem,
             discard_sbml_annotations=discard_annotations,
-            model_output_dir=os.path.join(folder, f"amici_models_{model_id}"),
+            output_dir=os.path.join(folder, f"amici_models_{model_id}"),
             model_name=f"splinetest_{model_id}",
         )
 
     # Set solver options
-    solver = amici_model.getSolver()
-    solver.setRelativeTolerance(rtol)
-    solver.setAbsoluteTolerance(atol)
-    solver.setMaxSteps(maxsteps)
+    solver = amici_model.create_solver()
+    solver.set_relative_tolerance(rtol)
+    solver.set_absolute_tolerance(atol)
+    solver.set_max_steps(maxsteps)
     if not skip_sensitivity:
-        solver.setSensitivityOrder(amici.SensitivityOrder.first)
+        solver.set_sensitivity_order(SensitivityOrder.first)
         if use_adjoint:
-            solver.setSensitivityMethod(amici.SensitivityMethod.adjoint)
+            solver.set_sensitivity_method(SensitivityMethod.adjoint)
         else:
-            solver.setSensitivityMethod(amici.SensitivityMethod.forward)
+            solver.set_sensitivity_method(SensitivityMethod.forward)
 
     # Compute and set timepoints
     # NB not working, will always be equal to the observation times
@@ -428,7 +443,12 @@ def simulate_splines(
 
     if benchmark is False:
         # Simulate PEtab problem
-        res = simulate_petab(petab_problem, amici_model, solver, params_str)
+        res = simulate_petab(
+            petab_problem,
+            amici_model=amici_model,
+            solver=solver,
+            problem_parameters=params_str,
+        )
         llh, rdatas, edatas = res[LLH], res[RDATAS], res[EDATAS]
         assert len(rdatas) == 1
         llh = float(llh)
@@ -439,8 +459,8 @@ def simulate_splines(
         edata = edatas[0]
 
         # Return state/parameter ordering
-        state_ids = amici_model.getStateIds()
-        param_ids = amici_model.getParameterIds()
+        state_ids = amici_model.get_state_ids()
+        param_ids = amici_model.get_free_parameter_ids()
 
         return (
             initial_values,
@@ -462,7 +482,12 @@ def simulate_splines(
     runtimes = []
     for _ in range(int(benchmark)):
         t0 = time.perf_counter()
-        simulate_petab(petab_problem, amici_model, solver, params_str)
+        simulate_petab(
+            petab_problem,
+            amici_model=amici_model,
+            solver=solver,
+            problem_parameters=params_str,
+        )
         t_elapsed = time.perf_counter() - t0
         runtimes.append(t_elapsed)
 
@@ -728,9 +753,9 @@ def check_splines(
         and parameter_lists is not None
     ):
         for plist in parameter_lists:
-            amici_model.setParameterList(plist)
-            amici_model.setTimepoints(rdata.t)
-            rdata_partial = amici.runAmiciSimulation(amici_model, amici_solver)
+            amici_model.set_parameter_list(plist)
+            amici_model.set_timepoints(rdata.t)
+            rdata_partial = run_simulation(amici_model, amici_solver)
             assert rdata.sx[:, plist, :].shape == rdata_partial.sx.shape
             assert np.allclose(rdata.sx[:, plist, :], rdata_partial.sx)
 
@@ -922,7 +947,7 @@ def example_spline_1(
         tols = (
             dict(llh_rtol=1e-15),
             dict(llh_rtol=1e-15),
-            dict(llh_rtol=1e-15, sllh_atol=5e-8),
+            dict(llh_rtol=1e-15, sllh_atol=5e-7, x_rtol=1e-10, x_atol=5e-10),
         )
 
     return spline, params, tols

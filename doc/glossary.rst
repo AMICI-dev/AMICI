@@ -27,10 +27,20 @@ Glossary
 
     fixed parameters
         In AMICI, *fixed parameters* are parameters with respect to which no
-        sensitivities are computed. They usually correspond to experimental
-        conditions. For fixed parameters, different values can be set for
+        sensitivities are computed. The values of fixed parameters can changed.
+        "fixed" here refers to the fact that these parameters are fixed
+        in context of parameter estimation.
+        Fixed parameters encode, for example, experimental conditions.
+        For fixed parameters, different values can be set for
         :term:`pre-equilibration`, :term:`pre-simulation` and the main
         simulation. See also :term:`simulation periods`.
+        See also :term:`free parameters`.
+
+    free parameters
+        In AMICI, *free parameters* are parameters with respect to which
+        sensitivities are computed. These are typically the parameters that
+        are estimated in a parameter estimation problem.
+        See also :term:`fixed parameters`.
 
     IDAS
         `IDAS <https://computing.llnl.gov/projects/sundials/idas>`_ is a
@@ -92,6 +102,9 @@ Glossary
         periods, but different sets of :term:`fixed parameters` (:math:`k`) can
         be specified for each period, except for post-equilibration, which
         always uses the fixed parameters of the main simulation period.
+
+        For SBML models, initial assignments and initial values of event
+        triggers are only applied once at the start of the first period.
 
     steady state
         In AMICI, a model is considered to be at steady state if the time

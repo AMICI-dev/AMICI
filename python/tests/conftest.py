@@ -2,17 +2,19 @@
 
 import copy
 import importlib
+import os
 import sys
+from pathlib import Path
 
 import amici
 import pytest
-from pathlib import Path
+from amici import MeasurementChannel
 from amici.testing import TemporaryDirectoryWinSafe as TemporaryDirectory
-
 
 pytest_plugins = ["amici.testing.fixtures"]
 
-EXAMPLES_DIR = Path(__file__).parents[2] / "doc" / "examples"
+REPO_ROOT = Path(__file__).parents[2]
+EXAMPLES_DIR = REPO_ROOT / "doc" / "examples"
 TEST_DIR = Path(__file__).parent
 MODEL_STEADYSTATE_SCALED_XML = (
     EXAMPLES_DIR / "getting_started" / "model_steadystate_scaled.xml"
@@ -21,6 +23,8 @@ MODEL_PRESIMULATION_XML = (
     EXAMPLES_DIR / "example_presimulation" / "model_presimulation.xml"
 )
 
+os.environ.setdefault("AMICI_MODELS_ROOT", str(REPO_ROOT.absolute()))
+
 
 @pytest.fixture(scope="session")
 def sbml_example_presimulation_module():
@@ -28,10 +32,10 @@ def sbml_example_presimulation_module():
 
     sbml_importer = amici.SbmlImporter(MODEL_PRESIMULATION_XML)
 
-    constant_parameters = ["DRUG_0", "KIN_0"]
+    fixed_parameters = ["DRUG_0", "KIN_0"]
 
-    observables = amici.assignmentRules2observables(
-        sbml_importer.sbml,  # the libsbml model object
+    observables = amici.assignment_rules_to_observables(
+        sbml_importer.sbml_model,  # the libsbml model object
         filter_function=lambda variable: variable.getName() == "pPROT_obs",
     )
     module_name = "test_model_presimulation"
@@ -41,8 +45,8 @@ def sbml_example_presimulation_module():
             model_name=module_name,
             output_dir=outdir,
             verbose=False,
-            observables=observables,
-            constant_parameters=constant_parameters,
+            observation_model=observables,
+            fixed_parameters=fixed_parameters,
         )
 
         yield amici.import_model_module(
@@ -54,9 +58,9 @@ def sbml_example_presimulation_module():
 def pysb_example_presimulation_module():
     """PySB example_presimulation model module fixture"""
     pysb = pytest.importorskip("pysb")
-    from amici.pysb_import import pysb2amici
+    from amici.importers.pysb import pysb2amici
 
-    constant_parameters = ["DRUG_0", "KIN_0"]
+    fixed_parameters = ["DRUG_0", "KIN_0"]
 
     pysb.SelfExporter.cleanup()  # reset pysb
     pysb.SelfExporter.do_export = True
@@ -78,8 +82,8 @@ def pysb_example_presimulation_module():
             model,
             outdir,
             verbose=True,
-            observables=["pPROT_obs"],
-            constant_parameters=constant_parameters,
+            observation_model=[MeasurementChannel("pPROT_obs")],
+            fixed_parameters=fixed_parameters,
         )
 
         yield amici.import_model_module(model.name, outdir)
@@ -98,3 +102,37 @@ def model_units_module():
         yield amici.import_model_module(
             module_name=module_name, module_path=outdir
         )
+
+
+@pytest.fixture(scope="session")
+def data_demartino2014():
+    """Get tests from DeMartino2014 Suppl. Material"""
+    import gzip
+
+    import pooch
+
+    # stoichiometric matrix
+    data = gzip.GzipFile(
+        pooch.retrieve(
+            "https://github.com/AMICI-dev/AMICI/files/11430971/DeMartinoDe2014_test-ecoli.dat.gz",
+            known_hash="md5:899873f8f1c413d13c3f8e94c1496b7e",
+        )
+    )
+    S = [
+        int(item)
+        for sl in [
+            entry.decode("ascii").strip().split("\t")
+            for entry in data.readlines()
+        ]
+        for item in sl
+    ]
+
+    # metabolite / row names
+    with open(
+        pooch.retrieve(
+            "https://github.com/AMICI-dev/AMICI/files/11430970/test-ecoli-met.txt",
+            known_hash="md5:d71e711a3655311390b38d00dcd6aa7f",
+        )
+    ) as f:
+        row_names = [entry.strip() for entry in f.readlines()]
+    return S, row_names

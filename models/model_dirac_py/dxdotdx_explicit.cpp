@@ -41,24 +41,25 @@ void dxdotdx_explicit_rowvals_model_dirac_py(SUNMatrixWrapper &dxdotdx_explicit)
 
 #include "amici/symbolic_functions.h"
 #include "amici/defines.h"
-#include "sundials/sundials_types.h"
 
-#include <gsl/gsl-lite.hpp>
 #include <algorithm>
-
-#include "x.h"
-#include "p.h"
-#include "h.h"
-#include "w.h"
-#include "dxdotdx_explicit.h"
+#include <sundials/sundials_types.h>
+#include <gsl/gsl-lite.hpp>
 
 namespace amici {
 namespace model_model_dirac_py {
 
 void dxdotdx_explicit_model_dirac_py(realtype *dxdotdx_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w){
-    ddx1dt_dx1 = -p1;  // dxdotdx_explicit[0]
-    ddx2dt_dx1 = p3;  // dxdotdx_explicit[1]
-    ddx2dt_dx2 = -p4;  // dxdotdx_explicit[2]
+    const realtype p1_ = p[0];
+    const realtype p3_ = p[2];
+    const realtype p4_ = p[3];
+
+    realtype &ddx1dt_dx1_ = dxdotdx_explicit[0];
+    realtype &ddx2dt_dx1_ = dxdotdx_explicit[1];
+    realtype &ddx2dt_dx2_ = dxdotdx_explicit[2];
+    ddx1dt_dx1_ = -p1_;  // dxdotdx_explicit[0]
+    ddx2dt_dx1_ = p3_;  // dxdotdx_explicit[1]
+    ddx2dt_dx2_ = -p4_;  // dxdotdx_explicit[2]
 }
 
 } // namespace model_model_dirac_py

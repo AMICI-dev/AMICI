@@ -1,17 +1,20 @@
 %define MODULEIMPORT
 "
 import amici
+import amici.sim.sundials
 import datetime
 import importlib.util
 import os
 import sysconfig
+import warnings
 from pathlib import Path
 
 ext_suffix = sysconfig.get_config_var('EXT_SUFFIX')
+extension_path = Path(__file__).parent / f'_model_robertson_py{ext_suffix}'
 _model_robertson_py = amici._module_from_path(
     'model_robertson_py._model_robertson_py' if __package__ or '.' in __name__
     else '_model_robertson_py',
-    Path(__file__).parent / f'_model_robertson_py{ext_suffix}',
+    extension_path,
 )
 
 def _get_import_time():
@@ -23,18 +26,43 @@ if t_imported < t_modified:
     t_imp_str = datetime.datetime.fromtimestamp(t_imported).isoformat()
     t_mod_str = datetime.datetime.fromtimestamp(t_modified).isoformat()
     module_path = Path(__file__).resolve()
-    raise RuntimeError(
+    warnings.warn(
         f'Cannot import extension for model_robertson_py from '
         f'{module_path}, because an extension in the same location '
         f'has already been imported, but the file was modified on '
         f'disk. \\nImported at {t_imp_str}\\nModified at {t_mod_str}.\\n'
         'Import the module with a different name or restart the '
-        'Python kernel.'
+        'Python kernel. '
+        'This can happen when the files live on a network share and '
+        'the machines\\' system clocks are not synchronized; in that case '
+        'this warning can be ignored.', RuntimeWarning, stacklevel=1
     )
 "
 %enddef
 
 %module(package="model_robertson_py",moduleimport=MODULEIMPORT) model_robertson_py
+
+// store swig version
+%constant int SWIG_VERSION_MAJOR = (SWIG_VERSION >> 16);
+%constant int SWIG_VERSION_MINOR = ((SWIG_VERSION >> 8) & 0xff);
+%constant int SWIG_VERSION_PATCH = (SWIG_VERSION & 0xff);
+
+%pythoncode %{
+# SWIG version used to build the model extension as `(major, minor, patch)`
+_SWIG_VERSION = (SWIG_VERSION_MAJOR, SWIG_VERSION_MINOR, SWIG_VERSION_PATCH)
+
+if (amici_swig := amici.sim.sundials._SWIG_VERSION) != (model_swig := _SWIG_VERSION):
+    import warnings
+    warnings.warn(
+        f"SWIG version mismatch between amici ({amici_swig}) and model "
+        f"({model_swig}). This may lead to unexpected behavior. "
+        "In that case, please recompile the model with swig=="
+        f"{amici_swig[0]}.{amici_swig[1]}.{amici_swig[2]} or rebuild amici "
+        f"with swig=={model_swig[0]}.{model_swig[1]}.{model_swig[2]}.",
+        RuntimeWarning,
+        stacklevel=2,
+    )
+%}
 
 %pythoncode %{
 # the model-package __init__.py module (will be set during import)
@@ -56,7 +84,7 @@ using namespace amici;
 // store the time a module was imported
 %{
 #include <chrono>
-static std::chrono::time_point<std::chrono::system_clock> _module_import_time;
+static std::chrono::time_point<std::chrono::system_clock> _module_import_time = std::chrono::system_clock::now();
 
 static double _get_import_time() {
     auto epoch = _module_import_time.time_since_epoch();
@@ -67,12 +95,14 @@ static double _get_import_time() {
 static double _get_import_time();
 
 %init %{
-    _module_import_time = std::chrono::system_clock::now();
+    // NOTE: from SWIG 4.4.0 onwards, %init code is executed every time the
+    // module is executed - not only on first import
+    // This code ends up in `SWIG_mod_exec`.
 %}
 
 
 // Make model module accessible from the model
-%feature("pythonappend") amici::generic_model::getModel %{
+%feature("pythonappend") amici::generic_model::get_model %{
     if '.' in __name__:
         val.module = _model_module
 %}

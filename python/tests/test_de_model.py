@@ -1,13 +1,116 @@
+import libsbml
+import pytest
 import sympy as sp
-from amici.de_model_components import Event
-from amici.import_utils import amici_time_symbol
+from amici import MeasurementChannel, SbmlImporter
+from amici._symbolic.de_model_components import Event, FreeParameter
+from amici.importers.antimony import antimony2sbml
+from amici.importers.sbml.splines import CubicHermiteSpline
+from amici.importers.utils import amici_time_symbol
 from amici.testing import skip_on_valgrind
+
+
+def _build_spline_model(*, with_spline_dependent_event: bool):
+    """Build a minimal `DEModel` with a single state and a single spline,
+    optionally with an event whose trigger depends on the spline's value.
+
+    Kept intentionally tiny and built via `_build_ode_model` directly (no
+    codegen/compilation) so these tests run fast.
+    """
+    event_line = (
+        "e1: at u > 1: x = x + 1;\n" if with_spline_dependent_event else ""
+    )
+    ant_str = rf"""
+    model spline_model
+        p1 = 1;
+        sp1 = 0;
+        sp2 = 2;
+        species x = 1;
+        x' = -p1*x + u;
+        var u = 0;
+        {event_line}
+    end
+    """
+    sbml_str = antimony2sbml(ant_str)
+    sbml_model = libsbml.SBMLReader().readSBMLFromString(sbml_str).getModel()
+
+    spline = CubicHermiteSpline(
+        sbml_id="u",
+        evaluate_at=amici_time_symbol,
+        nodes=[0, 10],
+        values_at_nodes=[sp.Symbol("sp1"), sp.Symbol("sp2")],
+        extrapolate=("constant", "constant"),
+    )
+    spline.add_to_sbml_model(sbml_model, auto_add=False)
+
+    importer = SbmlImporter(sbml_model)
+    model = importer._build_ode_model(
+        observation_model=[MeasurementChannel(id_="obs_x", formula="x")],
+    )
+    model.generate_basic_variables()
+    return model
+
+
+@skip_on_valgrind
+def test_spline_static_indices_and_substitution():
+    """Splines occur in the model as `AmiciSpline`/`AmiciSplineSensitivity`
+    sympy `Function` calls, which must be substituted for `spl`/`sspl`
+    symbols so `static_indices()` can classify spline-dependent rows as
+    dynamic without falling back to string matching (see the FIXMEs this
+    replaces)."""
+    model = _build_spline_model(with_spline_dependent_event=False)
+
+    # the spline's own row in `w` is time-varying and must not be static
+    w = model.eq("w")
+    static_w = set(model.static_indices("w"))
+    spline_row = next(
+        i for i, sym in enumerate(model.sym("w")) if str(sym) == "u"
+    )
+    assert spline_row not in static_w
+
+    # no raw spline Function calls should survive substitution anywhere
+    for name in ("w", "dwdx", "dwdw", "dwdp"):
+        eq = model.eq(name)
+        for entry in eq:
+            assert "AmiciSpline" not in str(entry)
+
+    # dwdp's entry for the spline row references the sensitivity symbols
+    assert set(model.sym("sspl")) & w[spline_row].free_symbols == set()
+    dwdp_spline_row = model.eq("dwdp")[spline_row, :]
+    assert set(model.sym("sspl")) & dwdp_spline_row.free_symbols
+
+
+@skip_on_valgrind
+def test_spline_derivative_in_event_not_supported():
+    """`AmiciSplineDerivative` (a spline's time derivative) has no C++
+    codegen support yet. A model where an event trigger depends on a
+    time-varying spline must fail loudly at import time instead of
+    silently generating C++ that references an undefined `dspl_N`."""
+    model = _build_spline_model(with_spline_dependent_event=True)
+
+    with pytest.raises(NotImplementedError, match="time derivative"):
+        model.eq("drootdt_total")
+
+
+@skip_on_valgrind
+def test_model_quantity_reserved_name():
+    """`t` is reserved for ModelQuantity symbols: it denotes simulation time
+    symbolically, so importers must rename any model entity of that name
+    before it reaches the model. Names that are merely unsafe in generated
+    code -- amici's fixed array-parameter names (x, p, k, h, w, y), C++
+    keywords/macros (e.g. NULL), Python keywords -- are handled by each
+    backend's code printer mangling every identifier instead, and must not
+    be rejected here."""
+    for name in ("NULL", "x", "p", "k", "h", "w", "y", "class"):
+        FreeParameter(symbol=sp.Symbol(name), name=name, value=1.0)
+
+    with pytest.raises(ValueError, match="Cannot add"):
+        FreeParameter(symbol=sp.Symbol("t"), name="t", value=1.0)
 
 
 @skip_on_valgrind
 def test_event_trigger_time():
     e = Event(
-        identifier=sp.Symbol("event1"),
+        symbol=sp.Symbol("event1"),
         name="event name",
         value=amici_time_symbol - 10,
         assignments=sp.Float(1),
@@ -18,7 +121,7 @@ def test_event_trigger_time():
 
     # fixed, but multiple timepoints - not (yet) supported
     e = Event(
-        identifier=sp.Symbol("event1"),
+        symbol=sp.Symbol("event1"),
         name="event name",
         value=sp.sin(amici_time_symbol),
         assignments=sp.Float(1),
@@ -27,7 +130,7 @@ def test_event_trigger_time():
     assert e.triggers_at_fixed_timepoint() is False
 
     e = Event(
-        identifier=sp.Symbol("event1"),
+        symbol=sp.Symbol("event1"),
         name="event name",
         value=amici_time_symbol / 2,
         assignments=sp.Float(1),
@@ -38,10 +141,140 @@ def test_event_trigger_time():
 
     # parameter-dependent triggers - not (yet) supported
     e = Event(
-        identifier=sp.Symbol("event1"),
+        symbol=sp.Symbol("event1"),
         name="event name",
         value=amici_time_symbol - sp.Symbol("delay"),
         assignments=sp.Float(1),
         use_values_from_trigger_time=False,
     )
     assert e.triggers_at_fixed_timepoint() is False
+
+
+def _build_event_model(trigger: str):
+    """Build a minimal one-state, one-observable `DEModel` with a single
+    event using the given Antimony trigger expression."""
+    ant_str = rf"""
+    model m
+        compartment_ = 1;
+        species x = 1;
+        y = 0;
+        p1 = 10;
+        x' = -x;
+        at ({trigger}): y = y + 1;
+    end
+    """
+    sbml_str = antimony2sbml(ant_str)
+    sbml_model = libsbml.SBMLReader().readSBMLFromString(sbml_str).getModel()
+    model = SbmlImporter(sbml_model)._build_ode_model(
+        observation_model=[MeasurementChannel(id_="obs_y", formula="y")],
+    )
+    model.generate_basic_variables()
+    return model
+
+
+@skip_on_valgrind
+def test_event_trigger_time_state_dependence_stays_implicit():
+    """A trigger comparing `time` directly to a state (`time >= x`) is
+    solved by plain `sympy.solve` to a state-dependent expression
+    (`solve(t - x, t) == [x]`) -- `x` is a dynamic state, not a static
+    parameter, so this must not make the event count as having an explicit
+    (precomputable) trigger time anywhere. Before the fix,
+    `DEModel._reorder_events` (physical event/Heaviside-array order) and
+    the JAX exporter's `iroot`/`eroot`/`ih`/`eh` split (root-detection
+    order) disagreed on this, permuting the two orderings relative to each
+    other (AMICI#3286)."""
+    model = _build_event_model("time >= x")
+    (event,) = model.events()
+
+    # the trigger time *is* solved, but still references the state `x`
+    (t_root,) = event.get_trigger_times()
+    assert model.sym("x")[0] in t_root.free_symbols
+
+    assert model.num_events_solver() == 1
+    assert len(model.eq("iroot")) == 1
+    assert len(model.eq("eroot")) == 0
+    assert model.sym("ih").shape == (1, 1)
+    assert model.sym("eh").shape == (0, 0)
+    assert model.get_explicit_roots() == []
+    assert len(model.get_implicit_roots()) == 1
+
+
+@skip_on_valgrind
+def test_event_trigger_time_purely_static_is_explicit():
+    """The static-parameter counterpart of the above: a trigger comparing
+    `time` to a genuine (fixed) parameter must be classified explicit
+    everywhere, consistently."""
+    model = _build_event_model("time >= p1")
+    (event,) = model.events()
+
+    assert model.num_events_solver() == 0
+    assert len(model.eq("iroot")) == 0
+    assert len(model.eq("eroot")) == 1
+    assert model.sym("ih").shape == (0, 0)
+    assert model.sym("eh").shape == (1, 1)
+    assert len(model.get_explicit_roots()) == 1
+    assert model.get_implicit_roots() == []
+
+
+@skip_on_valgrind
+def test_event_trigger_time_constant_state_is_explicit():
+    """A trigger comparing `time` to a state with zero time derivative
+    -- here, the parameter `y` that is converted to a state because it is
+    the target of an event assignment -- has an explicit trigger time that
+    only changes at events, so it does not require root-finding
+    (AMICI#3365)."""
+    model = _build_event_model("time >= y")
+    (event,) = model.events()
+
+    (y,) = (s for s in model.sym("x") if s.name == "y")
+    assert model.constant_state_symbols == {y}
+    assert event.get_trigger_times() == {y}
+
+    assert model.num_events_solver() == 0
+    assert len(model.eq("iroot")) == 0
+    assert len(model.eq("eroot")) == 1
+    assert model.sym("ih").shape == (0, 0)
+    assert model.sym("eh").shape == (1, 1)
+    assert model.get_explicit_roots() == [y]
+    assert model.get_implicit_roots() == []
+
+
+@skip_on_valgrind
+def test_event_ordering_consistent_across_classifications():
+    """Direct regression test for AMICI#3286: the physical event order
+    (`DEModel._reorder_events`, used for `h`/`event_initial_values`/
+    `deltax`) must never disagree with the order `iroot`++`eroot`
+    reconstructs (used for the JAX backend's root-detection vector) --
+    otherwise root crossings get attributed to the wrong Heaviside slot.
+    Uses the issue's own reproduction shape: a state-vs-time trigger
+    (solvable but not static) alongside a periodic, time-only trigger
+    (genuinely unsolvable, agreeing under any criterion)."""
+    ant_str = r"""
+    model m
+        compartment_ = 1;
+        species x1 = 20;
+        y = 0;
+        x1' = -x1;
+        ev_state: at (time >= x1): y = y + 1;
+        ev_periodic: at (sin(time) > 0.5): y = y + 2;
+    end
+    """
+    sbml_str = antimony2sbml(ant_str)
+    sbml_model = libsbml.SBMLReader().readSBMLFromString(sbml_str).getModel()
+    model = SbmlImporter(sbml_model)._build_ode_model(
+        observation_model=[MeasurementChannel(id_="obs_y", formula="y")],
+    )
+    model.generate_basic_variables()
+
+    static_syms = model.static_symbols
+    iroot_events = [
+        e
+        for e in model.events()
+        if not e.has_explicit_trigger_times(static_syms)
+    ]
+    eroot_events = [
+        e for e in model.events() if e.has_explicit_trigger_times(static_syms)
+    ]
+    assert [e.get_sym() for e in iroot_events + eroot_events] == [
+        e.get_sym() for e in model.events()
+    ]

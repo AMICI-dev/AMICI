@@ -25,6 +25,7 @@ class Logger {
     Logger() = default;
     /**
      * @brief Add a log entry
+     *
      * @param severity Severity level
      * @param identifier Short identifier for the logged event
      * @param message A more detailed message
@@ -46,6 +47,7 @@ class Logger {
     // see https://github.com/swig/swig/issues/1643
     /**
      * @brief Add a log entry with printf-like message formatting
+     *
      * @param severity Severity level
      * @param identifier Short identifier for the logged event
      * @param format printf format string
@@ -70,6 +72,7 @@ struct LogItem {
 
     /**
      * @brief Construct a LogItem
+     *
      * @param severity
      * @param identifier
      * @param message

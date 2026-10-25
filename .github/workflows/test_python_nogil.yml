@@ -9,18 +9,20 @@ on:
 jobs:
   nogil-tests:
     name: Python nogil
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     env:
       AMICI_SKIP_CMAKE_TESTS: "TRUE"
       AMICI_PARALLEL_COMPILE: ""
     steps:
+    - uses: dweindl/gha-runner-diagnostics@v1
+
     - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
-    - name: Set up Python 3.13 free-threaded
-      uses: actions/setup-python@v5
+    - name: Set up free-threaded Python
+      uses: actions/setup-python@v7
       with:
-        python-version: '3.13'
+        python-version: '3.14'
         freethreaded: true
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 20
     - name: Install apt dependencies
@@ -29,10 +31,11 @@ jobs:
       run: |
         python3 -m venv venv --clear
         source venv/bin/activate
-        pip install --upgrade pip wheel
-        pip install numpy sympy cmake-build-extension==0.6.0 swig cython pkgconfig
+        pip install --upgrade pip
+        pip install --group python/sdist/pyproject.toml:build
         AMICI_BUILD_TEMP="python/sdist/build/temp" \
-          pip install --verbose -e python/sdist[test] --no-build-isolation
+          pip install --verbose --group python/sdist/pyproject.toml:test \
+            -e python/sdist --no-build-isolation
     - run: source venv/bin/activate && pip3 install "sympy>1.12"
     - name: Python tests
       env:

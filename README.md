@@ -4,7 +4,7 @@
 
 ## About
 
-AMICI provides a multi-language (Python, C++, Matlab) interface for the
+AMICI provides a Python and C++ interface for the
 [SUNDIALS](https://computing.llnl.gov/projects/sundials/) solvers
 [CVODES](https://computing.llnl.gov/projects/sundials/cvodes)
 (for ordinary differential equations) and
@@ -12,13 +12,12 @@ AMICI provides a multi-language (Python, C++, Matlab) interface for the
 (for algebraic differential equations). AMICI allows the user to read
 differential equation models specified as [SBML](http://sbml.org/)
 or [PySB](http://pysb.org/)
-and automatically compiles such models into Python modules, C++ libraries or
-Matlab `.mex` simulation files.
+and automatically compiles such models into Python modules or C++ libraries.
 The generated model expressions along with the corresponding sensitivity
 equations are transformed into native C++ code which allows for a significantly
 faster simulation.
 
-**NOTE: The MATLAB interface is no longer supported and will be removed soon.**
+**NOTE: The former MATLAB interface has been removed in AMICI 1.0.**
 
 Beyond forward integration, the compiled simulation file also allows for
 forward sensitivity analysis, steady state sensitivity analysis and
@@ -53,7 +52,7 @@ constrained optimization problems.
 * Generation of C++ code for model simulation and sensitivity
   computation
 * Access to and high customizability of CVODES and IDAS solver
-* Python, C++, Matlab interface
+* Python and C++ interface
 * Sensitivity analysis
   * forward
   * steady state
@@ -66,11 +65,10 @@ constrained optimization problems.
 ## Interfaces & workflow
 
 The AMICI workflow starts with importing a model from either
-[SBML](http://sbml.org/) (Matlab, Python), [PySB](http://pysb.org/) (Python),
-or a Matlab definition of the model (Matlab-only). From this input,
-all equations for model simulation
+[SBML](http://sbml.org/) (Python) or [PySB](http://pysb.org/) (Python).
+From this input, all equations for model simulation
 are derived symbolically and C++ code is generated. This code is then
-compiled into a C++ library, a Python module, or a Matlab `.mex` file and
+compiled into a plain C++ library or a Python module, and
 is then used for model simulation.
 
 ![AMICI workflow](https://raw.githubusercontent.com/AMICI-dev/AMICI/main/doc/gfx/amici_workflow.png)
@@ -79,18 +77,14 @@ is then used for model simulation.
 
 The AMICI source code is available at https://github.com/AMICI-dev/AMICI/.
 To install AMICI, first read the installation instructions for
-[Python](https://amici.readthedocs.io/en/latest/python_installation.html),
-[C++](https://amici.readthedocs.io/en/latest/cpp_installation.html) or
-[Matlab](https://amici.readthedocs.io/en/latest/matlab_installation.html).
+[Python](https://amici.readthedocs.io/en/latest/python_installation.html) or
+[C++](https://amici.readthedocs.io/en/latest/cpp_installation.html).
 There are also instructions for using AMICI inside
 [containers](https://github.com/AMICI-dev/AMICI/tree/main/container).
 
 To get you started with Python-AMICI, the best way might be checking out this
 [Jupyter notebook](https://github.com/AMICI-dev/AMICI/blob/main/doc/examples/getting_started/GettingStarted.ipynb)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/AMICI-dev/AMICI/main?labpath=doc%2Fexamples%2Fgetting_started%2FGettingStarted.ipynb).
-
-To get started with Matlab-AMICI, various examples are available
-in [matlab/examples/](https://github.com/AMICI-dev/AMICI/tree/main/matlab/examples).
 
 Comprehensive documentation is available at
 [https://amici.readthedocs.io/en/latest/](https://amici.readthedocs.io/en/latest/).

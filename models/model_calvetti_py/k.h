@@ -1,6 +1,0 @@
-#define V1ss k[0]
-#define R1ss k[1]
-#define V2ss k[2]
-#define R2ss k[3]
-#define V3ss k[4]
-#define R3ss k[5]

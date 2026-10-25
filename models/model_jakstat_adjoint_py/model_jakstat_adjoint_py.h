@@ -14,21 +14,23 @@ class Solver;
 
 namespace model_model_jakstat_adjoint_py {
 
-extern std::array<const char*, 17> parameterNames;
-extern std::array<const char*, 2> fixedParameterNames;
-extern std::array<const char*, 9> stateNames;
-extern std::array<const char*, 3> observableNames;
-extern std::array<const ObservableScaling, 3> observableScalings;
-extern std::array<const char*, 2> expressionNames;
-extern std::array<const char*, 17> parameterIds;
-extern std::array<const char*, 2> fixedParameterIds;
-extern std::array<const char*, 9> stateIds;
-extern std::array<const char*, 3> observableIds;
-extern std::array<const char*, 2> expressionIds;
-extern std::array<int, 9> stateIdxsSolver;
+extern const std::array<std::string_view const, 17> free_parameter_names;
+extern const std::array<std::string_view const, 2> fixed_parameter_names;
+extern const std::array<std::string_view const, 9> state_names;
+extern const std::array<std::string_view const, 9> state_names_solver;
+extern const std::array<std::string_view const, 3> observable_names;
+extern std::array<const ObservableScaling, 3> observable_scalings;
+extern const std::array<std::string_view const, 1> expression_names;
+extern const std::array<std::string_view const, 17> free_parameter_ids;
+extern const std::array<std::string_view const, 2> fixed_parameter_ids;
+extern const std::array<std::string_view const, 9> state_ids;
+extern const std::array<std::string_view const, 9> state_ids_solver;
+extern const std::array<std::string_view const, 3> observable_ids;
+extern const std::array<std::string_view const, 1> expression_ids;
+extern std::array<int, 9> state_idxs_solver;
 
 extern void Jy_model_jakstat_adjoint_py(realtype *Jy, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my);
-extern void dJydsigma_model_jakstat_adjoint_py(realtype *dJydsigma, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my);
+extern void dJydsigmay_model_jakstat_adjoint_py(realtype *dJydsigmay, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my);
 extern void dJydy_model_jakstat_adjoint_py(realtype *dJydy, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my);
 extern void dJydy_colptrs_model_jakstat_adjoint_py(SUNMatrixWrapper &colptrs, int index);
 extern void dJydy_rowvals_model_jakstat_adjoint_py(SUNMatrixWrapper &rowvals, int index);
@@ -57,7 +59,7 @@ extern void dxdotdp_explicit_rowvals_model_jakstat_adjoint_py(SUNMatrixWrapper &
 extern void dxdotdx_explicit_model_jakstat_adjoint_py(realtype *dxdotdx_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
 extern void dxdotdx_explicit_colptrs_model_jakstat_adjoint_py(SUNMatrixWrapper &colptrs);
 extern void dxdotdx_explicit_rowvals_model_jakstat_adjoint_py(SUNMatrixWrapper &rowvals);
-extern void dydx_model_jakstat_adjoint_py(realtype *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx);
+extern void dydx_model_jakstat_adjoint_py(realtype *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
 extern void dydp_model_jakstat_adjoint_py(realtype *dydp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *w, const realtype *tcl, const realtype *dtcldp, const realtype *spl, const realtype *sspl);
 
 
@@ -71,10 +73,14 @@ extern void dsigmaydp_model_jakstat_adjoint_py(realtype *dsigmaydp, const realty
 extern void w_model_jakstat_adjoint_py(realtype *w, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *tcl, const realtype *spl, bool include_static);
 extern void x0_model_jakstat_adjoint_py(realtype *x0, const realtype t, const realtype *p, const realtype *k);
 
-
+extern void sx0_model_jakstat_adjoint_py(realtype *sx0, const realtype t, const realtype *x, const realtype *p, const realtype *k, const int ip);
 
 extern void xdot_model_jakstat_adjoint_py(realtype *xdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
 extern void y_model_jakstat_adjoint_py(realtype *y, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
+
+
+
+
 
 
 
@@ -110,48 +116,46 @@ class Model_model_jakstat_adjoint_py : public amici::Model_ODE {
      */
     Model_model_jakstat_adjoint_py()
         : amici::Model_ODE(
-              amici::ModelDimensions(
-                  9,                            // nx_rdata
-                  9,                        // nxtrue_rdata
-                  9,                           // nx_solver
-                  9,                       // nxtrue_solver
-                  0,                    // nx_solver_reinit
-                  17,                                  // np
-                  2,                                  // nk
-                  3,                                  // ny
-                  3,                              // nytrue
-                  0,                                  // nz
-                  0,                              // nztrue
-                  0,                              // nevent
-                  0,                       // nevent_solver
-                  1,                                // nspl
-                  1,                          // nobjective
-                  2,                                  // nw
-                  0,                               // ndwdx
-                  5,                               // ndwdp
-                  0,                               // ndwdw
-                  2,                            // ndxdotdw
-                  std::vector<int>{1, 1, 1},                              // ndjydy
-                  0,                    // ndxrdatadxsolver
-                  0,                        // ndxrdatadtcl
-                  0,                        // ndtotal_cldx_rdata
-                  0,                                       // nnz
-                  9,                                 // ubw
-                  9,                                 // lbw
-                  true,                                    // pythonGenerated
-                  13,                   // ndxdotdp_explicit
-                  18,                   // ndxdotdx_explicit
-                  0                    // w_recursion_depth
-              ),
+              amici::ModelDimensions{
+                  .nx_rdata = 9,
+                  .nxtrue_rdata = 9,
+                  .nx_solver = 9,
+                  .nxtrue_solver = 9,
+                  .nx_reinit = 0,
+                  .np = 17,
+                  .nk = 2,
+                  .ny = 3,
+                  .nytrue = 3,
+                  .nz = 0,
+                  .nztrue = 0,
+                  .ne = 0,
+                  .ne_solver = 0,
+                  .nspl = 1,
+                  .nw = 1,
+                  .ndwdx = 0,
+                  .ndwdp = 5,
+                  .ndwdw = 0,
+                  .ndxdotdw = 2,
+                  .ndJydy = std::vector<int>{1, 1, 1},
+                  .ndxrdatadxsolver = 0,
+                  .ndxrdatadtcl = 0,
+                  .ndtotal_cldx_rdata = 0,
+                  .nnz = 0,
+                  .nJ = 1,
+                  .ubw = 9,
+                  .lbw = 9,
+                  .ndxdotdp_explicit = 13,
+                  .ndxdotdx_explicit = 18,
+                  .w_recursion_depth = 0,
+              },
               amici::SimulationParameters(
                   std::vector<realtype>{1.3999999999999999, 0.45000000000000001}, // fixedParameters
-                  std::vector<realtype>{3.9810717055349727, 1000.0, 0.11220184543019635, 0.98287887300003218, 1.0, 0.0015848931924611134, 0.54954087385762451, 0.84139514164519513, 0.38904514499428061, 9.9999999999999991e-6, 0.18197008586099833, 0.22908676527677729, 0.77624711662869172, 1.0641430182243161, 0.31622776601683794, 1.0, 0.31622776601683794}        // dynamic parameters
+                  std::vector<realtype>{3.9810717055349727, 1000.0, 0.11220184543019635, 0.98287887300003218, 1.0, 0.0015848931924611134, 0.54954087385762451, 0.84139514164519513, 0.38904514499428061, 9.9999999999999991e-6, 0.18197008586099833, 0.22908676527677729, 0.77624711662869172, 1.0641430182243161, 0.31622776601683794, 1.0, 0.31622776601683794}        // free parameters
               ),
               amici::SecondOrderMode::none,                                  // o2mode
               std::vector<realtype>{1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0},   // idlist
               std::vector<int>{},               // z2events
-              std::vector<Event>{}, // events
-              {}               // state-independent events
+              std::vector<Event>{} // events
           ) {
           }
 
@@ -174,33 +178,45 @@ class Model_model_jakstat_adjoint_py : public amici::Model_ODE {
     void fJz(realtype *Jz, const int iz, const realtype *p, const realtype *k, const realtype *z, const realtype *sigmaz, const realtype *mz) override {}
 
 
-    void fdJrzdsigma(realtype *dJrzdsigma, const int iz, const realtype *p, const realtype *k, const realtype *rz, const realtype *sigmaz) override {}
+    void fdJrzdsigmaz(realtype *dJrzdsigmaz, const int iz, const realtype *p, const realtype *k, const realtype *rz, const realtype *sigmaz) override {}
 
 
-    void fdJrzdz(realtype *dJrzdz, const int iz, const realtype *p, const realtype *k, const realtype *rz, const realtype *sigmaz) override {}
+    void fdJrzdrz(realtype *dJrzdrz, const int iz, const realtype *p, const realtype *k, const realtype *rz, const realtype *sigmaz) override {}
 
 
-    void fdJydsigma(realtype *dJydsigma, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my) override {
-        dJydsigma_model_jakstat_adjoint_py(dJydsigma, iy, p, k, y, sigmay, my);
+    void fdJydsigmay(realtype *dJydsigmay, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my) override {
+        dJydsigmay_model_jakstat_adjoint_py(dJydsigmay, iy, p, k, y, sigmay, my);
     }
 
 
-    void fdJzdsigma(realtype *dJzdsigma, const int iz, const realtype *p, const realtype *k, const realtype *z, const realtype *sigmaz, const realtype *mz) override {}
+    void fdJzdsigmaz(realtype *dJzdsigmaz, const int iz, const realtype *p, const realtype *k, const realtype *z, const realtype *sigmaz, const realtype *mz) override {}
 
 
     void fdJzdz(realtype *dJzdz, const int iz, const realtype *p, const realtype *k, const realtype *z, const realtype *sigmaz, const double *mz) override {}
 
 
-    void fdeltax(double *deltax, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *x_old) override {}
+    void fdeltax(double *deltax, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ie, const realtype *xdot, const realtype *xdot_eval, const realtype *x_eval) override {}
 
 
-    void fdeltasx(realtype *deltasx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *sx, const realtype *stau, const realtype *tcl, const realtype *x_old) override {}
+    void fdeltasx(realtype *deltasx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const int ip, const int ie, const realtype *xdot, const realtype *xdot_eval, const realtype *xdot_pre, const realtype *sx, const realtype *sx_eval, const realtype *stau, const realtype *tcl, const realtype *x_eval) override {}
 
 
-    void fdeltaxB(realtype *deltaxB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *x_old, const realtype *xB, const realtype *tcl) override {}
+    void fdeltaxB(realtype *deltaxB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const int ie, const realtype *x_eval, const realtype *xB, const realtype *tcl) override {}
 
 
-    void fdeltaqB(realtype *deltaqB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *x_old, const realtype *xB) override {}
+    void fdeltaxB_at_trigger(realtype *deltaxB_at_trigger, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const int ie, const realtype *x_eval, const realtype *xB, const realtype *tcl) override {}
+
+
+    void fstauB(realtype *stauB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const int ie, const realtype *xdot, const realtype *xdot_eval, const realtype *xdot_pre, const realtype *x_eval, const realtype *xB, const realtype *tcl) override {}
+
+
+    void fdeltaqB(realtype *deltaqB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const int ip, const int ie, const realtype *x_eval, const realtype *xB) override {}
+
+
+    void fdtaudx(realtype *dtaudx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const int ie) override {}
+
+
+    void fdtaudp(realtype *dtaudp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const int ip, const int ie) override {}
 
 
     void fdrzdp(realtype *drzdp, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip) override {}
@@ -310,8 +326,8 @@ class Model_model_jakstat_adjoint_py : public amici::Model_ODE {
     }
 
 
-    void fdydx(realtype *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx) override {
-        dydx_model_jakstat_adjoint_py(dydx, t, x, p, k, h, w, dwdx);
+    void fdydx(realtype *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w) override {
+        dydx_model_jakstat_adjoint_py(dydx, t, x, p, k, h, w);
     }
 
 
@@ -326,7 +342,7 @@ class Model_model_jakstat_adjoint_py : public amici::Model_ODE {
     void fdzdx(realtype *dzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {}
 
 
-    void froot(realtype *root, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *tcl) override {}
+    void froot(realtype *root, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl) override {}
 
 
     void frz(realtype *rz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {}
@@ -340,9 +356,11 @@ class Model_model_jakstat_adjoint_py : public amici::Model_ODE {
     void fsigmaz(realtype *sigmaz, const realtype t, const realtype *p, const realtype *k) override {}
 
 
-    void fstau(realtype *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const realtype *tcl, const realtype *sx, const int ip, const int ie) override {}
+    void fstau(realtype *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const realtype *sx, const int ip, const int ie) override {}
 
-    void fsx0(realtype *sx0, const realtype t, const realtype *x, const realtype *p, const realtype *k, const int ip) override {}
+    void fsx0(realtype *sx0, const realtype t, const realtype *x, const realtype *p, const realtype *k, const int ip) override {
+        sx0_model_jakstat_adjoint_py(sx0, t, x, p, k, ip);
+    }
 
     void fsx0_fixedParameters(realtype *sx0_fixedParameters, const realtype t, const realtype *x0, const realtype *p, const realtype *k, const int ip, gsl::span<const int> reinitialization_state_idxs) override {}
 
@@ -410,122 +428,107 @@ class Model_model_jakstat_adjoint_py : public amici::Model_ODE {
     void fdtotal_cldx_rdata_rowvals(SUNMatrixWrapper &rowvals) override {}
 
 
-    std::string getName() const override {
+    std::vector<std::vector<realtype>> fexplicit_roots(const realtype *x, const realtype *p, const realtype *k, const realtype *w) override { return {}; }
+
+
+    std::string get_name() const override {
         return "model_jakstat_adjoint_py";
     }
 
     /**
-     * @brief Get names of the model parameters
+     * @brief Get names of the free model parameters
      * @return the names
      */
-    std::vector<std::string> getParameterNames() const override {
-        return std::vector<std::string>(parameterNames.begin(),
-                                        parameterNames.end());
+    std::span<std::string_view const> get_free_parameter_names() const override {
+        return free_parameter_names;
     }
 
     /**
      * @brief Get names of the model states
      * @return the names
      */
-    std::vector<std::string> getStateNames() const override {
-        return std::vector<std::string>(stateNames.begin(), stateNames.end());
+    std::span<std::string_view const> get_state_names() const override {
+        return state_names;
     }
 
     /**
      * @brief Get names of the solver states
      * @return the names
      */
-    std::vector<std::string> getStateNamesSolver() const override {
-        std::vector<std::string> result;
-        result.reserve(stateIdxsSolver.size());
-        for(auto const idx: stateIdxsSolver) {
-            result.push_back(stateNames[idx]);
-        }
-        return result;
+    std::span<std::string_view const> get_state_names_solver() const override {
+        return state_names_solver;
     }
 
     /**
      * @brief Get names of the fixed model parameters
      * @return the names
      */
-    std::vector<std::string> getFixedParameterNames() const override {
-        return std::vector<std::string>(fixedParameterNames.begin(),
-                                        fixedParameterNames.end());
+    std::span<std::string_view const> get_fixed_parameter_names() const override {
+        return fixed_parameter_names;
     }
 
     /**
      * @brief Get names of the observables
      * @return the names
      */
-    std::vector<std::string> getObservableNames() const override {
-        return std::vector<std::string>(observableNames.begin(),
-                                        observableNames.end());
+    std::span<std::string_view const> get_observable_names() const override {
+        return observable_names;
     }
 
     /**
      * @brief Get names of model expressions
      * @return Expression names
      */
-    std::vector<std::string> getExpressionNames() const override {
-        return std::vector<std::string>(expressionNames.begin(),
-                                        expressionNames.end());
+    std::span<std::string_view const> get_expression_names() const override {
+        return expression_names;
     }
 
     /**
-     * @brief Get ids of the model parameters
+     * @brief Get ids of the free model parameters
      * @return the ids
      */
-    std::vector<std::string> getParameterIds() const override {
-        return std::vector<std::string>(parameterIds.begin(),
-                                        parameterIds.end());
+    std::span<std::string_view const> get_free_parameter_ids() const override {
+        return free_parameter_ids;
     }
 
     /**
      * @brief Get ids of the model states
      * @return the ids
      */
-    std::vector<std::string> getStateIds() const override {
-        return std::vector<std::string>(stateIds.begin(), stateIds.end());
+    std::span<std::string_view const> get_state_ids() const override {
+        return state_ids;
     }
 
     /**
      * @brief Get ids of the solver states
      * @return the ids
      */
-    std::vector<std::string> getStateIdsSolver() const override {
-        std::vector<std::string> result;
-        result.reserve(stateIdxsSolver.size());
-        for(auto idx: stateIdxsSolver) {
-            result.push_back(stateIds[idx]);
-        }
-        return result;
+    std::span<std::string_view const> get_state_ids_solver() const override {
+        return state_ids_solver;
     }
 
     /**
      * @brief Get ids of the fixed model parameters
      * @return the ids
      */
-    std::vector<std::string> getFixedParameterIds() const override {
-        return std::vector<std::string>(fixedParameterIds.begin(),
-                                        fixedParameterIds.end());
+    std::span<std::string_view const> get_fixed_parameter_ids() const override {
+        return fixed_parameter_ids;
     }
 
     /**
      * @brief Get ids of the observables
      * @return the ids
      */
-    std::vector<std::string> getObservableIds() const override {
-        return std::vector<std::string>(observableIds.begin(),
-                                        observableIds.end());
+    std::span<std::string_view const> get_observable_ids() const override {
+        return observable_ids;
     }
 
     /**
      * @brief Get IDs of model expressions
      * @return Expression IDs
      */
-    std::vector<std::string> getExpressionIds() const override {
-        return std::vector<std::string>(expressionIds.begin(),
-                                        expressionIds.end());
+    std::span<std::string_view const> get_expression_ids() const override {
+        return expression_ids;
     }
 
     /**
@@ -534,7 +537,7 @@ class Model_model_jakstat_adjoint_py : public amici::Model_ODE {
      * @return flag indicating whether reinitialization of states depending on
      * fixed parameters is permissible
      */
-    bool isFixedParameterStateReinitializationAllowed() const override {
+    bool is_fixed_parameter_state_reinitialization_allowed() const override {
         return true;
     }
 
@@ -542,24 +545,24 @@ class Model_model_jakstat_adjoint_py : public amici::Model_ODE {
      * @brief returns the AMICI version that was used to generate the model
      * @return AMICI version string
      */
-    std::string getAmiciVersion() const override {
-        return "0.33.0";
+    std::string get_amici_version() const override {
+        return "1.1.0";
     }
 
     /**
      * @brief returns the amici version that was used to generate the model
      * @return AMICI git commit hash
      */
-    std::string getAmiciCommit() const override {
-        return "bcedb951ddf674996b269489d74f9b86112038ff";
+    std::string get_amici_commit() const override {
+        return "eb8630c7be82120d972865d1a4d6f4a71871193c";
     }
 
-    bool hasQuadraticLLH() const override {
+    bool has_quadratic_llh() const override {
         return true;
     }
 
-    ObservableScaling getObservableScaling(int iy) const override {
-        return observableScalings.at(iy);
+    ObservableScaling get_observable_scaling(int iy) const override {
+        return observable_scalings.at(iy);
     }
 };
 

@@ -1,13 +1,12 @@
 #include <amici/defines.h>
 #include <array>
+#include <string_view>
 
-namespace amici {
-
-namespace model_model_jakstat_adjoint_py {
+namespace amici::model_model_jakstat_adjoint_py {
 
 // clang-format off
 
-std::array<const char*, 17> parameterNames = {
+extern const std::array<std::string_view const, 17> free_parameter_names = {
     "p1", // p[0]
 "p2", // p[1]
 "p3", // p[2]
@@ -27,12 +26,12 @@ std::array<const char*, 17> parameterNames = {
 "sigma_pEpoR", // p[16]
 };
 
-std::array<const char*, 2> fixedParameterNames = {
+extern const std::array<std::string_view const, 2> fixed_parameter_names = {
     "Omega_cyt", // k[0]
 "Omega_nuc", // k[1]
 };
 
-std::array<const char*, 9> stateNames = {
+extern const std::array<std::string_view const, 9> state_names = {
     "STAT", // x_rdata[0]
 "pSTAT", // x_rdata[1]
 "pSTAT_pSTAT", // x_rdata[2]
@@ -44,24 +43,35 @@ std::array<const char*, 9> stateNames = {
 "nSTAT5", // x_rdata[8]
 };
 
-std::array<const char*, 3> observableNames = {
+extern const std::array<std::string_view const, 9> state_names_solver = {
+    "STAT", // x_solver[0]
+"pSTAT", // x_solver[1]
+"pSTAT_pSTAT", // x_solver[2]
+"npSTAT_npSTAT", // x_solver[3]
+"nSTAT1", // x_solver[4]
+"nSTAT2", // x_solver[5]
+"nSTAT3", // x_solver[6]
+"nSTAT4", // x_solver[7]
+"nSTAT5", // x_solver[8]
+};
+
+extern const std::array<std::string_view const, 3> observable_names = {
     "y0", // y[0]
 "y1", // y[1]
 "y2", // y[2]
 };
 
-std::array<const ObservableScaling, 3> observableScalings = {
+std::array<const ObservableScaling, 3> observable_scalings = {
     ObservableScaling::lin, // y[0]
 ObservableScaling::lin, // y[1]
 ObservableScaling::lin, // y[2]
 };
 
-std::array<const char*, 2> expressionNames = {
+extern const std::array<std::string_view const, 1> expression_names = {
     "u", // w[0]
-"flux_r0", // w[1]
 };
 
-std::array<const char*, 17> parameterIds = {
+extern const std::array<std::string_view const, 17> free_parameter_ids = {
     "p1", // p[0]
 "p2", // p[1]
 "p3", // p[2]
@@ -81,12 +91,12 @@ std::array<const char*, 17> parameterIds = {
 "sigma_pEpoR", // p[16]
 };
 
-std::array<const char*, 2> fixedParameterIds = {
+extern const std::array<std::string_view const, 2> fixed_parameter_ids = {
     "Omega_cyt", // k[0]
 "Omega_nuc", // k[1]
 };
 
-std::array<const char*, 9> stateIds = {
+extern const std::array<std::string_view const, 9> state_ids = {
     "STAT", // x_rdata[0]
 "pSTAT", // x_rdata[1]
 "pSTAT_pSTAT", // x_rdata[2]
@@ -98,23 +108,32 @@ std::array<const char*, 9> stateIds = {
 "nSTAT5", // x_rdata[8]
 };
 
-std::array<const char*, 3> observableIds = {
+extern const std::array<std::string_view const, 9> state_ids_solver = {
+    "STAT", // x_solver[0]
+"pSTAT", // x_solver[1]
+"pSTAT_pSTAT", // x_solver[2]
+"npSTAT_npSTAT", // x_solver[3]
+"nSTAT1", // x_solver[4]
+"nSTAT2", // x_solver[5]
+"nSTAT3", // x_solver[6]
+"nSTAT4", // x_solver[7]
+"nSTAT5", // x_solver[8]
+};
+
+extern const std::array<std::string_view const, 3> observable_ids = {
     "obs_pSTAT", // y[0]
 "obs_tSTAT", // y[1]
 "obs_spline", // y[2]
 };
 
-std::array<const char*, 2> expressionIds = {
+extern const std::array<std::string_view const, 1> expression_ids = {
     "u", // w[0]
-"flux_r0", // w[1]
 };
 
-std::array<int, 9> stateIdxsSolver = {
+std::array<int, 9> state_idxs_solver = {
     0, 1, 2, 3, 4, 5, 6, 7, 8
 };
 
 // clang-format on
 
-} // namespace model_model_jakstat_adjoint_py
-
-} // namespace amici
+} // namespace amici::model_model_jakstat_adjoint_py

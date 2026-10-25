@@ -14,57 +14,107 @@
 namespace amici {
 class ExpData;
 class Solver;
-class SteadystateProblem;
-class FinalStateStorer;
+class SteadyStateProblem;
+
+/**
+ * @brief States around the application of a single event within a
+ * `Discontinuity`.
+ *
+ * A `Discontinuity` can represent several events that trigger
+ * simultaneously (a single time point may satisfy more than one event's
+ * trigger condition). Each such event is applied in turn (e.g., in order
+ * of priority), and -- for adjoint sensitivities -- `deltaxB`/`deltaqB`
+ * need the states around *this* event's application, not those of the
+ * whole simultaneous-event group.
+ */
+struct EventApplication {
+    /** Index of the applied event. */
+    int ie{0};
+
+    /**
+     * State at which this event's assignments were evaluated: for events
+     * using values from the trigger time, the state at which the
+     * discontinuity in which the event triggered was reached, otherwise the
+     * state right before this event was applied.
+     */
+    AmiVector x_eval;
+
+    /**
+     * `xdot` evaluated at `x_eval`. For events using values from the trigger
+     * time, this is evaluated with the Heaviside variables before the
+     * discontinuity; otherwise, it equals `xdot_pre`.
+     */
+    AmiVector xdot_eval;
+
+    /**
+     * Heaviside variables with which this event's assignments were
+     * evaluated (see `x_eval`).
+     */
+    std::vector<realtype> h_assign;
+
+    /**
+     * `xdot` right before this event's own bolus was applied. For the first
+     * event of a discontinuity, this is evaluated with the Heaviside
+     * variables before the discontinuity.
+     */
+    AmiVector xdot_pre;
+
+    /** State immediately after this event's own bolus was applied. */
+    AmiVector x_post;
+
+    /** `xdot` evaluated at `x_post`. */
+    AmiVector xdot_post;
+
+    /** State derivative after this event's own bolus (DAE only). */
+    AmiVector dx_post;
+
+    /**
+     * How many discontinuities before the one this event belongs to is the
+     * one that was reached at `x_eval`. Non-zero for events using values
+     * from the trigger time that are executed after secondary events were
+     * triggered.
+     */
+    int trigger_disc_offset{0};
+};
 
 /**
  * @brief Data structure to store some state of a simulation at a discontinuity.
+ *
+ * Naming of the states around a discontinuity:
+ * - `*_at_trigger`: the state at which the discontinuity was reached, i.e.,
+ *   when its events triggered, before the Heaviside variables were updated
+ *   and before any event was applied. For events triggered by the
+ *   assignments of other events, this is the state right after those
+ *   assignments.
+ * - `*_pre`/`*_post`: the state right before/after the assignments of a
+ *   single event were applied (see `EventApplication`).
+ * - `*_eval`: the state at which the assignments of an event are evaluated:
+ *   `*_at_trigger` for events using values from the trigger time, otherwise
+ *   `*_pre`.
  */
 struct Discontinuity {
     /**
      * @brief Constructor.
+     *
      * @param time
      * @param root_info
-     * @param x_pre
-     * @param xdot_pre
-     * @param x_post
-     * @param xdot_post
-     * @param h_pre
-     * @param total_cl_pre
+     * @param h_at_trigger
+     * @param total_cl_at_trigger
      */
     explicit Discontinuity(
         realtype const time,
         std::vector<int> const& root_info = std::vector<int>(),
-        AmiVector const& x_pre = AmiVector(),
-        AmiVector const& xdot_pre = AmiVector(),
-        AmiVector const& x_post = AmiVector(),
-        AmiVector const& xdot_post = AmiVector(),
-        std::vector<realtype> const& h_pre = std::vector<realtype>(),
-        std::vector<realtype> const& total_cl_pre = std::vector<realtype>(0)
+        std::vector<realtype> const& h_at_trigger = std::vector<realtype>(),
+        std::vector<realtype> const& total_cl_at_trigger
+        = std::vector<realtype>(0)
     )
         : time(time)
-        , x_post(x_post)
-        , x_pre(x_pre)
-        , xdot_post(xdot_post)
-        , xdot_pre(xdot_pre)
         , root_info(root_info)
-        , h_pre(h_pre)
-        , total_cl_pre(total_cl_pre) {}
+        , h_at_trigger(h_at_trigger)
+        , total_cl_at_trigger(total_cl_at_trigger) {}
 
     /** Time of discontinuity. */
     realtype time;
-
-    /** Post-event state vector (dimension nx). */
-    AmiVector x_post;
-
-    /** Pre-event state vector (dimension nx). */
-    AmiVector x_pre;
-
-    /** Post-event differential state vectors (dimension nx). */
-    AmiVector xdot_post;
-
-    /** Pre-event differential state vectors (dimension nx). */
-    AmiVector xdot_pre;
 
     /**
      * @brief Array of flags indicating which root has been found.
@@ -76,29 +126,54 @@ struct Discontinuity {
     std::vector<int> root_info;
 
     /**
-     * Flag indicating whether a certain Heaviside function should be active or
-     * not, pre-event value (dimension: `ne`)
+     * Heaviside variables at which the discontinuity was reached, i.e.,
+     * before they were updated (dimension: `ne`)
      */
-    std::vector<realtype> h_pre;
+    std::vector<realtype> h_at_trigger;
 
-    /** time derivative of state (DAE only) post-event */
-    AmiVector dx_post;
+    /** Total abundances for conservation laws at which the discontinuity was
+     reached (dimension: `nx_rdata - nx_solver`) */
+    std::vector<realtype> total_cl_at_trigger;
 
-    /** Total abundances for conservation laws
-     (dimension: `nx_rdata - nx_solver`) */
-    std::vector<realtype> total_cl_pre;
+    /**
+     * @brief Per-event pre-/post-bolus state snapshots, one entry per
+     * event in the exact order in which they were applied (as opposed to
+     * `root_info`, which only records *which* events fired, but neither order
+     * nor intermediate state.)
+     * Only populated when adjoint sensitivities are being computed.
+     */
+    std::vector<EventApplication> event_applications;
+
+    /**
+     * State at the time the discontinuity was recorded, before any of its
+     * events were applied. Only populated for adjoint sensitivities.
+     */
+    AmiVector x_at_trigger;
+
+    /** State derivative corresponding to `x_at_trigger` (DAE only). */
+    AmiVector dx_at_trigger;
+
+    /** Whether this discontinuity is due to events at the initial time. */
+    bool initial_event{false};
+
+    /**
+     * Whether this discontinuity is due to the event assignments of the
+     * preceding one (at the same time), whose event time it shares.
+     */
+    bool secondary_event{false};
 };
 
 /**
  * @brief Compute the number of roots for each root function from a vector of
  * discontinuities.
+ *
  * @param discs Encountered discontinuities.
  * @param ne Number of root functions (ne).
- * @param nmaxevents Maximum number of events to track (nmaxevents).
- * @return The number of roots for each root function.
+ * @return The number of roots for each root function, including those
+ * exceeding the maximum number of events.
  */
 std::vector<int>
-compute_nroots(std::vector<Discontinuity> const& discs, int ne, int nmaxevents);
+compute_nroots(std::vector<Discontinuity> const& discs, int ne);
 
 /**
  * @brief The FwdSimWorkspace class is used to store temporary simulation
@@ -107,35 +182,34 @@ compute_nroots(std::vector<Discontinuity> const& discs, int ne, int nmaxevents);
 struct FwdSimWorkspace {
     /**
      * @brief Constructor
+     *
      * @param model The model for which to set up the workspace.
      * @param solver The solver for which to set up this workspace.
      */
     FwdSimWorkspace(
         gsl::not_null<Model*> const& model, gsl::not_null<Solver*> solver
     )
-        : sol(NAN, model->nx_solver, model->nplist(), solver->getSunContext())
-        , x_old(model->nx_solver, solver->getSunContext())
-        , xdot(model->nx_solver, solver->getSunContext())
-        , xdot_old(model->nx_solver, solver->getSunContext())
-        , sdx(model->nx_solver, model->nplist(), solver->getSunContext())
+        : sol(NAN, model->nx_solver, model->nplist(), solver->get_sun_context())
+        , xdot(model->nx_solver, solver->get_sun_context())
+        , xdot_at_trigger(model->nx_solver, solver->get_sun_context())
+        , sdx(model->nx_solver, model->nplist(), solver->get_sun_context())
         , stau(model->nplist())
         , roots_found(model->ne, 0)
         , rval_tmp(gsl::narrow<decltype(rval_tmp)::size_type>(model->ne), 0.0)
         , nroots(gsl::narrow<decltype(nroots)::size_type>(model->ne), 0)
         , rootvals(gsl::narrow<decltype(rootvals)::size_type>(model->ne), 0.0)
+        , roots_for_ignore(model->ne, 0)
 
     {}
     /** Current solution state */
     SolutionState sol;
 
-    /** old state vector (dimension: nx_solver) */
-    AmiVector x_old;
-
     /** time derivative state vector (dimension: nx_solver) */
     AmiVector xdot;
 
-    /** old time derivative state vector (dimension: nx_solver) */
-    AmiVector xdot_old;
+    /** time derivative at which the latest discontinuity was reached,
+     * before the Heaviside variables were updated (dimension: nx_solver) */
+    AmiVector xdot_at_trigger;
 
     /** differential sensitivity state vector array
      * (dimension: nx_cl x nplist, row-major) */
@@ -156,6 +230,15 @@ struct FwdSimWorkspace {
     /** Timepoint, at which the last root was found */
     realtype tlastroot{0.0};
 
+    /**
+     * Number of consecutive times handle_events() was called at exactly
+     * `tlastroot` (as opposed to after genuine forward progress in time).
+     * Used to distinguish genuinely distinct (near-)simultaneous events,
+     * discovered one at a time immediately after a reinitialization, from
+     * a true infinite loop.
+     */
+    int same_time_event_count{0};
+
     /** Events that are waiting to be handled at the current timepoint. */
     EventQueue pending_events;
 
@@ -169,6 +252,16 @@ struct FwdSimWorkspace {
 
     /** array of values of the root function (dimension: ne) */
     std::vector<realtype> rootvals;
+
+    /**
+     * Crossing directions of the roots found in the discontinuities at time
+     * `t_roots_for_ignore`, as a per-root bitmask (dimension: ne), see
+     * Solver::ignore_roots_after_reinit.
+     */
+    std::vector<int> roots_for_ignore;
+
+    /** Time of the discontinuities that `roots_for_ignore` refers to */
+    realtype t_roots_for_ignore{NAN};
 };
 
 /**
@@ -178,10 +271,6 @@ struct PeriodResult {
 
     /** Discontinuities encountered so far (dimension: dynamic) */
     std::vector<Discontinuity> discs;
-
-    /** array of number of found roots for a certain event type
-     * (dimension: ne) */
-    std::vector<int> nroots;
 
     /** simulation states history at timepoints */
     std::map<realtype, SimulationState> timepoint_states_;
@@ -204,11 +293,12 @@ class EventHandlingSimulator {
   public:
     /**
      * @brief EventHandlingSimulator
+     *
      * @param model The model to simulate.
      * @param solver The solver to use for the simulation.
      * @param ws The workspace to use for the simulation.
      * @param dJzdx State-derivative of event likelihood
-     * (dimension nJ x nx x nMaxEvent, ordering =?)
+     * (dimension nJ x nx_solver x n_max_event x ne, column-major)
      */
     EventHandlingSimulator(
         gsl::not_null<Model*> model, gsl::not_null<Solver const*> solver,
@@ -266,6 +356,7 @@ class EventHandlingSimulator {
 
     /**
      * @brief Returns maximal event index for which the timepoint is available
+     *
      * @return index
      */
     [[nodiscard]] int get_root_counter() const {
@@ -274,6 +365,7 @@ class EventHandlingSimulator {
 
     /**
      * @brief Returns maximal event index for which simulations are available
+     *
      * @return index
      */
     [[nodiscard]] int get_event_counter() const {
@@ -282,6 +374,7 @@ class EventHandlingSimulator {
 
     /**
      * @brief Creates a carbon copy of the current simulation state variables
+     *
      * @return state
      */
     SimulationState get_simulation_state();
@@ -314,18 +407,81 @@ class EventHandlingSimulator {
 
   private:
     /**
-     * @brief Store pre-event model state
+     * @brief Store the state at which the latest discontinuity was reached.
+     *
+     * For forward sensitivities, this also computes the event time
+     * sensitivity.
      *
      * @param seflag Secondary event flag
      * @param initial_event initial event flag
      */
-    void store_pre_event_state(bool seflag, bool initial_event);
+    void store_state_at_trigger(bool seflag, bool initial_event);
 
     /**
-     * @brief Check for, and if applicable, handle any secondary events
+     * @brief Check for secondary events.
+     *
+     * Updates `roots_found` for the roots crossed due to the preceding event
+     * assignment.
+     *
      * @return the number of secondary events found
      */
     int detect_secondary_events();
+
+    /**
+     * @brief Add the events that triggered in the latest discontinuity to the
+     * queue of pending events.
+     *
+     * Must be called after the Heaviside variables have been updated for
+     * this discontinuity, since the stored trigger-time state is used for
+     * evaluating the event assignments.
+     */
+    void queue_triggered_events();
+
+    /**
+     * @brief Get the next trigger timepoint of the events with explicit
+     * trigger times after the current time, at which not all events have
+     * been handled yet.
+     *
+     * The trigger timepoints may change after events, since they may depend
+     * on state variables that are only changed by event assignments.
+     *
+     * @return The next trigger timepoint, or infinity if there is none.
+     */
+    [[nodiscard]] realtype get_next_trigger_timepoint() const;
+
+    /**
+     * @brief Set the root-found flags of the events with explicit trigger
+     * times that trigger at the given trigger timepoint and have not been
+     * handled there yet, and mark them as handled.
+     *
+     * @param t_trigger The trigger timepoint.
+     */
+    void set_explicit_roots_found(realtype t_trigger);
+
+    /**
+     * @brief Handle the events of the trigger timepoints within roundoff
+     * after the current time.
+     *
+     * The solver cannot step to those trigger timepoints, so their events are
+     * handled at the current time, one trigger timepoint at a time.
+     *
+     * @param t_end Trigger timepoints after this time are not handled.
+     * @param edata experimental data
+     */
+    void handle_close_trigger_timepoints(realtype t_end, ExpData const* edata);
+
+    /**
+     * @brief Collect the roots found at the current time in
+     * `ws_->roots_found`.
+     *
+     * Sets the roots reported by the solver, and, if the current time is
+     * the given trigger timepoint, the roots of the events with explicit
+     * trigger times at that timepoint.
+     *
+     * @param t_trigger The current trigger timepoint of the events with
+     * explicit trigger times.
+     */
+    void collect_roots(realtype t_trigger);
 
     /**
      * @brief Extract output information for events
@@ -351,12 +507,25 @@ class EventHandlingSimulator {
             }))
             return;
 
-        result.discs.emplace_back(ws_->sol.t);
+        auto& disc = result.discs.emplace_back(ws_->sol.t);
+        if (solver_->computing_asa()) {
+            // no event is applied, the backward problem keeps the state
+            disc.h_at_trigger = model_->get_model_state().h;
+            disc.total_cl_at_trigger = model_->get_model_state().total_cl;
+        }
         store_event(edata);
     }
 
     /** Initial time of the current period. */
     realtype t0_{NAN};
+
+    /**
+     * The last trigger timepoint at which each event with an explicit
+     * trigger time was handled (dimension: ne). This may be after the
+     * current time if the trigger timepoint was within roundoff of the
+     * current time.
+     */
+    std::vector<realtype> t_last_trigger_;
 
     /** The model to simulate. */
     Model* model_{nullptr};
@@ -368,15 +537,15 @@ class EventHandlingSimulator {
     gsl::not_null<FwdSimWorkspace*> ws_;
 
     /** state derivative of event likelihood
-     * (dimension nJ x nx x nMaxEvent, ordering =?) */
+     * (dimension nJ x nx_solver x n_max_event x ne, column-major) */
     std::vector<realtype>* dJzdx_ = nullptr;
 };
 
 /**
- * @brief The SteadystateProblem class solves a steady-state problem using
+ * @brief The SteadyStateProblem class solves a steady-state problem using
  * Newton's method and falls back to integration on failure.
  */
-class SteadystateProblem {
+class SteadyStateProblem {
   public:
     /**
      * @brief Constructor
@@ -387,7 +556,7 @@ class SteadystateProblem {
      * @param is_preeq Whether this is a pre-equilibration (`true`) or
      * post-equilibration problem (`false`).
      */
-    explicit SteadystateProblem(
+    explicit SteadyStateProblem(
         FwdSimWorkspace* ws, Solver const& solver, Model& model, bool is_preeq
     );
 
@@ -402,83 +571,101 @@ class SteadystateProblem {
      * @param it Index of the current output time point.
      * @param t0 Initial time for the steady state simulation.
      */
-    void workSteadyStateProblem(Solver& solver, int it, realtype t0);
+    void run(Solver& solver, int it, realtype t0);
 
     /**
      * @brief Return the stored SimulationState.
      * @return stored SimulationState
      */
-    [[nodiscard]] SimulationState const& getFinalSimulationState() const {
+    [[nodiscard]] SimulationState const& get_final_simulation_state() const {
         return period_result_.final_state_;
     }
 
     /**
      * @brief Return state at steady state
+     *
      * @return x
      */
-    [[nodiscard]] AmiVector const& getState() const {
+    [[nodiscard]] AmiVector const& get_state() const {
         return period_result_.final_state_.sol.x;
     }
 
     /**
      * @brief Return state sensitivity at steady state
+     *
      * @return sx
      */
-    [[nodiscard]] AmiVectorArray const& getStateSensitivity() const {
+    [[nodiscard]] AmiVectorArray const& get_state_sensitivity() const {
         return period_result_.final_state_.sol.sx;
     }
 
     /**
      * @brief Get the CPU time taken to solve the forward problem.
+     *
      * @return The CPU time in milliseconds.
      */
-    [[nodiscard]] double getCPUTime() const { return cpu_time_; }
+    [[nodiscard]] double get_cpu_time() const { return cpu_time_; }
 
     /**
      * @brief Get the steady state computation status.
+     *
      * @return Execution status of the different approaches
      * [newton, simulation, newton].
      */
     [[nodiscard]] std::vector<SteadyStateStatus> const&
-    getSteadyStateStatus() const {
+    get_steady_state_status() const {
         return steady_state_status_;
     }
 
     /**
      * @brief Get model time at which steady state was found through simulation.
+     *
      * @return Time at which steady state was found (model time units).
      */
-    [[nodiscard]] realtype getSteadyStateTime() const {
+    [[nodiscard]] realtype get_steady_state_time() const {
         return period_result_.final_state_.sol.t;
     }
 
     /**
      * @brief Get the weighted root mean square of the residuals.
+     *
      * @return The weighted root-mean-square of the residuals.
      */
-    [[nodiscard]] realtype getResidualNorm() const { return wrms_; }
+    [[nodiscard]] realtype get_residual_norm() const { return wrms_; }
 
     /**
      * @brief Get the number of steps taken to find the steady state.
+     *
      * @return Number of steps taken to find the steady state as
      * [newton, simulation, newton].
      */
-    [[nodiscard]] std::vector<int> const& getNumSteps() const {
+    [[nodiscard]] std::vector<int> const& get_num_steps() const {
         return numsteps_;
     }
 
     /**
      * @brief Check, whether any approach to find the steady state was
      * successful.
+     *
      * @return Whether any approach to find the steady state was successful.
      */
-    [[nodiscard]] bool checkSteadyStateSuccess() const;
+    [[nodiscard]] bool check_steady_state_success() const;
 
     /**
      * @brief Get the pre-equilibration solver.
+     *
      * @return The preequilibration solver.
      */
     [[nodiscard]] Solver const* get_solver() const { return solver_; }
+
+    /**
+     * @brief Get the pre-equilibration result.
+     *
+     * @return
+     */
+    [[nodiscard]] PeriodResult const& get_result() const {
+        return period_result_;
+    }
 
   private:
     /**
@@ -489,67 +676,70 @@ class SteadystateProblem {
      * @param it Index of the current output time point.
      * @param t0 Initial time for the steady state simulation.
      */
-    void findSteadyState(int it, realtype t0);
+    void find_steady_state(int it, realtype t0);
 
     /**
      * @brief Try to determine the steady state by using Newton's method.
+     *
      * @param newton_retry Flag indicating whether Newton's method is being
      * relaunched.
      */
-    void findSteadyStateByNewtonsMethod(bool newton_retry);
+    void find_steady_state_by_newtons_method(bool newton_retry);
 
     /**
      * @brief Try to determine the steady state by using forward simulation.
+     *
      * @param it Index of the current output time point.
      * @param t0 Initial time for the steady state simulation.
      * @return SteadyStateStatus indicating whether the steady state was found
      * successfully, or if it failed.
      */
-    SteadyStateStatus findSteadyStateBySimulation(int it, realtype t0);
+    SteadyStateStatus find_steady_state_by_simulation(int it, realtype t0);
 
     /**
-     * @brief Store state and throw an exception if equilibration failed
+     * @brief Store state and throw an exception if equilibration failed.
+     *
      * @param tried_newton_1 Whether any Newton step was attempted before
      * simulation
      * @param tried_simulation Whether simulation was attempted
      * @param tried_newton_2 Whether any Newton step was attempted after
      * simulation
      */
-    [[noreturn]] void handleSteadyStateFailure(
+    [[noreturn]] void handle_steady_state_failure(
         bool tried_newton_1, bool tried_simulation, bool tried_newton_2
     ) const;
 
     /**
-     * @brief Checks convergence for state sensitivities
+     * @brief Checks convergence for state sensitivities.
+     *
      * @param wrms_computer_sx WRMSComputer instance for state sensitivities
      * @return weighted root mean squared residuals of the RHS
      */
-    realtype getWrmsFSA(WRMSComputer& wrms_computer_sx);
+    realtype get_wrms_fsa(WRMSComputer& wrms_computer_sx);
 
     /**
      * @brief Launch simulation if Newton solver or linear system solve
      * fail or are disabled.
-     * simulation.
      */
-    void runSteadystateSimulationFwd();
+    void run_steadystate_simulation_fwd();
 
     /**
      * @brief Update member variables to indicate that state_.x has been
      * updated and xdot_, delta_, etc. need to be recomputed.
      */
-    void flagUpdatedState();
+    void flag_updated_state();
 
     /**
      * @brief Retrieve simulation sensitivities from the provided solver and
      * set the corresponding flag to indicate they are up to date
      */
-    void updateSensiSimulation();
+    void update_sensi_simulation();
 
     /**
      * @brief Compute the right-hand side for the current state_.x and set the
      * corresponding flag to indicate xdot_ is up to date.
      */
-    void updateRightHandSide();
+    void update_rhs();
 
     /** Whether this is a pre- or post-equilibration problem */
     bool is_preeq_;
@@ -590,6 +780,13 @@ class SteadystateProblem {
      */
     bool newton_step_conv_{false};
 
+    /**
+     * Zero state derivative. For DAEs, the right-hand side for the
+     * convergence checks has to be evaluated at `dx = 0`, otherwise it is the
+     * residual, which vanishes along any consistent trajectory.
+     */
+    AmiVector dx_zero_;
+
     /** flag indicating whether xdot_ has been computed for the current state */
     bool xdot_updated_{false};
     /**
@@ -628,6 +825,7 @@ class ForwardProblem {
   public:
     /**
      * @brief Constructor
+     *
      * @param edata pointer to ExpData instance
      * @param model pointer to Model instance
      * @param solver pointer to Solver instance
@@ -640,85 +838,92 @@ class ForwardProblem {
 
     ~ForwardProblem() = default;
 
-    /** allow FinalStateStorer to access private members and functions */
-    friend ::amici::FinalStateStorer;
-
     /**
      * @brief Solve the forward problem.
      *
      * If forward sensitivities are enabled this will also compute
      * sensitivities.
      */
-    void workForwardProblem();
+    void run();
 
     /**
      * @brief Computes adjoint updates dJydx according to the provided model
      * and ExpData.
+     *
      * @param model Model instance
      * @param edata experimental data
      * @return dJydx
      */
-    std::vector<realtype> getAdjointUpdates(Model& model, ExpData const& edata);
+    std::vector<realtype>
+    get_adjoint_updates(Model& model, ExpData const& edata);
 
     /**
      * @brief Accessor for sx
+     *
      * @return sx
      */
-    [[nodiscard]] AmiVectorArray const& getStateSensitivity() const {
+    [[nodiscard]] AmiVectorArray const& get_state_sensitivity() const {
         return ws_.sol.sx;
     }
 
     /**
      * @brief Get information on the discontinuities encountered so far.
+     *
      * @return The vector of discontinuities.
      */
-    [[nodiscard]] std::vector<Discontinuity> const& getDiscontinuities() const {
+    [[nodiscard]] std::vector<Discontinuity> const&
+    get_discontinuities() const {
         return main_simulator_.result.discs;
     }
 
     /**
      * @brief Accessor for dJzdx
+     *
      * @return dJzdx
      */
-    [[nodiscard]] std::vector<realtype> const& getDJzdx() const {
+    [[nodiscard]] std::vector<realtype> const& get_dJzdx() const {
         return dJzdx_;
     }
 
     /**
      * @brief Accessor for it
+     *
      * @return it
      */
-    [[nodiscard]] int getCurrentTimeIteration() const { return it_; }
+    [[nodiscard]] int get_current_time_iteration() const { return it_; }
 
     /**
      * @brief Returns final time point for which simulations are available
+     *
      * @return time point
      */
-    [[nodiscard]] realtype getFinalTime() const {
+    [[nodiscard]] realtype get_final_time() const {
         return main_simulator_.result.final_state_.sol.t;
     }
 
     /**
      * @brief Returns maximal event index for which simulations are available
+     *
      * @return index
      */
-    [[nodiscard]] int getEventCounter() const {
+    [[nodiscard]] int get_event_counter() const {
         return main_simulator_.get_event_counter();
     }
 
     /**
      * @brief Retrieves the carbon copy of the simulation state variables at
      * the specified timepoint index
+     *
      * @param it timepoint index
      * @return state
      */
     [[nodiscard]] SimulationState const&
-    getSimulationStateTimepoint(int const it) const {
-        if (model->getTimepoint(it)
+    get_simulation_state_timepoint(int const it) const {
+        if (model->get_timepoint(it)
             == main_simulator_.result.initial_state_.sol.t)
-            return getInitialSimulationState();
+            return get_initial_simulation_state();
         auto const map_iter = main_simulator_.result.timepoint_states_.find(
-            model->getTimepoint(it)
+            model->get_timepoint(it)
         );
         Ensures(map_iter != main_simulator_.result.timepoint_states_.end());
         return map_iter->second;
@@ -727,68 +932,74 @@ class ForwardProblem {
     /**
      * @brief Retrieves the carbon copy of the simulation state variables at
      * the specified event index
+     *
      * @param iroot event index
      * @return SimulationState
      */
     [[nodiscard]] SimulationState const&
-    getSimulationStateEvent(int const iroot) const {
+    get_simulation_state_event(int const iroot) const {
         return main_simulator_.result.event_states_.at(iroot);
     }
 
     /**
      * @brief Retrieves the carbon copy of the simulation state variables at the
      * initial timepoint
+     *
      * @return SimulationState
      */
-    [[nodiscard]] SimulationState const& getInitialSimulationState() const {
+    [[nodiscard]] SimulationState const& get_initial_simulation_state() const {
         return main_simulator_.result.initial_state_;
     }
 
     /**
      * @brief Retrieves the carbon copy of the simulation state variables at the
      * final timepoint (or when the simulation failed)
+     *
      * @return SimulationState
      */
-    [[nodiscard]] SimulationState const& getFinalSimulationState() const {
+    [[nodiscard]] SimulationState const& get_final_simulation_state() const {
         return main_simulator_.result.final_state_;
     }
 
     /**
-     * @brief Return the preequilibration SteadystateProblem.
-     * @return The preequilibration SteadystateProblem, if any.
+     * @brief Return the preequilibration SteadyStateProblem.
+     *
+     * @return The preequilibration SteadyStateProblem, if any.
      */
-    [[nodiscard]] SteadystateProblem* getPreequilibrationProblem() {
+    [[nodiscard]] SteadyStateProblem* get_preeq_problem() {
         if (preeq_problem_.has_value())
             return &*preeq_problem_;
         return nullptr;
     }
 
     /**
-     * @brief Return the preequilibration SteadystateProblem.
-     * @return The preequilibration SteadystateProblem, if any.
+     * @brief Return the preequilibration SteadyStateProblem.
+     *
+     * @return The preequilibration SteadyStateProblem, if any.
      */
-    [[nodiscard]] SteadystateProblem const* getPreequilibrationProblem() const {
+    [[nodiscard]] SteadyStateProblem const* get_preeq_problem() const {
         if (preeq_problem_.has_value())
             return &*preeq_problem_;
         return nullptr;
     }
 
     /**
-     * @brief Return the postequilibration SteadystateProblem.
-     * @return The postequilibration SteadystateProblem, if any.
+     * @brief Return the postequilibration SteadyStateProblem.
+     *
+     * @return The postequilibration SteadyStateProblem, if any.
      */
-    [[nodiscard]] SteadystateProblem* getPostequilibrationProblem() {
+    [[nodiscard]] SteadyStateProblem* get_posteq_problem() {
         if (posteq_problem_.has_value())
             return &*posteq_problem_;
         return nullptr;
     }
 
     /**
-     * @brief Return the postequilibration SteadystateProblem.
-     * @return The postequilibration SteadystateProblem, if any.
+     * @brief Return the postequilibration SteadyStateProblem.
+     *
+     * @return The postequilibration SteadyStateProblem, if any.
      */
-    [[nodiscard]] SteadystateProblem const*
-    getPostequilibrationProblem() const {
+    [[nodiscard]] SteadyStateProblem const* get_posteq_problem() const {
         if (posteq_problem_.has_value())
             return &*posteq_problem_;
         return nullptr;
@@ -796,6 +1007,7 @@ class ForwardProblem {
 
     /**
      * @brief Get the presimulation results.
+     *
      * @return Presimulation results.
      */
     PeriodResult const& get_presimulation_result() const {
@@ -804,6 +1016,7 @@ class ForwardProblem {
 
     /**
      * @brief Whether pre-equilibration was performed successfully.
+     *
      * @return
      */
     bool was_preequilibrated() const { return preequilibrated_; }
@@ -819,13 +1032,13 @@ class ForwardProblem {
 
   private:
     /**
-     * @brief Handle preequilibration if necessary.
+     * @brief Handle pre-equilibration if necessary.
      *
      * Preequilibration starts at `Model::t0()`.
      *
      * So far, no event handling takes place during preequilibration.
      */
-    void handlePreequilibration();
+    void handle_preequilibration();
 
     /**
      * @brief Handle pre-simulation if required.
@@ -834,7 +1047,7 @@ class ForwardProblem {
      *
      * So far, no event handling takes place during presimulation.
      */
-    void handlePresimulation();
+    void handle_presimulation();
 
     /**
      * @brief Handle the main simulation.
@@ -843,7 +1056,7 @@ class ForwardProblem {
      * During this period, events are processed and data points are
      * handled.
      */
-    void handleMainSimulation();
+    void handle_main_simulation();
 
     /**
      * @brief Handle postequilibration if necessary.
@@ -854,13 +1067,24 @@ class ForwardProblem {
      * So far, no event handling takes place during postequilibration.
      * This also includes the processing of event observables.
      */
-    void handlePostequilibration();
+    void handle_postequilibration();
+
+    /**
+     * @brief Store the current simulation state as the main simulation's
+     * final state, backfilling the timepoint state at the final time if
+     * missing.
+     *
+     * May throw in `CVodeSolver::getSens` due to
+     * https://github.com/LLNL/sundials/issues/82.
+     */
+    void store_final_state();
 
     /** state derivative of event likelihood
-     * (dimension nJ x nx x nMaxEvent, ordering =?) */
+     * (dimension nJ x nx_solver x n_max_event x ne, column-major) */
     std::vector<realtype> dJzdx_;
 
-    /** flag to indicate whether solver was preeinitialized via preequilibration
+    /** flag to indicate whether solver was pre-initialized via
+     * pre-equilibration
      */
     bool preequilibrated_{false};
 
@@ -871,74 +1095,14 @@ class ForwardProblem {
     bool uses_presimulation_{false};
 
     /** The preequilibration steady-state problem, if any. */
-    std::optional<SteadystateProblem> preeq_problem_;
+    std::optional<SteadyStateProblem> preeq_problem_;
 
     /** The postequilibration steady-state problem, if any. */
-    std::optional<SteadystateProblem> posteq_problem_;
+    std::optional<SteadyStateProblem> posteq_problem_;
 
     FwdSimWorkspace ws_;
     EventHandlingSimulator main_simulator_;
     EventHandlingSimulator pre_simulator_;
-};
-
-/**
- * @brief stores the stimulation state when it goes out of scope
- */
-class FinalStateStorer : public ContextManager {
-  public:
-    /**
-     * @brief constructor, attaches problem pointer
-     * @param fwd problem from which the simulation state is to be stored
-     */
-    explicit FinalStateStorer(ForwardProblem* fwd)
-        : fwd_(fwd) {}
-
-    FinalStateStorer& operator=(FinalStateStorer const& other) = delete;
-
-    /**
-     * @brief destructor, stores simulation state
-     */
-    ~FinalStateStorer() noexcept(false) {
-        if (fwd_) {
-            try {
-                // This may throw in `CVodeSolver::getSens`
-                // due to https://github.com/LLNL/sundials/issues/82.
-                // Therefore, this dtor must be `noexcept(false)` to avoid
-                // program termination.
-                fwd_->main_simulator_.result.final_state_
-                    = fwd_->main_simulator_.get_simulation_state();
-                // if there is an associated output timepoint, also store it in
-                // timepoint_states if it's not present there.
-                // this may happen if there is an error just at
-                // (or indistinguishably before) an output timepoint
-                auto const final_time = fwd_->getFinalTime();
-                auto const timepoints = fwd_->model->getTimepoints();
-                if (!fwd_->main_simulator_.result.timepoint_states_.contains(
-                        final_time
-                    )
-                    && std::ranges::find(timepoints, final_time)
-                           != timepoints.cend()) {
-                    fwd_->main_simulator_.result.timepoint_states_[final_time]
-                        = fwd_->main_simulator_.result.final_state_;
-                }
-            } catch (std::exception const&) {
-                // We must not throw in case we are already in the stack
-                // unwinding phase due to some other active exception, otherwise
-                // this will also lead to termination.
-                //
-                // In case there is another active exception,
-                // `fwd_->{final_state_,timepoint_states_}` won't be set,
-                // and we assume that they are either not accessed anymore, or
-                // that there is appropriate error handling in place.
-                if (!std::uncaught_exceptions()) {
-                    throw;
-                }
-            }
-        }
-    }
-
-  private:
-    ForwardProblem* fwd_;
 };
 
 } // namespace amici

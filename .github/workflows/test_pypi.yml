@@ -11,19 +11,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11", "3.12", "3.13"]
-        os: [ubuntu-24.04, macos-latest]
+        python-version: ["3.12", "3.13", "3.14"]
+        os: [ubuntu-26.04, macos-latest]
 
     runs-on: ${{ matrix.os }}
 
     steps:
+      - uses: dweindl/gha-runner-diagnostics@v1
+
       - name: apt
         run: |
           if [[ ${{ matrix.os }} == ubuntu* ]] ; then \
             sudo apt-get update \
             && sudo apt-get install -y \
               g++ \
-              libatlas-base-dev \
+              libopenblas-dev \
               libhdf5-serial-dev \
               swig
           fi
@@ -36,11 +38,11 @@ jobs:
           fi
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
 
       - run: pip install --upgrade pip
       - run: pip install -v amici
-      - run: python -c "from amici import _amici; print(_amici)"
+      - run: python -c "from amici._installation import _amici; print(_amici)"
       - run: python -m amici

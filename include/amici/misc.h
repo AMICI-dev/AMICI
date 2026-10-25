@@ -11,10 +11,6 @@
 #include <regex>
 #include <vector>
 
-#ifdef HAS_BOOST_CHRONO
-#include <boost/chrono/thread_clock.hpp>
-#endif
-
 #include <gsl/gsl-lite.hpp>
 
 namespace amici {
@@ -60,11 +56,12 @@ gsl::span<T const> slice(std::vector<T> const& data, int index, unsigned size) {
 /**
  * @brief local helper to check whether the provided buffer has the expected
  * size
+ *
  * @param buffer buffer to which values are to be written
  * @param expected_size expected size of the buffer
  */
 template <class T>
-void checkBufferSize(
+void check_buffer_size(
     gsl::span<T> buffer, typename gsl::span<T>::index_type expected_size
 ) {
     if (buffer.size() != expected_size)
@@ -80,24 +77,26 @@ void checkBufferSize(
 /**
  * @brief local helper function to write computed slice to provided buffer
  * (span)
+ *
  * @param slice computed value
  * @param buffer buffer to which values are to be written
  */
 template <class T>
-void writeSlice(gsl::span<T const> const slice, gsl::span<T> buffer) {
-    checkBufferSize(buffer, slice.size());
+void write_slice(gsl::span<T const> const slice, gsl::span<T> buffer) {
+    check_buffer_size(buffer, slice.size());
     std::copy(slice.begin(), slice.end(), buffer.data());
 }
 
 /**
  * @brief local helper function to add the computed slice to provided buffer
  * (span)
+ *
  * @param slice computed value
  * @param buffer buffer to which values are to be added
  */
 template <class T>
-void addSlice(gsl::span<T const> const slice, gsl::span<T> buffer) {
-    checkBufferSize(buffer, slice.size());
+void add_slice(gsl::span<T const> const slice, gsl::span<T> buffer) {
+    check_buffer_size(buffer, slice.size());
     std::transform(
         slice.begin(), slice.end(), buffer.begin(), buffer.begin(),
         std::plus<T>()
@@ -107,11 +106,13 @@ void addSlice(gsl::span<T const> const slice, gsl::span<T> buffer) {
 /**
  * @brief local helper function to write computed slice to provided buffer
  * (vector)
+ *
  * @param s computed value
  * @param b buffer to which values are to be written
  */
-template <class T> void writeSlice(std::vector<T> const& s, std::vector<T>& b) {
-    writeSlice(
+template <class T>
+void write_slice(std::vector<T> const& s, std::vector<T>& b) {
+    write_slice(
         gsl::make_span(s.data(), s.size()), gsl::make_span(b.data(), b.size())
     );
 }
@@ -119,30 +120,33 @@ template <class T> void writeSlice(std::vector<T> const& s, std::vector<T>& b) {
 /**
  * @brief local helper function to write computed slice to provided buffer
  * (vector/span)
+ *
  * @param s computed value
  * @param b buffer to which values are to be written
  */
-template <class T> void writeSlice(std::vector<T> const& s, gsl::span<T> b) {
-    writeSlice(gsl::make_span(s.data(), s.size()), b);
+template <class T> void write_slice(std::vector<T> const& s, gsl::span<T> b) {
+    write_slice(gsl::make_span(s.data(), s.size()), b);
 }
 
 /**
  * @brief local helper function to add the computed slice to provided buffer
  * (vector/span)
+ *
  * @param s computed value
  * @param b buffer to which values are to be written
  */
-template <class T> void addSlice(std::vector<T> const& s, gsl::span<T> b) {
-    addSlice(gsl::make_span(s.data(), s.size()), b);
+template <class T> void add_slice(std::vector<T> const& s, gsl::span<T> b) {
+    add_slice(gsl::make_span(s.data(), s.size()), b);
 }
 
 /**
  * @brief local helper function to write computed slice to provided buffer
  * (AmiVector/span)
+ *
  * @param s computed value
  * @param b buffer to which values are to be written
  */
-void writeSlice(AmiVector const& s, gsl::span<realtype> b);
+void write_slice(AmiVector const& s, gsl::span<realtype> b);
 
 /**
  * @brief Remove parameter scaling according to the parameter scaling in pscale
@@ -153,7 +157,7 @@ void writeSlice(AmiVector const& s, gsl::span<realtype> b);
  * @param pscale parameter scaling
  * @param bufferUnscaled unscaled parameters are written to the array
  */
-void unscaleParameters(
+void unscale_parameters(
     gsl::span<realtype const> bufferScaled,
     gsl::span<ParameterScaling const> pscale, gsl::span<realtype> bufferUnscaled
 );
@@ -166,49 +170,54 @@ void unscaleParameters(
  *
  * @return Unscaled parameter
  */
-double getUnscaledParameter(double scaledParameter, ParameterScaling scaling);
+double unscale_parameter(double scaledParameter, ParameterScaling scaling);
 
 /**
  * @brief Apply parameter scaling according to `scaling`
+ *
  * @param unscaledParameter
  * @param scaling parameter scaling
  * @return Scaled parameter
  */
-double getScaledParameter(double unscaledParameter, ParameterScaling scaling);
+double scale_parameter(double unscaledParameter, ParameterScaling scaling);
 
 /**
  * @brief Apply parameter scaling according to `scaling`
+ *
  * @param bufferUnscaled
  * @param pscale parameter scaling
  * @param bufferScaled destination
  */
-void scaleParameters(
+void scale_parameters(
     gsl::span<realtype const> bufferUnscaled,
     gsl::span<ParameterScaling const> pscale, gsl::span<realtype> bufferScaled
 );
 
 /**
  * @brief Returns the current backtrace as std::string
+ *
  * @param maxFrames Number of frames to include
  * @param first_frame Index of first frame to include
  * @return Backtrace
  */
-std::string backtraceString(int maxFrames, int first_frame = 0);
+std::string get_backtrace_string(int maxFrames, int first_frame = 0);
 
 /**
  * @brief Convert std::regex_constants::error_type to string
+ *
  * @param err_type error type
  * @return Error type as string
  */
-std::string regexErrorToString(std::regex_constants::error_type err_type);
+std::string regex_error_to_string(std::regex_constants::error_type err_type);
 
 /**
  * @brief Format printf-style arguments to std::string
+ *
  * @param fmt Format string
  * @param ap Argument list pointer
  * @return Formatted String
  */
-std::string printfToString(char const* fmt, va_list ap);
+std::string printf_to_string(char const* fmt, va_list ap);
 
 /**
  * @brief Generic implementation for a context manager, explicitly deletes copy
@@ -224,6 +233,7 @@ class ContextManager {
 /**
  * @brief Convert a flat index to a pair of row/column indices,
  * assuming row-major order.
+ *
  * @param flat_idx flat index
  * @param num_cols number of columns of referred to matrix
  * @return row index, column index
@@ -234,6 +244,7 @@ auto unravel_index(size_t flat_idx, size_t num_cols)
 /**
  * @brief Check if two spans are equal, treating NaNs in the same position as
  * equal.
+ *
  * @param a
  * @param b
  * @return Whether the contents of the two spans are equal.
@@ -252,97 +263,77 @@ template <class T> bool is_equal(T const& a, T const& b) {
     return true;
 }
 
-#ifdef BOOST_CHRONO_HAS_THREAD_CLOCK
-/** Tracks elapsed CPU time using boost::chrono::thread_clock. */
-class CpuTimer {
-    using clock = boost::chrono::thread_clock;
-    using time_point = clock::time_point;
-    using d_seconds = boost::chrono::duration<double>;
-    using d_milliseconds = boost::chrono::duration<double, boost::milli>;
+/**
+ * @brief Check whether the value of a Heaviside function differs for the two
+ * arguments.
+ *
+ * Assumes H(x) = (x >= 1 ? 1 : 0).
+ *
+ * @param a First value
+ * @param b Second value
+ * @return H(a) != H(b).
+ */
+template <typename T> bool heaviside_differs(T a, T b) {
+    return (a < T{0} && b >= T{0}) || (a >= T{0} && b < T{0});
+}
 
+/**
+ * @brief Tracks elapsed CPU time of the calling thread.
+ *
+ * On platforms without a precise per-thread CPU clock, such as Windows,
+ * this uses std::clock instead, which tracks the CPU time of the whole
+ * process, or on Windows, the wall time (see CpuTimer::uses_thread_clock).
+ */
+class CpuTimer {
   public:
     /**
      * @brief Constructor
      */
     CpuTimer()
-        : start_(clock::now()) {}
+        : start_(now_seconds()) {}
 
     /**
      * @brief Reset the timer
      */
-    void reset() { start_ = clock::now(); }
+    void reset() { start_ = now_seconds(); }
 
     /**
      * @brief Get elapsed CPU time in seconds since initialization or last reset
+     *
      * @return CPU time in seconds
      */
     [[nodiscard]] double elapsed_seconds() const {
-        return d_seconds(clock::now() - start_).count();
+        return now_seconds() - start_;
     }
 
     /**
      * @brief Get elapsed CPU time in milliseconds since initialization or last
      * reset
+     *
      * @return CPU time in milliseconds
      */
     [[nodiscard]] double elapsed_milliseconds() const {
-        return d_milliseconds(clock::now() - start_).count();
+        return elapsed_seconds() * 1000.0;
     }
 
     /**
      * @brief Whether the timer uses a thread clock (i.e. provides proper,
      * thread-specific CPU time).
      */
-    static bool constexpr uses_thread_clock = true;
+    static bool const uses_thread_clock;
 
   private:
-    /** Start time */
-    time_point start_;
-};
-#else
-/** Tracks elapsed CPU time using std::clock. */
-class CpuTimer {
-  public:
     /**
-     * @brief Constructor
-     */
-    CpuTimer()
-        : start_(std::clock()) {}
-
-    /**
-     * @brief Reset the timer
-     */
-    void reset() { start_ = std::clock(); }
-
-    /**
-     * @brief Get elapsed CPU time in seconds since initialization or last reset
+     * @brief Get the current CPU time of the calling thread, or the value
+     * of std::clock if uses_thread_clock is false.
+     *
      * @return CPU time in seconds
      */
-    double elapsed_seconds() const {
-        return static_cast<double>(std::clock() - start_) / CLOCKS_PER_SEC;
-    }
+    static double now_seconds();
 
-    /**
-     * @brief Get elapsed CPU time in milliseconds since initialization or last
-     * reset
-     * @return CPU time in milliseconds
-     */
-    double elapsed_milliseconds() const {
-        return static_cast<double>(std::clock() - start_) * 1000.0
-               / CLOCKS_PER_SEC;
-    }
-
-    /**
-     * @brief Whether the timer uses a thread clock (i.e. provides proper,
-     * thread-specific CPU time).
-     */
-    static bool const uses_thread_clock = false;
-
-  private:
-    /** Start time */
-    std::clock_t start_;
+    /** Start time in seconds */
+    double start_;
 };
-#endif
 
 } // namespace amici
 

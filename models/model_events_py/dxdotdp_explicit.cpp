@@ -41,25 +41,25 @@ void dxdotdp_explicit_rowvals_model_events_py(SUNMatrixWrapper &dxdotdp_explicit
 
 #include "amici/symbolic_functions.h"
 #include "amici/defines.h"
-#include "sundials/sundials_types.h"
 
-#include <gsl/gsl-lite.hpp>
 #include <algorithm>
-
-#include "x.h"
-#include "p.h"
-#include "k.h"
-#include "h.h"
-#include "w.h"
-#include "dxdotdp_explicit.h"
+#include <sundials/sundials_types.h>
+#include <gsl/gsl-lite.hpp>
 
 namespace amici {
 namespace model_model_events_py {
 
 void dxdotdp_explicit_model_events_py(realtype *dxdotdp_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w){
-    ddx1dt_dp1 = -x1*(1 - Heaviside_2);  // dxdotdp_explicit[0]
-    ddx2dt_dp2 = x1*std::exp(-1.0/10.0*t);  // dxdotdp_explicit[1]
-    ddx2dt_dp3 = -x2;  // dxdotdp_explicit[2]
+    const realtype x1_ = x[0];
+    const realtype x2_ = x[1];
+    const realtype Heaviside_2_ = h[2];
+
+    realtype &ddx1dt_dp1_ = dxdotdp_explicit[0];
+    realtype &ddx2dt_dp2_ = dxdotdp_explicit[1];
+    realtype &ddx2dt_dp3_ = dxdotdp_explicit[2];
+    ddx1dt_dp1_ = -x1_*(1 - Heaviside_2_);  // dxdotdp_explicit[0]
+    ddx2dt_dp2_ = x1_*std::exp(-1.0/10.0*t);  // dxdotdp_explicit[1]
+    ddx2dt_dp3_ = -x2_;  // dxdotdp_explicit[2]
 }
 
 } // namespace model_model_events_py

@@ -1,24 +1,27 @@
 #include "amici/symbolic_functions.h"
 #include "amici/defines.h"
-#include "sundials/sundials_types.h"
 
-#include <gsl/gsl-lite.hpp>
 #include <algorithm>
-
-#include "x.h"
-#include "p.h"
-#include "k.h"
-#include "dx.h"
-#include "w.h"
-#include "xdot.h"
 
 namespace amici {
 namespace model_model_robertson_py {
 
 void xdot_model_robertson_py(realtype *xdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const realtype *w){
-    de_0 = -dx1dt - p1*x1 + p2*x2*x3;  // xdot[0]
-    de_1 = -dx2dt + p1*x1 - p2*x2*x3 - p3*std::pow(x2, 2);  // xdot[1]
-    ae_0 = x1 + x2 + x3 - 1;  // xdot[2]
+    const realtype x1_ = x[0];
+    const realtype x2_ = x[1];
+    const realtype x3_ = x[2];
+    const realtype p1_ = p[0];
+    const realtype p2_ = p[1];
+    const realtype p3_ = p[2];
+    const realtype dx1dt_ = dx[0];
+    const realtype dx2dt_ = dx[1];
+
+    realtype &de_0_ = xdot[0];
+    realtype &de_1_ = xdot[1];
+    realtype &ae_0_ = xdot[2];
+    de_0_ = -dx1dt_ - p1_*x1_ + p2_*x2_*x3_;  // xdot[0]
+    de_1_ = -dx2dt_ + p1_*x1_ - p2_*x2_*x3_ - p3_*std::pow(x2_, 2);  // xdot[1]
+    ae_0_ = x1_ + x2_ + x3_ - 1;  // xdot[2]
 }
 
 } // namespace model_model_robertson_py

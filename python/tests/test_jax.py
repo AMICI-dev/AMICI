@@ -1,24 +1,35 @@
-import pytest
-import amici
 from pathlib import Path
 
-pytest.importorskip("jax")
-import amici.jax
+import amici
+import pytest
 
+pytest.importorskip("pysb")
+pytest.importorskip("jax")
+import diffrax
+import jax
 import jax.numpy as jnp
 import jax.random as jr
-import jax
-import diffrax
-import optimistix
 import numpy as np
-from beartype import beartype
-from petab.v1.C import PREEQUILIBRATION_CONDITION_ID, SIMULATION_CONDITION_ID
-
-from amici.pysb_import import pysb2amici, pysb2jax
+import optimistix
+import sympy as sp
+from amici import MeasurementChannel as MC
+from amici import import_model_module
+from amici.exporters.jax.jaxcodeprinter import (
+    AmiciJaxCodePrinter,
+    _jnp_array_str,
+)
+from amici.importers.petab.v1 import import_petab_problem
+from amici.importers.pysb import pysb2amici, pysb2jax
+from amici.sim.jax import JAXProblem, ReturnValue, run_simulations
+from amici.sim.sundials import (
+    ExpData,
+    SensitivityMethod,
+    SensitivityOrder,
+)
 from amici.testing import TemporaryDirectoryWinSafe, skip_on_valgrind
-from amici.petab.petab_import import import_petab_problem
-from amici.jax import JAXProblem, ReturnValue, run_simulations
+from beartype import beartype
 from numpy.testing import assert_allclose
+from petab.v1.C import PREEQUILIBRATION_CONDITION_ID, SIMULATION_CONDITION_ID
 from test_petab_objective import lotka_volterra  # noqa: F401
 
 pysb = pytest.importorskip("pysb")
@@ -28,6 +39,31 @@ jax.config.update("jax_enable_x64", True)
 
 ATOL_SIM = 1e-12
 RTOL_SIM = 1e-12
+
+
+@skip_on_valgrind
+def test_code_printer_floats_roundtrip():
+    """Generated code must recover the exact double.
+
+    sympy's string printer emits only 15 significant digits, which perturbs
+    the last bits and breaks exact comparisons in the generated model
+    (SBML test suite case 00958: a parameter with value `pi` must test equal
+    to `pi`).
+    """
+    printer = AmiciJaxCodePrinter()
+    values = [sp.pi.evalf(), sp.Float(0.1), sp.Float(1) / 3, sp.Float(1e-17)]
+
+    for value in values:
+        assert float(printer.doprint(value)) == float(value)
+        # `Max`/`Min` build their argument array themselves
+        assert repr(float(value)) in printer.doprint(
+            sp.Max(value, sp.Symbol("x"))
+        )
+
+    # parameter values are emitted without going through `doprint`
+    assert _jnp_array_str(values) == "jnp.array([{}])".format(
+        ", ".join(repr(float(value)) for value in values)
+    )
 
 
 @skip_on_valgrind
@@ -42,13 +78,13 @@ def test_conversion():
     pysb.Observable("ab", a(s="b"))
 
     with TemporaryDirectoryWinSafe() as outdir:
-        pysb2amici(model, outdir, verbose=True, observables=["ab"])
-        pysb2jax(model, outdir, verbose=True, observables=["ab"])
+        pysb2amici(model, outdir, verbose=True, observation_model=[MC("ab")])
+        pysb2jax(model, outdir, verbose=True, observation_model=[MC("ab")])
 
-        amici_module = amici.import_model_module(
+        amici_module = import_model_module(
             module_name=model.name, module_path=outdir
         )
-        jax_module = amici.import_model_module(
+        jax_module = import_model_module(
             module_name=Path(outdir).stem, module_path=Path(outdir).parent
         )
 
@@ -97,19 +133,19 @@ def test_dimerization():
             model,
             outdir,
             verbose=True,
-            observables=["a_obs", "b_obs"],
-            constant_parameters=["ksyn_a", "ksyn_b"],
+            observation_model=[MC("a_obs"), MC("b_obs")],
+            fixed_parameters=["ksyn_a", "ksyn_b"],
         )
         pysb2jax(
             model,
             outdir,
-            observables=["a_obs", "b_obs"],
+            observation_model=[MC("a_obs"), MC("b_obs")],
         )
 
-        amici_module = amici.import_model_module(
+        amici_module = import_model_module(
             module_name=model.name, module_path=outdir
         )
-        jax_module = amici.import_model_module(
+        jax_module = import_model_module(
             module_name=Path(outdir).stem, module_path=Path(outdir).parent
         )
 
@@ -120,33 +156,31 @@ def test_dimerization():
 
 
 def _test_model(amici_module, jax_module, ts, p, k):
-    amici_model = amici_module.getModel()
+    amici_model = amici_module.get_model()
 
-    amici_model.setTimepoints(np.asarray(ts, dtype=np.float64))
-    sol_amici_ref = amici.runAmiciSimulation(
-        amici_model, amici_model.getSolver()
-    )
+    amici_model.set_timepoints(np.asarray(ts, dtype=np.float64))
+    sol_amici_ref = amici_model.simulate()
 
     jax_model = jax_module.Model()
 
-    amici_model.setParameters(np.asarray(p, dtype=np.float64))
-    amici_model.setFixedParameters(np.asarray(k, dtype=np.float64))
-    edata = amici.ExpData(sol_amici_ref, 1.0, 1.0)
-    edata.parameters = amici_model.getParameters()
-    edata.fixedParameters = amici_model.getFixedParameters()
-    edata.pscale = amici_model.getParameterScale()
-    amici_solver = amici_model.getSolver()
-    amici_solver.setSensitivityMethod(amici.SensitivityMethod.forward)
-    amici_solver.setSensitivityOrder(amici.SensitivityOrder.first)
-    amici_solver.setAbsoluteTolerance(ATOL_SIM)
-    amici_solver.setRelativeTolerance(RTOL_SIM)
-    rs_amici = amici.runAmiciSimulations(amici_model, amici_solver, [edata])
+    amici_model.set_free_parameters(np.asarray(p, dtype=np.float64))
+    amici_model.set_fixed_parameters(np.asarray(k, dtype=np.float64))
+    edata = ExpData(sol_amici_ref, 1.0, 1.0, 1)
+    edata.free_parameters = amici_model.get_free_parameters()
+    edata.fixed_parameters = amici_model.get_fixed_parameters()
+    edata.pscale = amici_model.get_parameter_scale()
+    amici_solver = amici_model.create_solver()
+    amici_solver.set_sensitivity_method(SensitivityMethod.forward)
+    amici_solver.set_sensitivity_order(SensitivityOrder.first)
+    amici_solver.set_absolute_tolerance(ATOL_SIM)
+    amici_solver.set_relative_tolerance(RTOL_SIM)
+    rs_amici = amici_model.simulate(solver=amici_solver, edata=[edata])
 
     check_fields_jax(
         rs_amici,
         jax_model,
-        amici_model.getParameterIds(),
-        amici_model.getFixedParameterIds(),
+        amici_model.get_free_parameter_ids(),
+        amici_model.get_fixed_parameter_ids(),
         edata,
         ["x", "y", "llh", "res", "x0"],
     )
@@ -154,26 +188,26 @@ def _test_model(amici_module, jax_module, ts, p, k):
     check_fields_jax(
         rs_amici,
         jax_model,
-        amici_model.getParameterIds(),
-        amici_model.getFixedParameterIds(),
+        amici_model.get_free_parameter_ids(),
+        amici_model.get_fixed_parameter_ids(),
         edata,
         ["sllh", "sx0", "sx", "sres", "sy"],
-        sensi_order=amici.SensitivityOrder.first,
+        sensi_order=SensitivityOrder.first,
     )
 
 
 def check_fields_jax(
     rs_amici,
     jax_model,
-    parameter_ids,
+    free_parameter_ids,
     fixed_parameter_ids,
     edata,
     fields,
-    sensi_order=amici.SensitivityOrder.none,
+    sensi_order=SensitivityOrder.none,
 ):
     r_jax = dict()
-    ts = np.array(edata.getTimepoints())
-    my = np.array(edata.getObservedData()).reshape(len(ts), -1)
+    ts = np.array(edata.get_timepoints())
+    my = np.array(edata.get_measurements()).reshape(len(ts), -1)
     ts = np.repeat(ts.reshape(-1, 1), my.shape[1], axis=1)
     iys = np.repeat(np.arange(my.shape[1]).reshape(1, -1), len(ts), axis=0)
     my = my.flatten()
@@ -185,8 +219,8 @@ def check_fields_jax(
     ts_posteq = np.array([])
 
     par_dict = {
-        **dict(zip(parameter_ids, edata.parameters)),
-        **dict(zip(fixed_parameter_ids, edata.fixedParameters)),
+        **dict(zip(free_parameter_ids, edata.free_parameters)),
+        **dict(zip(fixed_parameter_ids, edata.fixed_parameters)),
     }
 
     p = jnp.array([par_dict[par_id] for par_id in jax_model.parameter_ids])
@@ -200,13 +234,15 @@ def check_fields_jax(
         "iy_trafos": jnp.array(iy_trafos),
         "x_preeq": jnp.array([]),
         "solver": diffrax.Kvaerno5(),
-        "controller": diffrax.PIDController(atol=ATOL_SIM, rtol=RTOL_SIM),
+        "controller": diffrax.PIDController(atol=1e-8, rtol=1e-8),
         "root_finder": optimistix.Newton(atol=ATOL_SIM, rtol=RTOL_SIM),
         "adjoint": diffrax.RecursiveCheckpointAdjoint(),
         "steady_state_event": diffrax.steady_state_event(),
         "max_steps": 2**8,  # max_steps
     }
-    fun = beartype(jax_model.simulate_condition)
+    # Use beartype-wrapped unjitted version for type checking
+    # (beartype cannot introspect jitted functions, so we wrap the unjitted version)
+    fun = beartype(jax_model.simulate_condition_unjitted)
 
     for output in ["llh", "x0", "x", "y", "res"]:
         okwargs = kwargs | {
@@ -214,9 +250,9 @@ def check_fields_jax(
             "max_steps": 2**8,
             "ret": ReturnValue[output],
         }
-        if sensi_order == amici.SensitivityOrder.none:
+        if sensi_order == SensitivityOrder.none:
             r_jax[output] = fun(p, **okwargs)[0]
-        if sensi_order == amici.SensitivityOrder.first:
+        if sensi_order == SensitivityOrder.first:
             if output == "llh":
                 r_jax[f"s{output}"] = jax.grad(fun, has_aux=True)(p, **kwargs)[
                     0
@@ -227,7 +263,10 @@ def check_fields_jax(
                 )[0]
 
     amici_par_idx = np.array(
-        [jax_model.parameter_ids.index(par_id) for par_id in parameter_ids]
+        [
+            jax_model.parameter_ids.index(par_id)
+            for par_id in free_parameter_ids
+        ]
     )
 
     for field in fields:
@@ -275,21 +314,20 @@ def check_fields_jax(
 def test_preequilibration_failure(lotka_volterra):  # noqa: F811
     petab_problem = lotka_volterra
     # oscillating system, preequilibation should fail when interaction is active
+
     with TemporaryDirectoryWinSafe(prefix="normal") as model_dir:
-        jax_model = import_petab_problem(
-            petab_problem, jax=True, model_output_dir=model_dir
+        jax_problem = import_petab_problem(
+            petab_problem, jax=True, output_dir=model_dir
         )
-        jax_problem = JAXProblem(jax_model, petab_problem)
         r = run_simulations(jax_problem)
         assert not np.isinf(r[0].item())
     petab_problem.measurement_df[PREEQUILIBRATION_CONDITION_ID] = (
         petab_problem.measurement_df[SIMULATION_CONDITION_ID]
     )
     with TemporaryDirectoryWinSafe(prefix="failure") as model_dir:
-        jax_model = import_petab_problem(
-            petab_problem, jax=True, model_output_dir=model_dir
+        jax_problem = import_petab_problem(
+            petab_problem, jax=True, output_dir=model_dir
         )
-        jax_problem = JAXProblem(jax_model, petab_problem)
         r = run_simulations(jax_problem)
         assert np.isinf(r[0].item())
 
@@ -300,10 +338,9 @@ def test_serialisation(lotka_volterra):  # noqa: F811
     with TemporaryDirectoryWinSafe(
         prefix=petab_problem.model.model_id
     ) as model_dir:
-        jax_model = import_petab_problem(
-            petab_problem, jax=True, model_output_dir=model_dir
+        jax_problem = import_petab_problem(
+            petab_problem, jax=True, output_dir=model_dir
         )
-        jax_problem = JAXProblem(jax_model, petab_problem)
         # change parameters to random values to test serialisation
         jax_problem.update_parameters(
             jax_problem.parameters
@@ -320,13 +357,670 @@ def test_serialisation(lotka_volterra):  # noqa: F811
 
 
 @skip_on_valgrind
+def test_serialisation_parameter_scales(lotka_volterra):  # noqa: F811
+    """Parameter scales survive a save/load round-trip."""
+    petab_problem = lotka_volterra
+    parameter_scales = {"alpha": "log10", "gamma": "log"}
+    with TemporaryDirectoryWinSafe(
+        prefix=petab_problem.model.model_id
+    ) as model_dir:
+        jax_problem = import_petab_problem(
+            petab_problem, jax=True, output_dir=model_dir
+        )
+        jax_problem = JAXProblem(
+            jax_problem.model,
+            jax_problem._petab_problem,
+            parameter_scales=parameter_scales,
+        )
+        jax_problem = jax_problem.update_parameters(
+            jax_problem.parameters + 0.1
+        )
+
+        with TemporaryDirectoryWinSafe() as outdir:
+            outdir = Path(outdir)
+            jax_problem.save(outdir)
+            jax_problem_loaded = JAXProblem.load(outdir)
+
+        assert jax_problem.parameter_scales == parameter_scales
+        assert jax_problem_loaded.parameter_scales == parameter_scales
+        assert_allclose(jax_problem_loaded.parameters, jax_problem.parameters)
+        assert_allclose(
+            run_simulations(jax_problem_loaded)[0],
+            run_simulations(jax_problem)[0],
+            rtol=1e-12,
+        )
+
+
+@skip_on_valgrind
+def test_condition_table_initial_value_is_differentiable(tmp_path):
+    """A parameter used as a species initial value via the condition table
+    must stay a live function of ``JAXProblem.parameters``.
+
+    Regression test for a bug where the reinitialisation value was resolved
+    through the ``targets_map`` cached at construction time
+    (see ``JAXProblem._state_reinitialisation_value``): the initial value was
+    then frozen at the nominal parameter value, so ``update_parameters`` had
+    no effect on it and its gradient silently leaked into the cache instead of
+    ``grad.parameters``.
+    """
+    import equinox as eqx
+    import petab.v1 as petab
+    from petab.v1.models.sbml_model import SbmlModel
+
+    problem = petab.Problem()
+    problem.model = SbmlModel.from_antimony(
+        "compartment_ = 1;\n"
+        "species A in compartment_, B in compartment_;\n"
+        "A = 3; B = 0;\n"
+        "k1 = 0.8; k2 = 0.6;\n"
+        "fwd: A -> B; k1 * A;\n"
+        "rev: B -> A; k2 * B;\n"
+    )
+    # `a0` initialises species `A` via the condition table (not in the model)
+    problem.add_parameter(
+        "a0", estimate=True, nominal_value=2.0, scale="lin", lb=0.1, ub=10
+    )
+    problem.add_observable("obs_a", "A", noise_formula="0.5")
+    problem.add_condition("c0", A="a0")
+    problem.add_measurement("obs_a", "c0", 0.0, 0.7)
+    problem.add_measurement("obs_a", "c0", 10.0, 0.1)
+
+    jax_problem = import_petab_problem(
+        problem, jax=True, output_dir=str(tmp_path)
+    )
+    ia = jax_problem.parameter_ids.index("a0")
+
+    def llh(p):
+        return run_simulations(jax_problem.update_parameters(p))[0]
+
+    p0 = jax_problem.parameters
+    # `a0` enters the likelihood only through A(0); updating it must change llh
+    assert abs(float(llh(p0.at[ia].add(1.0))) - float(llh(p0))) > 1e-6, (
+        "initial value is frozen w.r.t. update_parameters"
+    )
+
+    # autodiff w.r.t. `a0` (read from grad.parameters) must match finite diff
+    eps = 1e-6
+    fd = (float(llh(p0.at[ia].add(eps))) - float(llh(p0.at[ia].add(-eps)))) / (
+        2 * eps
+    )
+    grad = eqx.filter_grad(lambda m: run_simulations(m)[0])(
+        jax_problem.update_parameters(p0)
+    )
+    assert_allclose(float(grad.parameters[ia]), fd, rtol=1e-4, atol=1e-4)
+
+
+@skip_on_valgrind
+def test_condition_table_parameter_override_is_differentiable(tmp_path):
+    """A model parameter mapped to an estimated parameter via the condition
+    table (the standard PEtab pattern for condition-specific estimated
+    parameters) must stay a live function of ``JAXProblem.parameters``.
+
+    Regression test for the same construction-time freezing bug as
+    ``test_condition_table_initial_value_is_differentiable``, on the parameter
+    mapping path (``JAXProblem._map_experiment_model_parameter_value``).
+    """
+    import equinox as eqx
+    import petab.v1 as petab
+    from petab.v1.models.sbml_model import SbmlModel
+
+    problem = petab.Problem()
+    problem.model = SbmlModel.from_antimony(
+        "compartment_ = 1;\n"
+        "species A in compartment_, B in compartment_;\n"
+        "A = 1; B = 0;\n"
+        "k1 = 0.8; k2 = 0.6;\n"
+        "fwd: A -> B; k1 * A;\n"
+        "rev: B -> A; k2 * B;\n"
+    )
+    # the condition maps model parameter `k1` to the estimated `k1_c0`
+    problem.add_parameter(
+        "k1_c0", estimate=True, nominal_value=0.8, scale="lin", lb=0.1, ub=10
+    )
+    problem.add_observable("obs_b", "B", noise_formula="0.5")
+    problem.add_condition("c0", k1="k1_c0")
+    problem.add_measurement("obs_b", "c0", 1.0, 0.3)
+    problem.add_measurement("obs_b", "c0", 5.0, 0.4)
+
+    jax_problem = import_petab_problem(
+        problem, jax=True, output_dir=str(tmp_path)
+    )
+    ik = jax_problem.parameter_ids.index("k1_c0")
+
+    def llh(p):
+        return run_simulations(jax_problem.update_parameters(p))[0]
+
+    p0 = jax_problem.parameters
+    assert abs(float(llh(p0.at[ik].add(0.3))) - float(llh(p0))) > 1e-6, (
+        "condition-overridden parameter is frozen w.r.t. update_parameters"
+    )
+
+    eps = 1e-6
+    fd = (float(llh(p0.at[ik].add(eps))) - float(llh(p0.at[ik].add(-eps)))) / (
+        2 * eps
+    )
+    grad = eqx.filter_grad(lambda m: run_simulations(m)[0])(
+        jax_problem.update_parameters(p0)
+    )
+    assert_allclose(float(grad.parameters[ik]), fd, rtol=1e-4, atol=1e-4)
+
+
+@skip_on_valgrind
+def test_condition_table_parameter_scales(tmp_path):
+    """Estimated parameters on non-linear scales are unscaled wherever they
+    enter the model: as initial values and model parameter overrides via the
+    condition table, and as noise parameter overrides.
+
+    The log-likelihood must not depend on the scales, and its gradient
+    w.r.t. ``JAXProblem.parameters`` must follow the chain rule.
+    """
+    import equinox as eqx
+    import petab.v1 as petab
+    from petab.v1.models.sbml_model import SbmlModel
+
+    problem = petab.Problem()
+    problem.model = SbmlModel.from_antimony(
+        "compartment_ = 1;\n"
+        "species A in compartment_, B in compartment_;\n"
+        "A = 3; B = 0;\n"
+        "k1 = 0.8; k2 = 0.6;\n"
+        "fwd: A -> B; k1 * A;\n"
+        "rev: B -> A; k2 * B;\n"
+    )
+    for par_id, nominal_value in (("a0", 2.0), ("k1_c0", 0.8), ("sd_b", 0.5)):
+        problem.add_parameter(
+            par_id,
+            estimate=True,
+            nominal_value=nominal_value,
+            scale="lin",
+            lb=0.1,
+            ub=10,
+        )
+    problem.add_observable("obs_a", "A", noise_formula="0.5")
+    problem.add_observable("obs_b", "B", noise_formula="noiseParameter1_obs_b")
+    # `a0` initialises species `A`, and `k1_c0` replaces model parameter `k1`
+    problem.add_condition("c0", A="a0", k1="k1_c0")
+    problem.add_measurement("obs_a", "c0", 0.0, 0.7)
+    problem.add_measurement("obs_a", "c0", 10.0, 0.1)
+    problem.add_measurement("obs_b", "c0", 1.0, 0.3, noise_parameters=["sd_b"])
+    problem.add_measurement("obs_b", "c0", 5.0, 0.4, noise_parameters=["sd_b"])
+
+    jax_problem_lin = import_petab_problem(
+        problem, jax=True, output_dir=str(tmp_path)
+    )
+    parameter_scales = {"a0": "log10", "k1_c0": "log", "sd_b": "log10"}
+    jax_problem = JAXProblem(
+        jax_problem_lin.model,
+        jax_problem_lin._petab_problem,
+        parameter_scales=parameter_scales,
+    )
+    par_ids = jax_problem.parameter_ids
+    assert par_ids == ["a0", "k1_c0", "sd_b"]
+    assert jax_problem.parameter_scales == parameter_scales
+
+    x = {"a0": 2.5, "k1_c0": 0.5, "sd_b": 0.4}
+    p_lin = jnp.array([x[par_id] for par_id in par_ids])
+    p_scaled = jnp.array(
+        [
+            petab.scale(x[par_id], parameter_scales[par_id])
+            for par_id in par_ids
+        ]
+    )
+    # d x_lin / d x_scaled
+    dlin_dscaled = np.array(
+        [
+            x[par_id]
+            * (np.log(10) if parameter_scales[par_id] == "log10" else 1.0)
+            for par_id in par_ids
+        ]
+    )
+
+    def llh(jp):
+        return run_simulations(jp)[0]
+
+    # nominal values on their scales
+    assert_allclose(
+        jax_problem.parameters,
+        [np.log10(2.0), np.log(0.8), np.log10(0.5)],
+        rtol=1e-15,
+    )
+    assert_allclose(llh(jax_problem), llh(jax_problem_lin), rtol=1e-10)
+
+    llh_lin, grad_lin = eqx.filter_value_and_grad(llh)(
+        jax_problem_lin.update_parameters(p_lin)
+    )
+    llh_scaled, grad = eqx.filter_value_and_grad(llh)(
+        jax_problem.update_parameters(p_scaled)
+    )
+    assert_allclose(llh_scaled, llh_lin, rtol=1e-10)
+    assert_allclose(
+        grad.parameters, grad_lin.parameters * dlin_dscaled, rtol=1e-8
+    )
+    assert np.all(np.abs(np.asarray(grad.parameters)) > 1e-3)
+
+
+@skip_on_valgrind
+def test_condition_table_initial_value_with_renamed_conditions(tmp_path):
+    """A condition-table change of a species must still be found when the
+    conditions have been renamed during import.
+
+    ``PetabImporter`` converts the PEtab experiments to SBML events
+    (``petab.v2.converters.ExperimentsToSbmlConverter``), which replaces the
+    condition table by ``_petab*`` indicator conditions. The simulation
+    condition ids of the resulting ``JAXProblem`` therefore no longer name the
+    original condition-table entries.
+
+    Regression test for a bug where
+    ``JAXProblem._condition_reinit_target_value`` only looked the (converted)
+    ids up in the converted condition table -- which merely sets the indicator
+    parameters -- so the state was reported as not needing reinitialisation.
+    ``_eval_nn`` already resolved the ids back to the original ones via
+    ``_resolve_original_condition_id``; the reinitialisation lookup must do the
+    same, while still returning the *raw* target value so that the caller can
+    resolve it against the traced ``JAXProblem.parameters``.
+    """
+    import equinox as eqx
+    from amici.importers.petab import PetabImporter
+    from petab.v2 import Problem
+    from petab.v2.core import ProblemConfig
+    from petab.v2.models.sbml_model import SbmlModel
+
+    problem = Problem()
+    problem.config = ProblemConfig()
+    problem.model = SbmlModel.from_antimony(
+        "compartment_ = 1;\n"
+        "species A in compartment_, B in compartment_;\n"
+        "A = 3; B = 0;\n"
+        "k1 = 0.8; k2 = 0.6;\n"
+        "fwd: A -> B; k1 * A;\n"
+        "rev: B -> A; k2 * B;\n"
+    )
+    # `a0` initialises species `A` via the condition table (not in the model)
+    problem.add_parameter(
+        "a0", nominal_value=2.0, estimate=True, lb=0.1, ub=10, scale="lin"
+    )
+    problem.add_observable("obs_a", formula="A", noise_formula="0.5")
+    problem.add_condition("c0", A="a0")
+    problem.add_experiment("e0", 0, "c0")
+    problem.add_measurement(
+        "obs_a", experiment_id="e0", time=0.0, measurement=0.7
+    )
+    problem.add_measurement(
+        "obs_a", experiment_id="e0", time=10.0, measurement=0.1
+    )
+
+    jax_problem = PetabImporter(
+        problem,
+        jax=True,
+        module_name="test_reinit_renamed_conditions",
+        output_dir=str(tmp_path),
+        verbose=False,
+    ).create_simulator(force_import=True)
+
+    (condition_id,) = jax_problem.simulation_conditions
+    sc = (condition_id,)
+    # The import must actually have renamed the condition, otherwise the
+    # resolution under test is never exercised.
+    assert condition_id != "c0"
+    assert "c0" not in {c.id for c in jax_problem._petab_problem.conditions}
+    assert "c0" in {c.id for c in jax_problem._unconverted_problem.conditions}
+
+    # the raw (unresolved) target value is looked up under the original id
+    assert str(jax_problem._condition_reinit_target_value(sc, "A")) == "a0"
+    assert jax_problem._condition_reinit_target_value(sc, "B") is None
+
+    ix = jax_problem.model.state_ids.index("A")
+    ia = jax_problem.parameter_ids.index("a0")
+
+    mask, reinit_x = jax_problem.load_reinitialisation(sc)
+    assert bool(mask[ix]), "state reinitialisation was not detected"
+    assert not bool(mask[jax_problem.model.state_ids.index("B")])
+    assert_allclose(float(reinit_x[ix]), 2.0)
+
+    # the raw value must be resolved live, so it follows `update_parameters`...
+    p0 = jax_problem.parameters
+    _, reinit_x = jax_problem.update_parameters(
+        p0.at[ia].set(5.0)
+    ).load_reinitialisation(sc)
+    assert_allclose(float(reinit_x[ix]), 5.0)
+
+    # ... and stays differentiable w.r.t. `JAXProblem.parameters`
+    grad = eqx.filter_grad(lambda m: m.load_reinitialisation(sc)[1][ix])(
+        jax_problem
+    )
+    assert_allclose(float(grad.parameters[ia]), 1.0)
+
+    # the reinitialised initial value is reflected in the likelihood
+    def llh(p):
+        return float(run_simulations(jax_problem.update_parameters(p))[0])
+
+    assert abs(llh(p0.at[ia].add(1.0)) - llh(p0)) > 1e-6
+    eps = 1e-6
+    fd = (llh(p0.at[ia].add(eps)) - llh(p0.at[ia].add(-eps))) / (2 * eps)
+    grad = eqx.filter_grad(lambda m: run_simulations(m)[0])(
+        jax_problem.update_parameters(p0)
+    )
+    assert_allclose(float(grad.parameters[ia]), fd, rtol=1e-4, atol=1e-4)
+
+
+@skip_on_valgrind
+def test_renamed_conditions_reinitialisation_respects_period_start(tmp_path):
+    """Resolving renamed conditions must not reinitialise a state for a period
+    that does not start at the simulated ``t0``.
+
+    Reinitialisation is applied at the initial time of the (pre-)equilibration
+    or of the dynamic simulation, which for an experiment with
+    preequilibration is ``t=0`` -- not the start time of the first dynamic
+    period. A change of a later-starting period is applied by the event that
+    ``PetabImporter`` created for it, so resolving the renamed conditions
+    (see ``test_condition_table_initial_value_with_renamed_conditions``) must
+    not additionally reinitialise the state at ``t0``, which would apply the
+    change too early (PEtab test suite cases 0017/0018).
+    """
+    from amici.importers.petab import PetabImporter
+    from amici.sim.jax.petab import _get_period_condition_ids
+    from petab.v2 import Problem
+    from petab.v2.core import ProblemConfig
+    from petab.v2.models.sbml_model import SbmlModel
+
+    problem = Problem()
+    problem.config = ProblemConfig()
+    problem.model = SbmlModel.from_antimony(
+        "compartment_ = 1;\n"
+        "species A in compartment_, B in compartment_;\n"
+        "A = 3; B = 0;\n"
+        "k1 = 0.8; k2 = 0.6;\n"
+        "fwd: A -> B; k1 * A;\n"
+        "rev: B -> A; k2 * B;\n"
+    )
+    problem.add_observable("obs_a", formula="A", noise_formula="0.5")
+    problem.add_condition("preeq_c0", A=0.0, B=2.0)
+    problem.add_condition("c0", A=1.0)
+    # the dynamic period starts at t=10, i.e. after the simulation's t0 (=0)
+    problem.add_experiment("e0", "-inf", "preeq_c0", 10.0, "c0")
+    problem.add_measurement(
+        "obs_a", experiment_id="e0", time=10.0, measurement=0.7
+    )
+    problem.add_measurement(
+        "obs_a", experiment_id="e0", time=20.0, measurement=0.1
+    )
+
+    jax_problem = PetabImporter(
+        problem,
+        jax=True,
+        module_name="test_reinit_renamed_conditions_preeq",
+        output_dir=str(tmp_path),
+        verbose=False,
+    ).create_simulator(force_import=True)
+
+    (experiment,) = jax_problem._petab_problem.experiments
+    preeq_conditions = _get_period_condition_ids(
+        experiment, is_preequilibration=True
+    )
+    dyn_conditions = _get_period_condition_ids(
+        experiment, is_preequilibration=False
+    )
+    # both periods carry the same experiment indicator condition, so a single
+    # condition id does not identify the period
+    assert set(preeq_conditions) & set(dyn_conditions)
+
+    # the preequilibration period starts at the preequilibration's t0 ...
+    assert (
+        float(
+            jax_problem._condition_reinit_target_value(preeq_conditions, "B")
+        )
+        == 2.0
+    )
+    mask, reinit_x = jax_problem.load_reinitialisation(preeq_conditions)
+    ib = jax_problem.model.state_ids.index("B")
+    assert bool(mask[ib])
+    assert_allclose(float(reinit_x[ib]), 2.0)
+
+    # ... whereas the dynamic period starts at t=10, so `A = 1` must be left to
+    # the event and not be applied at t0
+    assert (
+        jax_problem._condition_reinit_target_value(dyn_conditions, "A") is None
+    )
+    mask, _ = jax_problem.load_reinitialisation(dyn_conditions)
+    assert not bool(mask[jax_problem.model.state_ids.index("A")])
+
+
+@skip_on_valgrind
+def test_prepare_experiments_numeric_overrides_without_parameters(tmp_path):
+    """
+    Regression test: ``_prepare_experiments`` must preserve the shape of numeric override
+    arrays when the problem has no estimated scalar parameters.
+    """
+    import petab.v1 as petab
+    from amici.sim.jax.petab import _get_period_condition_ids
+    from petab.v1.models.sbml_model import SbmlModel
+
+    problem = petab.Problem()
+    problem.model = SbmlModel.from_antimony(
+        "compartment_ = 1;\n"
+        "species A in compartment_, B in compartment_;\n"
+        "A = 1; B = 0;\n"
+        "k1 = 0.8; k2 = 0.6;\n"
+        "fwd: A -> B; k1 * A;\n"
+        "rev: B -> A; k2 * B;\n"
+    )
+    # no estimated parameters -> ``JAXProblem.parameters`` is empty
+    problem.add_parameter(
+        "k2", estimate=False, nominal_value=0.6, scale="lin", lb=0.1, ub=10
+    )
+    # numeric noise-parameter overrides -> ``_np_numeric`` is non-empty while
+    # ``_np_mask`` is all-False (nothing to look up in the parameter vector)
+    problem.add_observable("obs_b", "B", noise_formula="noiseParameter1_obs_b")
+    problem.add_condition("c0", k1=0.8)
+    problem.add_measurement("obs_b", "c0", 1.0, 0.3, noise_parameters=[0.5])
+    problem.add_measurement("obs_b", "c0", 5.0, 0.4, noise_parameters=[0.7])
+
+    jax_problem = import_petab_problem(
+        problem, jax=True, output_dir=str(tmp_path)
+    )
+    assert jax_problem.parameters.size == 0
+    assert jax_problem._np_numeric.size
+
+    experiments = jax_problem._petab_problem.experiments
+    conditions = [
+        _get_period_condition_ids(exp, is_preequilibration=False)
+        for exp in experiments
+    ]
+    ei = jax_problem._experiment_indices(experiments)
+    np_numeric = jax_problem._np_numeric[ei]
+
+    (*_, np_array, _, _) = jax_problem._prepare_experiments(
+        experiments,
+        conditions,
+        False,
+        jax_problem._op_numeric[ei],
+        jax_problem._op_mask[ei],
+        jax_problem._op_indices[ei],
+        np_numeric,
+        jax_problem._np_mask[ei],
+        jax_problem._np_indices[ei],
+    )
+
+    assert np_array.shape == np_numeric.shape
+    assert_allclose(np.asarray(np_array), np.asarray(np_numeric))
+
+
+@skip_on_valgrind
+def test_petab_simulate_ragged_experiments(tmp_path):
+    """``petab_simulate`` must handle experiments with different numbers of
+    measurement timepoints.
+
+    Regression test for ``_build_simulation_df_v2``: ``_get_measurements``
+    pads every experiment's arrays to a common length, so an experiment with
+    fewer timepoints has masked-out padding. If the padding mask is not
+    applied consistently to the index and all columns, building the
+    simulation DataFrame raises ``ValueError: arrays must all be same
+    length`` (or leaks padded/duplicated indices).
+    """
+    import petab.v1 as petab
+    from amici.sim.jax import petab_simulate
+    from petab.v1.models.sbml_model import SbmlModel
+
+    problem = petab.Problem()
+    problem.model = SbmlModel.from_antimony(
+        "compartment_ = 1;\n"
+        "species A in compartment_, B in compartment_;\n"
+        "A = 1; B = 0;\n"
+        "k1 = 0.8; k2 = 0.6;\n"
+        "fwd: A -> B; k1 * A;\n"
+        "rev: B -> A; k2 * B;\n"
+    )
+    # `k1` is set per condition below, so only the free `k2` goes in the
+    # parameter table
+    problem.add_parameter(
+        "k2", estimate=False, nominal_value=0.6, scale="lin", lb=0.1, ub=10
+    )
+    problem.add_observable("obs_b", "B", noise_formula="0.5")
+    # two conditions -> two experiments, with DIFFERENT numbers of
+    # timepoints so `_ts_masks` has genuine padding
+    problem.add_condition("c0", k1=0.8)
+    problem.add_condition("c1", k1=0.5)
+    problem.add_measurement("obs_b", "c0", 1.0, 0.3)
+    problem.add_measurement("obs_b", "c1", 1.0, 0.4)
+    problem.add_measurement("obs_b", "c1", 5.0, 0.2)
+
+    jax_problem = import_petab_problem(
+        problem, jax=True, output_dir=str(tmp_path)
+    )
+
+    sim_df = petab_simulate(jax_problem)
+
+    # exactly one simulated row per measurement (1 for c0, 2 for c1) -- no
+    # length mismatch, no padded/duplicated rows, no missing simulations
+    assert len(sim_df) == len(problem.measurement_df) == 3
+    assert sim_df.index.is_unique
+    assert sorted(sim_df[petab.TIME].tolist()) == [1.0, 1.0, 5.0]
+    assert not sim_df[petab.SIMULATION].isna().any()
+
+
+@skip_on_valgrind
+def test_steady_state_event_no_recompile_across_conditions(
+    tmp_path, monkeypatch
+):
+    """Simulating different conditions/parameters must not force JAX to
+    recompile, as long as only numeric inputs (e.g. parameters) change.
+    """
+    import equinox as eqx
+    from amici.importers.antimony import antimony2sbml
+    from amici.importers.sbml import SbmlImporter
+    from amici.sim.jax.model import JAXModel
+    from amici.sim.jax.petab import (
+        DEFAULT_CONTROLLER_SETTINGS,
+        DEFAULT_ROOT_FINDER_SETTINGS,
+        SteadyStateEvent,
+    )
+
+    ant_model = """
+    model steady_state_recompile
+        x' = -k * x
+        x = 1
+        k = 1
+    end
+    """
+    sbml = antimony2sbml(ant_model)
+    importer = SbmlImporter(sbml, from_file=False)
+    importer.sbml2jax("steady_state_recompile", output_dir=tmp_path)
+    module = amici._module_from_path(
+        "steady_state_recompile", tmp_path / "__init__.py"
+    )
+    model = module.Model()
+
+    def fresh_solver_kwargs():
+        # construct brand new instances on every call, mimicking e.g. an
+        # optimizer objective that rebuilds solver settings each iteration
+        return dict(
+            solver=diffrax.Kvaerno5(),
+            controller=diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
+            root_finder=optimistix.Newton(**DEFAULT_ROOT_FINDER_SETTINGS),
+            steady_state_event=SteadyStateEvent(),
+        )
+
+    conditions = [1.0, 2.5, 0.3]  # numeric-only differences between calls
+
+    # Avoid order-dependent failures if prior tests already compiled these methods.
+    jax.clear_caches()
+
+    def patch_trace_counter(target, name):
+        # eqx.debug.assert_max_traces/get_num_traces track calls to a plain
+        # callable; since it isn't itself a descriptor, dispatch to it
+        # manually so `self` is still bound correctly when called as
+        # `self.<name>(...)`.
+        wrapped = eqx.debug.assert_max_traces(
+            getattr(target, name), max_traces=1
+        )
+
+        def dispatch(self, *args, **kwargs):
+            return wrapped(self, *args, **kwargs)
+
+        monkeypatch.setattr(target, name, dispatch)
+        return wrapped
+
+    ts = jnp.array([0.0, 1.0, 2.0])
+    my = jnp.zeros_like(ts)
+    iys = jnp.zeros_like(ts, dtype=int)
+    iy_trafos = jnp.zeros_like(ts, dtype=int)
+
+    simulate_traces = patch_trace_counter(
+        JAXModel, "simulate_condition_unjitted"
+    )
+    for k_val in conditions:
+        kwargs = fresh_solver_kwargs()
+        model.simulate_condition(
+            jnp.array([k_val]),
+            ts,
+            jnp.array([]),
+            my,
+            iys,
+            iy_trafos,
+            jnp.zeros((3, 0)),
+            jnp.zeros((3, 0)),
+            kwargs["solver"],
+            kwargs["controller"],
+            kwargs["root_finder"],
+            diffrax.RecursiveCheckpointAdjoint(),
+            kwargs["steady_state_event"],
+            1000,
+        )
+
+    assert eqx.debug.get_num_traces(simulate_traces) == 1, (
+        "simulate_condition was retraced across conditions with only "
+        "numeric differences"
+    )
+
+    preeq_traces = patch_trace_counter(JAXModel, "_handle_t0_event")
+    for k_val in conditions:
+        kwargs = fresh_solver_kwargs()
+        model.preequilibrate_condition(
+            jnp.array([k_val]),
+            jnp.array([]),
+            jnp.array([]),
+            jnp.array([]),
+            kwargs["solver"],
+            kwargs["controller"],
+            kwargs["root_finder"],
+            kwargs["steady_state_event"],
+            1000,
+        )
+
+    assert eqx.debug.get_num_traces(preeq_traces) == 1, (
+        "preequilibrate_condition was retraced across conditions with only "
+        "numeric differences"
+    )
+
+
+@skip_on_valgrind
 def test_time_dependent_discontinuity(tmp_path):
     """Models with time dependent discontinuities are handled."""
 
-    from amici.antimony_import import antimony2sbml
-    from amici.sbml_import import SbmlImporter
-    from amici.jax.petab import DEFAULT_CONTROLLER_SETTINGS
-    from amici.jax._simulation import solve
+    from amici.importers.antimony import antimony2sbml
+    from amici.importers.sbml import SbmlImporter
+    from amici.sim.jax._simulation import solve
+    from amici.sim.jax.petab import DEFAULT_CONTROLLER_SETTINGS
 
     ant_model = """
     model time_disc
@@ -337,6 +1031,7 @@ def test_time_dependent_discontinuity(tmp_path):
 
     sbml = antimony2sbml(ant_model)
     importer = SbmlImporter(sbml, from_file=False)
+
     importer.sbml2jax("time_disc", output_dir=tmp_path)
 
     module = amici._module_from_path("time_disc", tmp_path / "__init__.py")
@@ -354,10 +1049,12 @@ def test_time_dependent_discontinuity(tmp_path):
 
     ys, _, _ = solve(
         p,
+        ts[0],
         ts,
         tcl,
         h,
         x0,
+        jnp.ones_like(h),
         diffrax.Tsit5(),
         diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
         optimistix.Newton(atol=1e-8, rtol=1e-8),
@@ -366,7 +1063,9 @@ def test_time_dependent_discontinuity(tmp_path):
         diffrax.ODETerm(model._xdot),
         model._root_cond_fns(),
         model._root_cond_fn,
+        model._delta_x,
         model._known_discs(p),
+        model.observable_ids,
     )
 
     assert ys.shape[0] == ts.shape[0]
@@ -376,10 +1075,10 @@ def test_time_dependent_discontinuity(tmp_path):
 def test_time_dependent_discontinuity_equilibration(tmp_path):
     """Time dependent discontinuities are handled during equilibration."""
 
-    from amici.antimony_import import antimony2sbml
-    from amici.sbml_import import SbmlImporter
-    from amici.jax.petab import DEFAULT_CONTROLLER_SETTINGS
-    from amici.jax._simulation import eq
+    from amici.importers.antimony import antimony2sbml
+    from amici.importers.sbml import SbmlImporter
+    from amici.sim.jax._simulation import eq
+    from amici.sim.jax.petab import DEFAULT_CONTROLLER_SETTINGS
 
     ant_model = """
     model time_disc_eq
@@ -409,6 +1108,7 @@ def test_time_dependent_discontinuity_equilibration(tmp_path):
         tcl,
         h,
         x0,
+        jnp.ones_like(h),
         diffrax.Tsit5(),
         diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
         optimistix.Newton(atol=1e-8, rtol=1e-8),
@@ -416,8 +1116,509 @@ def test_time_dependent_discontinuity_equilibration(tmp_path):
         diffrax.ODETerm(model._xdot),
         model._root_cond_fns(),
         model._root_cond_fn,
+        model._delta_x,
         model._known_discs(p),
         1000,
     )
 
     assert_allclose(xs[0], 0.0, atol=1e-2)
+
+
+@skip_on_valgrind
+def test_explicit_discontinuity(tmp_path):
+    """Explicit (time-triggered) discontinuities are emitted as tracked
+    heaviside variables (not inlined ``jnp.select`` functions) and the solver
+    is clipped onto the known discontinuity time.
+    """
+    from amici.importers.antimony import antimony2sbml
+    from amici.importers.sbml import SbmlImporter
+    from amici.sim.jax._simulation import solve
+    from amici.sim.jax.petab import DEFAULT_CONTROLLER_SETTINGS
+
+    # dx/dt = 1 for time > 5 else 0, x(0) = 0  =>  x(t) = max(t - 5, 0)
+    ant_model = """
+    model explicit_disc
+        x' = piecewise(1, time > 5, 0)
+        x = 0
+    end
+    """
+
+    sbml = antimony2sbml(ant_model)
+    importer = SbmlImporter(sbml, from_file=False)
+
+    importer.sbml2jax("explicit_disc", output_dir=tmp_path)
+
+    # the explicit heaviside must be a tracked variable, not an inlined
+    # symbolic Heaviside function of time
+    generated = (tmp_path / "__init__.py").read_text()
+    assert "jnp.select" not in generated
+
+    module = amici._module_from_path("explicit_disc", tmp_path / "__init__.py")
+    model = module.Model()
+
+    p = jnp.array([])
+    x0_full = model._x0(0.0, p)
+    tcl = model._tcl(x0_full, p)
+    x0 = model._x_solver(x0_full)
+    ts = jnp.array([0.0, 4.0, 5.0, 6.0, 10.0])
+    h = model._initialise_heaviside_variables(0.0, x0, p, tcl)
+
+    # explicit trigger time is a known discontinuity
+    assert model._known_discs(p).size > 0
+
+    ys, _, stats = solve(
+        p,
+        ts[0],
+        ts,
+        tcl,
+        h,
+        x0,
+        jnp.ones_like(h),
+        diffrax.Tsit5(),
+        diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
+        optimistix.Newton(atol=1e-8, rtol=1e-8),
+        1000,
+        diffrax.DirectAdjoint(),
+        diffrax.ODETerm(model._xdot),
+        model._root_cond_fns(),
+        model._root_cond_fn,
+        model._delta_x,
+        model._known_discs(p),
+        model.observable_ids,
+    )
+
+    expected = jnp.clip(ts - 5.0, min=0.0)
+    assert_allclose(ys.squeeze(), expected, atol=1e-6, rtol=1e-6)
+    # clipping onto the known discontinuity avoids rejected steps
+    assert stats["num_rejected_steps"] == 0
+
+
+@skip_on_valgrind
+def test_discontinuity_time_changed_by_events(tmp_path):
+    """Discontinuities whose trigger times depend on parameters that are
+    changed by events (converted to states with zero derivative, e.g.,
+    PEtab v2 condition changes) are located at their updated trigger times
+    (gh-3365).
+
+    For the sundials backend, these triggers are explicit (precomputed trigger
+    times); here, they are located by root-finding and are not known
+    discontinuities, since ``_known_discs`` only depends on ``p``.
+    """
+    from amici.importers.antimony import antimony2sbml
+    from amici.importers.sbml import SbmlImporter
+    from amici.sim.jax._simulation import solve
+    from amici.sim.jax.petab import DEFAULT_CONTROLLER_SETTINGS
+
+    # `x` integrates the switch, which is on for t >= switch_time:
+    # E0 advances the switch from t=10 to t=3, E1 moves it from t=3 to t=4
+    # after it was switched on. Neither event switches it on or off.
+    ant_model = """
+    model disc_time_changed_by_events
+        switch_time = 10
+        x = 0
+        x' = piecewise(0, time < switch_time, 1)
+        E0: at time >= 1: switch_time = 3
+        E1: at time >= 5: switch_time = 4
+    end
+    """
+    sbml = antimony2sbml(ant_model)
+    importer = SbmlImporter(sbml, from_file=False)
+    importer.sbml2jax("disc_time_changed_by_events", output_dir=tmp_path)
+
+    module = amici._module_from_path(
+        "disc_time_changed_by_events", tmp_path / "__init__.py"
+    )
+    model = module.Model()
+
+    # E0, E1, and the two root functions of the switch
+    assert model.n_events == 4
+    assert len(model._root_cond_fns()) == model.n_events
+
+    p = jnp.array([])
+    # only the trigger times of E0 and E1 are known in advance
+    assert_allclose(jnp.sort(model._known_discs(p)), [1.0, 5.0])
+
+    x0_full = model._x0(0.0, p)
+    tcl = model._tcl(x0_full, p)
+    x0 = model._x_solver(x0_full)
+    ts = jnp.array([0.0, 0.5, 2.0, 4.0, 6.0, 9.0, 10.0])
+    h = model._initialise_heaviside_variables(0.0, x0, p, tcl)
+
+    ys, _, _ = solve(
+        p,
+        ts[0],
+        ts,
+        tcl,
+        h,
+        x0,
+        jnp.ones_like(h),
+        diffrax.Tsit5(),
+        diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
+        optimistix.Newton(atol=1e-8, rtol=1e-8),
+        1000,
+        diffrax.DirectAdjoint(),
+        diffrax.ODETerm(model._xdot),
+        model._root_cond_fns(),
+        model._root_cond_fn,
+        model._delta_x,
+        model._known_discs(p),
+        model.observable_ids,
+    )
+
+    x = ys[:, list(model.state_ids).index("x")]
+    assert_allclose(x, jnp.clip(ts - 3.0, min=0.0), atol=1e-5)
+
+
+@skip_on_valgrind
+def test_event_assignments_odd_root_count(tmp_path):
+    """Event assignments are applied for every event, even when the total
+    number of roots is odd.
+
+    Regression test: ``_apply_event_assignments`` used to process roots in
+    fixed windows of two (mirroring the root pairs generated for a
+    persisted Heaviside variable), silently dropping the last root's
+    assignment whenever a model's total root count was odd -- e.g. for any
+    odd number of plain (non-Heaviside) events with assignments.
+    """
+    from amici.importers.antimony import antimony2sbml
+    from amici.importers.sbml import SbmlImporter
+    from amici.sim.jax._simulation import solve
+    from amici.sim.jax.petab import DEFAULT_CONTROLLER_SETTINGS
+
+    # three independent events, no Heaviside anywhere in the RHS -> three
+    # roots total (odd), one per event
+    ant_model = """
+    model three_events
+        x = 1
+        y = 1
+        z = 1
+        x' = 0
+        y' = 0
+        z' = 0
+        at time > 2: x = x + 10
+        at time > 5: y = y + 100
+        at time > 8: z = z + 1000
+    end
+    """
+
+    sbml = antimony2sbml(ant_model)
+    importer = SbmlImporter(sbml, from_file=False)
+
+    importer.sbml2jax("three_events", output_dir=tmp_path)
+
+    module = amici._module_from_path("three_events", tmp_path / "__init__.py")
+    model = module.Model()
+
+    p = jnp.array([])
+    x0_full = model._x0(0.0, p)
+    tcl = model._tcl(x0_full, p)
+    x0 = model._x_solver(x0_full)
+    ts = jnp.array([0.0, 1.0, 3.0, 6.0, 9.0, 10.0])
+    h = model._initialise_heaviside_variables(0.0, x0, p, tcl)
+
+    assert len(model._root_cond_fns()) == 3
+
+    ys, _, _ = solve(
+        p,
+        ts[0],
+        ts,
+        tcl,
+        h,
+        x0,
+        jnp.ones_like(h),
+        diffrax.Tsit5(),
+        diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
+        optimistix.Newton(atol=1e-8, rtol=1e-8),
+        1000,
+        diffrax.DirectAdjoint(),
+        diffrax.ODETerm(model._xdot),
+        model._root_cond_fns(),
+        model._root_cond_fn,
+        model._delta_x,
+        model._known_discs(p),
+        model.observable_ids,
+    )
+
+    expected = jnp.array(
+        [
+            [1.0, 1.0, 1.0],
+            [1.0, 1.0, 1.0],
+            [11.0, 1.0, 1.0],
+            [11.0, 101.0, 1.0],
+            [11.0, 101.0, 1001.0],
+            [11.0, 101.0, 1001.0],
+        ]
+    )
+    assert_allclose(ys, expected, atol=1e-6, rtol=1e-6)
+
+
+@skip_on_valgrind
+def test_resolve_net_id():
+    """Neural-network parameter rows are matched to their network via the
+    mapping table's model entity id (``<net>.parameters...``).
+    """
+    nns = {"net_params", "net_fitness_fold", "net1"}
+
+    assert (
+        JAXProblem._resolve_net_id("net_params.parameters", nns)
+        == "net_params"
+    )
+    assert (
+        JAXProblem._resolve_net_id("net_fitness_fold.parameters", nns)
+        == "net_fitness_fold"
+    )
+    assert (
+        JAXProblem._resolve_net_id("net_params.parameters[linear].weight", nns)
+        == "net_params"
+    )
+    assert JAXProblem._resolve_net_id("net1.parameters", nns) == "net1"
+
+    # Entities that do not name a known network (non-NN parameters) -> None.
+    assert JAXProblem._resolve_net_id("net_other.parameters", nns) is None
+    assert JAXProblem._resolve_net_id("k1", nns) is None
+    # Missing / empty mapping entries -> None (must never raise).
+    assert JAXProblem._resolve_net_id("", nns) is None
+    assert JAXProblem._resolve_net_id(float("nan"), nns) is None
+    assert JAXProblem._resolve_net_id(None, nns) is None
+
+
+@skip_on_valgrind
+def test_nested_piecewise_in_condition(tmp_path):
+    """A piecewise expression inside the condition of another one.
+
+    The condition of the outer piecewise expression depends (via ``p3``) on the
+    value of the inner one, so the Heaviside variables have to be consistent
+    with the root functions before the branches are selected.
+
+    ``p2`` encodes as ``p1 * H(p1)`` with a consistent ``H(p1) = 0``. Seeding
+    the Heaviside variables from the trigger initial values (``h = 1``) would
+    give a stale ``p2 = -1e-3``, hence ``p3 = -9e-4 < 0``, and collapse ``p4``
+    to zero.
+
+    See https://github.com/AMICI-dev/AMICI/issues/3233.
+    """
+    from amici.importers.antimony import antimony2sbml
+    from amici.importers.sbml import SbmlImporter
+    from amici.sim.jax.petab import (
+        DEFAULT_CONTROLLER_SETTINGS,
+        DEFAULT_ROOT_FINDER_SETTINGS,
+        SteadyStateEvent,
+    )
+
+    ant_model = """
+    model nested_piecewise
+        p1 := -0.001;
+        p2 := piecewise(0, p1 < 0, p1);
+        p3 := p2 + 0.0001;
+        p4 := piecewise(0, p3 < 0, p3);
+        x = 0.0;
+        x' = p4;
+    end
+    """
+    sbml = antimony2sbml(ant_model)
+    SbmlImporter(sbml, from_file=False).sbml2jax(
+        "nested_piecewise", output_dir=tmp_path
+    )
+    model = amici._module_from_path(
+        "nested_piecewise", tmp_path / "__init__.py"
+    ).Model()
+
+    ts = jnp.array([0.0, 1.0])
+    x, _ = model.simulate_condition(
+        jnp.array(model.parameters),
+        ts,
+        jnp.array([]),
+        jnp.zeros_like(ts),
+        jnp.zeros_like(ts, dtype=int),
+        jnp.zeros_like(ts, dtype=int),
+        jnp.zeros((ts.shape[0], 0)),
+        jnp.zeros((ts.shape[0], 0)),
+        diffrax.Kvaerno5(),
+        diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
+        optimistix.Newton(**DEFAULT_ROOT_FINDER_SETTINGS),
+        diffrax.DirectAdjoint(),
+        SteadyStateEvent(),
+        1000,
+        ret=ReturnValue.x,
+    )
+
+    # dx/dt == p4 == 1e-4, constant
+    assert_allclose(
+        np.asarray(x).flatten(),
+        1e-4 * np.asarray(ts),
+        rtol=1e-5,
+        atol=1e-12,
+    )
+
+
+@pytest.mark.parametrize(
+    "assignment_expr,factor,inline",
+    [
+        # time in the assignment
+        ("p * time * x", 1, False),
+        # Heaviside variable of a state-dependent condition
+        ("p * piecewise(3, x > 0.5, 1) * x", 3, False),
+        # Heaviside variable of a condition that switches at the same time
+        ("p * piecewise(3, time >= 1, 1) * x", 3, False),
+        # the same, written directly in the event assignment
+        ("p * piecewise(3, time >= 1, 1) * x", 3, True),
+        # a strict condition, i.e., the Heaviside function of the negated
+        # root
+        ("p * piecewise(3, time > 1, 1) * x", 3, False),
+        ("p * piecewise(3, time > 1, 1) * x", 3, True),
+    ],
+    ids=[
+        "time",
+        "piecewise",
+        "piecewise_same_time",
+        "piecewise_same_time_inline",
+        "piecewise_same_time_strict",
+        "piecewise_same_time_strict_inline",
+    ],
+)
+def test_event_assignments_time_heaviside(
+    tmp_path, request, assignment_expr, factor, inline
+):
+    """Event assignments may depend on time and on Heaviside variables
+    (gh-3423).
+
+    The assignments are evaluated with the Heaviside variables updated for
+    the discontinuity, as in the C++ backend.
+    """
+    from amici.importers.antimony import antimony2sbml
+    from amici.importers.sbml import SbmlImporter
+    from amici.sim.jax._simulation import solve
+    from amici.sim.jax.petab import DEFAULT_CONTROLLER_SETTINGS
+
+    ant_model = f"""
+    model event_assignment_time_heaviside
+        k = 0.5
+        p = 2
+        x = 1
+        v = 0
+        x' = -k * x
+        v' = 0
+        y := {assignment_expr}
+        at time > 1: v = v + {assignment_expr if inline else "y"}
+    end
+    """
+    model_name = f"event_assignment_{request.node.callspec.id}"
+    importer = SbmlImporter(antimony2sbml(ant_model), from_file=False)
+    importer.sbml2jax(
+        model_name,
+        output_dir=tmp_path,
+        observation_model=[MC("obs_v", formula="v")],
+    )
+    module = amici._module_from_path(model_name, tmp_path / "__init__.py")
+    model = module.Model()
+
+    ts = jnp.array([0.0, 0.5, 1.5, 2.0])
+
+    def simulate(p):
+        x0_full = model._x0(0.0, p)
+        tcl = model._tcl(x0_full, p)
+        x0 = model._x_solver(x0_full)
+        h = model._initialise_heaviside_variables(0.0, x0, p, tcl)
+        ys, _, _ = solve(
+            p,
+            ts[0],
+            ts,
+            tcl,
+            h,
+            x0,
+            jnp.ones_like(h),
+            diffrax.Kvaerno5(),
+            diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
+            optimistix.Newton(atol=1e-10, rtol=1e-10),
+            1000,
+            diffrax.DirectAdjoint(),
+            diffrax.ODETerm(model._xdot),
+            model._root_cond_fns(),
+            model._root_cond_fn,
+            model._delta_x,
+            model._known_discs(p),
+            model.observable_ids,
+        )
+        return ys[:, 0]
+
+    ik, ip = (model.parameter_ids.index(pid) for pid in ("k", "p"))
+    p = jnp.zeros(len(model.parameter_ids)).at[ik].set(0.5).at[ip].set(2.0)
+    # `v` after the event at t = 1
+    v = factor * 2.0 * np.exp(-0.5)
+    assert_allclose(simulate(p), [0.0, 0.0, v, v], rtol=1e-6)
+
+    sv = jax.jacfwd(simulate)(p)
+    assert_allclose(sv[-1, ip], v / 2.0, rtol=1e-6)
+    assert_allclose(sv[-1, ik], -v, rtol=1e-6)
+
+
+@pytest.mark.parametrize(
+    "events",
+    [
+        # `E2` reads a condition that the simultaneous `E1` flips
+        """
+        E1: at time >= 1, fromTrigger=false: x = x + 10
+        E2: at time >= 1, fromTrigger=false: v = piecewise(3, x >= 5, 1)
+        """,
+        # an event at t0 reads a condition whose root is zero at t0
+        """
+        E1: at time > -1, t0=false, fromTrigger=false:
+            v = piecewise(3, time >= 0, 1)
+        """,
+        # the same for the negated root, which is also zero at t0
+        """
+        E1: at time > -1, t0=false, fromTrigger=false:
+            v = piecewise(3, time <= 0, 1)
+        """,
+    ],
+    ids=["simultaneous", "t0", "t0_negated"],
+)
+def test_event_assignments_updated_heaviside(tmp_path, request, events):
+    """Event assignments use the Heaviside variables after the preceding
+    assignments of simultaneous events and, at t0, evaluate conditions whose
+    root is zero at t0 itself."""
+    from amici.importers.antimony import antimony2sbml
+    from amici.importers.sbml import SbmlImporter
+    from amici.sim.jax.petab import (
+        DEFAULT_CONTROLLER_SETTINGS,
+        DEFAULT_ROOT_FINDER_SETTINGS,
+        SteadyStateEvent,
+    )
+
+    ant_model = f"""
+    model event_assignment_updated_heaviside
+        x = 0; v = 0; z = 0
+        x' = 0
+        v' = 0
+        z' = piecewise(1, x >= 5, 0) + piecewise(1, time >= 0, 0)
+        {events}
+    end
+    """
+    model_name = f"event_assignment_updated_h_{request.node.callspec.id}"
+    SbmlImporter(antimony2sbml(ant_model), from_file=False).sbml2jax(
+        model_name, output_dir=tmp_path
+    )
+    model = amici._module_from_path(
+        model_name, tmp_path / "__init__.py"
+    ).Model()
+
+    ts = jnp.array([0.0, 0.5, 2.0])
+    x, _ = model.simulate_condition(
+        jnp.array(model.parameters),
+        ts,
+        jnp.array([]),
+        jnp.zeros_like(ts),
+        jnp.zeros_like(ts, dtype=int),
+        jnp.zeros_like(ts, dtype=int),
+        jnp.zeros((ts.shape[0], 0)),
+        jnp.zeros((ts.shape[0], 0)),
+        diffrax.Kvaerno5(),
+        diffrax.PIDController(**DEFAULT_CONTROLLER_SETTINGS),
+        optimistix.Newton(**DEFAULT_ROOT_FINDER_SETTINGS),
+        diffrax.DirectAdjoint(),
+        SteadyStateEvent(),
+        1000,
+        ret=ReturnValue.x,
+    )
+    # same as the C++ backend
+    assert np.asarray(x)[-1, model.state_ids.index("v")] == 3.0

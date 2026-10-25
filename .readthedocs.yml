@@ -11,9 +11,6 @@ sphinx:
   configuration: doc/conf.py
   fail_on_warning: True
 
-formats:
-  - pdf
-
 python:
   install:
     - requirements: doc/rtd_requirements.txt
