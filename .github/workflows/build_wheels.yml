@@ -70,10 +70,14 @@ jobs:
 
       - uses: actions/checkout@v7
 
-      # Developer Command Prompt for Microsoft Visual C++,
-      #  needed to compile models in the test step
+      # Developer Command Prompt for Microsoft Visual C++.
+      #  The static libraries in the wheel can only be linked by a toolset at
+      #  least as new as the one that built them, so we build with the VS 2022
+      #  toolset (14.44, VS 2022 17.14), not the runner's default VS 2026.
       - uses: ilammy/msvc-dev-cmd@v1
         if: runner.os == 'Windows'
+        with:
+          toolset: "14.44"
 
       - uses: pypa/cibuildwheel@v4.3.4
         with:
@@ -214,6 +218,66 @@ jobs:
             echo
             echo '```'
             ${CXX:-c++} --version | sed -n 1p
+            echo '```'
+            echo
+            echo "Outcome: **${{ steps.model_test.outcome }}**"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # Check that models can be compiled with Visual Studio 2022 against the
+  #  Windows wheel.
+  test_vs2022:
+    name: Test wheel with Visual Studio 2022
+    needs: build_wheels
+    if: ${{ !cancelled() }}
+    runs-on: windows-2022
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - uses: dweindl/gha-runner-diagnostics@v1
+
+      - uses: actions/checkout@v7
+
+      - uses: ilammy/msvc-dev-cmd@v1
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: wheels-windows-amd64
+          path: wheelhouse
+
+      - name: Compiler version
+        run: cl 2>&1 | sed -n 1p
+
+      - name: Install wheel
+        run: |
+          python -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/Scripts/python" -m pip install \
+            wheelhouse/amici-*-cp312-*win_amd64.whl
+
+      - name: Compile and simulate a model
+        id: model_test
+        run: |
+          cd "$RUNNER_TEMP"
+          # for cmake and swig from the venv
+          source "$RUNNER_TEMP/venv/Scripts/activate"
+          python \
+            "$GITHUB_WORKSPACE/scripts/test_wheel.py" \
+            "$GITHUB_WORKSPACE/doc/examples/getting_started/model_steadystate_scaled.xml"
+
+      - name: Report
+        if: always()
+        run: |
+          {
+            echo "## Model test with Visual Studio 2022"
+            echo
+            echo '```'
+            cl 2>&1 | sed -n 1p
             echo '```'
             echo
             echo "Outcome: **${{ steps.model_test.outcome }}**"
