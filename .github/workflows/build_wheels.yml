@@ -138,6 +138,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - name: GCC 10 (Debian 11)
+            image: debian:11
+            install: apt-get update && apt-get install -y g++ git
           - name: GCC 11 (Ubuntu 22.04)
             image: ubuntu:22.04
             install: apt-get update && apt-get install -y g++ git
