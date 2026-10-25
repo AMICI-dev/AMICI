@@ -1560,3 +1560,75 @@ def test_dae_posteq_forward_sensitivities_newton(
     assert_equal(rdata2.numsteps, rdata_fresh.numsteps)
     assert_allclose(rdata2.sy, rdata_fresh.sy, rtol=1e-10)
     assert_allclose(rdata2.sy, rdata.sy, rtol=1e-10)
+
+
+@skip_on_valgrind
+def test_initial_events_after_failed_newton(tempdir):
+    """Check initial events in pre-equilibration after Newton's method failed.
+
+    If Newton's method fails, the simulation is restarted from the initial
+    state, and the initial events have to be handled again (gh-3451).
+    """
+    model_name = "test_initial_events_after_failed_newton"
+    antimony2amici(
+        """
+        p = 2
+        q = 5
+        k = 1
+        x = 1; x' = p - x^3
+        v = 0; v' = 0
+        # initial event during pre-equilibration only (k = 0)
+        E: at k < 0.5, t0=false: v = q
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        fixed_parameters=["k"],
+        observation_model=[
+            MeasurementChannel("obs_x", formula="x"),
+            MeasurementChannel("obs_v", formula="v"),
+        ],
+    )
+    model = amici.import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints([0.0])
+    model.set_steady_state_sensitivity_mode(
+        SteadyStateSensitivityMode.integrateIfNewtonFails
+    )
+    p, q = 2.0, 5.0
+    assert model.get_free_parameter_ids() == ("p", "q")
+    x_ss_expected = {"x": p ** (1 / 3), "v": q}
+    x_ss_expected = [x_ss_expected[x_id] for x_id in model.get_state_ids()]
+    y_expected = [p ** (1 / 3), q]
+    # residuals of -1
+    edata = ExpData(model)
+    edata.fixed_parameters_pre_equilibration = [0.0]
+    edata.set_measurements(np.array(y_expected) + 1)
+    edata.set_noise_scales([1.0, 1.0])
+    # d llh / d theta = sum_i (m_i - y_i) d y_i / d theta
+    sllh_expected = [1 / 3 * p ** (-2 / 3), 1.0]
+
+    for mode, sensi_meth in itertools.product(
+        (
+            SteadyStateComputationMode.integrationOnly,
+            SteadyStateComputationMode.integrateIfNewtonFails,
+        ),
+        (SensitivityMethod.forward, SensitivityMethod.adjoint),
+    ):
+        model.set_steady_state_computation_mode(mode)
+        solver = model.create_solver()
+        # enable Newton's method, which fails due to the singular Jacobian
+        # (v' = 0)
+        solver.set_newton_max_steps(10)
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(sensi_meth)
+        solver.set_sensitivity_method_pre_equilibration(sensi_meth)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS
+        assert rdata.preeq_status[1] == SteadyStateStatus.success
+        if mode == SteadyStateComputationMode.integrateIfNewtonFails:
+            # the simulation was restarted after Newton's method failed
+            assert (
+                rdata.preeq_status[0] == SteadyStateStatus.failed_factorization
+            )
+        assert_allclose(rdata.x_ss, x_ss_expected, rtol=1e-5)
+        assert_allclose(rdata.x[0], x_ss_expected, rtol=1e-5)
+        assert_allclose(rdata.sllh, sllh_expected, rtol=1e-4)

@@ -1168,13 +1168,14 @@ SteadyStateStatus SteadyStateProblem::find_steady_state_by_simulation(
 ) {
     if (simulator_.has_value()) {
         // There was already a (failed) Newton attempt
-        // reset the workspace to its initial state and restart with a fresh
-        // simulator. (Depending on the combination of methods, the old one
-        // might not have stored all required information for sensitivity
-        // computation.)
+        // reset the workspace to its initial state, including the pending
+        // initial events, and restart with a fresh simulator. (Depending on
+        // the combination of methods, the old one might not have stored all
+        // required information for sensitivity computation.)
         auto const& init_sim_state = simulator_->result.initial_state_;
         model_->set_model_state(init_sim_state.mod);
         ws_->sol = init_sim_state.sol;
+        ws_->roots_found = initial_roots_found_;
     }
 
     try {
@@ -1464,6 +1465,7 @@ void SteadyStateProblem::find_steady_state_by_newtons_method(
         // store initial state
         simulator_->result.initial_state_.mod = model_->get_model_state();
         simulator_->result.initial_state_.sol = ws_->sol;
+        initial_roots_found_ = ws_->roots_found;
 
         simulator_->handle_initial_events(nullptr);
         period_result_ = simulator_->result;
