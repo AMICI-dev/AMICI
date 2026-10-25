@@ -175,7 +175,7 @@ jobs:
         run: |
           ${CC:-cc} --version
           ${CXX:-c++} --version
-          ldd --version | head -1
+          ldd --version | sed -n 1p
 
       - name: Install wheel
         run: |
@@ -187,7 +187,9 @@ jobs:
         id: model_test
         run: |
           cd "$RUNNER_TEMP"
-          "$RUNNER_TEMP/venv/bin/python" \
+          # for cmake and swig from the venv
+          source "$RUNNER_TEMP/venv/bin/activate"
+          python \
             "$GITHUB_WORKSPACE/scripts/test_wheel.py" \
             "$GITHUB_WORKSPACE/doc/examples/getting_started/model_steadystate_scaled.xml"
 
@@ -198,7 +200,7 @@ jobs:
             echo "## Model test with ${{ matrix.name }}"
             echo
             echo '```'
-            ${CXX:-c++} --version | head -1
+            ${CXX:-c++} --version | sed -n 1p
             echo '```'
             echo
             echo "Outcome: **${{ steps.model_test.outcome }}**"
