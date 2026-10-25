@@ -16,10 +16,6 @@ find_dependency(Threads)
 find_dependency(SUNDIALS REQUIRED PATHS
              "@CMAKE_SOURCE_DIR@/ThirdParty/sundials/build/@CMAKE_INSTALL_LIBDIR@/cmake/sundials/")
 
-if(@Boost_CHRONO_FOUND@)
-  find_dependency(Boost COMPONENTS chrono REQUIRED)
-endif()
-
 if(@HDF5_FOUND@)
   # find_dependency(HDF5 ...) re-runs FindHDF5.cmake's compiler-wrapper
   # interrogation (spawning h5cc/h5c++ subprocesses) on every single model
