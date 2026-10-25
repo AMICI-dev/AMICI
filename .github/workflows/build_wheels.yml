@@ -1,0 +1,164 @@
+# Build binary wheels with cibuildwheel and test them.
+# Nothing is published, the wheels are only uploaded as workflow artifacts.
+name: Build wheels
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - python/sdist/**
+      - CMakeLists.txt
+      - cmake/**
+      - scripts/inspect_wheels.py
+      - scripts/test_wheel.py
+      - .github/workflows/build_wheels.yml
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CIBW_BUILD: "cp312-* cp313-* cp314-*"
+  CIBW_SKIP: "*-musllinux_*"
+  CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
+  CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_28
+  CIBW_ENVIRONMENT: AMICI_TRY_ENABLE_HDF5=OFF AMICI_PARALLEL_COMPILE=''
+  CIBW_BUILD_VERBOSITY: 1
+  # Compile a model against the installed wheel and simulate it.
+  #  cibuildwheel runs this from a temporary directory outside the source tree.
+  CIBW_TEST_COMMAND: >-
+    python {project}/scripts/test_wheel.py
+    {project}/doc/examples/getting_started/model_steadystate_scaled.xml
+
+jobs:
+  build_wheels:
+    name: Wheels ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-x86_64
+            os: ubuntu-26.04
+          - name: linux-aarch64
+            os: ubuntu-26.04-arm
+          - name: macos-arm64
+            os: macos-latest
+          - name: windows-amd64
+            os: windows-latest
+
+    steps:
+      - uses: dweindl/gha-runner-diagnostics@v1
+
+      - uses: actions/checkout@v7
+
+      # Developer Command Prompt for Microsoft Visual C++,
+      #  needed to compile models in the test step
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: runner.os == 'Windows'
+
+      - uses: pypa/cibuildwheel@v4.3.4
+        with:
+          package-dir: python/sdist
+          output-dir: wheelhouse
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: wheels-${{ matrix.name }}
+          path: wheelhouse/*.whl
+
+      - name: Inspect wheels
+        shell: bash
+        run: python scripts/inspect_wheels.py wheelhouse/*.whl
+
+      # Make sure the wheel doesn't depend on libraries that are only
+      #  available on the build machine (e.g., libomp from Homebrew)
+      - name: Check linked libraries
+        if: runner.os == 'macOS'
+        run: |
+          status=0
+          for whl in wheelhouse/*.whl; do
+            dir=$(mktemp -d)
+            unzip -q "$whl" -d "$dir"
+            echo "::group::$(basename "$whl")"
+            find "$dir" -type f \( -name '*.so' -o -name '*.dylib' \) \
+              -print0 | while IFS= read -r -d '' lib; do
+              echo "${lib#$dir/}:"
+              otool -L "$lib" | tail -n +2
+            done | tee otool.log
+            echo "::endgroup::"
+            if grep -E '/opt/homebrew|/usr/local' otool.log; then
+              echo "::error::$(basename "$whl") links libraries under /opt/homebrew or /usr/local"
+              status=1
+            fi
+            if grep -rlE '/opt/homebrew|/usr/local' \
+                --include='*.cmake' "$dir"; then
+              echo "::error::$(basename "$whl") has CMake files referencing /opt/homebrew or /usr/local"
+              status=1
+            fi
+            if [ -d "$dir/amici/.dylibs" ]; then
+              echo "::error::delocate vendored libraries into $(basename "$whl"):"
+              ls -l "$dir/amici/.dylibs"
+              status=1
+            fi
+          done
+          exit $status
+
+  # On Linux, cibuildwheel tests the wheels inside the manylinux container
+  #  with the same compiler that built them. Here, we check that the static
+  #  libraries in the wheel also work with the distribution's system compiler.
+  test_system_gcc:
+    name: Test wheel with system GCC (${{ matrix.os }})
+    needs: build_wheels
+    if: ${{ !cancelled() }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-26.04]
+
+    steps:
+      - uses: dweindl/gha-runner-diagnostics@v1
+
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: wheels-linux-x86_64
+          path: wheelhouse
+
+      - run: |
+          gcc --version
+          g++ --version
+          ldd --version | head -1
+
+      - name: Install wheel
+        run: |
+          python -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install wheelhouse/amici-*-cp312-*manylinux*x86_64.whl
+
+      - name: Compile and simulate a model
+        id: model_test
+        working-directory: ${{ runner.temp }}
+        run: |
+          "$RUNNER_TEMP/venv/bin/python" \
+            "$GITHUB_WORKSPACE/scripts/test_wheel.py" \
+            "$GITHUB_WORKSPACE/doc/examples/getting_started/model_steadystate_scaled.xml"
+
+      - name: Report
+        if: always()
+        run: |
+          {
+            echo "## Model test with system GCC on ${{ matrix.os }}"
+            echo
+            echo '```'
+            g++ --version | head -1
+            echo '```'
+            echo
+            echo "Outcome: **${{ steps.model_test.outcome }}**"
+          } >> "$GITHUB_STEP_SUMMARY"

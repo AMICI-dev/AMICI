@@ -43,6 +43,11 @@ This directory contains a number of build, installation, and CI scripts.
 
   Download and build [SWIG](http://www.swig.org/)
 
+* `inspect_wheels.py`
+
+  Report the size and the bundled shared libraries of built wheels
+  and check that no shared library is included twice
+
 * `installAmiciArchive.sh`
 
   Create a Python virtual environment and do an AMICI development installation
@@ -86,3 +91,7 @@ This directory contains a number of build, installation, and CI scripts.
 
   Run memory leak check using valgrind for all unit and integration tests.
   Assumes they have been built before in the default location.
+
+* `test_wheel.py`
+
+  Compile and simulate a model against an installed AMICI wheel
