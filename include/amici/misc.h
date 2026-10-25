@@ -280,8 +280,9 @@ template <typename T> bool heaviside_differs(T a, T b) {
 /**
  * @brief Tracks elapsed CPU time of the calling thread.
  *
- * On platforms without a per-thread CPU clock, this tracks the CPU time of
- * the whole process instead (see CpuTimer::uses_thread_clock).
+ * On platforms without a precise per-thread CPU clock, such as Windows,
+ * this uses std::clock instead, which tracks the CPU time of the whole
+ * process, or on Windows, the wall time (see CpuTimer::uses_thread_clock).
  */
 class CpuTimer {
   public:
@@ -323,8 +324,8 @@ class CpuTimer {
 
   private:
     /**
-     * @brief Get the current CPU time of the calling thread, or of the
-     * process if uses_thread_clock is false.
+     * @brief Get the current CPU time of the calling thread, or the value
+     * of std::clock if uses_thread_clock is false.
      *
      * @return CPU time in seconds
      */

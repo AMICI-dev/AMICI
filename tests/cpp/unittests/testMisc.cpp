@@ -770,7 +770,8 @@ TEST(CpuTimer, CpuTimer) {
 }
 
 TEST(CpuTimer, IgnoresOtherThreads) {
-    ASSERT_TRUE(amici::CpuTimer::uses_thread_clock);
+    if (!amici::CpuTimer::uses_thread_clock)
+        GTEST_SKIP() << "No precise per-thread CPU clock on this platform";
 
     amici::CpuTimer timer;
     // Burn CPU time in another thread while this thread sleeps.

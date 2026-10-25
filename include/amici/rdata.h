@@ -304,8 +304,9 @@ class ReturnData : public ModelDimensions {
      * @brief Computation time of forward solve [ms]
      *
      * This is the CPU time of the simulating thread, except on platforms
-     * without a per-thread CPU clock (see CpuTimer::uses_thread_clock),
-     * where it is the CPU time of the whole process.
+     * without a precise per-thread CPU clock, such as Windows (see
+     * CpuTimer::uses_thread_clock). There, it is measured with std::clock,
+     * so in a multi-threaded context, this value may be incorrect.
      *
      */
     double cpu_time = 0.0;
@@ -314,8 +315,9 @@ class ReturnData : public ModelDimensions {
      * @brief Computation time of backward solve [ms]
      *
      * This is the CPU time of the simulating thread, except on platforms
-     * without a per-thread CPU clock (see CpuTimer::uses_thread_clock),
-     * where it is the CPU time of the whole process.
+     * without a precise per-thread CPU clock, such as Windows (see
+     * CpuTimer::uses_thread_clock). There, it is measured with std::clock,
+     * so in a multi-threaded context, this value may be incorrect.
      *
      */
     double cpu_time_b = 0.0;
@@ -324,8 +326,9 @@ class ReturnData : public ModelDimensions {
      * @brief Total CPU time from entering runAmiciSimulation until exiting [ms]
      *
      * This is the CPU time of the simulating thread, except on platforms
-     * without a per-thread CPU clock (see CpuTimer::uses_thread_clock),
-     * where it is the CPU time of the whole process.
+     * without a precise per-thread CPU clock, such as Windows (see
+     * CpuTimer::uses_thread_clock). There, it is measured with std::clock,
+     * so in a multi-threaded context, this value may be incorrect.
      *
      */
     double cpu_time_total = 0.0;
@@ -338,8 +341,9 @@ class ReturnData : public ModelDimensions {
      * (pre-equilibration)
      *
      * This is the CPU time of the simulating thread, except on platforms
-     * without a per-thread CPU clock (see CpuTimer::uses_thread_clock),
-     * where it is the CPU time of the whole process.
+     * without a precise per-thread CPU clock, such as Windows (see
+     * CpuTimer::uses_thread_clock). There, it is measured with std::clock,
+     * so in a multi-threaded context, this value may be incorrect.
      *
      */
     double preeq_cpu_time = 0.0;
@@ -349,8 +353,9 @@ class ReturnData : public ModelDimensions {
      * problem [ms] (pre-equilibration)
      *
      * This is the CPU time of the simulating thread, except on platforms
-     * without a per-thread CPU clock (see CpuTimer::uses_thread_clock),
-     * where it is the CPU time of the whole process.
+     * without a precise per-thread CPU clock, such as Windows (see
+     * CpuTimer::uses_thread_clock). There, it is measured with std::clock,
+     * so in a multi-threaded context, this value may be incorrect.
      *
      */
     double preeq_cpu_time_b = 0.0;
@@ -363,8 +368,9 @@ class ReturnData : public ModelDimensions {
      * (postequilibration)
      *
      * This is the CPU time of the simulating thread, except on platforms
-     * without a per-thread CPU clock (see CpuTimer::uses_thread_clock),
-     * where it is the CPU time of the whole process.
+     * without a precise per-thread CPU clock, such as Windows (see
+     * CpuTimer::uses_thread_clock). There, it is measured with std::clock,
+     * so in a multi-threaded context, this value may be incorrect.
      *
      */
     double posteq_cpu_time = 0.0;
@@ -374,8 +380,9 @@ class ReturnData : public ModelDimensions {
      * problem [ms] (postequilibration)
      *
      * This is the CPU time of the simulating thread, except on platforms
-     * without a per-thread CPU clock (see CpuTimer::uses_thread_clock),
-     * where it is the CPU time of the whole process.
+     * without a precise per-thread CPU clock, such as Windows (see
+     * CpuTimer::uses_thread_clock). There, it is measured with std::clock,
+     * so in a multi-threaded context, this value may be incorrect.
      *
      */
     double posteq_cpu_time_b = 0.0;
