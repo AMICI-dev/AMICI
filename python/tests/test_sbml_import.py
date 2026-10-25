@@ -28,6 +28,7 @@ from amici.sim.sundials import (
     Constraint,
     ExpData,
     InternalSensitivityMethod,
+    LogSeverity,
     ModelModule,
     ParameterScaling,
     ReturnDataView,
@@ -2307,3 +2308,57 @@ def test_dae_adjoint_sensitivities_algebraic_feedback(dae_model_module):
         sllh[SensitivityMethod.forward],
         rtol=1e-6,
     )
+
+
+def test_failure_before_main_simulation(tempdir):
+    """A simulation that fails before the solver is set up doesn't report
+    the results or diagnostics of the solver's previous simulation."""
+    from amici.importers.antimony import antimony2amici
+
+    ant_model = """
+    model test_failure_before_main_simulation
+        x = x0
+        x' = -k * x
+        x0 = 2; k = 0.5
+    end
+    """
+    model = antimony2amici(
+        ant_model,
+        model_name="test_failure_before_main_simulation",
+        output_dir=tempdir,
+        fixed_parameters=["x0"],
+        observation_model=[MC("obs_x", formula="x")],
+    )
+    # many timepoints, so that the first simulation takes some CPU time
+    model.set_timepoints(np.linspace(0, 2, 1000))
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.adjoint)
+
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+    assert rdata.cpu_time > 0
+    assert np.all(rdata.numsteps[1:] > 0)
+
+    # adjoint presimulation with reinitialization is not supported and
+    # fails before the solver is set up
+    edata = ExpData(rdata, 0.1, 0.0)
+    edata.t_presim = 1.0
+    edata.fixed_parameters_presimulation = [3.0]
+    edata.reinitialize_fixed_parameter_initial_states = True
+    rdata = run_simulation(model, solver, edata)
+    assert rdata.status == AMICI_ERROR
+    # only the original error, no secondary errors from processing the
+    # results (debug builds additionally log a backtrace)
+    errors = [m for m in rdata.messages if m.severity == LogSeverity.error]
+    assert len(errors) == 1
+    assert "not yet implemented" in errors[0].message
+    assert rdata.cpu_time == 0
+    assert np.all(rdata.numsteps == 0)
+    assert np.isnan(rdata.t_last)
+    assert np.all(np.isnan(rdata.J))
+    assert np.all(np.isnan(rdata.xdot))
+    assert np.isnan(rdata.llh)
+    assert np.all(np.isnan(rdata.sllh))
+    assert np.all(np.isnan(rdata.x))
+    assert np.all(np.isnan(rdata.y))

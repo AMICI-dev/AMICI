@@ -270,13 +270,17 @@ void ReturnData::process_pre_equilibration(
     SteadyStateBackwardProblem const* preeq_bwd, Model& model
 ) {
     auto const simulation_state = preeq.get_final_simulation_state();
-    model.set_model_state(simulation_state.mod);
+    if (simulation_state.has_solution()) {
+        model.set_model_state(simulation_state.mod);
 
-    if (!x_ss.empty()) {
-        model.fx_rdata(x_ss, simulation_state.sol.x);
-    }
-    if (!sx_ss.empty() && sensi >= SensitivityOrder::first) {
-        model.fsx_rdata(sx_ss, simulation_state.sol.sx, simulation_state.sol.x);
+        if (!x_ss.empty()) {
+            model.fx_rdata(x_ss, simulation_state.sol.x);
+        }
+        if (!sx_ss.empty() && sensi >= SensitivityOrder::first) {
+            model.fsx_rdata(
+                sx_ss, simulation_state.sol.sx, simulation_state.sol.x
+            );
+        }
     }
     /* Get cpu time for pre-equilibration in milliseconds */
     preeq_cpu_time = preeq.get_cpu_time();
@@ -301,6 +305,10 @@ void ReturnData::process_post_equilibration(
         auto const t = model.get_timepoint(it);
         if (std::isinf(t)) {
             auto const& simulation_state = posteq.get_final_simulation_state();
+            if (!simulation_state.has_solution()) {
+                invalidate(it);
+                break;
+            }
             model.set_model_state(simulation_state.mod);
             get_data_output(it, model, simulation_state.sol, edata);
         }
@@ -323,12 +331,15 @@ void ReturnData::process_forward_problem(
     ForwardProblem const& fwd, Model& model, ExpData const* edata,
     bool store_sx0
 ) {
+    auto const& initialState = fwd.get_initial_simulation_state();
+    if (!initialState.has_solution()) {
+        // the forward problem failed before the main simulation started
+        invalidate(0);
+        return;
+    }
+
     if (edata)
         initialize_objective_function(model.has_quadratic_llh());
-
-    auto const& initialState = fwd.get_initial_simulation_state();
-    if (initialState.sol.x.size() == 0 && model.nx_solver > 0)
-        return; // if x wasn't set forward problem failed during initialization
 
     model.set_model_state(initialState.mod);
 

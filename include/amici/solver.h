@@ -994,7 +994,7 @@ class Solver {
     }
 
     /**
-     * @brief Resets vectors containing diagnosis information
+     * @brief Resets diagnosis information, CPU times and the current time
      */
     void reset_diagnosis() const;
 

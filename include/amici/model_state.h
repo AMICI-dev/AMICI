@@ -6,6 +6,7 @@
 #include "amici/model_dimensions.h"
 #include "amici/sundials_matrix_wrapper.h"
 
+#include <cmath>
 #include <vector>
 
 namespace amici {
@@ -450,7 +451,7 @@ struct ModelStateDerived {
  * @brief Container for the IVP solution state at a specific timepoint.
  */
 struct SolutionState {
-    /** timepoint */
+    /** timepoint, NaN if not set by a simulation */
     realtype t{NAN};
     /**
      * partial state vector, excluding states eliminated from conservation laws
@@ -496,6 +497,16 @@ struct SimulationState {
 
     /** state of the model that was used for simulation */
     ModelState mod;
+
+    /**
+     * @brief Whether this state was set by a simulation.
+     *
+     * This is not the case for the states of a simulation period that failed
+     * before it started.
+     *
+     * @return Whether this state was set by a simulation
+     */
+    [[nodiscard]] bool has_solution() const { return !std::isnan(sol.t); }
 };
 
 } // namespace amici
