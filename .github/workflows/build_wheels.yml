@@ -25,6 +25,16 @@ env:
   CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
   CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_28
   CIBW_ENVIRONMENT: AMICI_TRY_ENABLE_HDF5=OFF AMICI_PARALLEL_COMPILE=''
+  # The static libraries in the wheel are linked into models by the user's
+  #  compiler. Objects built with the default gcc-toolset-14 reference
+  #  libstdc++ symbols that older system compilers lack (e.g.,
+  #  std::string::_M_replace_cold, GCC>=13). Building with GCC 11 lets
+  #  GCC>=11 link them.
+  CIBW_BEFORE_ALL_LINUX: dnf install -y gcc-toolset-11-gcc-c++
+  CIBW_ENVIRONMENT_LINUX: >-
+    AMICI_TRY_ENABLE_HDF5=OFF AMICI_PARALLEL_COMPILE=''
+    CC=/opt/rh/gcc-toolset-11/root/usr/bin/gcc
+    CXX=/opt/rh/gcc-toolset-11/root/usr/bin/g++
   CIBW_BUILD_VERBOSITY: 1
   # scipy-openblas64 is already copied to amici/_installation/lib and loaded
   #  from there via os.add_dll_directory; don't let delvewheel look for it
