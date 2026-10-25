@@ -8,6 +8,7 @@ on:
       - python/sdist/**
       - CMakeLists.txt
       - cmake/**
+      - swig/CMakeLists.txt
       - scripts/inspect_wheels.py
       - scripts/test_wheel.py
       - .github/workflows/build_wheels.yml
@@ -19,6 +20,8 @@ concurrency:
 env:
   CIBW_BUILD: "cp312-* cp313-* cp314-*"
   CIBW_SKIP: "*-musllinux_*"
+  # no 32-bit builds; scipy-openblas64 is 64-bit only
+  CIBW_ARCHS: auto64
   CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
   CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_28
   CIBW_ENVIRONMENT: AMICI_TRY_ENABLE_HDF5=OFF AMICI_PARALLEL_COMPILE=''

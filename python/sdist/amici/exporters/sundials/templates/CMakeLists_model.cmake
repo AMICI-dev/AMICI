@@ -19,7 +19,7 @@ if(DEFINED ENV{PYTHON_EXECUTABLE})
 endif()
 # We don't need "Interpreter" here, but without that, FindPython3 will
 # ignore the Python version selected via $Python3_EXECUTABLE
-find_package(Python3 COMPONENTS Interpreter Development)
+find_package(Python3 COMPONENTS Interpreter Development.Module)
 include_directories(${Python3_INCLUDE_DIRS})
 
 set(SWIG_LIBRARY_NAME _${PROJECT_NAME})
