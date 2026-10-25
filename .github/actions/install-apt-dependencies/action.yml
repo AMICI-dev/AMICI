@@ -8,7 +8,6 @@ runs:
           && sudo apt-get install -y \
               g++ \
               libopenblas-dev \
-              libboost-chrono-dev \
               libboost-math-dev \
               libboost-serialization-dev \
               libhdf5-serial-dev \

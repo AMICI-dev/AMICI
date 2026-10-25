@@ -6,6 +6,7 @@ Test getters, setters, etc.
 import copy
 import numbers
 import pickle
+import sys
 from math import nan
 
 import amici
@@ -672,6 +673,15 @@ def test_python_exceptions(sbml_example_presimulation_module):
         amici._installation._amici.run_simulation(
             solver, None, model.get(), True
         )
+
+
+def test_cpu_timer_uses_thread_clock():
+    from amici.sim.sundials import CpuTimer
+
+    # Windows' per-thread CPU clock is too coarse, so std::clock is used
+    assert CpuTimer.uses_thread_clock is (sys.platform != "win32")
+    timer = CpuTimer()
+    assert 0.0 <= timer.elapsed_seconds() < 1.0
 
 
 def test_reporting_mode_obs_llh(sbml_example_presimulation_module):

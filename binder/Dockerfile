@@ -6,7 +6,6 @@ RUN apt-get update && apt-get install -y \
     g++ \
     git \
     libboost-serialization-dev \
-    libboost-chrono-dev \
     libhdf5-serial-dev \
     python-is-python3 \
     python3 \

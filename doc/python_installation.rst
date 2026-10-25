@@ -52,8 +52,8 @@ Install the AMICI dependencies via ``apt``
    # optionally for HDF5 support:
    sudo apt install libhdf5-serial-dev
 
-   # optionally for boost support (thread-specific CPU times, extended math functions, serialization)
-   sudo apt install libboost-chrono-dev libboost-math-dev libboost-serialization-dev
+   # optionally for boost support (extended math functions, serialization)
+   sudo apt install libboost-math-dev libboost-serialization-dev
 
 Install AMICI:
 
@@ -114,7 +114,7 @@ Install the AMICI dependencies using homebrew:
     # followed by either `brew link openmp` once,
     # or `export OpenMP_ROOT=$(brew --prefix)/opt/libomp"` where `OpenMP_ROOT` will have to be set during every re-installation of AMICI or any new model import
 
-    # optionally for boost support (thread-specific CPU times, extended math functions, serialization)
+    # optionally for boost support (extended math functions, serialization)
     brew install boost && export BOOST_ROOT=$(brew --prefix)/opt/boost
     # followed by either `brew link boost` once,
     # or `export BOOST_ROOT=$(brew --prefix)/opt/boost"` where `BOOST_ROOT` will have to be set during every re-installation of AMICI or any new model import
