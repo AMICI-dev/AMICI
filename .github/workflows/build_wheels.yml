@@ -115,46 +115,78 @@ jobs:
 
   # On Linux, cibuildwheel tests the wheels inside the manylinux container
   #  with the same compiler that built them. Here, we check that the static
-  #  libraries in the wheel also work with the distribution's system compiler.
-  test_system_gcc:
-    name: Test wheel with system GCC (${{ matrix.os }})
+  #  libraries in the wheel also work with the compilers of common
+  #  distributions, which are older or newer than the manylinux toolchain.
+  test_system_compiler:
+    name: Test wheel with ${{ matrix.name }}
     needs: build_wheels
     if: ${{ !cancelled() }}
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
+    container: ${{ matrix.image }}
 
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, ubuntu-26.04]
+        include:
+          - name: GCC 11 (Ubuntu 22.04)
+            image: ubuntu:22.04
+            install: apt-get update && apt-get install -y g++ git
+          - name: GCC 12 (Debian 12)
+            image: debian:12
+            install: apt-get update && apt-get install -y g++ git
+          - name: GCC 13 (Ubuntu 24.04)
+            image: ubuntu:24.04
+            install: apt-get update && apt-get install -y g++ git
+          - name: GCC (Ubuntu 26.04)
+            image: ubuntu:26.04
+            install: apt-get update && apt-get install -y g++ git
+          - name: GCC (Fedora)
+            image: fedora:latest
+            install: dnf install -y gcc-c++ git
+          - name: Clang (Ubuntu 26.04)
+            image: ubuntu:26.04
+            install: >-
+              apt-get update && apt-get install -y clang git
+              && echo CC=clang >> "$GITHUB_ENV"
+              && echo CXX=clang++ >> "$GITHUB_ENV"
+
+    defaults:
+      run:
+        shell: bash
+
+    env:
+      DEBIAN_FRONTEND: noninteractive
 
     steps:
-      - uses: dweindl/gha-runner-diagnostics@v1
+      - name: Install compiler
+        run: ${{ matrix.install }}
 
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.12"
+      # The distributions' Python versions are too old for some images
+      - uses: astral-sh/setup-uv@v10.3.2
 
       - uses: actions/download-artifact@v8
         with:
           name: wheels-linux-x86_64
           path: wheelhouse
 
-      - run: |
-          gcc --version
-          g++ --version
+      - name: Compiler versions
+        run: |
+          ${CC:-cc} --version
+          ${CXX:-c++} --version
           ldd --version | head -1
 
       - name: Install wheel
         run: |
-          python -m venv "$RUNNER_TEMP/venv"
-          "$RUNNER_TEMP/venv/bin/pip" install wheelhouse/amici-*-cp312-*manylinux*x86_64.whl
+          uv venv --python 3.12 "$RUNNER_TEMP/venv"
+          uv pip install --python "$RUNNER_TEMP/venv/bin/python" \
+            wheelhouse/amici-*-cp312-*manylinux*x86_64.whl
 
       - name: Compile and simulate a model
         id: model_test
-        working-directory: ${{ runner.temp }}
         run: |
+          cd "$RUNNER_TEMP"
           "$RUNNER_TEMP/venv/bin/python" \
             "$GITHUB_WORKSPACE/scripts/test_wheel.py" \
             "$GITHUB_WORKSPACE/doc/examples/getting_started/model_steadystate_scaled.xml"
@@ -163,10 +195,10 @@ jobs:
         if: always()
         run: |
           {
-            echo "## Model test with system GCC on ${{ matrix.os }}"
+            echo "## Model test with ${{ matrix.name }}"
             echo
             echo '```'
-            g++ --version | head -1
+            ${CXX:-c++} --version | head -1
             echo '```'
             echo
             echo "Outcome: **${{ steps.model_test.outcome }}**"
