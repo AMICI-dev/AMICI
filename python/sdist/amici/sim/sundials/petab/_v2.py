@@ -706,8 +706,7 @@ class PetabSimulator:
             If not provided, a new solver with default settings will be used.
         :param num_threads:
             The number of threads to use for parallel simulation of experiments.
-            Only relevant if multiple experiments are present in the PEtab problem,
-            and if AMICI was compiled with OpenMP support.
+            Only relevant if multiple experiments are present in the PEtab problem.
         """
         self._petab_problem: v2.Problem = em.petab_problem
         self._model = em.model
