@@ -10,6 +10,7 @@
 
 #include <cmath>
 #include <cstring>
+#include <thread>
 #include <vector>
 
 #include <gtest/gtest.h>
@@ -766,6 +767,22 @@ TEST(CpuTimer, CpuTimer) {
     elapsed = timer.elapsed_milliseconds();
     EXPECT_LT(0.0, elapsed);
     EXPECT_GT(1000.0, elapsed);
+}
+
+TEST(CpuTimer, IgnoresOtherThreads) {
+    ASSERT_TRUE(amici::CpuTimer::uses_thread_clock);
+
+    amici::CpuTimer timer;
+    // Burn CPU time in another thread while this thread sleeps.
+    std::thread busy([]() {
+        amici::CpuTimer busy_timer;
+        volatile double x = 0.0;
+        while (busy_timer.elapsed_seconds() < 0.2)
+            x = x + 1.0;
+    });
+    busy.join();
+
+    EXPECT_GT(0.1, timer.elapsed_seconds());
 }
 
 } // namespace

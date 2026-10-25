@@ -674,6 +674,15 @@ def test_python_exceptions(sbml_example_presimulation_module):
         )
 
 
+def test_cpu_timer_uses_thread_clock():
+    from amici.sim.sundials import CpuTimer
+
+    # all supported platforms provide a per-thread CPU clock
+    assert CpuTimer.uses_thread_clock is True
+    timer = CpuTimer()
+    assert 0.0 <= timer.elapsed_seconds() < 1.0
+
+
 def test_reporting_mode_obs_llh(sbml_example_presimulation_module):
     model_module = sbml_example_presimulation_module
     model = model_module.get_model()

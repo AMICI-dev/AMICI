@@ -303,10 +303,9 @@ class ReturnData : public ModelDimensions {
     /**
      * @brief Computation time of forward solve [ms]
      *
-     * .. warning::
-     *      If AMICI was built without boost, this tracks the CPU-time of the
-     *      current process. Therefore, in a multi-threaded context, this value
-     *      may be incorrect.
+     * This is the CPU time of the simulating thread, except on platforms
+     * without a per-thread CPU clock (see CpuTimer::uses_thread_clock),
+     * where it is the CPU time of the whole process.
      *
      */
     double cpu_time = 0.0;
@@ -314,10 +313,9 @@ class ReturnData : public ModelDimensions {
     /**
      * @brief Computation time of backward solve [ms]
      *
-     * .. warning::
-     *      If AMICI was built without boost, this tracks the CPU-time of the
-     *      current process. Therefore, in a multi-threaded context, this value
-     *      may be incorrect.
+     * This is the CPU time of the simulating thread, except on platforms
+     * without a per-thread CPU clock (see CpuTimer::uses_thread_clock),
+     * where it is the CPU time of the whole process.
      *
      */
     double cpu_time_b = 0.0;
@@ -325,10 +323,9 @@ class ReturnData : public ModelDimensions {
     /**
      * @brief Total CPU time from entering runAmiciSimulation until exiting [ms]
      *
-     * .. warning::
-     *      If AMICI was built without boost, this tracks the CPU-time of the
-     *      current process. Therefore, in a multi-threaded context, this value
-     *      may be incorrect.
+     * This is the CPU time of the simulating thread, except on platforms
+     * without a per-thread CPU clock (see CpuTimer::uses_thread_clock),
+     * where it is the CPU time of the whole process.
      *
      */
     double cpu_time_total = 0.0;
@@ -340,10 +337,9 @@ class ReturnData : public ModelDimensions {
      * @brief Computation time of the steady state solver [ms]
      * (pre-equilibration)
      *
-     * .. warning::
-     *      If AMICI was built without boost, this tracks the CPU-time of the
-     *      current process. Therefore, in a multi-threaded context, this value
-     *      may be incorrect.
+     * This is the CPU time of the simulating thread, except on platforms
+     * without a per-thread CPU clock (see CpuTimer::uses_thread_clock),
+     * where it is the CPU time of the whole process.
      *
      */
     double preeq_cpu_time = 0.0;
@@ -352,10 +348,9 @@ class ReturnData : public ModelDimensions {
      * @brief Computation time of the steady state solver of the backward
      * problem [ms] (pre-equilibration)
      *
-     * .. warning::
-     *      If AMICI was built without boost, this tracks the CPU-time of the
-     *      current process. Therefore, in a multi-threaded context, this value
-     *      may be incorrect.
+     * This is the CPU time of the simulating thread, except on platforms
+     * without a per-thread CPU clock (see CpuTimer::uses_thread_clock),
+     * where it is the CPU time of the whole process.
      *
      */
     double preeq_cpu_time_b = 0.0;
@@ -367,10 +362,9 @@ class ReturnData : public ModelDimensions {
      * @brief Computation time of the steady-state solver [ms]
      * (postequilibration)
      *
-     * .. warning::
-     *      If AMICI was built without boost, this tracks the CPU-time of the
-     *      current process. Therefore, in a multi-threaded context, this value
-     *      may be incorrect.
+     * This is the CPU time of the simulating thread, except on platforms
+     * without a per-thread CPU clock (see CpuTimer::uses_thread_clock),
+     * where it is the CPU time of the whole process.
      *
      */
     double posteq_cpu_time = 0.0;
@@ -379,10 +373,9 @@ class ReturnData : public ModelDimensions {
      * @brief Computation time of the steady-state solver of the backward
      * problem [ms] (postequilibration)
      *
-     * .. warning::
-     *      If AMICI was built without boost, this tracks the CPU-time of the
-     *      current process. Therefore, in a multi-threaded context, this value
-     *      may be incorrect.
+     * This is the CPU time of the simulating thread, except on platforms
+     * without a per-thread CPU clock (see CpuTimer::uses_thread_clock),
+     * where it is the CPU time of the whole process.
      *
      */
     double posteq_cpu_time_b = 0.0;

@@ -2,8 +2,10 @@
 #include "amici/symbolic_functions.h"
 
 #include <cstdarg>
+#include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <ctime>
 #include <sstream>
 
 #if defined(_WIN32)
@@ -16,6 +18,18 @@
 #include <cxxabi.h> // for __cxa_demangle
 #include <dlfcn.h>  // for dladdr
 #include <execinfo.h>
+#endif
+
+#if defined(_WIN32)
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h> // for GetThreadTimes
+#else
+#include <time.h> // for clock_gettime
 #endif
 
 namespace amici {
@@ -185,6 +199,36 @@ std::string printf_to_string(char const* fmt, va_list ap) {
 std::pair<size_t, size_t>
 unravel_index(size_t const flat_idx, size_t const num_cols) {
     return {flat_idx / num_cols, flat_idx % num_cols};
+}
+
+bool const CpuTimer::uses_thread_clock =
+#if defined(_WIN32) || defined(CLOCK_THREAD_CPUTIME_ID)
+    true;
+#else
+    false;
+#endif
+
+double CpuTimer::now_seconds() {
+#if defined(_WIN32)
+    FILETIME creation_time, exit_time, kernel_time, user_time;
+    GetThreadTimes(
+        GetCurrentThread(), &creation_time, &exit_time, &kernel_time, &user_time
+    );
+    // FILETIME counts 100-nanosecond intervals
+    auto to_seconds = [](FILETIME const& ft) {
+        auto const ticks = (static_cast<std::uint64_t>(ft.dwHighDateTime) << 32)
+                           | ft.dwLowDateTime;
+        return static_cast<double>(ticks) * 1e-7;
+    };
+    return to_seconds(kernel_time) + to_seconds(user_time);
+#elif defined(CLOCK_THREAD_CPUTIME_ID)
+    timespec ts{};
+    clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ts);
+    return static_cast<double>(ts.tv_sec)
+           + static_cast<double>(ts.tv_nsec) * 1e-9;
+#else
+    return static_cast<double>(std::clock()) / CLOCKS_PER_SEC;
+#endif
 }
 
 } // namespace amici
