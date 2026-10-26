@@ -202,8 +202,8 @@ void EventHandlingBwdSimulator::handle_event_b(
     std::vector<realtype> stauB(model_->nJ, 0.0);
     // This also applies to the secondary discontinuities triggered by this
     // one, which were handled right before.
-    if (!stauB_secondary_.empty()) {
-        Expects(!disc.event_applications.empty());
+    bool const has_secondary_events = !stauB_secondary_.empty();
+    if (has_secondary_events) {
         stauB = std::move(stauB_secondary_);
         stauB_secondary_.clear();
     }
@@ -290,12 +290,9 @@ void EventHandlingBwdSimulator::handle_event_b(
     // of the discontinuity that triggered them.
     if (disc.secondary_event) {
         stauB_secondary_ = std::move(stauB);
-    } else if (!disc.initial_event && !disc.event_applications.empty()) {
-        int ie_tau = -1;
-        for (int ie = 0; ie < model_->ne; ie++) {
-            if (disc.root_info[ie] == 1)
-                ie_tau = ie;
-        }
+    } else if (!disc.initial_event
+               && (!disc.event_applications.empty() || has_secondary_events)) {
+        int const ie_tau = event_time_root(disc.root_info);
         if (ie_tau >= 0) {
             model_->add_adjoint_event_time_update(
                 ws_->xB_, ws_->xQB_, stauB, ie_tau, t_, disc.x_at_trigger,

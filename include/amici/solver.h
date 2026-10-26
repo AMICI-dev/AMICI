@@ -89,6 +89,9 @@ class Solver {
     /**
      * @brief runs a forward simulation until the specified timepoint
      *
+     * Only root crossings that change the current Heaviside variables of
+     * the model are reported (see apply_root_directions()).
+     *
      * @param tout next timepoint
      * @return status flag
      */
@@ -96,6 +99,9 @@ class Solver {
 
     /**
      * @brief makes a single step in the simulation
+     *
+     * Only root crossings that change the current Heaviside variables of
+     * the model are reported (see apply_root_directions()).
      *
      * @param tout next timepoint
      * @return status flag
@@ -862,36 +868,6 @@ class Solver {
         = 0;
 
     /**
-     * @brief Records the roots of the discontinuity just handled.
-     *
-     * This information allows recognizing a spurious re-detection of
-     * exactly the same root, immediately following reinit().
-     *
-     * @param root_directions per-root bitmask of the crossing directions
-     * (see root_direction_bit()) seen during the discontinuity just
-     * handled, whether or not they triggered a state update
-     */
-    void ignore_roots_after_reinit(std::vector<int> root_directions) const {
-        roots_ignored_after_reinit_ = std::move(root_directions);
-    }
-
-    /**
-     * @brief Bit representing a root crossing direction.
-     *
-     * Used for the per-root bitmasks passed to ignore_roots_after_reinit(),
-     * where the same root may have crossed in both directions within one
-     * discontinuity, e.g. when an event assignment moves the state back
-     * across the event's own trigger.
-     *
-     * @param direction root direction as reported by the solver
-     * (1: up-crossing, -1: down-crossing, 0: no crossing)
-     * @return 1 for an up-crossing, 2 for a down-crossing, 0 otherwise
-     */
-    static constexpr int root_direction_bit(int const direction) {
-        return direction == 1 ? 1 : direction == -1 ? 2 : 0;
-    }
-
-    /**
      * @brief Reinitializes the state sensitivities in the solver after an
      * event occurrence
      *
@@ -1271,8 +1247,8 @@ class Solver {
      * forward problem
      *
      * @param tnext next timepoint (defines integration direction)
-     * @return whether a root was found immediately after reinitialization
-     * that must be treated as a genuine event
+     * @return whether a root was found in the first step after
+     * reinitialization
      */
     virtual bool reinit_post_process_f(realtype tnext) const = 0;
 
@@ -1374,6 +1350,30 @@ class Solver {
      * @param ne number of different events
      */
     virtual void root_init(int ne) const = 0;
+
+    /**
+     * @brief Sets the directions of the root crossings to be reported.
+     *
+     * @param rootdir per root function: 1 to report only increasing, -1 to
+     * report only decreasing, 0 to report all crossings
+     */
+    virtual void set_root_direction(std::vector<int> const& rootdir) const
+        = 0;
+
+    /**
+     * @brief Restrict root-finding to the crossings that change the
+     * Heaviside variables of the model.
+     *
+     * A root function with Heaviside variable 1 can only cross from positive
+     * to negative, and one with Heaviside variable 0 only from negative to
+     * positive. This prevents, e.g., re-detecting a root that was just
+     * crossed after reinitialization.
+     *
+     * Called by run() and step(), so the Heaviside variables of the model
+     * must be up to date whenever these are called. The backward problem
+     * does not apply them.
+     */
+    void apply_root_directions() const;
 
     /**
      * @brief Initialize non-linear solver for sensitivities
@@ -2076,27 +2076,10 @@ class Solver {
     mutable bool force_reinit_postprocess_B_{false};
 
     /**
-     * Per-root bitmask of the crossing directions (see
-     * root_direction_bit()) seen during the discontinuity handled at the
-     * preceding reinit(), whether or not they triggered a state update.
-     * Used to distinguish a spurious re-detection of the same
-     * discontinuity from a genuine new event.
+     * Buffer for the root directions (see apply_root_directions()),
+     * empty if root-finding is disabled
      */
-    mutable std::vector<int> roots_ignored_after_reinit_;
-
-    /**
-     * Root/direction info to report on the next call to get_root_info(),
-     * in place of actually querying the solver, consumed (reset to
-     * `nullopt`) as soon as it is read.
-     *
-     * Set by reinit_post_process_f() when it has determined that some,
-     * but not all, of the roots the solver just found are spurious
-     * re-detections: the solver's own root-info array cannot be
-     * selectively corrected from here (only entirely re-queried), so this
-     * lets the *next* caller of get_root_info() see the already-filtered
-     * result without AMICI reaching into solver-internal state.
-     */
-    mutable std::optional<std::vector<int>> root_info_override_;
+    mutable std::vector<int> root_directions_;
 
     /** flag indicating whether sensInit1 was called */
     mutable bool sens_initialized_{false};
