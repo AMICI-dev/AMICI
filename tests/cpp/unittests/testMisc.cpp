@@ -521,6 +521,14 @@ TEST_F(AmiVectorTest, Vector) {
     ASSERT_EQ(ss.str(), "[1, 2, 4, 3]");
 }
 
+TEST_F(AmiVectorTest, AssignEmpty) {
+    sundials::Context sunctx;
+    AmiVector av(vec1, sunctx);
+    av = AmiVector();
+    ASSERT_EQ(av.size(), 0);
+    ASSERT_EQ(av.get_nvector(), nullptr);
+}
+
 TEST_F(AmiVectorTest, VectorArray) {
     sundials::Context sunctx;
     AmiVectorArray ava(4, 3, sunctx);

@@ -58,8 +58,10 @@ void AmiVector::copy(AmiVector const& other) {
 }
 
 void AmiVector::synchronise_nvector(SUNContext const sunctx) {
-    if (nvec_)
+    if (nvec_) {
         N_VDestroy_Serial(nvec_);
+        nvec_ = nullptr;
+    }
     if (sunctx) {
         nvec_ = N_VMake_Serial(
             gsl::narrow<long int>(vec_.size()), vec_.data(), sunctx
