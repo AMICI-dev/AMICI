@@ -342,6 +342,11 @@ def get_solver_settings(solver: AmiciSolver) -> dict[str, Any]:
     The result can be passed to :func:`set_solver_settings` to apply the
     same settings to another solver, and it can be pickled.
 
+    The format is not stable across AMICI versions: settings may be added,
+    renamed, or removed. It is meant for transferring settings within one
+    AMICI installation, e.g., for pickling solvers for multiprocessing. Don't
+    use it for storing settings long-term.
+
     Tolerances that default to other settings when not set explicitly (e.g.,
     :meth:`Solver.get_absolute_tolerance_fsa`) are stored with their current
     values. After :func:`set_solver_settings`, they are set explicitly.
@@ -362,6 +367,9 @@ def get_solver_settings(solver: AmiciSolver) -> dict[str, Any]:
 
 def set_solver_settings(solver: AmiciSolver, settings: dict[str, Any]) -> None:
     """Apply settings obtained from :func:`get_solver_settings` to a solver.
+
+    The settings must come from the same AMICI version (see
+    :func:`get_solver_settings`).
 
     :param solver: The AMICI solver instance.
     :param settings:
