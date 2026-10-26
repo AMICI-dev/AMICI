@@ -12,6 +12,16 @@ Installation of the AMICI Python package has the following prerequisites:
 * a C++20 compatible C++ compiler and a C compiler
   (e.g., g++>=10.1, clang>=13, Intel C++ compiler, mingw)
 
+.. note::
+
+  When AMICI is installed from a binary wheel, AMICI itself is not compiled,
+  but a C++ compiler is still needed to compile models. Models link against
+  static libraries shipped in the wheel, which requires:
+
+  * Linux: g++>=11, or clang with libstdc++>=11
+  * Windows: Visual Studio 2022 version 17.14 or newer
+    (MSVC toolset >=14.44)
+
 If these requirements are fulfilled and all relevant paths are setup properly,
 AMICI can be installed using:
 
