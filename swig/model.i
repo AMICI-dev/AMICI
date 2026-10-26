@@ -187,8 +187,7 @@ def simulate(
         Only relevant if `edata` is a sequence of :class:`ExpData` instances.
     :param num_threads:
         Number of threads to use for simulation.
-        Only relevant if AMICI was compiled with OpenMP support and if `edata`
-        is a sequence of :class:`ExpData` instances.
+        Only relevant if `edata` is a sequence of :class:`ExpData` instances.
     :return:
         A single :class:`ReturnDataView` instance containing the simulation
         results if `edata` is a single :class:`ExpData` instance or `None`.
@@ -274,8 +273,7 @@ def simulate(
         Only relevant if `edata` is a sequence of :class:`ExpData` instances.
     :param num_threads:
         Number of threads to use for simulation.
-        Only relevant if AMICI was compiled with OpenMP support and if `edata`
-        is a sequence of :class:`ExpData` instances.
+        Only relevant if `edata` is a sequence of :class:`ExpData` instances.
     :return:
         A single :class:`ReturnDataView` instance containing the simulation
         results if `edata` is a single :class:`ExpData` instance or `None`.

@@ -12,9 +12,14 @@
 
 #include <sundials/sundials_types.h> //sunrealtype
 
+#include <algorithm>
+#include <atomic>
 #include <map>
 #include <memory>
+#include <system_error>
+#include <thread>
 #include <type_traits>
+#include <vector>
 
 static_assert(
     amici::AMICI_SINGULAR_JACOBIAN == SUN_ERR_EXT_FAIL,
@@ -222,35 +227,28 @@ std::unique_ptr<ReturnData> run_simulation(
 
 std::vector<std::unique_ptr<ReturnData>> run_simulations(
     Solver const& solver, std::vector<ExpData*> const& edatas,
-    Model const& model, bool const failfast,
-#if defined(_OPENMP)
-    int num_threads
-#else
-    int /* num_threads */
-#endif
-
+    Model const& model, bool const failfast, int const num_threads
 ) {
     std::vector<std::unique_ptr<ReturnData>> results(edatas.size());
-    // is set to true if one simulation fails and we should skip the rest.
-    // shared across threads.
-    bool skipThrough = false;
+    // Set once a simulation failed and failfast is enabled. Simulations
+    // started afterwards only produce empty results. Shared across threads.
+    std::atomic<bool> skip_through = false;
+    // Index of the next condition to simulate. Shared across threads.
+    std::atomic<std::size_t> next_index = 0;
 
-#if defined(_OPENMP)
-#pragma omp parallel for num_threads(num_threads)
-#endif
-    for (int i = 0; i < (int)edatas.size(); ++i) {
-        // must catch exceptions in parallel section to avoid termination
+    auto simulate_condition = [&](std::size_t const i) {
+        // must catch exceptions here, as they must not escape a thread
         try {
-            auto mySolver = std::unique_ptr<Solver>(solver.clone());
-            auto myModel = std::unique_ptr<Model>(model.clone());
+            auto my_solver = std::unique_ptr<Solver>(solver.clone());
+            auto my_model = std::unique_ptr<Model>(model.clone());
 
             // If we fail, we need to write empty ReturnDatas for the Python
             // interface
-            if (skipThrough) {
-                ConditionContext conditionContext(myModel.get(), edatas[i]);
+            if (skip_through) {
+                ConditionContext condition_context(my_model.get(), edatas[i]);
                 results[i] = std::make_unique<ReturnData>(solver, model);
             } else {
-                results[i] = run_simulation(*mySolver, edatas[i], *myModel);
+                results[i] = run_simulation(*my_solver, edatas[i], *my_model);
             }
         } catch (std::exception const& ex) {
             results[i] = std::make_unique<ReturnData>(solver, model);
@@ -260,8 +258,33 @@ std::vector<std::unique_ptr<ReturnData>> run_simulations(
             );
         }
 
-        skipThrough |= failfast && results[i]->status < 0;
+        if (failfast && results[i]->status < 0)
+            skip_through = true;
+    };
+
+    // Each worker picks the next unprocessed condition until none is left.
+    auto worker = [&]() {
+        for (auto i = next_index++; i < edatas.size(); i = next_index++)
+            simulate_condition(i);
+    };
+
+    auto const num_workers = std::min(
+        static_cast<std::size_t>(std::max(num_threads, 1)), edatas.size()
+    );
+    // The calling thread is one of the workers.
+    std::vector<std::thread> threads;
+    if (num_workers > 1)
+        threads.reserve(num_workers - 1);
+    try {
+        for (std::size_t t = 1; t < num_workers; ++t)
+            threads.emplace_back(worker);
+    } catch (std::system_error const&) {
+        // The system could not start more threads. Continue with the
+        // threads started so far.
     }
+    worker();
+    for (auto& thread : threads)
+        thread.join();
 
     return results;
 }

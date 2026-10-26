@@ -98,12 +98,17 @@ def test_cmake_compilation(sbml_example_presimulation_module):
 
 @skip_on_valgrind
 @pytest.mark.skipif(sys.platform == "win32", reason="requires POSIX shell")
-@pytest.mark.filterwarnings("ignore:SWIG version mismatch:RuntimeWarning")
 def test_model_rebuild_reruns_swig_on_swig_change(tmp_path, monkeypatch):
     """Check that rebuilding a model reruns SWIG if the SWIG version changed,
     even if the SWIG executable path and the interface file didn't."""
+    from amici.exporters.sundials import compile as compile_module
     from amici.exporters.sundials.compile import build_model_extension
     from amici.importers.antimony import antimony2amici
+
+    # The fake SWIG version below would otherwise fail the version check.
+    monkeypatch.setattr(
+        compile_module, "_check_swig_version", lambda swig: None
+    )
 
     real_swig = os.environ.get("SWIG") or shutil.which("swig")
 
@@ -240,19 +245,45 @@ def test_model_build_uses_env_swig(tmp_path, monkeypatch):
 @skip_on_valgrind
 @pytest.mark.skipif(sys.platform == "win32", reason="requires POSIX shell")
 def test_model_build_swig_version_mismatch(tmp_path, monkeypatch):
-    """Check that a mismatching SWIG version is reported before
-    compilation."""
+    """Check that a mismatching SWIG version fails before compilation."""
     from amici.exporters.sundials.compile import build_model_extension
 
     fake_swig = _write_fake_swig(tmp_path / "bin")
     monkeypatch.setenv("SWIG", str(fake_swig))
 
-    # There is nothing to build, so the build fails after the check
-    with (
-        pytest.warns(RuntimeWarning, match=r"SWIG version mismatch.*1\.2\.3"),
-        pytest.raises(subprocess.CalledProcessError),
+    # There is nothing to build, so a CalledProcessError would mean that the
+    # check did not stop the build.
+    with pytest.raises(
+        amici.AmiciVersionError, match=r"SWIG version mismatch.*1\.2\.3"
     ):
         build_model_extension(tmp_path)
+
+
+@skip_on_valgrind
+def test_model_import_swig_version_mismatch(sbml_example_presimulation_module):
+    """Check that importing a model built with a different SWIG version than
+    amici fails."""
+    module_name = sbml_example_presimulation_module.__name__
+    module_path = Path(sbml_example_presimulation_module.__file__).parents[1]
+    # Run in a new process, as the model module is already imported here.
+    script = (
+        "import amici, amici.sim.sundials\n"
+        "amici.sim.sundials._SWIG_VERSION = (1, 2, 3)\n"
+        "try:\n"
+        f"    amici.import_model_module({module_name!r}, {str(module_path)!r})\n"
+        "except amici.AmiciVersionError as e:\n"
+        "    print('AmiciVersionError:', e)\n"
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", script],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    assert "AmiciVersionError: SWIG version mismatch" in result.stdout, (
+        result.stdout + result.stderr
+    )
+    assert "(1, 2, 3)" in result.stdout
 
 
 def _assert_valid_matching(edges, matching):
