@@ -1,0 +1,281 @@
+# Build binary wheels with cibuildwheel and test them.
+# Nothing is published, the wheels are only uploaded as workflow artifacts.
+name: Build wheels
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - python/sdist/**
+      - CMakeLists.txt
+      - cmake/**
+      - swig/CMakeLists.txt
+      - scripts/inspect_wheels.py
+      - scripts/test_wheel.py
+      - .github/workflows/build_wheels.yml
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CIBW_BUILD: "cp312-* cp313-* cp314-*"
+  CIBW_SKIP: "*-musllinux_*"
+  # no 32-bit builds; scipy-openblas64 is 64-bit only
+  CIBW_ARCHS: auto64
+  CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
+  CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_28
+  CIBW_ENVIRONMENT: AMICI_TRY_ENABLE_HDF5=OFF AMICI_PARALLEL_COMPILE=''
+  # The static libraries in the wheel are linked into models by the user's
+  #  compiler. Objects built with the default gcc-toolset-14 reference
+  #  libstdc++ symbols that older system compilers lack (e.g.,
+  #  std::string::_M_replace_cold, GCC>=13). Building with GCC 11 lets
+  #  GCC>=11 link them.
+  CIBW_BEFORE_ALL_LINUX: dnf install -y gcc-toolset-11-gcc-c++
+  CIBW_ENVIRONMENT_LINUX: >-
+    AMICI_TRY_ENABLE_HDF5=OFF AMICI_PARALLEL_COMPILE=''
+    CC=/opt/rh/gcc-toolset-11/root/usr/bin/gcc
+    CXX=/opt/rh/gcc-toolset-11/root/usr/bin/g++
+  CIBW_BUILD_VERBOSITY: 1
+  # scipy-openblas64 is already copied to amici/_installation/lib and loaded
+  #  from there via os.add_dll_directory; don't let delvewheel look for it
+  CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: >-
+    delvewheel repair --no-dll libscipy_openblas64_.dll
+    -w {dest_dir} -v {wheel}
+  # Compile a model against the installed wheel and simulate it.
+  #  cibuildwheel runs this from a temporary directory outside the source tree.
+  CIBW_TEST_COMMAND: >-
+    python {project}/scripts/test_wheel.py
+    {project}/doc/examples/getting_started/model_steadystate_scaled.xml
+
+jobs:
+  build_wheels:
+    name: Wheels ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-x86_64
+            os: ubuntu-26.04
+          - name: linux-aarch64
+            os: ubuntu-26.04-arm
+          - name: macos-arm64
+            os: macos-latest
+          - name: windows-amd64
+            os: windows-latest
+
+    steps:
+      - uses: dweindl/gha-runner-diagnostics@v1
+
+      - uses: actions/checkout@v7
+
+      # Developer Command Prompt for Microsoft Visual C++.
+      #  The static libraries in the wheel can only be linked by a toolset at
+      #  least as new as the one that built them, so we build with the VS 2022
+      #  toolset (14.44, VS 2022 17.14), not the runner's default VS 2026.
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: runner.os == 'Windows'
+        with:
+          toolset: "14.44"
+
+      - uses: pypa/cibuildwheel@v4.3.4
+        with:
+          package-dir: python/sdist
+          output-dir: wheelhouse
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: wheels-${{ matrix.name }}
+          path: wheelhouse/*.whl
+
+      - name: Inspect wheels
+        shell: bash
+        run: python scripts/inspect_wheels.py wheelhouse/*.whl
+
+      # Make sure the wheel doesn't depend on libraries that are only
+      #  available on the build machine (e.g., libomp from Homebrew)
+      - name: Check linked libraries
+        if: runner.os == 'macOS'
+        run: |
+          status=0
+          for whl in wheelhouse/*.whl; do
+            dir=$(mktemp -d)
+            unzip -q "$whl" -d "$dir"
+            echo "::group::$(basename "$whl")"
+            find "$dir" -type f \( -name '*.so' -o -name '*.dylib' \) \
+              -print0 | while IFS= read -r -d '' lib; do
+              echo "${lib#$dir/}:"
+              otool -L "$lib" | tail -n +2
+            done | tee otool.log
+            echo "::endgroup::"
+            if grep -E '/opt/homebrew|/usr/local' otool.log; then
+              echo "::error::$(basename "$whl") links libraries under /opt/homebrew or /usr/local"
+              status=1
+            fi
+            # ignore comments
+            if grep -rnE '^[^#]*(/opt/homebrew|/usr/local)' \
+                --include='*.cmake' "$dir"; then
+              echo "::error::$(basename "$whl") has CMake files referencing /opt/homebrew or /usr/local"
+              status=1
+            fi
+            if [ -d "$dir/amici/.dylibs" ]; then
+              echo "::error::delocate vendored libraries into $(basename "$whl"):"
+              ls -l "$dir/amici/.dylibs"
+              status=1
+            fi
+          done
+          exit $status
+
+  # On Linux, cibuildwheel tests the wheels inside the manylinux container
+  #  with the same compiler that built them. Here, we check that the static
+  #  libraries in the wheel also work with the compilers of common
+  #  distributions, which are older or newer than the manylinux toolchain.
+  test_system_compiler:
+    name: Test wheel with ${{ matrix.name }}
+    needs: build_wheels
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    container: ${{ matrix.image }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: GCC 11 (Ubuntu 22.04)
+            image: ubuntu:22.04
+            install: apt-get update && apt-get install -y g++ git
+          - name: GCC 12 (Debian 12)
+            image: debian:12
+            install: apt-get update && apt-get install -y g++ git
+          - name: GCC 13 (Ubuntu 24.04)
+            image: ubuntu:24.04
+            install: apt-get update && apt-get install -y g++ git
+          - name: GCC (Ubuntu 26.04)
+            image: ubuntu:26.04
+            install: apt-get update && apt-get install -y g++ git
+          - name: GCC (Fedora)
+            image: fedora:latest
+            install: dnf install -y gcc-c++ git
+          - name: Clang (Ubuntu 26.04)
+            image: ubuntu:26.04
+            install: >-
+              apt-get update && apt-get install -y clang git
+              && echo CC=clang >> "$GITHUB_ENV"
+              && echo CXX=clang++ >> "$GITHUB_ENV"
+
+    defaults:
+      run:
+        shell: bash
+
+    env:
+      DEBIAN_FRONTEND: noninteractive
+
+    steps:
+      - name: Install compiler
+        run: ${{ matrix.install }}
+
+      - uses: actions/checkout@v7
+
+      # The distributions' Python versions are too old for some images
+      - uses: astral-sh/setup-uv@v10.3.2
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: wheels-linux-x86_64
+          path: wheelhouse
+
+      - name: Compiler versions
+        run: |
+          ${CC:-cc} --version
+          ${CXX:-c++} --version
+          ldd --version | sed -n 1p
+
+      - name: Install wheel
+        run: |
+          uv venv --python 3.12 "$RUNNER_TEMP/venv"
+          uv pip install --python "$RUNNER_TEMP/venv/bin/python" \
+            wheelhouse/amici-*-cp312-*manylinux*x86_64.whl
+
+      - name: Compile and simulate a model
+        id: model_test
+        run: |
+          cd "$RUNNER_TEMP"
+          # for cmake and swig from the venv
+          source "$RUNNER_TEMP/venv/bin/activate"
+          python \
+            "$GITHUB_WORKSPACE/scripts/test_wheel.py" \
+            "$GITHUB_WORKSPACE/doc/examples/getting_started/model_steadystate_scaled.xml"
+
+      - name: Report
+        if: always()
+        run: |
+          {
+            echo "## Model test with ${{ matrix.name }}"
+            echo
+            echo '```'
+            ${CXX:-c++} --version | sed -n 1p
+            echo '```'
+            echo
+            echo "Outcome: **${{ steps.model_test.outcome }}**"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # Check that models can be compiled with Visual Studio 2022 against the
+  #  Windows wheel.
+  test_vs2022:
+    name: Test wheel with Visual Studio 2022
+    needs: build_wheels
+    if: ${{ !cancelled() }}
+    runs-on: windows-2022
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - uses: dweindl/gha-runner-diagnostics@v1
+
+      - uses: actions/checkout@v7
+
+      - uses: ilammy/msvc-dev-cmd@v1
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: wheels-windows-amd64
+          path: wheelhouse
+
+      - name: Compiler version
+        run: cl 2>&1 | sed -n 1p
+
+      - name: Install wheel
+        run: |
+          python -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/Scripts/python" -m pip install \
+            wheelhouse/amici-*-cp312-*win_amd64.whl
+
+      - name: Compile and simulate a model
+        id: model_test
+        run: |
+          cd "$RUNNER_TEMP"
+          # for cmake and swig from the venv
+          source "$RUNNER_TEMP/venv/Scripts/activate"
+          python \
+            "$GITHUB_WORKSPACE/scripts/test_wheel.py" \
+            "$GITHUB_WORKSPACE/doc/examples/getting_started/model_steadystate_scaled.xml"
+
+      - name: Report
+        if: always()
+        run: |
+          {
+            echo "## Model test with Visual Studio 2022"
+            echo
+            echo '```'
+            cl 2>&1 | sed -n 1p
+            echo '```'
+            echo
+            echo "Outcome: **${{ steps.model_test.outcome }}**"
+          } >> "$GITHUB_STEP_SUMMARY"

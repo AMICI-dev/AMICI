@@ -18,7 +18,7 @@ endif()
 
 find_package(
   Python3
-  COMPONENTS Interpreter Development NumPy
+  COMPONENTS Interpreter Development.Module NumPy
   REQUIRED)
 message(
   STATUS

@@ -44,6 +44,10 @@ def get_extensions():
     global_cmake_configure_options = [
         "-DCMAKE_VERBOSE_MAKEFILE=ON",
         f"-DCMAKE_MODULE_PATH={prefix_path.as_posix()}",
+        # Install to lib/ independent of the build host. GNUInstallDirs
+        #  would use lib64/ on RHEL-based systems (e.g., manylinux), where
+        #  find_package() won't look on Debian-based systems.
+        "-DCMAKE_INSTALL_LIBDIR=lib",
     ]
 
     debug_build = os.getenv("ENABLE_AMICI_DEBUGGING", "").lower() in [
