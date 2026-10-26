@@ -6,6 +6,18 @@
 using namespace amici;
 %}
 
+%feature("pythonprepend") amici::Model::set_t0_preeq %{
+    if not np.isnan(t0_preeq):
+        import warnings
+
+        warnings.warn(
+            "`Model.set_t0_preeq` is deprecated, set "
+            "`ExpData.t_start_preeq` instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+%}
+
 // remove functions that use AmiVector(Array) since that class anyways cannot
 // be exposed in swig
 %ignore add_adjoint_event_time_update;

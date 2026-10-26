@@ -196,9 +196,10 @@ class SimulationParameters {
     std::vector<int> plist;
 
     /**
-     * @brief The initial time for pre-equilibration..
+     * @brief The initial time for pre-equilibration.
      *
-     * NAN indicates that `tstart_` should be used.
+     * NAN indicates that it is not set. Then, pre-equilibration starts at
+     * `t_start` (or at the deprecated Model::t0_preeq() if that is set).
      */
     realtype t_start_preeq{NAN};
 
