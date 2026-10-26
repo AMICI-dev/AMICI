@@ -59,7 +59,7 @@ classifiers = [
 # Don't include any URLs here - they are not supported by PyPI:
 #  HTTPError: 400 Bad Request from https://upload.pypi.org/legacy/
 #  Invalid value for requires_dist. Error: Can't have direct dependency: ...
-petab = ["petab>=0.7.0"]
+petab = ["petab>=0.10.0"]
 pysb = ["pysb>=1.17.0"]
 vis = [
     "matplotlib",
