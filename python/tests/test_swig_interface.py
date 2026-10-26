@@ -675,6 +675,72 @@ def test_python_exceptions(sbml_example_presimulation_module):
         )
 
 
+@pytest.mark.parametrize("num_threads", [0, 1, 3, 100])
+def test_run_simulations_parallel(
+    sbml_example_presimulation_module, num_threads
+):
+    """Parallel simulation matches serial simulation, also with failfast."""
+    from amici.sim.sundials import AMICI_NOT_RUN, AMICI_SUCCESS
+
+    model = sbml_example_presimulation_module.get_model()
+    model.set_timepoints(np.linspace(0, 10, 11))
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+
+    p = np.asarray(model.get_free_parameters())
+    edatas = []
+    for i in range(8):
+        edata = ExpData(model)
+        edata.free_parameters = p + 0.05 * i
+        edatas.append(edata)
+
+    expected = run_simulations(model, solver, edatas, num_threads=1)
+    actual = run_simulations(model, solver, edatas, num_threads=num_threads)
+    assert len(actual) == len(edatas)
+    for rdata_expected, rdata_actual in zip(expected, actual, strict=True):
+        assert rdata_actual.status == AMICI_SUCCESS
+        np.testing.assert_array_equal(rdata_actual.x, rdata_expected.x)
+        np.testing.assert_array_equal(rdata_actual.sx, rdata_expected.sx)
+
+    # one failing condition
+    failing = 2
+    edatas[failing].free_parameters = [nan] * model.np()
+    rdatas = run_simulations(
+        model, solver, edatas, failfast=False, num_threads=num_threads
+    )
+    assert rdatas[failing].status < 0
+    assert all(
+        rdata.status == AMICI_SUCCESS
+        for i, rdata in enumerate(rdatas)
+        if i != failing
+    )
+
+    rdatas = run_simulations(
+        model, solver, edatas, failfast=True, num_threads=num_threads
+    )
+    assert rdatas[failing].status < 0
+    assert rdatas[failing].status != AMICI_NOT_RUN
+    # with failfast, conditions that start after the failure are skipped
+    assert all(
+        rdata.status in (AMICI_SUCCESS, AMICI_NOT_RUN)
+        for i, rdata in enumerate(rdatas)
+        if i != failing
+    )
+    if num_threads <= 1:
+        assert all(rdata.status == AMICI_SUCCESS for rdata in rdatas[:failing])
+        assert all(
+            rdata.status == AMICI_NOT_RUN for rdata in rdatas[failing + 1 :]
+        )
+
+
+def test_compiled_with_openmp_deprecated():
+    from amici.sim.sundials import compiled_with_openmp
+
+    with pytest.deprecated_call():
+        assert compiled_with_openmp() is False
+
+
 def test_cpu_timer_uses_thread_clock():
     from amici.sim.sundials import CpuTimer
 
