@@ -11,6 +11,7 @@ from pathlib import Path
 import amici
 import pytest
 import sympy as sp
+from amici._installation.custom_commands import AmiciBuildPy
 from amici.importers.utils import (
     maximum_bipartite_matching,
     smart_subs_dict,
@@ -20,6 +21,7 @@ from amici.sim.sundials import (
     parameter_scaling_from_int_vector,
 )
 from amici.testing import skip_on_valgrind
+from setuptools import Distribution
 
 
 def test_parameter_scaling_from_int_vector():
@@ -321,3 +323,23 @@ def test_maximum_bipartite_matching_long_augmenting_path():
     matching = maximum_bipartite_matching(edges)
     _assert_valid_matching(edges, matching)
     assert len(matching) == n
+
+
+def test_build_py_skips_vendored_sources(tmp_path):
+    """Vendored third-party sources are not installed as package data"""
+    data_file = tmp_path / "data.txt"
+    data_file.touch()
+
+    cmd = AmiciBuildPy(Distribution({"package_data": {"": ["*.txt"]}}))
+    cmd.ensure_finalized()
+    cmd.manifest_files = {}
+
+    for package in (
+        "amici._installation.ThirdParty",
+        "amici._installation.ThirdParty.sundials.src",
+    ):
+        assert cmd.find_data_files(package, str(tmp_path)) == []
+
+    assert cmd.find_data_files("amici._installation", str(tmp_path)) == [
+        str(data_file)
+    ]

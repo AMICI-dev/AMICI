@@ -31,7 +31,17 @@ dependencies = [
     "swig",
     "xarray>=2025.01.0",
 ]
-license = "BSD-3-Clause"
+# AMICI itself is BSD-3-Clause. The distributions also contain KLU and BTF
+#  (SuiteSparse), which are LGPL-2.1-or-later.
+license = "BSD-3-Clause AND LGPL-2.1-or-later"
+license-files = [
+    "LICENSE.md",
+    # vendored libraries that are linked into the AMICI extension
+    "amici/_installation/ThirdParty/sundials/LICENSE",
+    "amici/_installation/ThirdParty/sundials/NOTICE",
+    "amici/_installation/ThirdParty/SuiteSparse/LICENSE.txt",
+    "amici/_installation/ThirdParty/SuiteSparse/*/Doc/License.txt",
+]
 authors = [
     {name = "Fabian Froehlich", email = "froehlichfab@gmail.com"},
     {name = "Daniel Weindl", email = "sci@danielweindl.de"},
