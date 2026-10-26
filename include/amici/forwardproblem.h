@@ -206,7 +206,10 @@ struct FwdSimWorkspace {
         , rval_tmp(gsl::narrow<decltype(rval_tmp)::size_type>(model->ne), 0.0)
         , nroots(gsl::narrow<decltype(nroots)::size_type>(model->ne), 0)
         , rootvals(gsl::narrow<decltype(rootvals)::size_type>(model->ne), 0.0)
-        , roots_for_ignore(model->ne, 0)
+        , t_root_crossed(
+              model->ne, -std::numeric_limits<realtype>::infinity()
+          )
+        , n_slope_flips(model->ne, 0)
 
     {}
     /** Current solution state */
@@ -250,8 +253,8 @@ struct FwdSimWorkspace {
     /** Events that are waiting to be handled at the current timepoint. */
     EventQueue pending_events;
 
-    /** temporary rootval storage to check crossing in secondary event
-     * (dimension: ne) */
+    /** root function values before the latest event assignment, to check
+     * which root functions it changed (dimension: ne) */
     std::vector<realtype> rval_tmp;
 
     /** array of number of found roots for a certain event type
@@ -261,15 +264,14 @@ struct FwdSimWorkspace {
     /** array of values of the root function (dimension: ne) */
     std::vector<realtype> rootvals;
 
-    /**
-     * Crossing directions of the roots found in the discontinuities at time
-     * `t_roots_for_ignore`, as a per-root bitmask (dimension: ne), see
-     * Solver::ignore_roots_after_reinit.
-     */
-    std::vector<int> roots_for_ignore;
+    /** Time at which each root function last crossed zero, or was set to
+     * zero by an event assignment (dimension: ne) */
+    std::vector<realtype> t_root_crossed;
 
-    /** Time of the discontinuities that `roots_for_ignore` refers to */
-    realtype t_roots_for_ignore{NAN};
+    /** Number of times the Heaviside variables were changed according to the
+     * direction in which the root functions move, since the last primary
+     * discontinuity (dimension: ne) */
+    std::vector<int> n_slope_flips;
 };
 
 /**
@@ -431,11 +433,31 @@ class EventHandlingSimulator {
      * @brief Check for secondary events.
      *
      * Updates `roots_found` for the roots crossed due to the preceding event
-     * assignment.
+     * assignment, in either direction, including roots that were crossed
+     * earlier in the same discontinuity.
      *
      * @return the number of secondary events found
      */
     int detect_secondary_events();
+
+    /**
+     * @brief Estimate the uncertainty and the time derivative of the root
+     * functions at the current state.
+     *
+     * The uncertainty is estimated as the maximum of `|g(x + d) - g(x)|`
+     * with `d_i = atol + rtol * |x_i|` (likewise for `dx`), the change of
+     * `g` within the root-finding time tolerance, and the roundoff error of
+     * the states. The time derivative is estimated by a central difference
+     * along the current right-hand side.
+     * Afterwards, re-evaluates the root functions at the current state,
+     * which also restores the model's derived state.
+     *
+     * @param[out] noise estimated uncertainty of each root function
+     * @param[out] slope estimated time derivative of each root function
+     */
+    void estimate_root_noise_and_slope(
+        std::vector<realtype>& noise, std::vector<realtype>& slope
+    );
 
     /**
      * @brief Add the events that triggered in the latest discontinuity to the
@@ -500,10 +522,15 @@ class EventHandlingSimulator {
      * the given trigger timepoint, the roots of the events with explicit
      * trigger times at that timepoint.
      *
+     * Roots reported by the solver that do not change the Heaviside
+     * variables are dropped.
+     *
      * @param t_trigger The current trigger timepoint of the events with
      * explicit trigger times.
+     * @return Whether there are events to handle: false if the solver only
+     * reported dropped roots.
      */
-    void collect_roots(realtype t_trigger);
+    bool collect_roots(realtype t_trigger);
 
     /**
      * @brief Extract output information for events
