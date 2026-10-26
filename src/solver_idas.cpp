@@ -159,7 +159,6 @@ void IDASolver::init(
     int status;
     solver_was_called_F_ = false;
     force_reinit_postprocess_F_ = false;
-    root_info_override_.reset();
     t_ = t0;
     x_ = x0;
     dx_ = dx0;
@@ -254,6 +253,13 @@ void IDASolver::qb_init(int const which, AmiVector const& xQB0) const {
     }
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDAQuadInitB");
+}
+
+void IDASolver::deactivate_root_if_zero(int const ie) const {
+    // not available through the IDAS API
+    auto const ida_mem = static_cast<IDAMem>(solver_memory_.get());
+    if (ida_mem->ida_grout[ie] == 0.0)
+        ida_mem->ida_gactive[ie] = SUNFALSE;
 }
 
 void IDASolver::root_init(int const ne) const {
@@ -403,11 +409,6 @@ void IDASolver::set_quad_err_con(bool const flag) const {
 }
 
 void IDASolver::get_root_info(int* rootsfound) const {
-    if (root_info_override_) {
-        std::ranges::copy(*root_info_override_, rootsfound);
-        root_info_override_.reset();
-        return;
-    }
     int status = IDAGetRootInfo(solver_memory_.get(), rootsfound);
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDAGetRootInfo");
@@ -512,53 +513,7 @@ bool IDASolver::reinit_post_process_f(realtype const tnext) const {
         = reinit_post_process(solver_memory_.get(), &t_, &x_, &dx_, tnext);
     force_reinit_postprocess_F_ = false;
 
-    if (status != IDA_ROOT_RETURN)
-        return false;
-
-    // If a root was found after reinitialization, this may be a spurious
-    // re-detection of a root already accounted for during the preceding
-    // discontinuity handling, rather than a genuine new event. Suppress
-    // exactly those entries that match (same index *and* same direction)
-    // a root recorded there, in a local copy of the root-info array --
-    // not the solver's own -- so that a *different*, genuinely new root
-    // reported at the very same instant is still correctly surfaced on
-    // its own, rather than the whole step being reported (or suppressed)
-    // as one all-or-nothing unit. The filtered copy is then reported to
-    // the next caller of get_root_info() via root_info_override_.
-    auto ida_mem = static_cast<IDAMem>(solver_memory_.get());
-    std::vector<int> rootsfound(ida_mem->ida_nrtfn, 0);
-    get_root_info(rootsfound.data());
-    bool genuine = false;
-    for (int ie = 0; ie < ida_mem->ida_nrtfn; ++ie) {
-        if (rootsfound[ie] == 0)
-            continue;
-        if (ie < gsl::narrow<int>(roots_ignored_after_reinit_.size())
-            && (roots_ignored_after_reinit_[ie]
-                & root_direction_bit(rootsfound[ie]))) {
-            // spurious re-detection of a root already accounted for.
-            // Only an up-crossing (rootsfound[ie] == 1) is ever a genuine
-            // trigger, so only warn about suppressing one of those --
-            // suppressing a repeated down-crossing is always inconsequential.
-            if (rootsfound[ie] == 1 && get_logger()) {
-                std::stringstream msg;
-                msg << "Ignored a root immediately after reinitialization "
-                       "that matches the just-processed event at index "
-                    << ie << ", time " << t_
-                    << ". If this event is expected to retrigger faster "
-                       "than the solver's current tolerances can resolve, "
-                       "this repeat will not be detected.";
-                get_logger()->log(
-                    LogSeverity::warning, "ROOT_AFTER_REINIT", msg.str()
-                );
-            }
-            rootsfound[ie] = 0;
-        } else {
-            genuine = true;
-        }
-    }
-    if (genuine)
-        root_info_override_ = std::move(rootsfound);
-    return genuine;
+    return status == IDA_ROOT_RETURN;
 }
 
 void IDASolver::reinit_post_process_b(realtype const tnext) const {
@@ -766,7 +721,6 @@ void IDASolver::reinit(
     ida_mem->ida_tn = t0;
     if (solver_was_called_F_)
         force_reinit_postprocess_F_ = true;
-    roots_ignored_after_reinit_.clear();
     x_.copy(yy0);
     dx_.copy(yp0);
     reset_state(ida_mem, x_.get_nvector(), dx_.get_nvector());
