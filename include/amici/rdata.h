@@ -118,6 +118,19 @@ class ReturnData : public ModelDimensions {
         ForwardProblem const* fwd, BackwardProblem const* bwd, Model& model,
         Solver const& solver, ExpData const* edata
     );
+
+    /**
+     * @brief Set likelihood, state variables, outputs and respective
+     * sensitivities to NaN (typically after integration failure)
+     *
+     * Timepoint-resolved quantities are invalidated from `it_start` on,
+     * the likelihood, its sensitivities and the FIM entirely.
+     * Does nothing if `it_start >= nt`.
+     *
+     * @param it_start time index at which to start invalidating
+     */
+    void invalidate(int it_start);
+
     /**
      * @brief Arbitrary (not necessarily unique) identifier.
      */
@@ -772,14 +785,6 @@ class ReturnData : public ModelDimensions {
      */
     void
     fFIM(int it, Model& model, SolutionState const& sol, ExpData const& edata);
-
-    /**
-     * @brief Set likelihood, state variables, outputs and respective
-     * sensitivities to NaN (typically after integration failure)
-     *
-     * @param it_start time index at which to start invalidating
-     */
-    void invalidate(int it_start);
 
     /**
      * @brief Set likelihood and chi2 to NaN
