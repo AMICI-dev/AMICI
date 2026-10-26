@@ -142,9 +142,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # Debian 11 is EOL, its security repository no longer serves
+          #  packages
           - name: GCC 10 (Debian 11)
             image: debian:11
-            install: apt-get update && apt-get install -y g++ git
+            install: >-
+              sed -i '/bullseye-security/d' /etc/apt/sources.list
+              && apt-get update && apt-get install -y g++ git
           - name: GCC 11 (Ubuntu 22.04)
             image: ubuntu:22.04
             install: apt-get update && apt-get install -y g++ git
