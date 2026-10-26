@@ -100,29 +100,12 @@ def _solver_repr(self: "Solver"):
     ])
 
 def _solver_reduce(self: "Solver"):
-    """
-    For now, we just store solver settings in a temporary HDF5 file.
-    This is sufficient for multiprocessing use cases, but will not survive
-    reboots and will not work in distributed (MPI) settings.
-    This requires that amici was compiled with HDF5 support.
-    """
-    from amici.sim.sundials import hdf5_enabled
-    if not hdf5_enabled:
-        raise RuntimeError(
-            "Cannot pickle this Solver: pickling stores solver settings "
-            "via HDF5, but this AMICI installation was built without "
-            "HDF5 support."
-        )
-    from amici.sim.sundials._swig_wrappers import restore_solver, write_solver_settings_to_hdf5
-    from tempfile import NamedTemporaryFile
-    import os
-    with NamedTemporaryFile(suffix=".h5", delete=False) as tmpfile:
-        tmpfilename = tmpfile.name
-        write_solver_settings_to_hdf5(self, tmpfilename)
+    """Pickle a solver via its settings (see `get_solver_settings`)."""
+    from amici.sim.sundials._swig_wrappers import get_solver_settings, restore_solver
 
     return (
         restore_solver,
-        (self.__class__, self.get_class_name(), tmpfilename,),
+        (self.__class__, self.get_class_name(), get_solver_settings(self)),
     )
 
 %}

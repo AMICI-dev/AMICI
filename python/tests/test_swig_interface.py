@@ -30,12 +30,15 @@ from amici.sim.sundials import (
     SteadyStateComputationMode,
     SteadyStateSensitivityMode,
     get_model_settings,
+    get_solver_settings,
     parameter_scaling_from_int_vector,
     run_simulation,
     run_simulations,
     set_model_settings,
+    set_solver_settings,
 )
 from amici.testing import skip_on_valgrind
+from util import modify_solver_attrs
 
 
 def test_version_number(pysb_example_presimulation_module):
@@ -903,10 +906,44 @@ def test_pickle_edata_after_expdataview():
     assert edata == edata_pickled
 
 
-@pytest.mark.skipif(
-    not amici.sim.sundials.hdf5_enabled,
-    reason="AMICI build without HDF5 support",
-)
+def _solver_getters(solver):
+    """Names of all settings with a getter and setter on `solver`."""
+    return sorted(
+        name[4:]
+        for name in dir(solver)
+        if name.startswith("set_") and hasattr(solver, f"get_{name[4:]}")
+    )
+
+
+def test_solver_settings_complete():
+    """`get_solver_settings` covers every setting of a solver."""
+    from amici.sim.sundials._swig_wrappers import solver_instance_settings
+
+    for solver in (CVodeSolver(), IDASolver()):
+        assert sorted(solver_instance_settings) == _solver_getters(solver)
+
+
+def test_get_set_solver_settings():
+    for solver_cls in (CVodeSolver, IDASolver):
+        solver = solver_cls()
+        modify_solver_attrs(solver)
+        settings = get_solver_settings(solver)
+
+        new_solver = solver_cls()
+        for name in _solver_getters(solver):
+            assert settings[name] != getattr(new_solver, f"get_{name}")(), name
+
+        set_solver_settings(new_solver, settings)
+        assert get_solver_settings(new_solver) == settings
+
+        # a subset of the settings can be set
+        set_solver_settings(new_solver, {"max_steps": 1234})
+        assert new_solver.get_max_steps() == 1234
+
+        with pytest.raises(ValueError, match="Unknown solver settings"):
+            set_solver_settings(new_solver, {"no_such_setting": 1})
+
+
 def test_pickle_solver():
     for solver in (
         CVodeSolver(),
@@ -914,14 +951,12 @@ def test_pickle_solver():
         SolverPtr(CVodeSolver()),
         SolverPtr(IDASolver()),
     ):
-        solver.set_max_steps(1234)
-        solver.set_sensitivity_order(SensitivityOrder.first)
+        modify_solver_attrs(solver)
         solver_pickled = pickle.loads(pickle.dumps(solver))
         assert type(solver) is type(solver_pickled)
-        assert solver.get_max_steps() == solver_pickled.get_max_steps()
-        assert (
-            solver.get_sensitivity_order()
-            == solver_pickled.get_sensitivity_order()
+        assert solver.get_class_name() == solver_pickled.get_class_name()
+        assert get_solver_settings(solver_pickled) == get_solver_settings(
+            solver
         )
 
 
