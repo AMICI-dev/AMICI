@@ -39,6 +39,9 @@ def build_model_extension(
 
     :param extra_msg:
         Additional message to be printed in case of a failed build.
+
+    :raises amici.AmiciVersionError:
+        If the SWIG version differs from the one used for building amici.
     """
     # setup.py assumes it is run from within the model directory
     package_dir = Path(package_dir)
@@ -106,9 +109,13 @@ def _get_env_swig() -> str | None:
 
 
 def _check_swig_version(swig: str) -> None:
-    """Warn if the given SWIG version differs from the one used for amici.
+    """Check that the given SWIG version matches the one used for amici.
 
-    Mismatching SWIG versions may lead to subtle errors at runtime.
+    A model extension built with a different SWIG version can't be imported
+    (see :class:`amici.AmiciVersionError`), so fail before building it.
+    If the version can't be determined, only warn.
+
+    :raises amici.AmiciVersionError: If the SWIG versions differ.
     """
     try:
         from amici.sim.sundials import _SWIG_VERSION as amici_swig
@@ -140,13 +147,13 @@ def _check_swig_version(swig: str) -> None:
 
     model_swig = tuple(map(int, match.groups()))
     if model_swig != amici_swig:
-        warnings.warn(
+        from amici import AmiciVersionError
+
+        raise AmiciVersionError(
             f"SWIG version mismatch between amici "
             f"({'.'.join(map(str, amici_swig))}) and the SWIG executable "
-            f"`{swig}` ({'.'.join(map(str, model_swig))}) used for "
-            "building the model extension. This may lead to unexpected "
-            "behavior. Set the `SWIG` environment variable to a matching "
-            "SWIG executable.",
-            RuntimeWarning,
-            stacklevel=3,
+            f"`{swig}` ({'.'.join(map(str, model_swig))}) for building the "
+            "model extension. The model could not be imported. Set the "
+            "`SWIG` environment variable to a SWIG executable of version "
+            f"{'.'.join(map(str, amici_swig))}."
         )
