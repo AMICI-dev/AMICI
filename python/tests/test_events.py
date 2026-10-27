@@ -3443,3 +3443,133 @@ def test_dae_explicit_and_solver_tracked_events(tempdir):
         assert_allclose(
             rdatas[dae].by_id("y"), 2 * rdatas[dae].by_id("x"), rtol=1e-8
         )
+
+
+@skip_on_valgrind
+def test_event_crosses_own_trigger_back(tempdir):
+    """The Heaviside variables of roots that an event assignment crosses back
+    in the same discontinuity are updated (gh-3425)."""
+    model_name = "test_event_crosses_own_trigger_back"
+    antimony2amici(
+        r"""
+        k1 = 0.7; k2 = 0.3; a = 1.5; thr = 0.5
+        x = 1; y = 0.5
+        x' = piecewise(-k1 * x, x > thr, -2 * k1 * x)
+        y' = piecewise(-k2 * y, x > thr, -k2 * x * y)
+        E1: at x < thr, fromTrigger=false: x = x * a
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[
+            MC("obs_x", formula="x"),
+            MC("obs_y", formula="y"),
+        ],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    k1, k2, a, thr = 0.7, 0.3, 1.5, 0.5
+    t = np.array([0.0, 1.0, 2.0, 3.0, 4.0])
+    model.set_timepoints(t)
+
+    # `x` reaches `thr` at `t0`, `E1` moves it back above `thr`, from where it
+    # decays to `thr` again within `period`. So, `x > thr` holds throughout,
+    # and `x = a^m * exp(-k1 * t)` after `m` event occurrences.
+    t0 = np.log(1 / thr) / k1
+    period = np.log(a) / k1
+    m = np.where(t < t0, 0, np.floor((t - t0) / period) + 1)
+    assert np.sum(m >= 3) >= 2
+    x = a**m * np.exp(-k1 * t)
+    y = 0.5 * np.exp(-k2 * t)
+    # The event times depend on `thr`, but the state jumps compensate the
+    # shifted right-hand side discontinuities, so `dx/dthr = 0`.
+    sx = {"k1": -t * x, "k2": 0 * t, "a": m * x / a, "thr": 0 * t}
+    sy = {"k1": 0 * t, "k2": -t * y, "a": 0 * t, "thr": 0 * t}
+    par_ids = list(model.get_free_parameter_ids())
+    ix = model.get_state_ids().index("x")
+    iy = model.get_state_ids().index("y")
+
+    edata = ExpData(model)
+    measurements = np.vstack([x, y]).T + 0.1
+    edata.set_measurements(measurements.flatten())
+    edata.set_noise_scales(np.ones_like(measurements).flatten())
+    for sens_method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver = model.create_solver()
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(sens_method)
+        solver.set_relative_tolerance(1e-12)
+        solver.set_absolute_tolerance(1e-12)
+        rdata = run_simulation(model, solver, edata=edata)
+        assert rdata.status == AMICI_SUCCESS
+        assert_allclose(rdata.by_id("x"), x, rtol=1e-8)
+        assert_allclose(rdata.by_id("y"), y, rtol=1e-8)
+        # the right-hand side at the final time point uses the `x > thr`
+        # branch
+        assert_allclose(rdata.xdot[ix], -k1 * x[-1], rtol=1e-8)
+
+        expected_sllh = [
+            np.sum(0.1 * (sx[par_id] + sy[par_id])) for par_id in par_ids
+        ]
+        assert_allclose(
+            rdata.sllh,
+            expected_sllh,
+            rtol=1e-6,
+            atol=1e-8,
+            err_msg=str(sens_method),
+        )
+        if sens_method == SensitivityMethod.forward:
+            for ip, par_id in enumerate(par_ids):
+                assert_allclose(
+                    rdata.sx[:, ip, ix], sx[par_id], rtol=1e-6, atol=1e-8
+                )
+                assert_allclose(
+                    rdata.sx[:, ip, iy], sy[par_id], rtol=1e-6, atol=1e-8
+                )
+
+
+@skip_on_valgrind
+def test_event_moves_own_trigger_time(tempdir):
+    """An event that moves its own explicit trigger time fires again
+    (gh-3425)."""
+    model_name = "test_event_moves_own_trigger_time"
+    antimony2amici(
+        r"""
+        s = 1; n = 0
+        x = 1; x' = -x
+        E: at time >= s: s = s + 1, n = n + 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    assert model.ne_solver == 0
+    model.set_timepoints([0.0, 1.5, 2.5, 3.5])
+    rdata = run_simulation(model, model.create_solver())
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.by_id("n"), [0.0, 1.0, 2.0, 3.0], rtol=0, atol=0)
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize("x_new", ["xmax", "0.3"])
+def test_event_assignment_onto_threshold(tempdir, x_new):
+    """An event assignment that sets a just-crossed root function to zero,
+    exactly or up to rounding errors, does not cross it back.
+
+    `xmax` is computed at runtime, `0.1 + 0.2 = 0.30000000000000004`, so
+    `x = 0.3` is one rounding error below it.
+    """
+    model_name = f"test_event_assignment_onto_threshold_{x_new != 'xmax'}"
+    antimony2amici(
+        rf"""
+        r = 1; a = 0.1; b = 0.2
+        xmax := a + b
+        x = 0; x' = piecewise(r, x < xmax, 0)
+        E: at x > xmax: x = {x_new}
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints([0.0, 1.0, 2.0])
+    rdata = run_simulation(model, model.create_solver())
+    assert rdata.status == AMICI_SUCCESS
+    x_expected = 0.1 + 0.2 if x_new == "xmax" else 0.3
+    assert_allclose(rdata.by_id("x"), [0.0, x_expected, x_expected], rtol=1e-8)
