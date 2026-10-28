@@ -506,6 +506,27 @@ class EventHandlingSimulator {
     void collect_roots(realtype t_trigger);
 
     /**
+     * @brief Ignore roots reported again right after a discontinuity.
+     *
+     * If a root function is exactly zero at a discontinuity, the solver
+     * determines its sign after reinitialization at a small distance from
+     * the discontinuity. If the first step is shorter, the state may not
+     * change in floating-point arithmetic, and the zero root function is
+     * reported as a root in the opposite direction. Such roots of the
+     * preceding discontinuity, reported within the solver's root-finding
+     * tolerance after it, at which the root function is still exactly
+     * zero, are removed from `ws_->roots_found`.
+     *
+     * @param t_stop The time until which the solver was run.
+     */
+    void filter_zero_roots_after_discontinuity(realtype t_stop);
+
+    /**
+     * @brief Whether any roots are set in `ws_->roots_found`.
+     */
+    [[nodiscard]] bool any_roots_found() const;
+
+    /**
      * @brief Extract output information for events
      */
     void store_event(ExpData const* edata);

@@ -2358,3 +2358,81 @@ def test_failure_before_main_simulation(tempdir):
     assert np.all(np.isnan(rdata.sllh))
     assert np.all(np.isnan(rdata.x))
     assert np.all(np.isnan(rdata.y))
+
+
+@skip_on_valgrind
+@pytest.mark.filterwarnings(
+    "ignore:Adjoint sensitivity analysis for models with discontinuous "
+)
+@pytest.mark.parametrize("dae", [True, False], ids=["dae", "ode"])
+def test_switch_after_root_at_stop_time(tempdir, dae):
+    """Switches and events apply independently of the output timepoints.
+
+    For some output timepoints, the solver stops exactly at the root, where
+    the root function is zero. If the first step afterwards was too short
+    to change the state, the zero root function was reported as a root in
+    the opposite direction, which reverted the switch and executed ``E``.
+    """
+    model_name = f"test_switch_after_root_at_stop_time_{dae}"
+    # z = 2 * x as algebraic state or expression
+    z_def = "z = 200; 0 = z - 2 * x" if dae else "z := 2 * x"
+    antimony2amici(
+        f"""
+        thr = 204
+        x = 100; v = 0; w = 0
+        x' = 1
+        {z_def}
+        v' = piecewise(1, z > thr, 0)
+        w' = 0
+        E: at z < thr, t0 = true: w = w + 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    assert ("z" in model.get_state_ids()) == dae
+    assert model.get_free_parameter_ids() == ("thr",)
+    model.set_parameter_scale(ParameterScaling.none)
+    for timepoints in (
+        [0, 3, 4],
+        [0, 1, 4],
+        [0, 0.5, 4],
+        [0, 1, 3, 4],
+        [0, 0.1, 4],
+    ):
+        timepoints = np.asarray(timepoints, dtype=float)
+        model.set_timepoints(timepoints)
+        # `z > thr` from t = thr / 2 - 100 = 2
+        v_expected = np.maximum(0, timepoints - 2)
+        sv_expected = np.where(timepoints > 2, -0.5, 0)
+        edata = ExpData(model)
+        edata.set_measurements(np.ones(len(timepoints) * model.ny))
+        sllh = {}
+        for method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+            solver = model.create_solver()
+            solver.set_sensitivity_order(SensitivityOrder.first)
+            solver.set_sensitivity_method(method)
+            rdata = run_simulation(model, solver, edata)
+            assert rdata.status == AMICI_SUCCESS
+            msg = f"{timepoints}, {method.name}"
+            assert_allclose(
+                rdata.by_id("v"), v_expected, rtol=1e-6, atol=1e-8, err_msg=msg
+            )
+            assert_array_equal(rdata.by_id("w"), 0, err_msg=msg)
+            if method == SensitivityMethod.forward:
+                iv = model.get_state_ids().index("v")
+                assert_allclose(
+                    rdata.sx[:, 0, iv],
+                    sv_expected,
+                    rtol=1e-6,
+                    atol=1e-8,
+                    err_msg=msg,
+                )
+            sllh[method] = rdata.sllh
+        assert sllh[SensitivityMethod.forward][0] != 0
+        assert_allclose(
+            sllh[SensitivityMethod.adjoint],
+            sllh[SensitivityMethod.forward],
+            rtol=1e-5,
+            err_msg=str(timepoints),
+        )
