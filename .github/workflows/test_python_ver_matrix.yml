@@ -25,6 +25,8 @@ jobs:
             experimental: false
           - python-version: '3.14'
             experimental: false
+          - python-version: '3.15'
+            experimental: false
 
     steps:
     - uses: dweindl/gha-runner-diagnostics@v1
