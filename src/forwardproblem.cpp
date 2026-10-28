@@ -607,6 +607,7 @@ void EventHandlingSimulator::handle_events(
                 xdot_pre.copy(ws_->xdot);
             }
         }
+        bool const at_discontinuity = first_since_discontinuity;
         first_since_discontinuity = false;
         // `xdot_at_trigger` is only set if sensitivities are computed
         gsl_AssertDebug(
@@ -636,6 +637,18 @@ void EventHandlingSimulator::handle_events(
                 event_application->trigger_disc_offset = gsl::narrow<int>(
                     result.discs.size() - 1 - pending_event.trigger_disc_idx
                 );
+            }
+            // The algebraic states at the state at which a discontinuity
+            // was reached were determined with the Heaviside variables
+            // before that discontinuity, otherwise with the current ones.
+            if (state_at_trigger.has_value()) {
+                event_application->h_eval
+                    = result.discs.at(pending_event.trigger_disc_idx)
+                          .h_at_trigger;
+            } else if (at_discontinuity) {
+                event_application->h_eval = result.discs.back().h_at_trigger;
+            } else {
+                event_application->h_eval = model_->get_model_state().h;
             }
         }
 
@@ -667,11 +680,21 @@ void EventHandlingSimulator::handle_events(
                 ws_->stau, h_assign
             );
         }
+        if (solver_->computing_fsa() || solver_->computing_asa()) {
+            // `IDACalcIC` doesn't update the derivatives and sensitivities of
+            // the algebraic states, which subsequent events may depend on.
+            // Their stale values in `xdot` above only enter the algebraic
+            // components of `sx`, which are recomputed here.
+            model_->make_algebraic_derivatives_consistent(
+                ws_->sol.t, ws_->sol.x, ws_->sol.dx,
+                solver_->computing_fsa() ? &ws_->sol.sx : nullptr
+            );
+            model_->fdxdt(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->xdot);
+        }
         // store post-event state
         if (event_application) {
             event_application->x_post = ws_->sol.x;
             event_application->dx_post = ws_->sol.dx;
-            model_->fdxdt(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->xdot);
             event_application->xdot_post = ws_->xdot;
             result.discs.back().event_applications.push_back(
                 *std::move(event_application)

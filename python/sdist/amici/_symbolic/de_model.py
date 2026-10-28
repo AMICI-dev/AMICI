@@ -769,7 +769,9 @@ class DEModel:
             return raw
 
         substituted = self._substitute_splines(raw)
-        if self._contains_dspl(substituted):
+        # `dwdt` may contain spline time derivatives, which are not
+        # evaluated yet, see `Model_DAE::fdxdotdt`
+        if name != "dwdt" and self._contains_dspl(substituted):
             raise NotImplementedError(
                 f"Model uses a spline in an expression that depends on "
                 f"its time derivative (encountered while computing "
@@ -1720,6 +1722,16 @@ class DEModel:
         elif name == "dxdotdp_explicit":
             # force symbols
             self._derivative("xdot", "p", name=name)
+
+        elif name == "dxdotdt_explicit":
+            # only required for the algebraic equations
+            n_alg = len(self._algebraic_equations)
+            n_diff = self.num_states_solver() - n_alg
+            self._eqs[name] = sp.zeros(n_diff, 1)
+            if n_alg:
+                self._eqs[name] = self._eqs[name].col_join(
+                    smart_jacobian(self.eq("xdot")[n_diff:, :], time_symbol)
+                )
 
         elif name == "spl":
             self._eqs[name] = self.sym(name)
