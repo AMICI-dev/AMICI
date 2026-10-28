@@ -895,6 +895,9 @@ class Solver {
      * @brief Reinitializes the state sensitivities in the solver after an
      * event occurrence
      *
+     * Does nothing if the sensitivities were switched off by
+     * `sens_toggle_off`.
+     *
      * @param yyS0 new state sensitivity
      * @param ypS0 new derivative state sensitivities (DAE only)
      */
@@ -903,8 +906,8 @@ class Solver {
         = 0;
 
     /**
-     * @brief Switches off computation of  state sensitivities without
-     * deallocating the memory for sensitivities
+     * @brief Switches off computation of state sensitivities and deallocates
+     * the memory for sensitivities
      */
     virtual void sens_toggle_off() const = 0;
 

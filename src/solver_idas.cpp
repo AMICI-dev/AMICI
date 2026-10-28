@@ -775,6 +775,10 @@ void IDASolver::reinit(
 void IDASolver::sens_reinit(
     AmiVectorArray const& yyS0, AmiVectorArray const& ypS0
 ) const {
+    if (!sens_initialized_) {
+        return;
+    }
+
     auto ida_mem = static_cast<IDAMem>(solver_memory_.get());
     /* Initialize znS[0] in the history array */
     for (int is = 0; is < nplist(); is++)
@@ -804,6 +808,10 @@ void IDASolver::sens_toggle_off() const {
     IDASensFree(solver_memory_.get());
     /* need to deallocate sensi memory, otherwise can't reenable */
     sens_initialized_ = false;
+    // Unlike CVODES, IDASolve checks the sensitivity error control flag
+    // without checking whether sensitivities are enabled, and would access
+    // the freed sensitivity vectors.
+    set_sens_err_con(false);
 }
 
 void IDASolver::reinit_b(
