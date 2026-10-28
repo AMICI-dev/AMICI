@@ -483,6 +483,39 @@ def test_model_instance_settings_custom_x0(pysb_example_presimulation_module):
     assert_same(settings, get_model_settings(model2))
 
 
+def test_expdata_initial_state_restored(sbml_example_presimulation_module):
+    """Check that `ExpData` initial states don't remain set in the model.
+
+    See gh-3452.
+    """
+    model = sbml_example_presimulation_module.get_model()
+    model.set_timepoints([0.0, 1.0])
+    solver = model.create_solver()
+    x0_default = np.asarray(model.get_initial_state())
+    assert not model.has_custom_initial_state()
+    assert not model.has_custom_initial_state_sensitivities()
+
+    edata = ExpData(model)
+    edata.x0 = 2 * x0_default + 1
+    edata.sx0 = np.ones(model.nx_rdata * model.nplist())
+    rdata = run_simulation(model, solver, edata)
+    assert np.asarray(rdata.x0) == pytest.approx(2 * x0_default + 1)
+
+    assert not model.has_custom_initial_state()
+    assert not model.has_custom_initial_state_sensitivities()
+    assert np.asarray(model.get_initial_state()) == pytest.approx(x0_default)
+    rdata = run_simulation(model, solver)
+    assert np.asarray(rdata.x0) == pytest.approx(x0_default)
+
+    # a custom initial state of the model is restored
+    x0_custom = x0_default + 3
+    model.set_initial_state(x0_custom)
+    rdata = run_simulation(model, solver, edata)
+    assert np.asarray(rdata.x0) == pytest.approx(2 * x0_default + 1)
+    assert model.has_custom_initial_state()
+    assert np.asarray(model.get_initial_state()) == pytest.approx(x0_custom)
+
+
 def test_solver_repr():
     for solver in (CVodeSolver(), IDASolver()):
         solver_ptr = SolverPtr(solver.this)

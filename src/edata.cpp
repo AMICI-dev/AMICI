@@ -560,11 +560,10 @@ void ConditionContext::restore() {
     // parameter scale has to be set before initial state sensitivities
     model_->set_parameter_scale(original_scaling_);
 
-    if (!original_x0_.empty())
-        model_->set_initial_state(original_x0_);
-
-    if (!original_sx0_.empty())
-        model_->set_unscaled_initial_state_sensitivities(original_sx0_);
+    // empty originals remove initial states and sensitivities set from
+    // `ExpData`
+    model_->set_initial_state(original_x0_);
+    model_->set_unscaled_initial_state_sensitivities(original_sx0_);
 
     model_->set_free_parameters(original_parameters_);
     model_->set_fixed_parameters(original_fixed_parameters_);
