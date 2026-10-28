@@ -25,4 +25,8 @@ remove it earlier.
 Python compatibility
 --------------------
 
-We follow `numpy's Python support policy <https://numpy.org/neps/nep-0029-deprecation_policy.html>`_.
+We follow `SPEC 0 <https://scientific-python.org/specs/spec-0000/>`_
+for the minimum supported versions of Python and of core dependencies such as
+NumPy, SciPy, pandas, and Matplotlib.
+We may keep supporting a Python version beyond the SPEC 0 schedule until
+NumPy drops it.
