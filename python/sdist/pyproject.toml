@@ -20,10 +20,9 @@ requires-python = ">=3.12"
 dependencies = [
     "cmake-build-extension==0.6.0",
     "sympy>=1.12.1",
-    "numpy>=1.26.2; python_version=='3.12'",
-    "numpy; python_version>='3.13'",
+    "numpy>=2.2",
     "python-libsbml",
-    "pandas>=2.0.2",
+    "pandas>=2.3",
     "sbmlmath>=0.4.0",
     "toposort",
     "setuptools>=48",
@@ -72,12 +71,12 @@ classifiers = [
 petab = ["petab>=0.10.0"]
 pysb = ["pysb>=1.17.0"]
 vis = [
-    "matplotlib",
+    "matplotlib>=3.10",
     "seaborn",
 ]
 examples = [
     "jupyter",
-    "scipy",
+    "scipy>=1.15",
 ]
 jax = [
     "jax>=0.7.2",
@@ -153,7 +152,7 @@ test = [
     "shyaml",
     "antimony>=2.13.1",
     "antimony!=2.14; platform_system=='Darwin' and platform_machine in 'x86_64h'",
-    "scipy",
+    "scipy>=1.15",
     "pooch",
     "beartype",
     "wheel",
