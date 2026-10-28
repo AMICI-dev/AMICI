@@ -1632,3 +1632,94 @@ def test_initial_events_after_failed_newton(tempdir):
         assert_allclose(rdata.x_ss, x_ss_expected, rtol=1e-5)
         assert_allclose(rdata.x[0], x_ss_expected, rtol=1e-5)
         assert_allclose(rdata.sllh, sllh_expected, rtol=1e-4)
+
+
+@pytest.fixture(scope="module")
+def spline_fixed_parameter_module(tmp_path_factory):
+    """A model with a spline whose values depend on the fixed parameter
+    `k`."""
+    import libsbml
+    import sympy as sp
+    from amici.importers.antimony import antimony2sbml
+    from amici.importers.sbml import SbmlImporter, splines
+
+    sbml_doc = libsbml.SBMLReader().readSBMLFromString(
+        antimony2sbml("p = 1; k = 1; x = 0; x' = spl - x; spl = 0")
+    )
+    sbml_model = sbml_doc.getModel()
+    p, k = sp.symbols("p k")
+    splines.CubicHermiteSpline(
+        sbml_id="spl",
+        nodes=[0, 1, 2],
+        values_at_nodes=[p * k, p * k, p * k],
+        extrapolate="constant",
+    ).add_to_sbml_model(sbml_model)
+    sbml_model.getElementBySId("spl").setConstant(False)
+    model_name = "test_splines_fixed_parameters"
+    outdir = tmp_path_factory.mktemp(model_name)
+    SbmlImporter(sbml_model, from_file=False).sbml2amici(
+        model_name,
+        outdir,
+        fixed_parameters=["k"],
+        observation_model=[MeasurementChannel("obs_x", formula="x")],
+    )
+    return amici.import_model_module(model_name, outdir)
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize("period", ["preequilibration", "presimulation"])
+def test_splines_with_fixed_parameters_across_periods(
+    spline_fixed_parameter_module, period
+):
+    """Check splines depending on fixed parameters across periods.
+
+    Each simulation period uses its own fixed parameters (gh-3450).
+    """
+    model = spline_fixed_parameter_module.get_model()
+    model.set_steady_state_computation_mode(
+        SteadyStateComputationMode.integrationOnly
+    )
+    model.set_steady_state_sensitivity_mode(
+        SteadyStateSensitivityMode.integrationOnly
+    )
+    t = np.array([0.0, 1.0, 2.0])
+    model.set_timepoints(t)
+    p_val = model.get_free_parameter_by_id("p")
+
+    edata = ExpData(model)
+    edata.fixed_parameters = [1.0]
+    if period == "preequilibration":
+        edata.fixed_parameters_pre_equilibration = [5.0]
+        # x approaches 5 p during pre-equilibration, then p
+        x_expected = p_val + 4 * p_val * np.exp(-t)
+        sx_expected = 1 + 4 * np.exp(-t)
+    else:
+        edata.fixed_parameters_presimulation = [5.0]
+        edata.t_presim = 1.0
+        # x approaches 5 p during presimulation, starting from 0
+        x_presim = 5 * p_val * (1 - np.exp(-1.0))
+        x_expected = p_val + (x_presim - p_val) * np.exp(-t)
+        sx_expected = 1 + (x_presim / p_val - 1) * np.exp(-t)
+    edata.set_measurements(np.zeros(len(t)))
+    edata.set_noise_scales(np.ones(len(t)))
+    sllh_expected = -np.sum(x_expected * sx_expected)
+
+    rdata = run_simulation(model, model.create_solver(), edata)
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.x[:, 0], x_expected, rtol=1e-5)
+
+    for sensitivity_method in (
+        SensitivityMethod.forward,
+        SensitivityMethod.adjoint,
+    ):
+        solver = model.create_solver()
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(sensitivity_method)
+        solver.set_sensitivity_method_pre_equilibration(sensitivity_method)
+        solver.set_relative_tolerance(1e-10)
+        solver.set_absolute_tolerance(1e-10)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS
+        if sensitivity_method == SensitivityMethod.forward:
+            assert_allclose(rdata.sx[:, 0, 0], sx_expected, rtol=1e-5)
+        assert_allclose(rdata.sllh, [sllh_expected], rtol=1e-5)

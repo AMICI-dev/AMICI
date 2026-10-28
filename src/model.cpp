@@ -398,6 +398,17 @@ void Model::initialize_splines() {
     for (auto& spline : splines_) {
         spline.compute_coefficients();
     }
+    spline_sensitivities_initialized_ = false;
+}
+
+void Model::update_splines() {
+    if (splines_.empty())
+        return;
+
+    auto const sensitivities = spline_sensitivities_initialized_;
+    initialize_splines();
+    if (sensitivities)
+        initialize_spline_sensitivities();
 }
 
 void Model::initialize_spline_sensitivities() {
@@ -448,6 +459,7 @@ void Model::initialize_spline_sensitivities() {
         );
         spline_offset += spline.n_nodes() * nplist();
     }
+    spline_sensitivities_initialized_ = true;
 }
 
 void Model::initialize_state_sensitivities(
@@ -810,7 +822,10 @@ void Model::set_fixed_parameters(std::vector<realtype> const& k) {
             "Dimension mismatch. Size of fixedParameters does "
             "not match number of fixed model parameters."
         );
+    if (k == state_.fixed_parameters)
+        return;
     state_.fixed_parameters = k;
+    update_splines();
 }
 
 void Model::set_fixed_parameter_by_id(
@@ -825,6 +840,7 @@ void Model::set_fixed_parameter_by_id(
         get_fixed_parameter_ids(), state_.fixed_parameters, value, par_id,
         "fixedParameters", "id"
     );
+    update_splines();
 }
 
 int Model::set_fixed_parameters_by_id_regex(
@@ -835,10 +851,12 @@ int Model::set_fixed_parameters_by_id_regex(
             "Could not access fixed parameters by id as they are not set"
         );
 
-    return set_value_by_id_regex(
+    auto const n_changed = set_value_by_id_regex(
         get_fixed_parameter_ids(), state_.fixed_parameters, value, par_id_regex,
         "fixedParameters", "id"
     );
+    update_splines();
+    return n_changed;
 }
 
 void Model::set_fixed_parameter_by_name(
@@ -853,6 +871,7 @@ void Model::set_fixed_parameter_by_name(
         get_fixed_parameter_names(), state_.fixed_parameters, value, par_name,
         "fixedParameters", "name"
     );
+    update_splines();
 }
 
 int Model::set_fixed_parameters_by_name_regex(
@@ -863,10 +882,12 @@ int Model::set_fixed_parameters_by_name_regex(
             "Could not access fixed parameters by name as they are not set"
         );
 
-    return set_value_by_id_regex(
+    auto const n_changed = set_value_by_id_regex(
         get_fixed_parameter_ids(), state_.fixed_parameters, value,
         par_name_regex, "fixedParameters", "name"
     );
+    update_splines();
+    return n_changed;
 }
 
 std::string Model::get_name() const { return ""; }

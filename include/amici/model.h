@@ -924,7 +924,12 @@ class Model : public AbstractModel, public ModelDimensions {
             throw AmiException("Mismatch in conservation law size");
         if (gsl::narrow<int>(state.stotal_cl.size()) != ncl() * np())
             throw AmiException("Mismatch in conservation law sensitivity size");
+        bool const parameters_changed
+            = state.fixed_parameters != state_.fixed_parameters
+              || state.unscaled_parameters != state_.unscaled_parameters;
         state_ = state;
+        if (parameters_changed)
+            update_splines();
     }
 
     /**
@@ -1911,6 +1916,16 @@ class Model : public AbstractModel, public ModelDimensions {
 
   protected:
     /**
+     * @brief Recompute the splines for the current parameters.
+     *
+     * Spline nodes and values may depend on the fixed parameters, which
+     * change, e.g., between pre-equilibration and the main simulation.
+     * This is called when the fixed parameters or the model state are set.
+     * Spline sensitivities are only recomputed if they were computed before.
+     */
+    void update_splines();
+
+    /**
      * @brief Map the algebraic components of an adjoint event update to the
      * differential states and parameters.
      *
@@ -2459,6 +2474,9 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /** Storage for splines of the model */
     std::vector<HermiteSpline> splines_;
+
+    /** Whether the sensitivities of `splines_` were computed */
+    bool spline_sensitivities_initialized_{false};
 
     /** index indicating to which event an event output belongs (size nz) */
     std::vector<int> z2event_;
