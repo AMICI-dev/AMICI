@@ -29,6 +29,9 @@ source ${AMICI_PATH}/venv/bin/activate
 pip3 show nbconvert || pip3 install --upgrade nbconvert
 pip3 show ipykernel || (pip3 install --upgrade ipykernel && python3 -m ipykernel install --user --name amici --display-name "Python (amici)")
 
+# retry failed downloads, also in the notebook kernels
+export PYTHONPATH="${AMICI_PATH}/scripts/retry_downloads${PYTHONPATH:+:${PYTHONPATH}}"
+
 for arg in "$@"; do
     if [ -d $arg ]; then
         for notebook in $(ls -1 $arg | grep -E ipynb\$); do

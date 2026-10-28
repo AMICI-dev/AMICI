@@ -170,6 +170,16 @@ nbsphinx_prolog = (
 )
 
 nbsphinx_execute = "never" if os.environ.get("AMICI_NO_NB_EXEC") else "auto"
+# retry failed downloads in the notebook kernels
+os.environ["PYTHONPATH"] = os.pathsep.join(
+    filter(
+        None,
+        [
+            os.path.join(amici_dir, "scripts", "retry_downloads"),
+            os.environ.get("PYTHONPATH"),
+        ],
+    )
+)
 nbsphinx_execute_arguments = [
     "--InlineBackend.figure_formats={'svg', 'pdf'}",
     "--InlineBackend.rc={'figure.dpi': 96}",
