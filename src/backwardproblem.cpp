@@ -207,6 +207,15 @@ void EventHandlingBwdSimulator::handle_event_b(
         stauB = std::move(stauB_secondary_);
         stauB_secondary_.clear();
     }
+    // Jump in the right-hand side due to a Heaviside update not followed by
+    // any event application (adjoint of the corresponding `sx` update).
+    if (disc.xdot_jump.size() > 0) {
+        Expects(disc.event_applications.empty());
+        for (int iJ = 0; iJ < model_->nJ; ++iJ)
+            for (int ix = 0; ix < model_->nxtrue_solver; ++ix)
+                stauB.at(iJ) += ws_->xB_[ix + iJ * model_->nxtrue_solver]
+                                * disc.xdot_jump[ix];
+    }
     AmiVector xB_at_trigger(ws_->xB_.size(), solver_->get_sun_context());
     xB_at_trigger.zero();
     // Events of later discontinuities may use the state at which this one

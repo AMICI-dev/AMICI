@@ -1275,6 +1275,86 @@ def test_event_assignment_switch_flipped_before_execution(
 
 
 @skip_on_valgrind
+@pytest.mark.parametrize("dae", [False, True], ids=["ode", "dae"])
+def test_switch_crossed_back_by_event_assignment(tempdir, dae):
+    """Sensitivities of a switch turned off by an event assignment.
+
+    The assignment to `s` crosses the `piecewise` condition in the negative
+    direction, which doesn't trigger any further event. The jump in the
+    right-hand side still contributes to the sensitivities via the event
+    time.
+
+    The ODE model covers `>=` and `<` conditions (`z_geq`, `z_lt`), and an
+    assignment by a secondary event at a later time (`z_sec`). The DAE model
+    switches the equation of an algebraic state.
+    """
+    if dae:
+        equations = """
+            a = 0.8
+            z = 0; z' = a
+            0 = a - piecewise(c, s >= 1, 0)
+            E1: at x >= 1: s = 0
+        """
+        # observable -> number of time units 1 / k until the switch flips
+        n_switch = {"z": 1}
+    else:
+        equations = """
+            s2 = 1; s2' = 0
+            v = 0
+            z_geq = 0; z_geq' = piecewise(c, s >= 1, 0)
+            z_lt = 0; z_lt' = piecewise(0, s < 1, c)
+            z_sec = 0; z_sec' = piecewise(c, s2 >= 1, 0)
+            E1: at x >= 1: s = 0
+            E2: at x >= 2, priority=2: v = 1
+            E3: at v > 0.5, priority=1: s2 = 0
+        """
+        n_switch = {"z_geq": 1, "z_lt": 1, "z_sec": 2}
+    model_name = f"test_switch_crossed_back_{'dae' if dae else 'ode'}"
+    antimony2amici(
+        f"""
+        const k = 1.5, c = 0.8
+        x = 0; x' = k
+        s = 1; s' = 0
+        {equations}
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[MC(f"obs_{id_}", formula=id_) for id_ in n_switch],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    t_end = 3.0
+    model.set_timepoints([t_end])
+    assert model.get_free_parameter_ids() == ("k", "c")
+    k, c = model.get_free_parameters()
+
+    # z' = c until the switch flips at t = n / k, then z' = 0
+    n = np.array(list(n_switch.values()))
+    y = n * c / k
+    dy_dp = np.array([-n * c / k**2, n / k])
+    measurements = np.zeros_like(y)
+    expected_sllh = -np.sum((y - measurements) * dy_dp, axis=1)
+    assert np.all(np.abs(expected_sllh) > 0.1)
+
+    edata = ExpData(model)
+    edata.set_measurements(measurements)
+    edata.set_noise_scales(np.ones_like(measurements))
+    for sens_method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver = model.create_solver()
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(sens_method)
+        solver.set_relative_tolerance(1e-12)
+        solver.set_absolute_tolerance(1e-12)
+        rdata = run_simulation(model, solver, edata=edata)
+        assert rdata.status == AMICI_SUCCESS, sens_method
+        assert_allclose(rdata.y[-1], y, rtol=1e-8)
+        if sens_method == SensitivityMethod.forward:
+            assert_allclose(rdata.sy[-1], dy_dp, rtol=1e-6)
+        assert_allclose(
+            rdata.sllh, expected_sllh, rtol=1e-6, err_msg=str(sens_method)
+        )
+
+
+@skip_on_valgrind
 def test_event_output_parameter_derivatives(tempdir):
     """Test forward sensitivities of event outputs that depend explicitly on
     the parameters, and of the root function value of an event that does

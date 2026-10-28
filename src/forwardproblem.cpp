@@ -686,6 +686,19 @@ void EventHandlingSimulator::handle_events(
             model_->update_heaviside(ws_->roots_found);
             first_since_discontinuity = true;
             queue_triggered_events();
+
+            if (ws_->pending_events.empty()) {
+                // If another event is pending, its sensitivity update
+                // includes the jump in the right-hand side, and the
+                // algebraic states are made consistent after its
+                // application. If there is none, e.g., if roots were only
+                // crossed in the negative direction, do that here.
+                solver_->calc_consistent_state(
+                    ws_->sol.t, ws_->sol.x, ws_->sol.dx,
+                    next_output_timepoint(*model_, ws_->sol.t)
+                );
+                apply_xdot_jump_sensitivity_update();
+            }
         }
 
         // record any newly-found roots
@@ -833,10 +846,28 @@ void EventHandlingSimulator::queue_triggered_events() {
     }
 }
 
+void EventHandlingSimulator::apply_xdot_jump_sensitivity_update() {
+    if (!solver_->computing_fsa() && !solver_->computing_asa())
+        return;
+
+    // `xdot` with the updated Heaviside variables
+    model_->fdxdt(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->xdot);
+    AmiVector xdot_jump(ws_->xdot);
+    for (int ix = 0; ix < model_->nx_solver; ++ix)
+        xdot_jump[ix] -= ws_->xdot_at_trigger[ix];
+
+    if (solver_->computing_fsa()) {
+        for (int ip = 0; ip < model_->nplist(); ++ip)
+            for (int ix = 0; ix < model_->nx_solver; ++ix)
+                ws_->sol.sx.at(ix, ip) += xdot_jump[ix] * ws_->stau.at(ip);
+    }
+    if (solver_->computing_asa()) {
+        result.discs.back().xdot_jump = xdot_jump;
+    }
+}
+
 int EventHandlingSimulator::detect_secondary_events() {
     int secondevent = 0;
-    // whether an event assignment triggered another event
-    bool triggered_event = false;
 
     // check whether we need to fire a secondary event
     model_->froot(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->rootvals);
@@ -847,8 +878,6 @@ int EventHandlingSimulator::detect_secondary_events() {
             if (heaviside_differs(ws_->rval_tmp.at(ie), ws_->rootvals.at(ie))) {
                 ws_->roots_found.at(ie)
                     = ws_->rval_tmp.at(ie) < ws_->rootvals.at(ie) ? 1 : -1;
-                if (ws_->roots_found.at(ie) == 1)
-                    triggered_event = true;
                 secondevent++;
             } else {
                 ws_->roots_found.at(ie) = 0;
@@ -862,23 +891,14 @@ int EventHandlingSimulator::detect_secondary_events() {
     // fire the secondary event?
     if (secondevent > 0) {
         // Known limitations of sensitivities at secondary events.
-        // If no further event is executed at this time, the event
-        // assignment only changed the sign of root functions, and the
-        // resulting jump in the right-hand side is not accounted for in the
-        // sensitivities.
-        bool const no_further_event
-            = !triggered_event && ws_->pending_events.empty();
         if ((solver_->computing_fsa() || solver_->computing_asa())
-            && (model_->has_algebraic_states() || model_->nz > 0
-                || no_further_event)
+            && (model_->has_algebraic_states() || model_->nz > 0)
             && solver_->get_logger())
             solver_->get_logger()->log(
                 LogSeverity::warning, "SECONDARY_EVENT",
                 "Secondary event was triggered. Sensitivities can be "
-                "incorrect for models with algebraic states, for event "
-                "outputs of secondary events, and if an event assignment "
-                "changes the sign of a root function without triggering "
-                "another event."
+                "incorrect for models with algebraic states and for event "
+                "outputs of secondary events."
             );
     }
 
