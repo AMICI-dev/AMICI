@@ -855,6 +855,13 @@ class SteadyStateProblem {
 
     /** Simulator for event handling */
     std::optional<EventHandlingSimulator> simulator_;
+
+    /**
+     * Initial events pending before the first attempt (`ws_->roots_found`),
+     * to handle them again if the simulation is restarted from the initial
+     * state.
+     */
+    std::vector<int> initial_roots_found_;
 };
 
 /**
