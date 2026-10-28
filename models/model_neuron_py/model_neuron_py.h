@@ -570,7 +570,7 @@ class Model_model_neuron_py : public amici::Model_ODE {
      * @return AMICI version string
      */
     std::string get_amici_version() const override {
-        return "1.1.0";
+        return "1.2.0";
     }
 
     /**
@@ -578,7 +578,7 @@ class Model_model_neuron_py : public amici::Model_ODE {
      * @return AMICI git commit hash
      */
     std::string get_amici_commit() const override {
-        return "eb8630c7be82120d972865d1a4d6f4a71871193c";
+        return "46a7a00ab9f0aec6603785f7e1a9d878d6dcaa0d";
     }
 
     bool has_quadratic_llh() const override {
