@@ -405,7 +405,10 @@ class ODEExporter:
                 resolved = root
                 for _ in range(len(w_subs) + 1):
                     if resolved.free_symbols.issubset(p_k_syms):
-                        if resolved.is_number:
+                        if resolved.is_number and not resolved.is_finite:
+                            # the event never triggers
+                            pass
+                        elif resolved.is_number:
                             # force a float literal: under jax_enable_x64,
                             # jnp.array([5]) infers int64, but `known_discs`
                             # is used as `jump_ts` in
