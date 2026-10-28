@@ -9,6 +9,316 @@ Changes that are not released yet are collected in
 
 <!-- towncrier release notes start -->
 
+### v1.2.0 (2026-XX-XX)
+
+This release contains many fixes for events (in particular simultaneous events),
+event observables, `piecewise` functions,
+sensitivity analysis, pre-equilibration, and DAE models.
+
+**BREAKING CHANGES**
+
+* A SWIG version mismatch between AMICI and a model is now an error
+  (`amici.AmiciVersionError`) instead of a warning,
+  both when compiling and when importing a model.
+  Set the `SWIG` environment variable to a matching SWIG executable,
+  or rebuild AMICI. ([#3487](https://github.com/AMICI-dev/AMICI/pull/3487))
+* `ExpData.t_start_preeq` is no longer ignored.
+  Pre-equilibration now starts at `ExpData.t_start_preeq`,
+  or at `ExpData.t_start` if that is NaN.
+  The deprecated `Model.t0_preeq()` is only used
+  if `ExpData.t_start_preeq` is NaN.
+  This changes the results of PEtab v2 problems with pre-equilibration
+  whose main simulation does not start at `t = 0`. ([#3465](https://github.com/AMICI-dev/AMICI/pull/3465))
+* PEtab support requires libpetab-python >= 0.10.0. ([#3492](https://github.com/AMICI-dev/AMICI/pull/3492))
+* AMICI no longer uses OpenMP.
+  `run_simulations(..., num_threads=...)` and `Model.simulate(..., num_threads=...)`
+  now always simulate multiple conditions in parallel using native threads,
+  also on platforms where AMICI was previously built without OpenMP,
+  such as macOS without `libomp`. ([#3484](https://github.com/AMICI-dev/AMICI/pull/3484))
+* C++ API, only relevant when subclassing `amici::Model` directly:
+  `fdJydsigma`, `fdJzdsigma`, `fdJrzdsigma`, and `fdJrzdz` were renamed to
+  `fdJydsigmay`, `fdJzdsigmaz`, `fdJrzdsigmaz`, and `fdJrzdrz`,
+  and `fexplicit_roots` and `Model::reinit_explicit_roots`
+  take the state vector as additional first argument. ([#3273](https://github.com/AMICI-dev/AMICI/pull/3273), [#3397](https://github.com/AMICI-dev/AMICI/pull/3397))
+
+**Deprecations**
+
+* `Model.set_t0_preeq()` and `Model.t0_preeq()` are deprecated.
+  Set `ExpData.t_start_preeq` instead. ([#3465](https://github.com/AMICI-dev/AMICI/pull/3465))
+* `compiled_with_openmp()` is deprecated and always returns `False`. ([#3484](https://github.com/AMICI-dev/AMICI/pull/3484))
+
+**Features**
+
+* Model entity IDs no longer need to avoid names used by AMICI
+  or by the generated code, such as C++ or Python keywords,
+  `NULL`, `x`, `p`, or `w`.
+  Before, such IDs could make import or compilation fail,
+  or silently produce wrong code.
+  Local variable names in the generated code have changed. ([#3239](https://github.com/AMICI-dev/AMICI/pull/3239), [#3243](https://github.com/AMICI-dev/AMICI/pull/3243), [#3247](https://github.com/AMICI-dev/AMICI/pull/3247), [#3252](https://github.com/AMICI-dev/AMICI/pull/3252), [#3255](https://github.com/AMICI-dev/AMICI/pull/3255), [#3256](https://github.com/AMICI-dev/AMICI/pull/3256))
+* The PEtab v2 simulators (`PetabSimulator` and the JAX `JAXProblem`)
+  now support parameter scales.
+  `"lin"`, `"log"`, or `"log10"` can be chosen per parameter
+  via the new `parameter_scales` argument of
+  `PetabImporter.create_simulator`, `ExperimentManager`, or `JAXProblem`.
+  Parameter values and sensitivities are then on these scales.
+  `ExperimentManager.apply_parameters` now always sets `ExpData.pscale`. ([#3312](https://github.com/AMICI-dev/AMICI/pull/3312), [#3313](https://github.com/AMICI-dev/AMICI/pull/3313))
+* New functions `amici.sim.sundials.get_solver_settings` and `set_solver_settings`,
+  analogous to `get_model_settings` and `set_model_settings`.
+  Pickling a `Solver` now uses them,
+  so it no longer requires HDF5 or leaves temporary files behind. ([#3486](https://github.com/AMICI-dev/AMICI/pull/3486))
+* Adjoint pre-equilibration now supports the reinitialization of
+  fixed-parameter-dependent initial states
+  (`reinitialize_fixed_parameter_initial_states`)
+  for ODE models without conservation laws. ([#3283](https://github.com/AMICI-dev/AMICI/pull/3283))
+* The `fiddy` adapter (`amici.adapters.fiddy`) was migrated to the redesigned
+  `fiddy` package, whose finite-difference gradient checks are more robust
+  and require few, if any, hyperparameters. ([#3248](https://github.com/AMICI-dev/AMICI/pull/3248))
+* JAX: Events with state updates whose triggers depend on parameters
+  or static expressions are now supported. ([#3302](https://github.com/AMICI-dev/AMICI/pull/3302))
+* Experimental conservation laws for non-constant species
+  (`AMICI_EXPERIMENTAL_SBML_NONCONST_CLS`) are now computed in exact
+  arithmetic, which is faster for large networks.
+  This also fixes missed, wrong, or failing conservation law computations
+  with the previous floating-point computation. ([#3399](https://github.com/AMICI-dev/AMICI/pull/3399))
+* New method `Model.has_algebraic_states()`. ([#3369](https://github.com/AMICI-dev/AMICI/pull/3369))
+
+**Performance**
+
+* Events whose triggers combine multiple conditions with `And`/`Or`,
+  as generated, e.g., for PEtab v2 experiments,
+  now get precomputed trigger times where possible
+  instead of relying on root-finding. ([#3302](https://github.com/AMICI-dev/AMICI/pull/3302))
+
+**Fixes: Events and `piecewise` functions**
+
+* Triggers and `piecewise` conditions whose trigger times depend on states
+  with zero time derivative,
+  including parameters changed by event assignments
+  such as PEtab v2 condition changes,
+  are now handled at their precomputed trigger times instead of by
+  root-finding, which could give wrong results,
+  e.g., for the PEtab v2 version of Isensee_JCB2018. ([#3397](https://github.com/AMICI-dev/AMICI/pull/3397))
+* Fixed failures with `reInitPostProcess failed with error code -27`
+  if a precomputed trigger time (e.g., `time >= p1 + p2`)
+  is within roundoff of another one, of an output time, or of the initial time.
+  An event that triggers within roundoff after an output time
+  is now reflected in the output at that time. ([#3407](https://github.com/AMICI-dev/AMICI/pull/3407))
+* Fixed spurious "root after reinitialization" failures after events,
+  and `reInitPostProcess failed with error code 1` failures
+  for discontinuities less than one solver step apart. ([#3266](https://github.com/AMICI-dev/AMICI/pull/3266))
+* Fixed inaccurate adjoint sensitivities at state-dependent events,
+  and failures of the backward integration for repeatedly triggered events.
+  With adjoint sensitivities, `numsteps` now includes one additional step
+  per event. ([#3373](https://github.com/AMICI-dev/AMICI/pull/3373))
+* Fixed adjoint sensitivities for observables depending on `piecewise`
+  functions. ([#3372](https://github.com/AMICI-dev/AMICI/pull/3372))
+* Fixed adjoint sensitivities for events that are both state-triggered and
+  state-updating ([#3258](https://github.com/AMICI-dev/AMICI/pull/3258)),
+  and for simultaneously triggered events ([#3263](https://github.com/AMICI-dev/AMICI/pull/3263)).
+* Fixed forward and adjoint sensitivities for simultaneous events
+  where an earlier event changes a state that a later one depends on,
+  including events with priorities. ([#3261](https://github.com/AMICI-dev/AMICI/pull/3261), [#3418](https://github.com/AMICI-dev/AMICI/pull/3418), [#3419](https://github.com/AMICI-dev/AMICI/pull/3419))
+* Fixed forward and adjoint sensitivities for events and `piecewise` switches
+  whose trigger only depends on variables changed by event assignments. ([#3419](https://github.com/AMICI-dev/AMICI/pull/3419), [#3420](https://github.com/AMICI-dev/AMICI/pull/3420))
+* Fixed forward and adjoint sensitivities if an event assignment changes
+  a `piecewise` condition without triggering another event. ([#3480](https://github.com/AMICI-dev/AMICI/pull/3480))
+* Fixes for events with `useValuesFromTriggerTime="true"`:
+  outdated `piecewise` conditions in assignments of events triggered by other
+  events ([#3430](https://github.com/AMICI-dev/AMICI/pull/3430));
+  wrong sensitivities if a `piecewise` switch flips between trigger and
+  execution ([#3433](https://github.com/AMICI-dev/AMICI/pull/3433));
+  wrong adjoint sensitivities if executed after an event triggered by
+  another event's assignments at the same time ([#3421](https://github.com/AMICI-dev/AMICI/pull/3421)).
+
+**Fixes: Event observables**
+
+* Fixed the likelihood of models with more than one event output:
+  only the first one was included,
+  and a buffer overflow could occur (e.g., crashes on Windows). ([#3375](https://github.com/AMICI-dev/AMICI/pull/3375))
+* For events that did not occur until the last output time,
+  only the root function value now enters the likelihood,
+  consistent with the sensitivities.
+  This changes `ReturnData.llh` for such data. ([#3387](https://github.com/AMICI-dev/AMICI/pull/3387))
+* Fixed forward sensitivities of event outputs and root function values
+  that explicitly depend on parameters other than the first one in `plist`,
+  and their contributions to `sllh`. ([#3374](https://github.com/AMICI-dev/AMICI/pull/3374))
+* Fixed `sllh` with respect to parameters of event noise formulas ([#3378](https://github.com/AMICI-dev/AMICI/pull/3378)),
+  and `ReturnData.ssigmaz`, which was always zero ([#3382](https://github.com/AMICI-dev/AMICI/pull/3382)).
+* Fixed adjoint sensitivities for event measurements:
+  "Mismatch in Heaviside size" failures,
+  contributions of the wrong event occurrence,
+  and out-of-bounds reads ([#3385](https://github.com/AMICI-dev/AMICI/pull/3385));
+  overwritten contributions for models with multiple events ([#3404](https://github.com/AMICI-dev/AMICI/pull/3404)).
+* Fixed `vector::_M_range_check` failures with post-equilibration,
+  and crashes with adjoint sensitivities and presimulation,
+  if an event occurred fewer than `n_max_event` times. ([#3469](https://github.com/AMICI-dev/AMICI/pull/3469))
+
+**Fixes: Pre-equilibration and presimulation**
+
+* Fixed event triggers and `piecewise` conditions not being re-evaluated
+  after state reinitialization following pre-equilibration,
+  which could count a crossing twice. ([#3317](https://github.com/AMICI-dev/AMICI/pull/3317))
+* Fixed wrong gradients for adjoint sensitivities with forward-sensitivity
+  pre-equilibration and state reinitialization. ([#3282](https://github.com/AMICI-dev/AMICI/pull/3282))
+* Fixed adjoint sensitivities if `piecewise` conditions, static expressions,
+  or conservation law totals at the end of pre-equilibration or presimulation
+  differ from those of the main simulation. ([#3446](https://github.com/AMICI-dev/AMICI/pull/3446))
+* Fixed splines depending on fixed parameters using the values of
+  pre-equilibration or presimulation in the main simulation. ([#3482](https://github.com/AMICI-dev/AMICI/pull/3482))
+* Fixed initial events being lost in pre-equilibration
+  with `SteadyStateComputationMode.integrateIfNewtonFails`
+  after Newton's method failed. ([#3481](https://github.com/AMICI-dev/AMICI/pull/3481))
+* Fixed simulations without sensitivities failing for steady-state computation
+  mode `newtonOnly` combined with sensitivity mode `integrationOnly`. ([#3371](https://github.com/AMICI-dev/AMICI/pull/3371))
+* Fixed a custom initial state being overwritten at the start of
+  presimulation without pre-equilibration,
+  and wrong forward sensitivities for events triggered by the state
+  reinitialization at the start of presimulation after pre-equilibration. ([#3454](https://github.com/AMICI-dev/AMICI/pull/3454))
+* Adjoint presimulation with state reinitialization, which is not supported,
+  now fails with an error instead of possibly giving wrong results.
+  Forward-sensitivity presimulation with state reinitialization
+  is no longer rejected. ([#3279](https://github.com/AMICI-dev/AMICI/pull/3279))
+* `ReturnData.sx0` is now empty for adjoint pre-equilibration with adjoint
+  sensitivities, instead of containing meaningless values. ([#3284](https://github.com/AMICI-dev/AMICI/pull/3284))
+
+**Fixes: Simulation results and Python API**
+
+* Fixed `ExpData.x0` remaining set as the model's initial state after
+  `run_simulation`, if the model had no custom initial state. ([#3483](https://github.com/AMICI-dev/AMICI/pull/3483))
+* Fixed `Model.get_initial_state_sensitivities()` returning wrong values
+  for more than one parameter. ([#3370](https://github.com/AMICI-dev/AMICI/pull/3370))
+* Simulations that failed before the main simulation now report NaN
+  instead of values at zero states, and no longer report solver statistics
+  of a previous simulation. ([#3478](https://github.com/AMICI-dev/AMICI/pull/3478))
+  For `run_simulations(..., failfast=True)`,
+  the results of skipped conditions now carry the `ExpData`'s `id`,
+  timepoints, and parameter list, and NaN values. ([#3466](https://github.com/AMICI-dev/AMICI/pull/3466))
+* Fixed (un)pickling of `Model`s with a custom `reinitialization_state_idxs`
+  ([#3467](https://github.com/AMICI-dev/AMICI/pull/3467)), and pickling of `ExpData` after wrapping in `ExpDataView` ([#3309](https://github.com/AMICI-dev/AMICI/pull/3309)).
+* Fixed `CVodeSensSStolerances failed with error code -40` when changing
+  sensitivity settings after a forward sensitivity simulation of a model
+  without states. ([#3364](https://github.com/AMICI-dev/AMICI/pull/3364))
+* `IDASolver.set_linear_solver` now accepts a linear solver,
+  as `CVodeSolver.set_linear_solver` does. ([#3486](https://github.com/AMICI-dev/AMICI/pull/3486))
+* Fixed a use-after-free when assigning an empty `AmiVector`. ([#3496](https://github.com/AMICI-dev/AMICI/pull/3496))
+* The `fiddy` adapter's `*_to_function_and_derivative` helpers now restore
+  the solver's sensitivity order and the model parameters. ([#3338](https://github.com/AMICI-dev/AMICI/pull/3338))
+* AMICI's logger setup no longer calls `socket.getfqdn()`,
+  which could block for more than 30 seconds on hosts whose hostname does not
+  resolve quickly. ([#3310](https://github.com/AMICI-dev/AMICI/pull/3310))
+
+**Fixes: Model import and code generation**
+
+* Fixed uncompilable model code for noise formulas that reference expressions,
+  such as targets of SBML assignment rules.
+  Noise formulas depending on unavailable quantities are now rejected
+  at import. ([#3388](https://github.com/AMICI-dev/AMICI/pull/3388))
+* Fixed uncompilable model code for event assignments that reference
+  expressions ([#3416](https://github.com/AMICI-dev/AMICI/pull/3416)),
+  and for models whose expressions are all zero but are referenced in
+  `piecewise` conditions or event triggers ([#3445](https://github.com/AMICI-dev/AMICI/pull/3445)).
+* Fixed wrong sensitivities for single-species conservation laws
+  (e.g., a boundary or constant species)
+  whose total depends on a parameter via an initial assignment. ([#3270](https://github.com/AMICI-dev/AMICI/pull/3270))
+* SBML math in PEtab v1 initial assignments and in observables based on
+  assignment rules is now converted via `sbmlmath`
+  instead of `sympy.sympify`.
+  Some rare constructs may be interpreted differently. ([#3288](https://github.com/AMICI-dev/AMICI/pull/3288))
+* Splines: fixed the validation of rational node values ([#3276](https://github.com/AMICI-dev/AMICI/pull/3276)),
+  the sympification of spline formulas from the Python API and from
+  annotations ([#3285](https://github.com/AMICI-dev/AMICI/pull/3285)),
+  and the detection of time dependence.
+  Event triggers depending on splines, which are not supported,
+  now raise an error at import ([#3245](https://github.com/AMICI-dev/AMICI/pull/3245)).
+* Integers outside the 32-bit range are now printed as floating-point
+  literals, avoiding silent truncation in C++ and `OverflowError`s in JAX. ([#3406](https://github.com/AMICI-dev/AMICI/pull/3406))
+* Model names that coincide with generated files or directories,
+  such as `x0`, `main`, or `swig`, are now rejected. ([#3383](https://github.com/AMICI-dev/AMICI/pull/3383))
+
+**Fixes: PEtab**
+
+* PEtab v1 observable and noise formulas are now parsed using PEtab v2's math
+  grammar. Some rare formulas may be interpreted differently. ([#3290](https://github.com/AMICI-dev/AMICI/pull/3290))
+* Fixed the PEtab-SciML import of neural network outputs in observable
+  formulas with libpetab-python >= 0.10. ([#3351](https://github.com/AMICI-dev/AMICI/pull/3351))
+* Fixed a pandas 3.1 deprecation warning about `fillna` for PEtab v1 problems
+  with an empty `preequilibrationConditionId` column. ([#3440](https://github.com/AMICI-dev/AMICI/pull/3440))
+
+**Fixes: Installation and model compilation**
+
+* Models are now built with the `swig` executable of the current Python
+  environment, if available, instead of the first one on `PATH` ([#3324](https://github.com/AMICI-dev/AMICI/pull/3324)).
+  Rebuilding a model in an existing directory with a different SWIG version
+  now reruns SWIG ([#3325](https://github.com/AMICI-dev/AMICI/pull/3325)).
+* Building AMICI and models only requires the Python headers,
+  no longer `libpython`. ([#3488](https://github.com/AMICI-dev/AMICI/pull/3488))
+* On Windows with CMake >= 4.2, the paths of intermediate build files
+  no longer contain the model name,
+  so models with longer names can be compiled without exceeding the path
+  length limit. ([#3426](https://github.com/AMICI-dev/AMICI/pull/3426))
+
+**Fixes: JAX**
+
+* Fixed event assignments depending on time or on `piecewise` conditions. ([#3431](https://github.com/AMICI-dev/AMICI/pull/3431))
+* Fixed state updates being gated by the wrong event's condition
+  for triggers that compare time to a state. ([#3287](https://github.com/AMICI-dev/AMICI/pull/3287))
+* Fixed code generation for `And`/`Or` with more than two arguments. ([#3408](https://github.com/AMICI-dev/AMICI/pull/3408))
+
+**Fixes: DAE models**
+
+* Adjoint sensitivity analysis now works for DAE models.
+  Before, it always failed during setup,
+  and the adjoint residual and quadrature were wrong ([#3323](https://github.com/AMICI-dev/AMICI/pull/3323)).
+  Further fixes:
+  algebraic states entering the differential equations ([#3347](https://github.com/AMICI-dev/AMICI/pull/3347)),
+  measured algebraic states ([#3348](https://github.com/AMICI-dev/AMICI/pull/3348)),
+  no forward integration, e.g., if all output times are at `t0` ([#3356](https://github.com/AMICI-dev/AMICI/pull/3356)),
+  event triggers depending on algebraic states ([#3403](https://github.com/AMICI-dev/AMICI/pull/3403)),
+  a check point at exactly `maxsteps` steps ([#3396](https://github.com/AMICI-dev/AMICI/pull/3396)),
+  and a crash when freeing the solver after an early failure ([#3352](https://github.com/AMICI-dev/AMICI/pull/3352)).
+* Fixed simulations failing or being inaccurate after events ([#3322](https://github.com/AMICI-dev/AMICI/pull/3322)),
+  wrong forward sensitivities after state-dependent events ([#3342](https://github.com/AMICI-dev/AMICI/pull/3342)),
+  missing event handling for `piecewise` functions in algebraic rules ([#3390](https://github.com/AMICI-dev/AMICI/pull/3390)),
+  and heap corruption for models with both explicit-time and
+  solver-tracked events ([#3479](https://github.com/AMICI-dev/AMICI/pull/3479)).
+* Fixed consistent initial conditions not being computed for a single output
+  time ([#3336](https://github.com/AMICI-dev/AMICI/pull/3336)),
+  `IDACalcIC` failures for output times within roundoff of the current time
+  ([#3354](https://github.com/AMICI-dev/AMICI/pull/3354), [#3391](https://github.com/AMICI-dev/AMICI/pull/3391)),
+  inconsistent algebraic states and sensitivities at the initial time
+  after pre-equilibration or presimulation ([#3350](https://github.com/AMICI-dev/AMICI/pull/3350))
+  or after a previous simulation period ([#3454](https://github.com/AMICI-dev/AMICI/pull/3454)),
+  inconsistent initial sensitivities of algebraic states ([#3328](https://github.com/AMICI-dev/AMICI/pull/3328)),
+  and forward sensitivity failures in `IDACalcIC` due to zero initial
+  derivatives ([#3335](https://github.com/AMICI-dev/AMICI/pull/3335)).
+* Fixed the steady-state computation stopping at the initial state ([#3349](https://github.com/AMICI-dev/AMICI/pull/3349)),
+  and segmentation faults with forward sensitivities and post-equilibration
+  with `SteadyStateSensitivityMode.newtonOnly` ([#3470](https://github.com/AMICI-dev/AMICI/pull/3470)).
+* Fixed an out-of-bounds read with
+  `InternalSensitivityMethod.staggered` ([#3321](https://github.com/AMICI-dev/AMICI/pull/3321)).
+  `InternalSensitivityMethod.staggered1`, which IDAS does not support,
+  now raises an error ([#3337](https://github.com/AMICI-dev/AMICI/pull/3337)).
+* The order of algebraic states no longer depends on `PYTHONHASHSEED` ([#3329](https://github.com/AMICI-dev/AMICI/pull/3329)),
+  and algebraic rules that do not determine all variables they reference
+  are rejected at import ([#3330](https://github.com/AMICI-dev/AMICI/pull/3330)).
+
+**Other changes**
+
+* Updated the bundled SUNDIALS from 7.1.1 to
+  [7.9.0](https://sundials.readthedocs.io/en/latest/Changelog_link.html),
+  including fixes for inequality constraints (`Solver.set_constraints`)
+  and the IDAS quadrature predictor.
+  Simulation results may differ slightly.
+  For editable installations, delete `ThirdParty/sundials/build/` and
+  `python/sdist/build/` before rebuilding. ([#3471](https://github.com/AMICI-dev/AMICI/pull/3471))
+* AMICI no longer depends on Boost.Chrono.
+  On Linux and macOS, CPU times in `ReturnData` are now always measured
+  per thread. ([#3485](https://github.com/AMICI-dev/AMICI/pull/3485))
+* Updated the bundled SuiteSparse to v7.14.1.
+  `scripts/buildSuiteSparse.sh` requires CMake >= 3.23. ([#3463](https://github.com/AMICI-dev/AMICI/pull/3463))
+
+Thanks to @dweindl and @FFroehlich for their contributions.
+
 ### v1.1 (2026-09-03)
 
 **BREAKING CHANGES**
