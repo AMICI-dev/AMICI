@@ -9,7 +9,7 @@ Changes that are not released yet are collected in
 
 <!-- towncrier release notes start -->
 
-### v1.2.0 (2026-XX-XX)
+### v1.2.0 (2026-10-29)
 
 This release contains many fixes for events (in particular simultaneous events),
 event observables, `piecewise` functions,
