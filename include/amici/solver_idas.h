@@ -276,6 +276,9 @@ class IDASolver : public Solver {
 
     void root_init(int ne) const override;
 
+    void
+    set_root_direction(std::vector<int> const& rootdir) const override;
+
     void set_dense_jac_fn() const override;
 
     void set_sparse_jac_fn() const override;

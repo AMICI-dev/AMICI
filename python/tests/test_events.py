@@ -2145,20 +2145,17 @@ def test_gh2926(tempdir):
 
 
 @skip_on_valgrind
-def test_root_after_reinit_direction_is_checked(tempdir, caplog):
-    """A root reported immediately after reinitialization must only be
-    ignored if it matches the *direction* of a root recorded during the
-    preceding discontinuity handling, not just the index.
+def test_event_assignment_just_below_other_trigger(tempdir):
+    """A root crossed back right after reinitialization triggers its event.
 
     ``EA`` fires periodically and its assignment sets ``y`` to just
-    below ``EB``'s threshold, causing a down-crossing of ``EB`` to be
-    recorded as part of ``EA``'s own discontinuity handling.
+    below ``EB``'s threshold, which is a down-crossing of ``EB``'s trigger.
     Within the post-reinitialization solver step, ``y`` increases,
-    and `EB` immediately crosses back over the threshold,
-    triggering ``EB``. If the post-reinit check skips all roots of a given
-    event, ``EB`` would never fire, and ``y`` would never be reset.
+    and ``EB`` immediately crosses back over the threshold,
+    triggering ``EB``. If this crossing is missed, ``EB`` never fires, and
+    ``y`` is never reset.
     """
-    model_name = "test_root_after_reinit_direction_is_checked"
+    model_name = "test_event_assignment_just_below_other_trigger"
     eps = 1e-15
     antimony2amici(
         rf"""
@@ -2193,32 +2190,25 @@ def test_root_after_reinit_direction_is_checked(tempdir, caplog):
     assert rdata.status == AMICI_SUCCESS
     assert rdata.by_id("n_fired_A")[-1] == n_periods
     assert rdata.by_id("n_fired_B")[-1] == n_periods
-    assert "ROOT_AFTER_REINIT" not in caplog.text
 
 
 @skip_on_valgrind
-def test_root_after_reinit_ignores_just_fired_event(tempdir, caplog):
-    """A root reported immediately after reinitialization, for the exact
-    same index and direction as the event just fired, is treated as a
-    spurious re-detection and ignored -- even though, read literally, the
-    dynamics below really do cross the threshold, drop back below it, and
-    cross again, i.e. two distinct trigger events did occur.
+def test_root_after_reinit_ignores_just_fired_event(tempdir):
+    """An event moving its own trigger back by less than the tolerances does
+    not fire again.
 
-    Whether an immediate same-index, same-direction root reflects a
-    genuine retrigger or floating-point noise is undecidable from inside
-    the solver once the recurrence interval is below what the current
-    tolerances can resolve.
+    Read literally, the dynamics below cross the threshold, drop back below
+    it, and cross again, i.e. two distinct trigger events occur. However,
+    ``E1`` moves its trigger back by less than the integration tolerances,
+    while the trigger keeps moving towards the threshold. This is not
+    distinguishable from roundoff, so ``E1`` is considered still triggered.
 
-    ``recovering`` is set by ``E1`` itself and never reset, so once ``x``
-    is assigned a value just below the threshold, its derivative switches
-    to an enormous rate, so the "immediate re-trigger" reliably falls
-    within the first post-reinitialization solver step.
+    ``recovering`` is set by ``E1`` itself and never reset, so after the
+    assignment, ``x`` reaches the threshold again within a time far below
+    the resolution of the root-finding.
 
-    ``E2`` is a second, independent event whose own threshold is crossed
-    (for the first, genuine time) at the very same instant as ``E1``'s
-    "spurious" repeat. It must still fire normally: suppression is scoped
-    to the exact (index, direction) pair that was just handled, not to
-    "anything reported in this step".
+    ``E2`` is a second, independent event whose threshold ``y`` is moved
+    to in the same way, from below. It fires at the same time as ``E1``.
     """
     model_name = "test_root_after_reinit_ignores_just_fired_event"
     margin_below_threshold = 1e-13
@@ -2266,7 +2256,6 @@ def test_root_after_reinit_ignores_just_fired_event(tempdir, caplog):
     assert rdata.by_id("n_fired_1")[-1] == 1
     # E2's genuine, simultaneous first crossing is still correctly handled.
     assert rdata.by_id("n_fired_2")[-1] == 1
-    assert "ROOT_AFTER_REINIT" in caplog.text
 
     # Analytical solution: `z` jumps by 3 at t1 = threshold / k (1 from E1,
     # 2 from E2), so z(T) = k + (3 - k exp(-t1)) exp(-(T - t1)).
@@ -3763,3 +3752,419 @@ def test_dae_explicit_and_solver_tracked_events(tempdir):
         assert_allclose(
             rdatas[dae].by_id("y"), 2 * rdatas[dae].by_id("x"), rtol=1e-8
         )
+
+
+@skip_on_valgrind
+def test_event_crosses_own_trigger_back(tempdir):
+    """The Heaviside variables of roots that an event assignment crosses back
+    in the same discontinuity are updated (gh-3425)."""
+    model_name = "test_event_crosses_own_trigger_back"
+    antimony2amici(
+        r"""
+        k1 = 0.7; k2 = 0.3; a = 1.5; thr = 0.5
+        x = 1; y = 0.5
+        x' = piecewise(-k1 * x, x > thr, -2 * k1 * x)
+        y' = piecewise(-k2 * y, x > thr, -k2 * x * y)
+        E1: at x < thr, fromTrigger=false: x = x * a
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[
+            MC("obs_x", formula="x"),
+            MC("obs_y", formula="y"),
+        ],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    k1, k2, a, thr = 0.7, 0.3, 1.5, 0.5
+    t = np.array([0.0, 1.0, 2.0, 3.0, 4.0])
+    model.set_timepoints(t)
+
+    # `x` reaches `thr` at `t0`, `E1` moves it back above `thr`, from where it
+    # decays to `thr` again within `period`. So, `x > thr` holds throughout,
+    # and `x = a^m * exp(-k1 * t)` after `m` event occurrences.
+    t0 = np.log(1 / thr) / k1
+    period = np.log(a) / k1
+    m = np.where(t < t0, 0, np.floor((t - t0) / period) + 1)
+    assert np.sum(m >= 3) >= 2
+    x = a**m * np.exp(-k1 * t)
+    y = 0.5 * np.exp(-k2 * t)
+    # The event times depend on `thr`, but the state jumps compensate the
+    # shifted right-hand side discontinuities, so `dx/dthr = 0`.
+    sx = {"k1": -t * x, "k2": 0 * t, "a": m * x / a, "thr": 0 * t}
+    sy = {"k1": 0 * t, "k2": -t * y, "a": 0 * t, "thr": 0 * t}
+    par_ids = list(model.get_free_parameter_ids())
+    ix = model.get_state_ids().index("x")
+    iy = model.get_state_ids().index("y")
+
+    edata = ExpData(model)
+    measurements = np.vstack([x, y]).T + 0.1
+    edata.set_measurements(measurements.flatten())
+    edata.set_noise_scales(np.ones_like(measurements).flatten())
+    for sens_method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver = model.create_solver()
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(sens_method)
+        solver.set_relative_tolerance(1e-12)
+        solver.set_absolute_tolerance(1e-12)
+        rdata = run_simulation(model, solver, edata=edata)
+        assert rdata.status == AMICI_SUCCESS
+        assert_allclose(rdata.by_id("x"), x, rtol=1e-8)
+        assert_allclose(rdata.by_id("y"), y, rtol=1e-8)
+        # the right-hand side at the final time point uses the `x > thr`
+        # branch
+        assert_allclose(rdata.xdot[ix], -k1 * x[-1], rtol=1e-8)
+
+        expected_sllh = [
+            np.sum(0.1 * (sx[par_id] + sy[par_id])) for par_id in par_ids
+        ]
+        assert_allclose(
+            rdata.sllh,
+            expected_sllh,
+            rtol=1e-6,
+            atol=1e-8,
+            err_msg=str(sens_method),
+        )
+        if sens_method == SensitivityMethod.forward:
+            for ip, par_id in enumerate(par_ids):
+                assert_allclose(
+                    rdata.sx[:, ip, ix], sx[par_id], rtol=1e-6, atol=1e-8
+                )
+                assert_allclose(
+                    rdata.sx[:, ip, iy], sy[par_id], rtol=1e-6, atol=1e-8
+                )
+
+
+@skip_on_valgrind
+def test_event_moves_own_trigger_time(tempdir):
+    """An event that moves its own explicit trigger time fires again
+    (gh-3425)."""
+    model_name = "test_event_moves_own_trigger_time"
+    antimony2amici(
+        r"""
+        s = 1; n = 0
+        x = 1; x' = -x
+        E: at time >= s: s = s + 1, n = n + 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    assert model.ne_solver == 0
+    model.set_timepoints([0.0, 1.5, 2.5, 3.5])
+    rdata = run_simulation(model, model.create_solver())
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.by_id("n"), [0.0, 1.0, 2.0, 3.0], rtol=0, atol=0)
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize("x_new", ["xmax", "0.3"])
+def test_event_assignment_onto_threshold(tempdir, x_new):
+    """An event assignment that sets a just-crossed root function to zero,
+    exactly or up to rounding errors, does not cross it back.
+
+    `xmax` is computed at runtime, `0.1 + 0.2 = 0.30000000000000004`, so
+    `x = 0.3` is one rounding error below it.
+    """
+    model_name = f"test_event_assignment_onto_threshold_{x_new != 'xmax'}"
+    antimony2amici(
+        rf"""
+        r = 1; a = 0.1; b = 0.2
+        xmax := a + b
+        x = 0; x' = piecewise(r, x < xmax, 0)
+        E: at x > xmax: x = {x_new}
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints([0.0, 1.0, 2.0])
+    rdata = run_simulation(model, model.create_solver())
+    assert rdata.status == AMICI_SUCCESS
+    x_expected = 0.1 + 0.2 if x_new == "xmax" else 0.3
+    assert_allclose(rdata.by_id("x"), [0.0, x_expected, x_expected], rtol=1e-8)
+
+
+@skip_on_valgrind
+def test_bouncing_ball(tempdir):
+    """An event assignment exactly onto the threshold that reverses the
+    direction of the root function crosses it back.
+
+    After each bounce, the trigger function is zero and decreasing, so the
+    trigger is false again, and the next bounce triggers the event again.
+    `t_contact` must not increase between bounces.
+    """
+    model_name = "test_bouncing_ball"
+    antimony2amici(
+        r"""
+        g = 2; e = 0.5
+        x = 1; v = 0; n = 0; t_contact = 0
+        x' = v
+        v' = -g
+        t_contact' = piecewise(1, x <= 0, 0)
+        E: at x <= 0: x = 0, v = -e * v, n = n + 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[MC("obs_x", formula="x")],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    # bounces at t = 1, 2, 2.5
+    t = np.array([0.5, 1.5, 2.25, 2.6])
+    model.set_timepoints(t)
+    rdata = run_simulation(model, model.create_solver())
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.by_id("n"), [0, 1, 2, 3], rtol=0, atol=0)
+    assert_allclose(
+        rdata.by_id("x"), [0.75, 0.25, 0.0625, 0.015], rtol=1e-6, atol=1e-12
+    )
+    assert_allclose(rdata.by_id("t_contact"), 0, rtol=0, atol=1e-12)
+
+    def x_analytical(g, e):
+        x = []
+        for ti in t:
+            t_bounce, v = np.sqrt(2 / g), 0.0
+            v_impact = g * t_bounce
+            while t_bounce <= ti:
+                v = e * v_impact
+                v_impact = v
+                t_bounce += 2 * v / g
+            t_last = t_bounce - 2 * v / g if v else 0.0
+            x0 = 0.0 if v else 1.0
+            x.append(x0 + v * (ti - t_last) - g / 2 * (ti - t_last) ** 2)
+        return np.array(x)
+
+    assert list(model.get_free_parameter_ids()) == ["g", "e"]
+    p = np.array([2.0, 0.5])
+    assert_allclose(x_analytical(*p), rdata.by_id("x"), rtol=1e-6)
+    eps = 1e-6
+    dx_dp = np.array(
+        [
+            (x_analytical(*(p + eps * d)) - x_analytical(*(p - eps * d)))
+            / (2 * eps)
+            for d in np.eye(2)
+        ]
+    )
+    assert np.all(np.abs(dx_dp).max(axis=1) > 0.01)
+
+    edata = ExpData(rdata, 1, 0, 0)
+    edata.set_measurements(rdata.by_id("obs_x") + 0.1)
+    edata.set_noise_scales(np.ones_like(t))
+    for sens_method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver = model.create_solver()
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(sens_method)
+        solver.set_relative_tolerance(1e-12)
+        solver.set_absolute_tolerance(1e-12)
+        rdata = run_simulation(model, solver, edata=edata)
+        assert rdata.status == AMICI_SUCCESS
+        assert_allclose(
+            rdata.sllh,
+            0.1 * dx_dp.sum(axis=1),
+            rtol=1e-5,
+            err_msg=str(sens_method),
+        )
+
+
+@skip_on_valgrind
+def test_sawtooth_many_events(tempdir):
+    """Many events whose assignments reverse the direction of their own root
+    function.
+
+    Each event triggers exactly once per period, and forward and adjoint
+    sensitivities match the analytical ones.
+    """
+    model_name = "test_sawtooth_many_events"
+    antimony2amici(
+        r"""
+        k = 1; r = 1; x = 0.5; n1 = 0; n2 = 0
+        x' = k * r
+        E1: at x > 1: r = -1, n1 = n1 + 1
+        E2: at x < 0: r = 1, n2 = n2 + 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[MC("obs_x", formula="x")],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    t = np.linspace(0, 1000, 101) + 0.25
+    model.set_timepoints(t)
+
+    def x_analytical(k):
+        # distance travelled from x = 0, folded onto [0, 1]
+        u = np.mod(k * t + 0.5, 2)
+        return np.where(u <= 1, u, 2 - u)
+
+    solver = model.create_solver()
+    solver.set_max_steps(10**5)
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+    s = t + 0.5
+    assert_allclose(rdata.by_id("n1"), np.floor((s + 1) / 2), rtol=0, atol=0)
+    assert_allclose(rdata.by_id("n2"), np.floor(s / 2), rtol=0, atol=0)
+    assert_allclose(rdata.by_id("x"), x_analytical(1.0), rtol=0, atol=1e-6)
+
+    assert list(model.get_free_parameter_ids()) == ["k"]
+    eps = 1e-6
+    dx_dk = (x_analytical(1 + eps) - x_analytical(1 - eps)) / (2 * eps)
+    assert np.abs(dx_dk).max() > 1
+
+    edata = ExpData(rdata, 1, 0, 0)
+    edata.set_measurements(rdata.by_id("obs_x") + 0.1)
+    edata.set_noise_scales(np.ones_like(t))
+    for sens_method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver = model.create_solver()
+        solver.set_max_steps(10**5)
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(sens_method)
+        rdata = run_simulation(model, solver, edata=edata)
+        assert rdata.status == AMICI_SUCCESS, str(sens_method)
+        assert_allclose(
+            rdata.sllh,
+            [0.1 * dx_dk.sum()],
+            rtol=1e-6,
+            err_msg=str(sens_method),
+        )
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize("with_event", [True, False])
+def test_assignment_onto_other_threshold(tempdir, with_event):
+    """An event assignment exactly onto the threshold of another root function
+    that then moves away from it.
+
+    At `t = 1`, `x >= 1` becomes true, which triggers `E2`, and false again
+    right after. At `t = 2`, it becomes true again. `x` is constant until
+    `t = 1`, so that the event assignment, which is applied as a change of
+    `x`, sets it to `1` exactly.
+    """
+    model_name = f"test_assignment_onto_other_threshold_{with_event}"
+    e2 = "E2: at x >= 1: n = n + 1" if with_event else ""
+    antimony2amici(
+        rf"""
+        n = 0; y = 0; k = 0
+        x = 0; x' = k
+        y' = piecewise(1, x >= 1, 0)
+        E1: at time >= 1: x = 1, k = -1
+        E3: at time >= 2: x = 5
+        {e2}
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints([0.5, 1.5, 2.5, 5.0])
+    rdata = run_simulation(model, model.create_solver())
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.by_id("x"), [0.0, 0.5, 4.5, 2.0], rtol=1e-8)
+    assert_allclose(rdata.by_id("y"), [0, 0, 0.5, 3.0], rtol=1e-8, atol=1e-12)
+    if with_event:
+        assert_allclose(rdata.by_id("n"), [0, 1, 2, 2], rtol=0, atol=0)
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize("at_t0", [False, True], ids=["assignment", "t0"])
+def test_trigger_leaves_threshold(tempdir, at_t0):
+    """A trigger function that is zero and then decreases does not hide the
+    next crossing.
+
+    `x >= 1` is true while `x` is at `1`, either after the assignment of
+    `E1` or at the initial time, and false right after. When `x` reaches
+    `1` again, `E2` triggers.
+    """
+    model_name = f"test_trigger_leaves_threshold_{at_t0}"
+    if at_t0:
+        x0, e1, t_trigger = 1, "", 4.0
+    else:
+        x0, e1, t_trigger = 2, "E1: at time >= 0.5: x = 1", 3.5
+    antimony2amici(
+        rf"""
+        r = -1; c = 0
+        x = {x0}; x' = r
+        {e1}
+        E3: at time >= 2: r = 1
+        E2: at x >= 1: c = c + 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    t = np.array([1.0, t_trigger - 0.1, t_trigger + 0.1, 6.0])
+    model.set_timepoints(t)
+    rdata = run_simulation(model, model.create_solver())
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.by_id("c"), [0, 0, 1, 1], rtol=0, atol=0)
+
+
+@skip_on_valgrind
+def test_event_moves_own_trigger_back_within_tolerance(tempdir):
+    """An event moving its own trigger back by less than the tolerances does
+    not fire again, also if the threshold is a state."""
+    model_name = "test_event_moves_own_trigger_back_within_tolerance"
+    antimony2amici(
+        r"""
+        x = 0; threshold = 1; recovering = 0; n = 0
+        x' = 1 + 1e10 * recovering
+        threshold' = 0
+        recovering' = 0
+        E: at x >= threshold:
+            n = n + 1, recovering = 1, x = threshold - 1e-13
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints([0.5, 1.5])
+    rdata = run_simulation(model, model.create_solver())
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.by_id("n"), [0, 1], rtol=0, atol=0)
+
+
+@skip_on_valgrind
+def test_chattering_switch_fails(tempdir):
+    """A switch that flips back and forth at the same time fails instead of
+    hanging."""
+    model_name = "test_chattering_switch_fails"
+    antimony2amici(
+        r"""
+        x = 0
+        x' = piecewise(-1, x > 1, 1)
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints([0.5, 2.0])
+    rdata = run_simulation(model, model.create_solver())
+    assert rdata.status != AMICI_SUCCESS
+    assert any("switches back and forth" in m.message for m in rdata.messages)
+    assert_allclose(rdata.by_id("x")[0], 0.5, rtol=1e-8)
+
+
+@skip_on_valgrind
+def test_root_at_threshold_changes_direction(tempdir):
+    """A root function at its threshold whose direction is changed by an
+    event that does not change the root function itself.
+
+    `x` stays at the threshold of `E2` until `E3` makes it decrease, so
+    `x >= 1` becomes false right after `t = 2`, and true again at `t = 8`.
+    """
+    model_name = "test_root_at_threshold_changes_direction"
+    antimony2amici(
+        r"""
+        x = 1; r = 0; c = 0; z = 0
+        x' = r
+        z' = piecewise(1, x >= 1, 0)
+        E3: at time >= 2: r = -1
+        E4: at time >= 5: r = 1
+        E2: at x >= 1: c = c + 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints([1.0, 3.0, 6.0, 9.0])
+    rdata = run_simulation(model, model.create_solver())
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.by_id("x"), [1, 0, -1, 2], rtol=0, atol=1e-8)
+    assert_allclose(rdata.by_id("c"), [0, 0, 0, 1], rtol=0, atol=0)
+    assert_allclose(rdata.by_id("z"), [1, 2, 2, 3], rtol=0, atol=1e-8)
