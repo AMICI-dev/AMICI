@@ -286,6 +286,8 @@ class CVodeSolver : public Solver {
 
     void root_init(int ne) const override;
 
+    void deactivate_root_if_zero(int ie) const override;
+
     void set_dense_jac_fn() const override;
 
     void set_sparse_jac_fn() const override;
