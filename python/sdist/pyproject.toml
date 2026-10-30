@@ -121,13 +121,13 @@ libpetab = [
 # exports, breaking amici/exporters/jax/nn.py's `from petab_sciml
 # import Layer`. 3a712be6 is the last commit before that merge.
 petab-sciml = [
-    "petab_sciml @ git+https://github.com/petab-dev/petab_sciml.git@3a712be62accdda9506c1c1c088c3f8620a3e8a5",
+    "petab_sciml @ git+https://github.com/petab-dev/petab_sciml.git@9d076feb8f9f422d50f0c128fe7dcd91584def6d",
 ]
 petab-sciml-torch = [
     # torch pulls in its own bundled OpenMP, which can crash/deadlock
     # when loaded alongside AMICI's own OpenMP-linked native extension
     # (observed on macOS) - only install it where actually needed.
-    "petab_sciml[torch] @ git+https://github.com/petab-dev/petab_sciml.git@3a712be62accdda9506c1c1c088c3f8620a3e8a5",
+    "petab_sciml[torch] @ git+https://github.com/petab-dev/petab_sciml.git@9d076feb8f9f422d50f0c128fe7dcd91584def6d",
 ]
 # TODO: PEtab test suite: v1 is intentionally pinned to a pre-v2 commit until
 # proper PEtab v2 import support lands (https://github.com/AMICI-dev/AMICI/issues/2662).
