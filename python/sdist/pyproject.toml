@@ -116,18 +116,19 @@ fiddy = [
 libpetab = [
     "petab @ git+https://github.com/petab-dev/libpetab-python.git@main",
 ]
-# pinned: c84ce473133cd3979b55a725891fee45f248ddde (merge of PR #84,
-# "update_api_page") dropped Layer/Node from petab_sciml's top-level
-# exports, breaking amici/exporters/jax/nn.py's `from petab_sciml
-# import Layer`. 3a712be6 is the last commit before that merge.
+# pinned: petab_sciml is still pre-release. Since PR #84 ("update_api_page"),
+# Layer/Node are no longer top-level exports (amici imports them from
+# petab_sciml.standard.nn_model), and petab_sciml must include the fix
+# restoring `from __future__ import annotations` in nn_model.py - otherwise
+# importing petab.v2 fails with NameError wherever torch is not installed.
 petab-sciml = [
-    "petab_sciml @ git+https://github.com/petab-dev/petab_sciml.git@9d076feb8f9f422d50f0c128fe7dcd91584def6d",
+    "petab_sciml @ git+https://github.com/petab-dev/petab_sciml.git@76a2006134621ceb1b116eaf2dc23cabc66e6870",
 ]
 petab-sciml-torch = [
     # torch pulls in its own bundled OpenMP, which can crash/deadlock
     # when loaded alongside AMICI's own OpenMP-linked native extension
     # (observed on macOS) - only install it where actually needed.
-    "petab_sciml[torch] @ git+https://github.com/petab-dev/petab_sciml.git@9d076feb8f9f422d50f0c128fe7dcd91584def6d",
+    "petab_sciml[torch] @ git+https://github.com/petab-dev/petab_sciml.git@76a2006134621ceb1b116eaf2dc23cabc66e6870",
 ]
 # TODO: PEtab test suite: v1 is intentionally pinned to a pre-v2 commit until
 # proper PEtab v2 import support lands (https://github.com/AMICI-dev/AMICI/issues/2662).
