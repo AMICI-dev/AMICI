@@ -26,6 +26,11 @@ def build_model_extension(
     if set, otherwise from the scripts directory of the current Python
     environment, if available, otherwise from ``PATH``.
 
+    If the scripts directory of the current Python environment is not on
+    ``PATH``, e.g., because the environment is not activated, it is
+    prepended to ``PATH`` for the build, so that the ``cmake`` and ``ninja``
+    of that environment are found.
+
     :param package_dir:
         Directory of the model package to be compiled. I.e., the directory
         containing the `setup.py` file.
@@ -77,6 +82,8 @@ def build_model_extension(
     if "SWIG" in env:
         _check_swig_version(env["SWIG"])
 
+    env["PATH"] = _add_env_scripts_to_path(env.get("PATH", os.defpath))
+
     # distutils.core.run_setup looks nicer, but does not let us check the
     # result easily
     try:
@@ -106,6 +113,30 @@ def _get_env_swig() -> str | None:
         the running interpreter, or ``None`` if there is none.
     """
     return shutil.which("swig", path=sysconfig.get_path("scripts"))
+
+
+def _add_env_scripts_to_path(path: str) -> str:
+    """Prepend the scripts directory of the current Python environment to
+    ``PATH``, unless it is on ``PATH`` already.
+
+    This makes the executables installed into the current Python
+    environment, such as ``cmake`` and ``ninja``, available to the model
+    build, also if the environment is not activated. If the scripts directory
+    is on ``PATH`` already, the existing order is kept.
+
+    :param path: The value of the ``PATH`` environment variable.
+    :returns: The updated value for ``PATH``.
+    """
+    scripts_dir = sysconfig.get_path("scripts")
+
+    def normalize(directory: str) -> str:
+        return os.path.normcase(os.path.normpath(directory))
+
+    on_path = {normalize(d) for d in path.split(os.pathsep) if d}
+    if normalize(scripts_dir) in on_path:
+        return path
+
+    return os.pathsep.join(filter(None, (scripts_dir, path)))
 
 
 def _check_swig_version(swig: str) -> None:
