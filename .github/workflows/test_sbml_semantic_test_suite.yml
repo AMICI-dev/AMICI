@@ -7,10 +7,19 @@ on:
   pull_request:
     paths:
       - .github/workflows/test_sbml_semantic_test_suite.yml
-      - python/sdist/amici/exporters/sundials/de_export.py
+      - include/**
+      - src/**
+      - swig/**
+      - ThirdParty/sundials/**
+      - python/sdist/amici/adapters/fiddy.py
+      - python/sdist/amici/constants.py
+      - python/sdist/amici/exporters/_mangling.py
+      - python/sdist/amici/exporters/sundials/**
+      - python/sdist/amici/exporters/template.py
       - python/sdist/amici/_symbolic/**
       - python/sdist/amici/importers/sbml/**
       - python/sdist/amici/importers/utils.py
+      - python/sdist/amici/sim/sundials/**
       - scripts/run-SBMLTestsuite.sh
       - tests/sbml/testSBMLSuite.py
       - tests/sbml/conftest.py
