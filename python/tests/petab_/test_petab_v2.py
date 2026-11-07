@@ -559,6 +559,24 @@ def test_simulate_does_not_scan_petab_problem(
     assert ps.exp_man.create_edata("exp_hi").id == "exp_hi"
 
 
+def test_apply_parameters_checks_parameter_ids(residual_test_importer):
+    """`apply_parameters` rejects missing and unknown problem parameters."""
+    em = residual_test_importer.create_simulator().exp_man
+    edata = em.create_edata("exp_lo")
+
+    with pytest.raises(ValueError) as exc_info:
+        em.apply_parameters(edata, {"k_decay": 0.4, "foo": 1.0})
+    msg = str(exc_info.value)
+    assert "missing parameters: {'scale'}" in msg
+    assert "unknown parameters: {'foo'}" in msg
+
+    with pytest.raises(ValueError) as exc_info:
+        em.apply_parameters(edata, {"k_decay": 0.4, "scale": 1.5, "foo": 1.0})
+    msg = str(exc_info.value)
+    assert "missing" not in msg
+    assert "unknown parameters: {'foo'}" in msg
+
+
 def test_fiddy_derivative_check_leaves_solver_unchanged(
     residual_test_importer,
 ):
