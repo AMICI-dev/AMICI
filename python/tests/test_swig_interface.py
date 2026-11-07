@@ -4,9 +4,11 @@ Test getters, setters, etc.
 """
 
 import copy
+import gc
 import numbers
 import pickle
 import sys
+import weakref
 from math import nan
 
 import amici
@@ -628,6 +630,7 @@ def test_rdataview(sbml_example_presimulation_module):
 
     # field names are included by dir()
     assert "x" in dir(rdata)
+    assert "xr" in dir(rdata)
 
     # Test xarray conversion
     xr_x = rdata.xr.x
@@ -713,6 +716,28 @@ def test_rdata_ids(sbml_example_presimulation_module):
     assert rdata.state_ids_solver == model.get_state_ids_solver()
     assert rdata.observable_ids == model.get_observable_ids()
     assert rdata.expression_ids == model.get_expression_ids()
+
+
+def test_rdataview_freed_without_gc(sbml_example_presimulation_module):
+    """A ReturnDataView and its ReturnData are freed by reference counting,
+    without waiting for the cyclic garbage collector."""
+    model = sbml_example_presimulation_module.get_model()
+    model.set_timepoints([1, 2, 3])
+    solver = model.create_solver()
+
+    gc_was_enabled = gc.isenabled()
+    gc.disable()
+    try:
+        rdata = run_simulation(model, solver)
+        _ = rdata.xr.x
+        rdata_ref = weakref.ref(rdata)
+        swigptr_ref = weakref.ref(rdata._swigptr)
+        del rdata
+        assert rdata_ref() is None
+        assert swigptr_ref() is None
+    finally:
+        if gc_was_enabled:
+            gc.enable()
 
 
 def test_python_exceptions(sbml_example_presimulation_module):
