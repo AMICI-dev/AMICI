@@ -525,6 +525,40 @@ def test_aggregated_residuals_failed_simulation(residual_test_importer):
     assert result.s2llh is None
 
 
+def test_simulate_does_not_scan_petab_problem(
+    residual_test_importer, monkeypatch
+):
+    """Simulation does not use the linear-time lookups of the PEtab problem.
+
+    Looking up experiments, conditions, or measurements by ID via
+    `petab.v2.Problem` scans the respective tables, which would make
+    creating the `ExpData` objects and aggregating the sensitivities
+    quadratic in the size of the problem
+    (https://github.com/AMICI-dev/AMICI/issues/3519).
+    """
+    from amici.sim.sundials import SensitivityMethod
+
+    ps = residual_test_importer.create_simulator()
+    ps.solver.set_sensitivity_method(SensitivityMethod.forward)
+    ps.solver.set_sensitivity_order(SensitivityOrder.first)
+
+    def fail(*args, **kwargs):
+        raise AssertionError("Linear-time lookup in the PEtab problem")
+
+    for method in (
+        "__getitem__",
+        "get_changes_for_period",
+        "get_measurements_for_experiment",
+    ):
+        monkeypatch.setattr(Problem, method, fail)
+
+    result = ps.simulate({"k_decay": 0.4, "scale": 1.5})
+    assert result.sllh is not None
+    assert result.s2llh is not None
+    assert result.sres is not None
+    assert ps.exp_man.create_edata("exp_hi").id == "exp_hi"
+
+
 def test_fiddy_derivative_check_leaves_solver_unchanged(
     residual_test_importer,
 ):
