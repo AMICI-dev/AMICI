@@ -183,7 +183,8 @@ class SwigPtrView(collections.abc.Mapping):
 
     :ivar _swigptr: pointer to the C++ object
     :ivar _field_names: names of members that will be exposed as numpy arrays
-    :ivar _field_dimensions: dimensions of numpy arrays
+    :ivar _field_dimensions: per-field functions that return the dimensions
+        of the field's numpy array, given ``_swigptr``
     :ivar _field_getters: optional per-field accessors for fields that are
         not directly available as an attribute of ``_swigptr`` (e.g.
         because the underlying C++ getter has a different name)
@@ -192,7 +193,7 @@ class SwigPtrView(collections.abc.Mapping):
 
     _swigptr = None
     _field_names: list[str] = []
-    _field_dimensions: dict[str, list[int]] = dict()
+    _field_dimensions: dict[str, Callable[..., list[int]]] = {}
     _field_getters: dict[str, Callable] = {}
 
     def __getitem__(self, item: str) -> np.ndarray | float:
@@ -407,6 +408,58 @@ class ReturnDataView(SwigPtrView):
         "messages",
         "t_last",
     ]
+    # Shapes of the array fields as functions of the ``ReturnData``. They are
+    # only evaluated when a field is first accessed: reading them through
+    # SWIG costs more than the rest of constructing a view.
+    _field_dimensions = {
+        "ts": lambda rdata: [rdata.nt],
+        "x": lambda rdata: [rdata.nt, rdata.nx_rdata],
+        "x0": lambda rdata: [rdata.nx_rdata],
+        "x_ss": lambda rdata: [rdata.nx_rdata],
+        "sx": lambda rdata: [rdata.nt, rdata.nplist, rdata.nx_rdata],
+        "sx0": lambda rdata: [rdata.nplist, rdata.nx_rdata],
+        "sx_ss": lambda rdata: [rdata.nplist, rdata.nx_rdata],
+        # observables
+        "y": lambda rdata: [rdata.nt, rdata.ny],
+        "sigmay": lambda rdata: [rdata.nt, rdata.ny],
+        "sy": lambda rdata: [rdata.nt, rdata.nplist, rdata.ny],
+        "ssigmay": lambda rdata: [rdata.nt, rdata.nplist, rdata.ny],
+        # event observables
+        "z": lambda rdata: [rdata.nmaxevent, rdata.nz],
+        "rz": lambda rdata: [rdata.nmaxevent, rdata.nz],
+        "sigmaz": lambda rdata: [rdata.nmaxevent, rdata.nz],
+        "sz": lambda rdata: [rdata.nmaxevent, rdata.nplist, rdata.nz],
+        "srz": lambda rdata: [rdata.nmaxevent, rdata.nplist, rdata.nz],
+        "ssigmaz": lambda rdata: [rdata.nmaxevent, rdata.nplist, rdata.nz],
+        # objective function
+        "sllh": lambda rdata: [rdata.nplist],
+        "s2llh": lambda rdata: [rdata.np, rdata.nplist],
+        "res": lambda rdata: [
+            rdata.nt * rdata.nytrue * (2 if rdata.sigma_res else 1)
+        ],
+        "sres": lambda rdata: [
+            rdata.nt * rdata.nytrue * (2 if rdata.sigma_res else 1),
+            rdata.nplist,
+        ],
+        "FIM": lambda rdata: [rdata.nplist, rdata.nplist],
+        # diagnosis
+        "J": lambda rdata: [rdata.nx_solver, rdata.nx_solver],
+        "w": lambda rdata: [rdata.nt, rdata.nw],
+        "xdot": lambda rdata: [rdata.nx_solver],
+        "preeq_numlinsteps": lambda rdata: [rdata.newton_maxsteps, 2],
+        "preeq_numsteps": lambda rdata: [3],
+        "posteq_numlinsteps": lambda rdata: [rdata.newton_maxsteps, 2],
+        "posteq_numsteps": lambda rdata: [3],
+        "numsteps": lambda rdata: [rdata.nt],
+        "num_rhs_evals": lambda rdata: [rdata.nt],
+        "num_err_test_fails": lambda rdata: [rdata.nt],
+        "num_non_lin_solv_conv_fails": lambda rdata: [rdata.nt],
+        "order": lambda rdata: [rdata.nt],
+        "numsteps_b": lambda rdata: [rdata.nt],
+        "num_rhs_evals_b": lambda rdata: [rdata.nt],
+        "num_err_test_fails_b": lambda rdata: [rdata.nt],
+        "num_non_lin_solv_conv_fails_b": lambda rdata: [rdata.nt],
+    }
 
     def __init__(self, rdata: ReturnDataPtr | ReturnData):
         """
@@ -419,53 +472,6 @@ class ReturnDataView(SwigPtrView):
                 f"Unsupported pointer {type(rdata)}, must be"
                 f"ReturnDataPtr or ReturnData!"
             )
-        self._field_dimensions = {
-            "ts": [rdata.nt],
-            "x": [rdata.nt, rdata.nx_rdata],
-            "x0": [rdata.nx_rdata],
-            "x_ss": [rdata.nx_rdata],
-            "sx": [rdata.nt, rdata.nplist, rdata.nx_rdata],
-            "sx0": [rdata.nplist, rdata.nx_rdata],
-            "sx_ss": [rdata.nplist, rdata.nx_rdata],
-            # observables
-            "y": [rdata.nt, rdata.ny],
-            "sigmay": [rdata.nt, rdata.ny],
-            "sy": [rdata.nt, rdata.nplist, rdata.ny],
-            "ssigmay": [rdata.nt, rdata.nplist, rdata.ny],
-            # event observables
-            "z": [rdata.nmaxevent, rdata.nz],
-            "rz": [rdata.nmaxevent, rdata.nz],
-            "sigmaz": [rdata.nmaxevent, rdata.nz],
-            "sz": [rdata.nmaxevent, rdata.nplist, rdata.nz],
-            "srz": [rdata.nmaxevent, rdata.nplist, rdata.nz],
-            "ssigmaz": [rdata.nmaxevent, rdata.nplist, rdata.nz],
-            # objective function
-            "sllh": [rdata.nplist],
-            "s2llh": [rdata.np, rdata.nplist],
-            "res": [rdata.nt * rdata.nytrue * (2 if rdata.sigma_res else 1)],
-            "sres": [
-                rdata.nt * rdata.nytrue * (2 if rdata.sigma_res else 1),
-                rdata.nplist,
-            ],
-            "FIM": [rdata.nplist, rdata.nplist],
-            # diagnosis
-            "J": [rdata.nx_solver, rdata.nx_solver],
-            "w": [rdata.nt, rdata.nw],
-            "xdot": [rdata.nx_solver],
-            "preeq_numlinsteps": [rdata.newton_maxsteps, 2],
-            "preeq_numsteps": [3],
-            "posteq_numlinsteps": [rdata.newton_maxsteps, 2],
-            "posteq_numsteps": [3],
-            "numsteps": [rdata.nt],
-            "num_rhs_evals": [rdata.nt],
-            "num_err_test_fails": [rdata.nt],
-            "num_non_lin_solv_conv_fails": [rdata.nt],
-            "order": [rdata.nt],
-            "numsteps_b": [rdata.nt],
-            "num_rhs_evals_b": [rdata.nt],
-            "num_err_test_fails_b": [rdata.nt],
-            "num_non_lin_solv_conv_fails_b": [rdata.nt],
-        }
         super().__init__(rdata)
 
     @property
@@ -572,6 +578,31 @@ class ExpDataView(SwigPtrView):
         "event_measurements": lambda edata: edata.get_event_measurements(),
         "event_noise_scales": lambda edata: edata.get_event_noise_scales(),
     }
+    # Shapes of the array fields as functions of the ``ExpData``, evaluated
+    # when a field is first accessed
+    _field_dimensions = {
+        "ts": lambda edata: [edata.nt()],
+        # observables
+        "measurements": lambda edata: [edata.nt(), edata.nytrue()],
+        "noise_scales": lambda edata: [edata.nt(), edata.nytrue()],
+        # event observables
+        "event_measurements": lambda edata: [
+            edata.nmaxevent(),
+            edata.nztrue(),
+        ],
+        "event_noise_scales": lambda edata: [
+            edata.nmaxevent(),
+            edata.nztrue(),
+        ],
+        # fixed parameters
+        "fixed_parameters": lambda edata: [len(edata.fixed_parameters)],
+        "fixed_parameters_pre_equilibration": lambda edata: [
+            len(edata.fixed_parameters_pre_equilibration)
+        ],
+        "fixed_parameters_presimulation": lambda edata: [
+            len(edata.fixed_parameters_presimulation)
+        ],
+    }
 
     def __init__(self, edata: ExpDataPtr | ExpData):
         """
@@ -583,28 +614,11 @@ class ExpDataView(SwigPtrView):
             raise TypeError(
                 f"Unsupported pointer {type(edata)}, must be ExpDataPtr!"
             )
-        self._field_dimensions = {
-            "ts": [edata.nt()],
-            # observables
-            "measurements": [edata.nt(), edata.nytrue()],
-            "noise_scales": [edata.nt(), edata.nytrue()],
-            # event observables
-            "event_measurements": [edata.nmaxevent(), edata.nztrue()],
-            "event_noise_scales": [edata.nmaxevent(), edata.nztrue()],
-            # fixed parameters
-            "fixed_parameters": [len(edata.fixed_parameters)],
-            "fixed_parameters_pre_equilibration": [
-                len(edata.fixed_parameters_pre_equilibration)
-            ],
-            "fixed_parameters_presimulation": [
-                len(edata.fixed_parameters_presimulation)
-            ],
-        }
         super().__init__(edata)
 
 
 def _field_as_numpy(
-    field_dimensions: dict[str, list[int]],
+    field_dimensions: dict[str, Callable[..., list[int]]],
     field: str,
     data: SwigPtrView,
     getter: Callable | None = None,
@@ -613,8 +627,8 @@ def _field_as_numpy(
     Convert data object field to numpy array with dimensions according to
     specified field dimensions
 
-    :param field_dimensions: dimension specifications
-                ``dict({field: list([dim1, dim2, ...])})``
+    :param field_dimensions: per-field functions that return the dimensions
+        ``[dim1, dim2, ...]`` of the field, given ``data``
     :param data: object with fields
     :param field: Name of field
     :param getter: optional callable to retrieve the field value from
@@ -624,8 +638,10 @@ def _field_as_numpy(
     specified field dimensions
     """
     attr = getter(data) if getter is not None else getattr(data, field)
-    if field_dim := field_dimensions.get(field, None):
-        return None if len(attr) == 0 else np.array(attr).reshape(field_dim)
+    if get_dims := field_dimensions.get(field):
+        if len(attr) == 0:
+            return None
+        return np.array(attr).reshape(get_dims(data))
 
     if isinstance(attr, Number):
         return float(attr)
