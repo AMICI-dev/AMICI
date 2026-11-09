@@ -85,15 +85,15 @@ problems_for_gradient_check = list(sorted(problems_for_gradient_check))
 # Problems for checking the log-likelihood computation at nominal parameters
 #
 # not merged:
-# Becker_Science2010 (multiple models)             https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab/tree/model_Becker_Science2010
-# Hass_PONE2017 (???)                              https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab/tree/model_Hass_PONE2017
-# Korkut_eLIFE2015 (???)                           https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab/tree/model_Korkut_eLIFE2015
-# Casaletto_PNAS2019 (yaml missing)                https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab/tree/model_Casaletto_PNAS2019
-# Merkle_PCB2016 (model missing)                   https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab/tree/model_Merkle_PCB2016
-# Parmar_PCB2019 (SBML extensions)                 https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab/tree/model_Parmar_PCB2019
-# Swameye_PNAS2003 (splines)                       https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab/tree/model_Swameye_PNAS2003
-# Sobotta_Frontiers2017 (???)                      https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab/tree/model_Sobotta_Frontiers2017
-# Raia_CancerResearch2011 (state dependent sigmas) https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab/tree/model_Raia_CancerResearch2011
+# Becker_Science2010 (multiple models)             https://github.com/PEtab-dev/petab-benchmark-problems/tree/model_Becker_Science2010
+# Hass_PONE2017 (???)                              https://github.com/PEtab-dev/petab-benchmark-problems/tree/model_Hass_PONE2017
+# Korkut_eLIFE2015 (???)                           https://github.com/PEtab-dev/petab-benchmark-problems/tree/model_Korkut_eLIFE2015
+# Casaletto_PNAS2019 (yaml missing)                https://github.com/PEtab-dev/petab-benchmark-problems/tree/model_Casaletto_PNAS2019
+# Merkle_PCB2016 (model missing)                   https://github.com/PEtab-dev/petab-benchmark-problems/tree/model_Merkle_PCB2016
+# Parmar_PCB2019 (SBML extensions)                 https://github.com/PEtab-dev/petab-benchmark-problems/tree/model_Parmar_PCB2019
+# Swameye_PNAS2003 (splines)                       https://github.com/PEtab-dev/petab-benchmark-problems/tree/model_Swameye_PNAS2003
+# Sobotta_Frontiers2017 (???)                      https://github.com/PEtab-dev/petab-benchmark-problems/tree/model_Sobotta_Frontiers2017
+# Raia_CancerResearch2011 (state dependent sigmas) https://github.com/PEtab-dev/petab-benchmark-problems/tree/model_Raia_CancerResearch2011
 #
 # no reference value:
 # Alkan_SciSignal2018 (d2d: Alkan_DDRP_SciSignal2018)
@@ -538,7 +538,7 @@ def test_nominal_parameters_llh_v2(problem_id):
             )
         )
         is not None
-        # https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab/issues/275
+        # https://github.com/PEtab-dev/petab-benchmark-problems/issues/275
         and problem_id != "Lucarelli_CellSystems2018"
     ):
         print("benchmark collection simulations:")
@@ -710,7 +710,7 @@ def compare_to_reference(problem_id: str, llh: float):
                 "Reference llh from benchmark collection simulation table:",
                 ref_llh_bm,
             )
-            # TODO https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab/issues/278
+            # TODO https://github.com/PEtab-dev/petab-benchmark-problems/issues/278
             # assert np.isclose(
             #     ref_llh, ref_llh_bm
             # ), f"Stored Reference llh {ref_llh} differs from the value computed "\
