@@ -115,23 +115,22 @@ class ExperimentManager:
         }
 
         # Lookup tables for the PEtab problem, which must not change after
-        #  this point. `v2.Problem` looks up entities by ID via linear scans,
-        #  which would make the creation of all `ExpData`s quadratic in the
-        #  number of experiments and parameters.
+        #  this point.
         # maps PEtab observable IDs to petab Observable instances
         self._petab_id_to_obs: dict[str, v2.Observable] = {
             obs.id: obs for obs in self._petab_problem.observables
         }
-        self._experiments: dict[str, v2.Experiment] = {
+        self._id_to_experiment: dict[str, v2.Experiment] = {
             exp.id: exp for exp in self._petab_problem.experiments
         }
-        self._conditions: dict[str, v2.Condition] = {
+        self._id_to_condition: dict[str, v2.Condition] = {
             cond.id: cond for cond in self._petab_problem.conditions
         }
-        # experiment ID to the measurements for that experiment
-        self._measurements: dict[str | None, list[v2.Measurement]] = {}
+        self._experiment_id_to_measurements: dict[
+            str | None, list[v2.Measurement]
+        ] = {}
         for measurement in self._petab_problem.measurements:
-            self._measurements.setdefault(
+            self._experiment_id_to_measurements.setdefault(
                 measurement.experiment_id, []
             ).append(measurement)
         self._x_ids: frozenset[str] = frozenset(self._petab_problem.x_ids)
@@ -206,7 +205,7 @@ class ExperimentManager:
         from amici.sim.sundials import ExpData
 
         if isinstance(experiment, str):
-            experiment = self._experiments[experiment]
+            experiment = self._id_to_experiment[experiment]
 
         if len(experiment.periods) > 2:
             raise AssertionError(
@@ -257,7 +256,7 @@ class ExperimentManager:
             """Get the fixed parameters for the period."""
             fixed_pars_vals = self._original_k.copy()
             for condition_id in period.condition_ids:
-                for change in self._conditions[condition_id].changes:
+                for change in self._id_to_condition[condition_id].changes:
                     pid = self._fixed_pid_to_idx[change.target_id]
                     # those are only indicator variables that are always
                     #  number literals
@@ -436,7 +435,7 @@ class ExperimentManager:
         par_vals = np.array(self._original_p)
         pid_to_idx = self._pid_to_idx
         experiment_id = edata.id
-        experiment = self._experiments[experiment_id]
+        experiment = self._id_to_experiment[experiment_id]
 
         # plist -- estimated parameters + those mapped via placeholders
         # TODO sufficient to set them during creation of edata
@@ -625,7 +624,7 @@ class ExperimentManager:
         :return: The measurements for the given experiment, in the order of
             the measurement table.
         """
-        return self._measurements.get(experiment_id, ())
+        return self._experiment_id_to_measurements.get(experiment_id, ())
 
     def _get_placeholder_mapping(
         self, experiment: v2.Experiment
@@ -889,7 +888,7 @@ class PetabSimulator:
 
         # still needs parameter mapping for placeholders
         for rdata in rdatas:
-            experiment = self._exp_man._experiments[rdata.id]
+            experiment = self._exp_man._id_to_experiment[rdata.id]
             placeholder_mappings = self._exp_man._get_placeholder_mapping(
                 experiment
             )
@@ -947,7 +946,7 @@ class PetabSimulator:
         ix_map: dict[int, int] = dict(exp_man._model_par_idx_to_x_free_idx)
 
         # still needs experiment-specific parameter mapping for placeholders
-        experiment = exp_man._experiments[rdata.id]
+        experiment = exp_man._id_to_experiment[rdata.id]
         placeholder_mappings = exp_man._get_placeholder_mapping(experiment)
         for model_pid, problem_pid in placeholder_mappings.items():
             if (problem_par_ix := x_free_ix.get(problem_pid)) is not None:
