@@ -25,7 +25,7 @@ sphinxcontrib-napoleon>=0.7
 pygments>=2.15.1
 Jinja2>=3.1.6
 ipykernel
--e git+https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab.git@master#subdirectory=src/python&egg=benchmark_models_petab
+-e git+https://github.com/PEtab-dev/petab-benchmark-problems.git@main#subdirectory=src/python&egg=benchmark_models_petab
 -e python/sdist/[jax]
 antimony>=2.13
 fiddy>=0.0.3

@@ -103,7 +103,7 @@ build = [
 ]
 
 benchmark-models-petab = [
-    "benchmark_models_petab @ git+https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab.git@master#subdirectory=src/python",
+    "benchmark_models_petab @ git+https://github.com/PEtab-dev/petab-benchmark-problems.git@main#subdirectory=src/python",
 ]
 diffrax-dev = [
     # for events with direction; see https://github.com/patrick-kidger/diffrax/issues/654
