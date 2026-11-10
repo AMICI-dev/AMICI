@@ -17,10 +17,12 @@ from amici.sim.sundials import (
     AMICI_FIRST_RHSFUNC_ERR,
     AMICI_NOT_RUN,
     CVodeSolver,
+    DoubleVector,
     ExpData,
     ExpDataPtr,
     ExpDataView,
     IDASolver,
+    IntVector,
     ModelPtr,
     ParameterScaling,
     RDataReporting,
@@ -643,6 +645,57 @@ def test_rdataview(sbml_example_presimulation_module):
                 getattr(rdata.xr, attr)
             except TypeError as e:
                 print(str(e))
+
+
+def test_vector_to_ndarray(monkeypatch, sbml_example_presimulation_module):
+    """DoubleVector and IntVector are converted to numpy arrays in C++,
+    not element by element via their Python iterators."""
+
+    def no_iter(self):
+        raise AssertionError("converted via the Python iterator")
+
+    for vector_type, values, dtype in (
+        (DoubleVector, [1.5, -2.0, 3.25], np.float64),
+        (IntVector, [1, -2, 3], np.int64),
+    ):
+        vec = vector_type(values)
+        monkeypatch.setattr(vector_type, "__iter__", no_iter)
+
+        for convert in (np.array, np.asarray):
+            arr = convert(vec)
+            assert isinstance(arr, np.ndarray)
+            assert arr.dtype == dtype
+            assert arr.shape == (len(values),)
+            assert arr.tolist() == values
+
+        # the array is a copy
+        arr = np.asarray(vec)
+        arr[0] = 0
+        assert np.asarray(vec).tolist() == values
+        with pytest.raises(ValueError, match="always copied"):
+            np.asarray(vec, copy=False)
+
+        assert np.asarray(vec, dtype=np.float32).dtype == np.float32
+        assert np.asarray(vector_type()).shape == (0,)
+        assert repr(np.asarray(vec)) in repr(vec)
+
+    # ReturnDataView fields
+    monkeypatch.undo()
+    model = sbml_example_presimulation_module.get_model()
+    model.set_timepoints([1, 2, 3])
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    rdata = run_simulation(model, solver)
+    fields = ("x", "sx", "y", "numsteps")
+    expected = {field: list(getattr(rdata.ptr, field)) for field in fields}
+    monkeypatch.setattr(DoubleVector, "__iter__", no_iter)
+    monkeypatch.setattr(IntVector, "__iter__", no_iter)
+    assert rdata.x.shape == (rdata.nt, rdata.nx_rdata)
+    assert rdata.sx.shape == (rdata.nt, rdata.nplist, rdata.nx_rdata)
+    assert rdata.numsteps.dtype == np.int64
+    for field in fields:
+        assert expected[field]
+        assert getattr(rdata, field).flatten().tolist() == expected[field]
 
 
 def test_rdata_ids(sbml_example_presimulation_module):
