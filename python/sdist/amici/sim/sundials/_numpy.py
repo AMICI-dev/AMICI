@@ -466,8 +466,23 @@ class ReturnDataView(SwigPtrView):
             "num_err_test_fails_b": [rdata.nt],
             "num_non_lin_solv_conv_fails_b": [rdata.nt],
         }
-        self.xr = XArrayFactory(self)
         super().__init__(rdata)
+
+    @property
+    def xr(self) -> XArrayFactory:
+        """
+        Access fields as :class:`xarray.DataArray` with labeled coordinates,
+        e.g. ``rdata.xr.x``.
+
+        A new factory is created on each access, so that the factory's
+        reference to this view does not form a reference cycle that would
+        keep this view and the underlying ``ReturnData`` alive until the
+        next cyclic garbage collection.
+        """
+        return XArrayFactory(self)
+
+    def __dir__(self):
+        return sorted(set(super().__dir__()) | {"xr"})
 
     def __getitem__(
         self, item: str
