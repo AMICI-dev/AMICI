@@ -1,0 +1,19 @@
+python:
+  - 3.13
+
+c_compiler:
+  - gcc                        # [linux]
+  # - clang                      # [osx]
+  # - vs2022                     # [win]
+c_stdlib:
+  - sysroot                    # [linux]
+  # - macosx_deployment_target   # [osx]
+  # - vs                         # [win]
+cxx_compiler:
+  - gxx                        # [linux]
+  # - clangxx                    # [osx]
+  # - vs2022                     # [win]
+# fortran_compiler:              # [unix or win64]
+#   - gfortran                   # [linux64 or (osx and x86_64)]
+#   - gfortran                   # [aarch64 or ppc64le or armv7l or s390x]
+#   - flang                      # [win64]
