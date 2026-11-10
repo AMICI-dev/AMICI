@@ -1055,6 +1055,17 @@ def test_pickle_edata_after_expdataview():
     assert edata == edata_pickled
 
 
+def test_expdataview_shape_at_first_access():
+    """Field shapes are read from the `ExpData` when a field is first
+    accessed, not when the view is created."""
+    edata = ExpData(2, 0, 0, [1.0, 2.0])
+    view = ExpDataView(edata)
+    edata.set_timepoints([1.0, 2.0, 3.0])
+
+    assert view.measurements.shape == (3, 2)
+    assert view.ts.shape == (3,)
+
+
 def _solver_getters(solver):
     """Names of all settings with a getter and setter on `solver`."""
     return sorted(
