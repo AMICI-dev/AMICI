@@ -173,11 +173,23 @@ class ExperimentManager:
         self._original_p = np.array(model0.get_free_parameters())
         self._original_k = np.array(model0.get_fixed_parameters())
 
-    def create_edatas(self) -> list[amici.sim.sundials.ExpData]:
-        """Create ExpData objects for all experiments."""
-        problem_parameters = self.scale_parameters(
-            self._petab_problem.get_x_nominal_dict()
-        )
+    def create_edatas(
+        self, problem_parameters: dict[str, float] | None = None
+    ) -> list[amici.sim.sundials.ExpData]:
+        """Create ExpData objects for all experiments.
+
+        :param problem_parameters:
+            Optional dictionary of problem parameters to apply to the
+            `ExpData` objects, on the scales given by :attr:`parameter_scales`.
+            If `None`, the nominal parameters of the PEtab problem are used.
+        :return:
+            The created `ExpData` objects, in the order of the experiments
+            in the PEtab problem.
+        """
+        if problem_parameters is None:
+            problem_parameters = self.scale_parameters(
+                self._petab_problem.get_x_nominal_dict()
+            )
         return [
             self.create_edata(experiment, problem_parameters)
             for experiment in self._petab_problem.experiments
@@ -749,6 +761,11 @@ class PetabSimulator:
 
     This class is used to simulate all experiments of a given PEtab problem
     using a given AMICI model and solver, and to aggregate the results.
+
+    The :class:`amici.sim.sundials.ExpData` objects for the experiments are
+    created by the first call to :meth:`simulate` and reused by all subsequent
+    calls, which only update their parameter-dependent values
+    (see :meth:`ExperimentManager.apply_parameters`).
     """
 
     def __init__(
@@ -758,7 +775,6 @@ class PetabSimulator:
         solver: amici.sim.sundials.Solver | None = None,
         num_threads: int = 1,
         # TODO: allow selecting specific experiments?
-        # TODO: store_edatas: bool
     ):
         """
         Initialize the simulator.
@@ -785,6 +801,11 @@ class PetabSimulator:
         self._plist_to_problem_par_ix: dict[
             tuple[str, tuple[int, ...]], dict[int, int]
         ] = {}
+        # The `ExpData`s for all experiments, created by the first call to
+        #  `simulate`. Apart from the values set by
+        #  `ExperimentManager.apply_parameters`, they only depend on the
+        #  (immutable) PEtab problem and the model.
+        self._edatas: list[amici.sim.sundials.ExpData] | None = None
 
     @property
     def model(self) -> amici.sim.sundials.Model:
@@ -816,8 +837,8 @@ class PetabSimulator:
             per-experiment data objects and aggregated results.
 
             Note that the returned :class:`amici.sim.sundials.ExpData`
-            instances may be changed by subsequent calls to this function.
-            Create a copy if needed.
+            instances are reused and updated by subsequent calls to this
+            function. They must not be modified. Create a copy if needed.
         """
         if problem_parameters is None:
             # use default parameters, i.e., nominal values for all parameters
@@ -830,20 +851,23 @@ class PetabSimulator:
         )
         problem_parameters = problem_parameters_default | problem_parameters
 
-        # TODO cache edatas
-        edatas = self._exp_man.create_edatas()
-
-        for edata in edatas:
-            self._exp_man.apply_parameters(
-                edata=edata, problem_parameters=problem_parameters
-            )
+        if self._edatas is None:
+            self._edatas = self._exp_man.create_edatas(problem_parameters)
+        else:
+            for edata in self._edatas:
+                self._exp_man.apply_parameters(
+                    edata=edata, problem_parameters=problem_parameters
+                )
 
         rdatas = amici.sim.sundials.run_simulations(
-            self._model, self._solver, edatas, num_threads=self.num_threads
+            self._model,
+            self._solver,
+            self._edatas,
+            num_threads=self.num_threads,
         )
 
         return PetabSimulationResult(
-            edatas=edatas,
+            edatas=list(self._edatas),
             rdatas=rdatas,
             sllh=self._aggregate_sllh(rdatas),
             s2llh=self._aggregate_s2llh(rdatas, use_fim=True),
