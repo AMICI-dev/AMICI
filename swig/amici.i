@@ -111,12 +111,21 @@ _SWIG_VERSION = (SWIG_VERSION_MAJOR, SWIG_VERSION_MINOR, SWIG_VERSION_PATCH)
 #include <cstring>
 #include <vector>
 #include <stdexcept>
+
+// `DoubleVector._to_ndarray` copies the data with `memcpy`
+static_assert(sizeof(double) == sizeof(npy_double), "Numpy double size mismatch");
 %}
 
 // numpy
 %init %{
 import_array();
 %}
+
+// `SwigPyIterator.value()` creates a Python object, but with `-threads`, its
+// wrapper releases the GIL, which results in a segfault
+// (https://github.com/AMICI-dev/AMICI/issues/3509).
+// Python iteration doesn't need it: `__next__` calls it with the GIL held.
+%ignore swig::SwigPyIterator::value;
 
 // Expose vectors
 %include <stl.i>
@@ -214,16 +223,6 @@ def __repr__(self):
 
 %}
 };
-
-// Let numpy access std::vector
-%{
-static_assert (sizeof(double) == sizeof (npy_double), "Numpy double size mismatch");
-static_assert (sizeof(int) == sizeof (npy_int), "Numpy integer size mismatch");
-
-#include "../swig/stdvec2numpy.h"
-using namespace amici;
-%}
-%include "stdvec2numpy.h"
 
 typedef double realtype;
 

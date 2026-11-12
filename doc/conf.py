@@ -527,7 +527,6 @@ def skip_member(app, what, name, obj, skip, options):
         "Model_DAE",
         "ConditionContext",
         "equals",
-        "stdVec2ndarray",
         "SwigPyIterator",
         "thisown",
     }
