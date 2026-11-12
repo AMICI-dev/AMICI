@@ -97,8 +97,10 @@ at zero. Afterwards, the direction in which the root function moves decides,
 e.g., after an assignment exactly onto the threshold that reverses the
 direction of the root function, or if it ended up slightly below zero due to
 roundoff. The same holds for root functions that crossed zero at the current
-timepoint, and for root functions at zero that were not changed by the event
-assignments, whose direction may have changed nevertheless.
+timepoint, and for other root functions that are exactly zero, whose direction
+may have changed nevertheless. Other root functions, also if slightly changed
+by an event assignment, are left to the root-finding of the solver, so that
+their events trigger at their own time.
 The uncertainty is estimated from the change of the
 root function for a state perturbation within the integration tolerances
 and within the time tolerance of the root-finding.

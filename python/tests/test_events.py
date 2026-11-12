@@ -4395,3 +4395,55 @@ def test_root_at_threshold_changes_direction_dae_large_t(tempdir):
     rdata = run_simulation(model, model.create_solver())
     assert rdata.status == AMICI_SUCCESS
     assert_allclose(rdata.by_id("z"), [T - 1, T, T], rtol=1e-10, atol=0)
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize("dt", [5e-6, 1e-3])
+@pytest.mark.parametrize("touched", [False, True])
+def test_trigger_close_to_unrelated_event(tempdir, dt, touched):
+    """A trigger close to, but not at, its threshold at an unrelated event
+    triggers at its own time, with its own event-time sensitivity, also if
+    the unrelated event assignment changes it slightly.
+
+    `E1` triggers at `t1 = 1 / k`, shortly after `E2`. `q` is the time since
+    `E1`, so `dq/dk = 1 / k^2`.
+    """
+    model_name = (
+        f"test_trigger_close_to_unrelated_event_{dt:g}_{touched}".replace(
+            "-", "_"
+        ).replace(".", "_")
+    )
+    trigger = "x + 1e-15 * w" if touched else "x"
+    antimony2amici(
+        rf"""
+        k = 1e-3; t2 = {1000 - dt}
+        x = 0; x' = k
+        y = 0; q = 0; w = 0
+        q' = y
+        E1: at {trigger} >= 1: y = 1
+        E2: at time >= t2: w = 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[MC("obs_q", formula="q")],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints([1001.0])
+    k = model.get_free_parameter_by_id("k")
+    iq = list(model.get_state_ids()).index("q")
+    rdata = run_simulation(model, model.create_solver())
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.x[0, iq], 1001.0 - 1 / k, rtol=0, atol=1e-8)
+
+    # llh = -0.5 (q + 1 - q)^2, so dllh/dk = dq/dk
+    edata = ExpData(rdata, 1.0, 0.0)
+    edata.set_measurements([rdata.x[0, iq] + 1.0])
+    for method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver = model.create_solver()
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(method)
+        rdata = run_simulation(model, solver, edata=edata)
+        assert rdata.status == AMICI_SUCCESS
+        assert_allclose(rdata.sllh[0], 1 / k**2, rtol=1e-4)
+        if method == SensitivityMethod.forward:
+            assert_allclose(rdata.sx[0, 0, iq], 1 / k**2, rtol=1e-4)

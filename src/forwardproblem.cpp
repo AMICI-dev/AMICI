@@ -1091,10 +1091,16 @@ int EventHandlingSimulator::detect_secondary_events() {
             continue;
         if (root_noise.empty())
             estimate_root_noise_and_slope(root_noise, root_slope);
-        bool const near_zero = std::abs(rootval) <= root_noise[ie];
-        // Root functions not changed by the preceding event assignment keep
-        // their Heaviside value, unless they crossed zero at this time or are
-        // at zero, where the event may have changed their direction.
+        // Root functions keep their Heaviside value, unless they crossed zero
+        // at this time, an event assignment moved them to the other side of
+        // zero, or they are exactly zero, where the event may have changed
+        // their direction. Otherwise, the solver finds their crossings, at
+        // their own time, also if an event assignment changed them slightly.
+        bool const moved_across
+            = changed && (rootval >= 0.0) != (h.at(ie) > 0.0);
+        bool const near_zero = (crossed || moved_across)
+                                   ? std::abs(rootval) <= root_noise[ie]
+                                   : rootval == 0.0;
         if (!crossed && !changed && !near_zero)
             continue;
         bool above = rootval >= 0.0;
