@@ -608,6 +608,9 @@ class EventHandlingSimulator {
      */
     std::vector<realtype> t_last_trigger_;
 
+    /** Time of the last solver return with only dropped roots */
+    realtype t_dropped_roots_{NAN};
+
     /** The model to simulate. */
     Model* model_{nullptr};
 
