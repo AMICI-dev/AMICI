@@ -299,6 +299,7 @@ void serialize(
     ar & m.ne_solver;
     ar & m.nspl;
     ar & m.nw;
+    ar & m.nws;
     ar & m.ndwdx;
     ar & m.ndwdp;
     ar & m.ndwdw;

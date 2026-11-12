@@ -49,7 +49,7 @@ void dxdotdp_explicit_rowvals_model_events_py(SUNMatrixWrapper &dxdotdp_explicit
 namespace amici {
 namespace model_model_events_py {
 
-void dxdotdp_explicit_model_events_py(realtype *dxdotdp_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w){
+void dxdotdp_explicit_model_events_py(realtype *dxdotdp_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *w){
     const realtype x1_ = x[0];
     const realtype x2_ = x[1];
     const realtype Heaviside_2_ = h[2];

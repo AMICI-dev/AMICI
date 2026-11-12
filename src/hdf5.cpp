@@ -449,7 +449,7 @@ void write_return_data_to_hdf5(
 
     if (!rdata.w.empty())
         create_and_write_double_2d_dataset(
-            file, hdf5Location + "/w", rdata.w, rdata.nt, rdata.nw
+            file, hdf5Location + "/w", rdata.w, rdata.nt, rdata.nw + rdata.nws
         );
 
     if (!rdata.z.empty())

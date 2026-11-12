@@ -311,14 +311,15 @@ class Model_ODE : public Model {
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
+     * @param ws static expressions
      * @param h Heaviside vector
      * @param w vector with helper variables
      * @param dwdx derivative of w wrt x
      **/
     virtual void fJSparse(
         realtype* JSparse, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, realtype const* w,
-        realtype const* dwdx
+        realtype const* k, realtype const* ws, realtype const* h,
+        realtype const* w, realtype const* dwdx
     );
 
     /**
@@ -343,14 +344,15 @@ class Model_ODE : public Model {
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
+     * @param ws static expressions
      * @param h Heaviside vector
      * @param w vector with helper variables
      * @param tcl total abundances for conservation laws
      **/
     virtual void froot(
         realtype* root, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, realtype const* w,
-        realtype const* tcl
+        realtype const* k, realtype const* ws, realtype const* h,
+        realtype const* w, realtype const* tcl
     );
 
     /**
@@ -361,12 +363,14 @@ class Model_ODE : public Model {
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
+     * @param ws static expressions
      * @param h Heaviside vector
      * @param w vector with helper variables
      **/
     virtual void fxdot(
         realtype* xdot, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, realtype const* w
+        realtype const* k, realtype const* ws, realtype const* h,
+        realtype const* w
     ) = 0;
 
     /**
@@ -378,13 +382,14 @@ class Model_ODE : public Model {
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
+     * @param ws static expressions
      * @param h Heaviside vector
      * @param w vector with helper variables
      */
     virtual void fdxdotdp_explicit(
         realtype* dxdotdp_explicit, realtype t, realtype const* x,
-        realtype const* p, realtype const* k, realtype const* h,
-        realtype const* w
+        realtype const* p, realtype const* k, realtype const* ws,
+        realtype const* h, realtype const* w
     );
 
     /**
@@ -410,13 +415,14 @@ class Model_ODE : public Model {
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
+     * @param ws static expressions
      * @param h heaviside vector
      * @param w vector with helper variables
      */
     virtual void fdxdotdx_explicit(
         realtype* dxdotdx_explicit, realtype t, realtype const* x,
-        realtype const* p, realtype const* k, realtype const* h,
-        realtype const* w
+        realtype const* p, realtype const* k, realtype const* ws,
+        realtype const* h, realtype const* w
     );
 
     /**
@@ -441,12 +447,14 @@ class Model_ODE : public Model {
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
+     * @param ws static expressions
      * @param h Heaviside vector
      * @param w vector with helper variables
      */
     virtual void fdxdotdw(
         realtype* dxdotdw, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, realtype const* w
+        realtype const* k, realtype const* ws, realtype const* h,
+        realtype const* w
     );
 
     /**

@@ -49,7 +49,7 @@ void dJydy_rowvals_model_events_py(SUNMatrixWrapper &dJydy, int index){
 namespace amici {
 namespace model_model_events_py {
 
-void dJydy_model_events_py(realtype *dJydy, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my){
+void dJydy_model_events_py(realtype *dJydy, const int iy, const realtype *p, const realtype *k, const realtype *ws, const realtype *y, const realtype *sigmay, const realtype *my){
     const realtype y1_ = y[0];
     const realtype sigma_y1_ = sigmay[0];
     const realtype my1_ = my[0];

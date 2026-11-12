@@ -6,7 +6,7 @@
 namespace amici {
 namespace model_model_jakstat_adjoint_py {
 
-void dJydsigmay_model_jakstat_adjoint_py(realtype *dJydsigmay, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my){
+void dJydsigmay_model_jakstat_adjoint_py(realtype *dJydsigmay, const int iy, const realtype *p, const realtype *k, const realtype *ws, const realtype *y, const realtype *sigmay, const realtype *my){
     const realtype obs_pSTAT_ = y[0];
     const realtype obs_tSTAT_ = y[1];
     const realtype obs_spline_ = y[2];

@@ -49,7 +49,7 @@ void dxdotdw_rowvals_model_jakstat_adjoint_py(SUNMatrixWrapper &dxdotdw){
 namespace amici {
 namespace model_model_jakstat_adjoint_py {
 
-void dxdotdw_model_jakstat_adjoint_py(realtype *dxdotdw, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w){
+void dxdotdw_model_jakstat_adjoint_py(realtype *dxdotdw, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *w){
     const realtype STAT_ = x[0];
     const realtype p1_ = p[0];
 

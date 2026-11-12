@@ -40,7 +40,7 @@ void Model_ODE::fJSparse(realtype const t, const_N_Vector x, SUNMatrix J) {
         fdxdotdx_explicit(
             derived_state_.dxdotdx_explicit.data(), t,
             N_VGetArrayPointerConst(x_pos), state_.unscaled_parameters.data(),
-            state_.fixed_parameters.data(), state_.h.data(),
+            state_.fixed_parameters.data(), state_.ws.data(), state_.h.data(),
             derived_state_.w_.data()
         );
     }
@@ -93,7 +93,8 @@ void Model_ODE::froot(
     froot(
         root.data(), t, N_VGetArrayPointerConst(x_pos),
         state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-        state_.h.data(), derived_state_.w_.data(), state_.total_cl.data()
+        state_.ws.data(), state_.h.data(), derived_state_.w_.data(),
+        state_.total_cl.data()
     );
 }
 
@@ -111,7 +112,7 @@ void Model_ODE::fxdot(realtype const t, const_N_Vector x, N_Vector xdot) {
     fxdot(
         N_VGetArrayPointer(xdot), t, N_VGetArrayPointerConst(x_pos),
         state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-        state_.h.data(), derived_state_.w_.data()
+        state_.ws.data(), state_.h.data(), derived_state_.w_.data()
     );
 }
 
@@ -135,7 +136,7 @@ void Model_ODE::fdxdotdw(realtype const t, const_N_Vector x) {
         fdxdotdw(
             derived_state_.dxdotdw_.data(), t, N_VGetArrayPointerConst(x_pos),
             state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-            state_.h.data(), derived_state_.w_.data()
+            state_.ws.data(), state_.h.data(), derived_state_.w_.data()
         );
     }
 }
@@ -153,7 +154,7 @@ void Model_ODE::fdxdotdp(realtype const t, const_N_Vector x) {
         fdxdotdp_explicit(
             derived_state_.dxdotdp_explicit.data(), t,
             N_VGetArrayPointerConst(x_pos), state_.unscaled_parameters.data(),
-            state_.fixed_parameters.data(), state_.h.data(),
+            state_.fixed_parameters.data(), state_.ws.data(), state_.h.data(),
             derived_state_.w_.data()
         );
     }
@@ -182,8 +183,8 @@ std::unique_ptr<Solver> Model_ODE::create_solver() {
 
 void Model_ODE::fJSparse(
     realtype* /*JSparse*/, realtype const /*t*/, realtype const* /*x*/,
-    realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
-    realtype const* /*w*/, realtype const* /*dwdx*/
+    realtype const* /*p*/, realtype const* /*k*/, realtype const* /*ws*/,
+    realtype const* /*h*/, realtype const* /*w*/, realtype const* /*dwdx*/
 ) {
     throw AmiException(
         "Requested functionality is not supported as %s "
@@ -210,8 +211,8 @@ void Model_ODE::fJSparse_rowvals(SUNMatrixWrapper& /*JSparse*/) {
 
 void Model_ODE::froot(
     realtype* /*root*/, realtype const /*t*/, realtype const* /*x*/,
-    realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
-    realtype const* /*w*/, realtype const* /*tcl*/
+    realtype const* /*p*/, realtype const* /*k*/, realtype const* /*ws*/,
+    realtype const* /*h*/, realtype const* /*w*/, realtype const* /*tcl*/
 ) {
     throw AmiException(
         "Requested functionality is not supported as %s is not "
@@ -222,8 +223,8 @@ void Model_ODE::froot(
 
 void Model_ODE::fdxdotdp_explicit(
     realtype* /*dxdotdp_explicit*/, realtype const /*t*/, realtype const* /*x*/,
-    realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
-    realtype const* /*w*/
+    realtype const* /*p*/, realtype const* /*k*/, realtype const* /*ws*/,
+    realtype const* /*h*/, realtype const* /*w*/
 ) {
     throw AmiException(
         "Requested functionality is not supported as %s "
@@ -250,8 +251,8 @@ void Model_ODE::fdxdotdp_explicit_rowvals(SUNMatrixWrapper& /*dxdotdp*/) {
 
 void Model_ODE::fdxdotdx_explicit(
     realtype* /*dxdotdx_explicit*/, realtype const /*t*/, realtype const* /*x*/,
-    realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
-    realtype const* /*w*/
+    realtype const* /*p*/, realtype const* /*k*/, realtype const* /*ws*/,
+    realtype const* /*h*/, realtype const* /*w*/
 ) {
     throw AmiException(
         "Requested functionality is not supported as %s "
@@ -278,8 +279,8 @@ void Model_ODE::fdxdotdx_explicit_rowvals(SUNMatrixWrapper& /*dxdotdx*/) {
 
 void Model_ODE::fdxdotdw(
     realtype* /*dxdotdw*/, realtype const /*t*/, realtype const* /*x*/,
-    realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
-    realtype const* /*w*/
+    realtype const* /*p*/, realtype const* /*k*/, realtype const* /*ws*/,
+    realtype const* /*h*/, realtype const* /*w*/
 ) {
     throw AmiException(
         "Requested functionality is not supported as %s "

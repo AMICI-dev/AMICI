@@ -51,6 +51,7 @@ class ExpDataTest : public ::testing::Test {
             .ne_solver = 0,
             .nspl = 0,
             .nw = 0,
+            .nws = 0,
             .ndwdx = 0,
             .ndwdp = 0,
             .ndwdw = 0,

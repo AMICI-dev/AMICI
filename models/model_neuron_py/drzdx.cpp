@@ -6,7 +6,7 @@
 namespace amici {
 namespace model_model_neuron_py {
 
-void drzdx_model_neuron_py(realtype *drzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h){
+void drzdx_model_neuron_py(realtype *drzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h){
     switch(ie) {
         case 0:
             drzdx[0] = 1;

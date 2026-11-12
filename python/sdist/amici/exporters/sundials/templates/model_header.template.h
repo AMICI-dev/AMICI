@@ -20,13 +20,13 @@ extern const std::array<std::string_view const, TPL_NX_RDATA> state_names;
 extern const std::array<std::string_view const, TPL_NX_SOLVER> state_names_solver;
 extern const std::array<std::string_view const, TPL_NY> observable_names;
 extern std::array<const ObservableScaling, TPL_NY> observable_scalings;
-extern const std::array<std::string_view const, TPL_NW> expression_names;
+extern const std::array<std::string_view const, TPL_NW + TPL_NWS> expression_names;
 extern const std::array<std::string_view const, TPL_NP> free_parameter_ids;
 extern const std::array<std::string_view const, TPL_NK> fixed_parameter_ids;
 extern const std::array<std::string_view const, TPL_NX_RDATA> state_ids;
 extern const std::array<std::string_view const, TPL_NX_SOLVER> state_ids_solver;
 extern const std::array<std::string_view const, TPL_NY> observable_ids;
-extern const std::array<std::string_view const, TPL_NW> expression_ids;
+extern const std::array<std::string_view const, TPL_NW + TPL_NWS> expression_ids;
 extern std::array<int, TPL_NX_SOLVER> state_idxs_solver;
 
 TPL_JY_DEF
@@ -71,6 +71,8 @@ TPL_DSIGMAYDP_DEF
 TPL_DSIGMAYDY_DEF
 TPL_DSIGMAZDP_DEF
 TPL_W_DEF
+TPL_WS_DEF
+TPL_WS_FIXEDPARAMETERS_DEF
 TPL_X0_DEF
 TPL_X0_FIXEDPARAMETERS_DEF
 TPL_SX0_DEF
@@ -132,6 +134,7 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
                   .ne_solver = TPL_NEVENT_SOLVER,
                   .nspl = TPL_NSPL,
                   .nw = TPL_NW,
+                  .nws = TPL_NWS,
                   .ndwdx = TPL_NDWDX,
                   .ndwdp = TPL_NDWDP,
                   .ndwdw = TPL_NDWDW,
@@ -262,6 +265,10 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
     TPL_SX0_FIXEDPARAMETERS_IMPL
 
     TPL_W_IMPL
+
+    TPL_WS_IMPL
+
+    TPL_WS_FIXEDPARAMETERS_IMPL
 
     TPL_X0_IMPL
 

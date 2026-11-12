@@ -101,54 +101,54 @@ class _FunctionInfo:
 functions = {
     "Jy": _FunctionInfo(
         "realtype *Jy, const int iy, const realtype *p, "
-        "const realtype *k, const realtype *y, const realtype *sigmay, "
+        "const realtype *k, const realtype *ws, const realtype *y, const realtype *sigmay, "
         "const realtype *my"
     ),
     "dJydsigmay": _FunctionInfo(
         "realtype *dJydsigmay, const int iy, const realtype *p, "
-        "const realtype *k, const realtype *y, const realtype *sigmay, "
+        "const realtype *k, const realtype *ws, const realtype *y, const realtype *sigmay, "
         "const realtype *my"
     ),
     "dJydy": _FunctionInfo(
         "realtype *dJydy, const int iy, const realtype *p, "
-        "const realtype *k, const realtype *y, "
+        "const realtype *k, const realtype *ws, const realtype *y, "
         "const realtype *sigmay, const realtype *my",
         sparse=True,
     ),
     "Jz": _FunctionInfo(
-        "realtype *Jz, const int iz, const realtype *p, const realtype *k, "
+        "realtype *Jz, const int iz, const realtype *p, const realtype *k, const realtype *ws, "
         "const realtype *z, const realtype *sigmaz, const realtype *mz"
     ),
     "dJzdsigmaz": _FunctionInfo(
         "realtype *dJzdsigmaz, const int iz, const realtype *p, "
-        "const realtype *k, const realtype *z, const realtype *sigmaz, "
+        "const realtype *k, const realtype *ws, const realtype *z, const realtype *sigmaz, "
         "const realtype *mz"
     ),
     "dJzdz": _FunctionInfo(
         "realtype *dJzdz, const int iz, const realtype *p, "
-        "const realtype *k, const realtype *z, const realtype *sigmaz, "
+        "const realtype *k, const realtype *ws, const realtype *z, const realtype *sigmaz, "
         "const double *mz",
     ),
     "Jrz": _FunctionInfo(
         "realtype *Jrz, const int iz, const realtype *p, "
-        "const realtype *k, const realtype *rz, const realtype *sigmaz"
+        "const realtype *k, const realtype *ws, const realtype *rz, const realtype *sigmaz"
     ),
     "dJrzdsigmaz": _FunctionInfo(
         "realtype *dJrzdsigmaz, const int iz, const realtype *p, "
-        "const realtype *k, const realtype *rz, const realtype *sigmaz"
+        "const realtype *k, const realtype *ws, const realtype *rz, const realtype *sigmaz"
     ),
     "dJrzdrz": _FunctionInfo(
         "realtype *dJrzdrz, const int iz, const realtype *p, "
-        "const realtype *k, const realtype *rz, const realtype *sigmaz",
+        "const realtype *k, const realtype *ws, const realtype *rz, const realtype *sigmaz",
     ),
     "root": _FunctionInfo(
         "realtype *root, const realtype t, const realtype *x, "
-        "const realtype *p, const realtype *k, const realtype *h, "
+        "const realtype *p, const realtype *k, const realtype *ws, const realtype *h, "
         "const realtype *w, const realtype *tcl"
     ),
     "dwdp": _FunctionInfo(
         "realtype *dwdp, const realtype t, const realtype *x, "
-        "const realtype *p, const realtype *k, const realtype *h, "
+        "const realtype *p, const realtype *k, const realtype *ws, const realtype *h, "
         "const realtype *w, const realtype *tcl, const realtype *dtcldp, "
         "const realtype *spl, const realtype *sspl, bool include_static",
         assume_pow_positivity=True,
@@ -156,14 +156,14 @@ functions = {
     ),
     "dwdx": _FunctionInfo(
         "realtype *dwdx, const realtype t, const realtype *x, "
-        "const realtype *p, const realtype *k, const realtype *h, "
+        "const realtype *p, const realtype *k, const realtype *ws, const realtype *h, "
         "const realtype *w, const realtype *tcl, const realtype *spl, "
         "bool include_static",
         assume_pow_positivity=True,
         sparse=True,
     ),
     "create_splines": _FunctionInfo(
-        "const realtype *p, const realtype *k",
+        "const realtype *p, const realtype *k, const realtype *ws",
         return_type="std::vector<HermiteSpline>",
         header=[
             '#include "amici/splinefunctions.h"',
@@ -173,110 +173,112 @@ functions = {
     "spl": _FunctionInfo(generate_body=False),
     "sspl": _FunctionInfo(generate_body=False),
     "spline_values": _FunctionInfo(
-        "const realtype *p, const realtype *k", generate_body=False
+        "const realtype *p, const realtype *k, const realtype *ws",
+        generate_body=False,
     ),
     "spline_slopes": _FunctionInfo(
-        "const realtype *p, const realtype *k", generate_body=False
+        "const realtype *p, const realtype *k, const realtype *ws",
+        generate_body=False,
     ),
     "dspline_valuesdp": _FunctionInfo(
-        "realtype *dspline_valuesdp, const realtype *p, const realtype *k, "
+        "realtype *dspline_valuesdp, const realtype *p, const realtype *k, const realtype *ws, "
         "const int ip"
     ),
     "dspline_slopesdp": _FunctionInfo(
-        "realtype *dspline_slopesdp, const realtype *p, const realtype *k, "
+        "realtype *dspline_slopesdp, const realtype *p, const realtype *k, const realtype *ws, "
         "const int ip"
     ),
     "dwdw": _FunctionInfo(
         "realtype *dwdw, const realtype t, const realtype *x, "
-        "const realtype *p, const realtype *k, const realtype *h, "
+        "const realtype *p, const realtype *k, const realtype *ws, const realtype *h, "
         "const realtype *w, const realtype *tcl, bool include_static",
         assume_pow_positivity=True,
         sparse=True,
     ),
     "dxdotdw": _FunctionInfo(
         "realtype *dxdotdw, const realtype t, const realtype *x, "
-        "const realtype *p, const realtype *k, const realtype *h, "
+        "const realtype *p, const realtype *k, const realtype *ws, const realtype *h, "
         "const realtype *w",
         "realtype *dxdotdw, const realtype t, const realtype *x, "
-        "const realtype *p, const realtype *k, const realtype *h, "
+        "const realtype *p, const realtype *k, const realtype *ws, const realtype *h, "
         "const realtype *dx, const realtype *w",
         assume_pow_positivity=True,
         sparse=True,
     ),
     "dxdotdx_explicit": _FunctionInfo(
         "realtype *dxdotdx_explicit, const realtype t, "
-        "const realtype *x, const realtype *p, const realtype *k, "
+        "const realtype *x, const realtype *p, const realtype *k, const realtype *ws, "
         "const realtype *h, const realtype *w",
         "realtype *dxdotdx_explicit, const realtype t, "
-        "const realtype *x, const realtype *p, const realtype *k, "
+        "const realtype *x, const realtype *p, const realtype *k, const realtype *ws, "
         "const realtype *h, const realtype *dx, const realtype *w",
         assume_pow_positivity=True,
         sparse=True,
     ),
     "dxdotdp_explicit": _FunctionInfo(
         "realtype *dxdotdp_explicit, const realtype t, "
-        "const realtype *x, const realtype *p, const realtype *k, "
+        "const realtype *x, const realtype *p, const realtype *k, const realtype *ws, "
         "const realtype *h, const realtype *w",
         "realtype *dxdotdp_explicit, const realtype t, "
-        "const realtype *x, const realtype *p, const realtype *k, "
+        "const realtype *x, const realtype *p, const realtype *k, const realtype *ws, "
         "const realtype *h, const realtype *dx, const realtype *w",
         assume_pow_positivity=True,
         sparse=True,
     ),
     "dydx": _FunctionInfo(
         "realtype *dydx, const realtype t, const realtype *x, "
-        "const realtype *p, const realtype *k, const realtype *h, "
+        "const realtype *p, const realtype *k, const realtype *ws, const realtype *h, "
         "const realtype *w"
     ),
     "dydp": _FunctionInfo(
         "realtype *dydp, const realtype t, const realtype *x, "
-        "const realtype *p, const realtype *k, const realtype *h, "
+        "const realtype *p, const realtype *k, const realtype *ws, const realtype *h, "
         "const int ip, const realtype *w, const realtype *tcl, "
         "const realtype *dtcldp, const realtype *spl, const realtype *sspl"
     ),
     "dzdx": _FunctionInfo(
         "realtype *dzdx, const int ie, const realtype t, "
-        "const realtype *x, const realtype *p, const realtype *k, "
+        "const realtype *x, const realtype *p, const realtype *k, const realtype *ws, "
         "const realtype *h",
     ),
     "dzdp": _FunctionInfo(
         "realtype *dzdp, const int ie, const realtype t, "
-        "const realtype *x, const realtype *p, const realtype *k, "
+        "const realtype *x, const realtype *p, const realtype *k, const realtype *ws, "
         "const realtype *h, const int ip",
     ),
     "drzdx": _FunctionInfo(
         "realtype *drzdx, const int ie, const realtype t, "
-        "const realtype *x, const realtype *p, const realtype *k, "
+        "const realtype *x, const realtype *p, const realtype *k, const realtype *ws, "
         "const realtype *h",
     ),
     "drzdp": _FunctionInfo(
         "realtype *drzdp, const int ie, const realtype t, "
-        "const realtype *x, const realtype *p, const realtype *k, "
+        "const realtype *x, const realtype *p, const realtype *k, const realtype *ws, "
         "const realtype *h, const int ip",
     ),
     "dsigmaydy": _FunctionInfo(
         "realtype *dsigmaydy, const realtype t, const realtype *p, "
-        "const realtype *k, const realtype *y"
+        "const realtype *k, const realtype *ws, const realtype *y"
     ),
     "dsigmaydp": _FunctionInfo(
         "realtype *dsigmaydp, const realtype t, const realtype *p, "
-        "const realtype *k, const realtype *y, const int ip",
+        "const realtype *k, const realtype *ws, const realtype *y, const int ip",
     ),
     "sigmay": _FunctionInfo(
         "realtype *sigmay, const realtype t, const realtype *p, "
-        "const realtype *k, const realtype *y",
+        "const realtype *k, const realtype *ws, const realtype *y",
     ),
     "dsigmazdp": _FunctionInfo(
         "realtype *dsigmazdp, const realtype t, const realtype *p,"
-        " const realtype *k, const int ip",
+        " const realtype *k, const realtype *ws, const int ip",
     ),
     "sigmaz": _FunctionInfo(
         "realtype *sigmaz, const realtype t, const realtype *p, "
-        "const realtype *k",
+        "const realtype *k, const realtype *ws",
     ),
     "sroot": _FunctionInfo(
         "realtype *stau, const realtype t, const realtype *x, "
-        "const realtype *p, const realtype *k, const realtype *h, "
+        "const realtype *p, const realtype *k, const realtype *ws, const realtype *h, "
         "const realtype *sx, const int ip, const int ie, "
         "const realtype *tcl",
         generate_body=False,
@@ -287,14 +289,14 @@ functions = {
     "drootdx": _FunctionInfo(generate_body=False),
     "stau": _FunctionInfo(
         "realtype *stau, const realtype t, const realtype *x, "
-        "const realtype *p, const realtype *k, const realtype *h, "
+        "const realtype *p, const realtype *k, const realtype *ws, const realtype *h, "
         "const realtype *w, const realtype *dx, "
         "const realtype *tcl, const realtype *sx, const int ip, "
         "const int ie"
     ),
     "deltax": _FunctionInfo(
         "double *deltax, const realtype t, const realtype *x, "
-        "const realtype *p, const realtype *k, const realtype *h, "
+        "const realtype *p, const realtype *k, const realtype *ws, const realtype *h, "
         "const int ie, const realtype *xdot, const realtype *xdot_eval, "
         "const realtype *x_eval"
     ),
@@ -304,7 +306,7 @@ functions = {
     "ddeltaxdp": _FunctionInfo(generate_body=False),
     "deltasx": _FunctionInfo(
         "realtype *deltasx, const realtype t, const realtype *x, "
-        "const realtype *p, const realtype *k, const realtype *h, "
+        "const realtype *p, const realtype *k, const realtype *ws, const realtype *h, "
         "const realtype *w, const int ip, const int ie, "
         "const realtype *xdot, const realtype *xdot_eval, "
         "const realtype *xdot_pre, const realtype *sx, "
@@ -313,73 +315,83 @@ functions = {
     ),
     "deltaxB": _FunctionInfo(
         "realtype *deltaxB, const realtype t, const realtype *x, "
-        "const realtype *p, const realtype *k, const realtype *h, "
+        "const realtype *p, const realtype *k, const realtype *ws, const realtype *h, "
         "const realtype *dx, const int ie, const realtype *x_eval, "
         "const realtype *xB, const realtype *tcl"
     ),
     "deltaxB_at_trigger": _FunctionInfo(
         "realtype *deltaxB_at_trigger, const realtype t, const realtype *x, "
-        "const realtype *p, const realtype *k, const realtype *h, "
+        "const realtype *p, const realtype *k, const realtype *ws, const realtype *h, "
         "const realtype *dx, const int ie, const realtype *x_eval, "
         "const realtype *xB, const realtype *tcl"
     ),
     "stauB": _FunctionInfo(
         "realtype *stauB, const realtype t, const realtype *x, "
-        "const realtype *p, const realtype *k, const realtype *h, "
+        "const realtype *p, const realtype *k, const realtype *ws, const realtype *h, "
         "const realtype *dx, const int ie, const realtype *xdot, "
         "const realtype *xdot_eval, const realtype *xdot_pre, "
         "const realtype *x_eval, const realtype *xB, const realtype *tcl"
     ),
     "deltaqB": _FunctionInfo(
         "realtype *deltaqB, const realtype t, const realtype *x, "
-        "const realtype *p, const realtype *k, const realtype *h, "
+        "const realtype *p, const realtype *k, const realtype *ws, const realtype *h, "
         "const realtype *dx, const int ip, const int ie, "
         "const realtype *x_eval, const realtype *xB"
     ),
     "dtaudx": _FunctionInfo(
         "realtype *dtaudx, const realtype t, const realtype *x, "
-        "const realtype *p, const realtype *k, const realtype *h, "
+        "const realtype *p, const realtype *k, const realtype *ws, const realtype *h, "
         "const realtype *w, const realtype *dx, const realtype *tcl, "
         "const int ie"
     ),
     "dtaudp": _FunctionInfo(
         "realtype *dtaudp, const realtype t, const realtype *x, "
-        "const realtype *p, const realtype *k, const realtype *h, "
+        "const realtype *p, const realtype *k, const realtype *ws, const realtype *h, "
         "const realtype *w, const realtype *dx, const realtype *tcl, "
         "const int ip, const int ie"
     ),
     "w": _FunctionInfo(
         "realtype *w, const realtype t, const realtype *x, "
-        "const realtype *p, const realtype *k, "
+        "const realtype *p, const realtype *k, const realtype *ws, "
         "const realtype *h, const realtype *tcl, const realtype *spl, "
         "bool include_static",
         assume_pow_positivity=True,
     ),
+    "ws": _FunctionInfo(
+        "realtype *ws, const realtype t, const realtype *p, const realtype *k",
+        assume_pow_positivity=True,
+    ),
+    "ws_fixedParameters": _FunctionInfo(
+        "realtype *ws_fixedParameters, const realtype t, const realtype *p, "
+        "const realtype *k",
+        assume_pow_positivity=True,
+    ),
     "x0": _FunctionInfo(
-        "realtype *x0, const realtype t, const realtype *p, const realtype *k"
+        "realtype *x0, const realtype t, const realtype *p, const realtype *k, "
+        "const realtype *ws"
     ),
     "x0_fixedParameters": _FunctionInfo(
         "realtype *x0_fixedParameters, const realtype t, "
-        "const realtype *p, const realtype *k, "
+        "const realtype *p, const realtype *k, const realtype *ws, "
         "gsl::span<const int> reinitialization_state_idxs",
         header=["#include <gsl/gsl-lite.hpp>"],
     ),
     "sx0": _FunctionInfo(
         "realtype *sx0, const realtype t, const realtype *x, "
-        "const realtype *p, const realtype *k, const int ip",
+        "const realtype *p, const realtype *k, const realtype *ws, const int ip",
     ),
     "sx0_fixedParameters": _FunctionInfo(
         "realtype *sx0_fixedParameters, const realtype t, "
-        "const realtype *x0, const realtype *p, const realtype *k, "
+        "const realtype *x0, const realtype *p, const realtype *k, const realtype *ws, "
         "const int ip, gsl::span<const int> reinitialization_state_idxs",
         header=["#include <gsl/gsl-lite.hpp>"],
     ),
     "xdot": _FunctionInfo(
         "realtype *xdot, const realtype t, const realtype *x, "
-        "const realtype *p, const realtype *k, const realtype *h, "
+        "const realtype *p, const realtype *k, const realtype *ws, const realtype *h, "
         "const realtype *w",
         "realtype *xdot, const realtype t, const realtype *x, "
-        "const realtype *p, const realtype *k, const realtype *h, "
+        "const realtype *p, const realtype *k, const realtype *ws, const realtype *h, "
         "const realtype *dx, const realtype *w",
         assume_pow_positivity=True,
     ),
@@ -387,52 +399,52 @@ functions = {
     "xdot_pre": _FunctionInfo(generate_body=False),
     "y": _FunctionInfo(
         "realtype *y, const realtype t, const realtype *x, "
-        "const realtype *p, const realtype *k, "
+        "const realtype *p, const realtype *k, const realtype *ws, "
         "const realtype *h, const realtype *w",
     ),
     "x_rdata": _FunctionInfo(
         "realtype *x_rdata, const realtype *x, const realtype *tcl, "
-        "const realtype *p, const realtype *k"
+        "const realtype *p, const realtype *k, const realtype *ws"
     ),
     "total_cl": _FunctionInfo(
         "realtype *total_cl, const realtype *x_rdata, "
-        "const realtype *p, const realtype *k"
+        "const realtype *p, const realtype *k, const realtype *ws"
     ),
     "dtotal_cldp": _FunctionInfo(
         "realtype *dtotal_cldp, const realtype *x_rdata, "
-        "const realtype *p, const realtype *k, const int ip"
+        "const realtype *p, const realtype *k, const realtype *ws, const int ip"
     ),
     "dtotal_cldx_rdata": _FunctionInfo(
         "realtype *dtotal_cldx_rdata, const realtype *x_rdata, "
-        "const realtype *p, const realtype *k, const realtype *tcl",
+        "const realtype *p, const realtype *k, const realtype *ws, const realtype *tcl",
         sparse=True,
     ),
     "x_solver": _FunctionInfo("realtype *x_solver, const realtype *x_rdata"),
     "dx_rdatadx_solver": _FunctionInfo(
         "realtype *dx_rdatadx_solver, const realtype *x, "
-        "const realtype *tcl, const realtype *p, const realtype *k",
+        "const realtype *tcl, const realtype *p, const realtype *k, const realtype *ws",
         sparse=True,
     ),
     "dx_rdatadp": _FunctionInfo(
         "realtype *dx_rdatadp, const realtype *x, "
-        "const realtype *tcl, const realtype *p, const realtype *k, "
+        "const realtype *tcl, const realtype *p, const realtype *k, const realtype *ws, "
         "const int ip"
     ),
     "dx_rdatadtcl": _FunctionInfo(
         "realtype *dx_rdatadtcl, const realtype *x, "
-        "const realtype *tcl, const realtype *p, const realtype *k",
+        "const realtype *tcl, const realtype *p, const realtype *k, const realtype *ws",
         sparse=True,
     ),
     "z": _FunctionInfo(
         "realtype *z, const int ie, const realtype t, const realtype *x, "
-        "const realtype *p, const realtype *k, const realtype *h"
+        "const realtype *p, const realtype *k, const realtype *ws, const realtype *h"
     ),
     "rz": _FunctionInfo(
         "realtype *rz, const int ie, const realtype t, const realtype *x, "
-        "const realtype *p, const realtype *k, const realtype *h"
+        "const realtype *p, const realtype *k, const realtype *ws, const realtype *h"
     ),
     "explicit_roots": _FunctionInfo(
-        "const realtype *x, const realtype *p, const realtype *k, "
+        "const realtype *x, const realtype *p, const realtype *k, const realtype *ws, "
         "const realtype *w",
         return_type="std::vector<std::vector<realtype>>",
         default_return_value="{}",

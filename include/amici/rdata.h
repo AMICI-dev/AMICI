@@ -160,7 +160,8 @@ class ReturnData : public ModelDimensions {
      *
      * Values of model expressions (recurring terms in xdot, for imported SBML
      * models from Python, this contains, e.g., the flux vector)
-     * at timepoints `ReturnData::ts` (shape `nt` x `nw`, row major).
+     * at timepoints `ReturnData::ts`, followed by the static expressions
+     * `ws` (shape `nt` x (`nw` + `nws`), row major).
      *
      * The corresponding expression IDs can be obtained from
      * `expression_ids`.

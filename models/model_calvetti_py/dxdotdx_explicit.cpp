@@ -49,7 +49,7 @@ void dxdotdx_explicit_rowvals_model_calvetti_py(SUNMatrixWrapper &dxdotdx_explic
 namespace amici {
 namespace model_model_calvetti_py {
 
-void dxdotdx_explicit_model_calvetti_py(realtype *dxdotdx_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const realtype *w){
+void dxdotdx_explicit_model_calvetti_py(realtype *dxdotdx_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *dx, const realtype *w){
     realtype &dae_0_df1_ = dxdotdx_explicit[0];
     realtype &dae_1_df1_ = dxdotdx_explicit[1];
     realtype &dae_1_df2_ = dxdotdx_explicit[2];

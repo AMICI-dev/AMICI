@@ -6,7 +6,7 @@
 namespace amici {
 namespace model_model_events_py {
 
-void sigmaz_model_events_py(realtype *sigmaz, const realtype t, const realtype *p, const realtype *k){
+void sigmaz_model_events_py(realtype *sigmaz, const realtype t, const realtype *p, const realtype *k, const realtype *ws){
     realtype &sigma_z1_ = sigmaz[0];
     realtype &sigma_z2_ = sigmaz[1];
     sigma_z1_ = 1.0;  // sigmaz[0]

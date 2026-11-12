@@ -8,7 +8,7 @@
 namespace amici {
 namespace model_model_nested_events_py {
 
-std::vector<HermiteSpline> create_splines_model_nested_events_py(const realtype *p, const realtype *k){
+std::vector<HermiteSpline> create_splines_model_nested_events_py(const realtype *p, const realtype *k, const realtype *ws){
     return {};
 }
 

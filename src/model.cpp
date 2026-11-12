@@ -45,6 +45,7 @@ std::map<ModelQuantity, std::string> const model_quantity_to_str{
     {ModelQuantity::dydp, "dydp"},
     {ModelQuantity::dydx, "dydx"},
     {ModelQuantity::w, "w"},
+    {ModelQuantity::ws, "ws"},
     {ModelQuantity::root, "root"},
     {ModelQuantity::qBdot, "qBdot"},
     {ModelQuantity::qBdot_ss, "qBdot_ss"},
@@ -246,10 +247,11 @@ bool operator==(ModelDimensions const& a, ModelDimensions const& b) {
            && (a.ny == b.ny) && (a.nytrue == b.nytrue) && (a.nz == b.nz)
            && (a.nztrue == b.nztrue) && (a.ne == b.ne)
            && (a.ne_solver == b.ne_solver) && (a.nspl == b.nspl)
-           && (a.nw == b.nw) && (a.ndwdx == b.ndwdx) && (a.ndwdp == b.ndwdp)
-           && (a.ndwdw == b.ndwdw) && (a.ndxdotdw == b.ndxdotdw)
-           && (a.ndJydy == b.ndJydy) && (a.nnz == b.nnz) && (a.nJ == b.nJ)
-           && (a.ubw == b.ubw) && (a.lbw == b.lbw);
+           && (a.nw == b.nw) && (a.nws == b.nws) && (a.ndwdx == b.ndwdx)
+           && (a.ndwdp == b.ndwdp) && (a.ndwdw == b.ndwdw)
+           && (a.ndxdotdw == b.ndxdotdw) && (a.ndJydy == b.ndJydy)
+           && (a.nnz == b.nnz) && (a.nJ == b.nJ) && (a.ubw == b.ubw)
+           && (a.lbw == b.lbw);
 }
 
 bool Model::has_algebraic_states() const {
@@ -263,6 +265,7 @@ void Model::initialize(
     AmiVectorArray& sdx, bool const computeSensitivities,
     std::vector<int>& roots_found
 ) {
+    fws(t);
     initialize_state(t, x);
     initialize_splines();
     if (computeSensitivities) {
@@ -300,6 +303,7 @@ void Model::reinitialize(
     realtype const t, AmiVector& x, AmiVectorArray& sx,
     bool const computeSensitivities
 ) {
+    fws_fixedParameters(t);
     fx0_fixedParameters(t, x);
 
     // re-evaluate static expressions once
@@ -331,13 +335,14 @@ void Model::reinitialize_b(
     auto const& idxs = simulation_parameters_.reinitialization_state_idxs_sim;
     auto const* p = state_.unscaled_parameters.data();
     auto const* k = state_.fixed_parameters.data();
+    auto const* ws = state_.ws.data();
     auto const* x_pos = compute_x_pos(x);
 
     // xQB += (dx0/dp)^T xB for the reinitialized states
     std::vector<realtype> sx0(nx_rdata);
     for (int ip = 0; ip < nplist(); ++ip) {
         std::ranges::fill(sx0, 0.0);
-        fsx0_fixedParameters(sx0.data(), t, x_pos, p, k, plist(ip), idxs);
+        fsx0_fixedParameters(sx0.data(), t, x_pos, p, k, ws, plist(ip), idxs);
         xQB.at(ip) += std::inner_product(
             sx0.cbegin(), sx0.cend(), xB.get_vector().cbegin(), 0.0
         );
@@ -346,7 +351,7 @@ void Model::reinitialize_b(
     // xB <- P xB, the reinitialized states don't depend on the previous ones.
     // fx0_fixedParameters only writes the reinitialized states.
     std::vector<realtype> x0(nx_rdata, NAN);
-    fx0_fixedParameters(x0.data(), t, p, k, idxs);
+    fx0_fixedParameters(x0.data(), t, p, k, ws, idxs);
     for (int ix = 0; ix < nx_solver; ++ix) {
         if (!std::isnan(x0[ix]))
             xB.at(ix) = 0.0;
@@ -381,7 +386,8 @@ void Model::initialize_state(realtype t, AmiVector& x) {
         std::vector<realtype> x0_solver(nx_solver, 0.0);
         ftotal_cl(
             state_.total_cl.data(), x0data_.data(),
-            state_.unscaled_parameters.data(), state_.fixed_parameters.data()
+            state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
+            state_.ws.data()
         );
         fx_solver(x0_solver.data(), x0data_.data());
         std::copy(x0_solver.cbegin(), x0_solver.cend(), x.data());
@@ -392,7 +398,8 @@ void Model::initialize_state(realtype t, AmiVector& x) {
 
 void Model::initialize_splines() {
     splines_ = fcreate_splines(
-        state_.unscaled_parameters.data(), state_.fixed_parameters.data()
+        state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
+        state_.ws.data()
     );
     derived_state_.spl_.resize(splines_.size(), 0.0);
     for (auto& spline : splines_) {
@@ -428,11 +435,11 @@ void Model::initialize_spline_sensitivities() {
         std::ranges::fill(tmp_dslopes, 0.0);
         fdspline_valuesdp(
             tmp_dvalues.data(), state_.unscaled_parameters.data(),
-            state_.fixed_parameters.data(), plist(ip)
+            state_.fixed_parameters.data(), state_.ws.data(), plist(ip)
         );
         fdspline_slopesdp(
             tmp_dslopes.data(), state_.unscaled_parameters.data(),
-            state_.fixed_parameters.data(), plist(ip)
+            state_.fixed_parameters.data(), state_.ws.data(), plist(ip)
         );
         /* NB dspline_valuesdp/dspline_slopesdp must be filled
          * using the following order for the indices
@@ -477,7 +484,8 @@ void Model::initialize_state_sensitivities(
                 stcl, &sx0data_.at(ip * nx_rdata), plist(ip),
                 derived_state_.x_rdata_.data(),
                 state_.unscaled_parameters.data(),
-                state_.fixed_parameters.data(), state_.total_cl.data()
+                state_.fixed_parameters.data(), state_.ws.data(),
+                state_.total_cl.data()
             );
             fsx_solver(sx0_solver_slice.data(), &sx0data_.at(ip * nx_rdata));
             for (int ix = 0; ix < nx_solver; ix++) {
@@ -551,7 +559,8 @@ void Model::reinit_explicit_roots(AmiVector const& x) {
     // That happens during model initialization or pre-equilibration.
     auto const exp_roots = fexplicit_roots(
         compute_x_pos(x), state_.unscaled_parameters.data(),
-        state_.fixed_parameters.data(), derived_state_.w_.data()
+        state_.fixed_parameters.data(), state_.ws.data(),
+        derived_state_.w_.data()
     );
     Expects(exp_roots.size() == gsl::narrow<size_t>(ne - ne_solver));
 
@@ -1067,7 +1076,7 @@ std::vector<realtype> Model::get_initial_state(realtype t0) {
      */
     std::vector<realtype> x0(nx_rdata, 0.0);
     fx0(x0.data(), t0, state_.unscaled_parameters.data(),
-        state_.fixed_parameters.data());
+        state_.fixed_parameters.data(), state_.ws.data());
     return x0;
 }
 
@@ -1103,7 +1112,7 @@ std::vector<realtype> Model::get_initial_state_sensitivities(realtype t0) {
         fsx0(
             &sx0.at(ip * nx_rdata), t0, x0.data(),
             state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-            plist(ip)
+            state_.ws.data(), plist(ip)
         );
     }
     return sx0;
@@ -1232,7 +1241,8 @@ void Model::get_expression(
     gsl::span<realtype> w, realtype const t, AmiVector const& x
 ) {
     fw(t, compute_x_pos(x), false);
-    write_slice(derived_state_.w_, w);
+    write_slice(derived_state_.w_, w.subspan(0, nw));
+    write_slice(state_.ws, w.subspan(nw));
 }
 
 void Model::get_observable(
@@ -1328,8 +1338,9 @@ void Model::add_observable_objective(
         if (edata.is_set_measurement(it, iyt)) {
             std::ranges::fill(nllh, 0.0);
             fJy(nllh.data(), iyt, state_.unscaled_parameters.data(),
-                state_.fixed_parameters.data(), derived_state_.y_.data(),
-                derived_state_.sigmay_.data(), edata.get_measurements_ptr(it));
+                state_.fixed_parameters.data(), state_.ws.data(),
+                derived_state_.y_.data(), derived_state_.sigmay_.data(),
+                edata.get_measurements_ptr(it));
             Jy -= nllh.at(0);
         }
     }
@@ -1514,8 +1525,8 @@ void Model::add_event_objective(
             && edata.is_set_event_measurement(nroots, iztrue)) {
             std::ranges::fill(nllh, 0.0);
             fJz(nllh.data(), iztrue, state_.unscaled_parameters.data(),
-                state_.fixed_parameters.data(), derived_state_.z_.data(),
-                derived_state_.sigmaz_.data(),
+                state_.fixed_parameters.data(), state_.ws.data(),
+                derived_state_.z_.data(), derived_state_.sigmaz_.data(),
                 edata.get_event_measurements_ptr(nroots));
             Jz -= nllh.at(0);
         }
@@ -1536,8 +1547,8 @@ void Model::add_event_objective_regularization(
             std::ranges::fill(nllh, 0.0);
             fJrz(
                 nllh.data(), iztrue, state_.unscaled_parameters.data(),
-                state_.fixed_parameters.data(), derived_state_.rz_.data(),
-                derived_state_.sigmaz_.data()
+                state_.fixed_parameters.data(), state_.ws.data(),
+                derived_state_.rz_.data(), derived_state_.sigmaz_.data()
             );
             Jrz -= nllh.at(0);
         }
@@ -1609,8 +1620,8 @@ void Model::get_event_time_sensitivity(
         fstau(
             &stau.at(ip), t, compute_x_pos(x),
             state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-            state_.h.data(), derived_state_.w_.data(), dx.data(),
-            state_.total_cl.data(), sx.data(ip), plist(ip), ie
+            state_.ws.data(), state_.h.data(), derived_state_.w_.data(),
+            dx.data(), state_.total_cl.data(), sx.data(ip), plist(ip), ie
         );
     }
 }
@@ -1634,7 +1645,8 @@ void Model::add_state_event_update(
     fdeltax(
         derived_state_.deltax_.data(), t, x.data(),
         state.unscaled_parameters.data(), state.fixed_parameters.data(),
-        state.h.data(), ie, xdot.data(), xdot_eval.data(), x_eval.data()
+        state.ws.data(), state.h.data(), ie, xdot.data(), xdot_eval.data(),
+        x_eval.data()
     );
 
     if (always_check_finite_) {
@@ -1654,8 +1666,8 @@ void Model::add_state_sensitivity_event_update(
     fspl(t);
     fw(derived_state_.w_.data(), t, x_eval.data(),
        state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-       h_assign.data(), state_.total_cl.data(), derived_state_.spl_.data(),
-       false);
+       state_.ws.data(), h_assign.data(), state_.total_cl.data(),
+       derived_state_.spl_.data(), false);
     if (always_check_finite_) {
         check_finite(derived_state_.w_, ModelQuantity::w, t);
     }
@@ -1668,9 +1680,9 @@ void Model::add_state_sensitivity_event_update(
         fdeltasx(
             derived_state_.deltasx_.data(), t, x.data(),
             state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-            h_assign.data(), derived_state_.w_.data(), plist(ip), ie,
-            xdot.data(), xdot_eval.data(), xdot_pre.data(), sx.data(ip),
-            sx_eval.data(ip), &stau.at(ip), state_.total_cl.data(),
+            state_.ws.data(), h_assign.data(), derived_state_.w_.data(),
+            plist(ip), ie, xdot.data(), xdot_eval.data(), xdot_pre.data(),
+            sx.data(ip), sx_eval.data(ip), &stau.at(ip), state_.total_cl.data(),
             x_eval.data()
         );
         if (always_check_finite_) {
@@ -1702,7 +1714,8 @@ void Model::add_adjoint_event_update(
         fdeltaqB(
             derived_state_.deltaqB_.data(), t, x_pos,
             state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-            h_assign.data(), dx.data(), plist(ip), ie, x_eval.data(), xB.data()
+            state_.ws.data(), h_assign.data(), dx.data(), plist(ip), ie,
+            x_eval.data(), xB.data()
         );
         if (always_check_finite_) {
             check_finite(derived_state_.deltaqB_, ModelQuantity::deltaqB, t);
@@ -1714,9 +1727,9 @@ void Model::add_adjoint_event_update(
     std::vector<realtype> stauB_ie(nJ, 0.0);
     fstauB(
         stauB_ie.data(), t, x_pos, state_.unscaled_parameters.data(),
-        state_.fixed_parameters.data(), h_assign.data(), dx.data(), ie,
-        xdot.data(), xdot_eval.data(), xdot_pre.data(), x_eval.data(),
-        xB.data(), state_.total_cl.data()
+        state_.fixed_parameters.data(), state_.ws.data(), h_assign.data(),
+        dx.data(), ie, xdot.data(), xdot_eval.data(), xdot_pre.data(),
+        x_eval.data(), xB.data(), state_.total_cl.data()
     );
     if (always_check_finite_) {
         check_finite(stauB_ie, ModelQuantity::stauB, t);
@@ -1730,8 +1743,8 @@ void Model::add_adjoint_event_update(
         fdeltaxB_at_trigger(
             derived_state_.deltaxB_.data(), t, x_pos,
             state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-            h_assign.data(), dx.data(), ie, x_eval.data(), xB.data(),
-            state_.total_cl.data()
+            state_.ws.data(), h_assign.data(), dx.data(), ie, x_eval.data(),
+            xB.data(), state_.total_cl.data()
         );
         if (always_check_finite_) {
             check_finite(
@@ -1749,8 +1762,8 @@ void Model::add_adjoint_event_update(
     fdeltaxB(
         derived_state_.deltaxB_.data(), t, x_pos,
         state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-        h_assign.data(), dx.data(), ie, x_eval.data(), xB.data(),
-        state_.total_cl.data()
+        state_.ws.data(), h_assign.data(), dx.data(), ie, x_eval.data(),
+        xB.data(), state_.total_cl.data()
     );
     if (always_check_finite_) {
         check_finite(derived_state_.deltaxB_, ModelQuantity::deltaxB, t);
@@ -1775,7 +1788,7 @@ void Model::add_adjoint_event_time_update(
     std::vector<realtype> dtaudx(nx_solver, 0.0);
     fdtaudx(
         dtaudx.data(), t, x_pos, state_.unscaled_parameters.data(),
-        state_.fixed_parameters.data(), state_.h.data(),
+        state_.fixed_parameters.data(), state_.ws.data(), state_.h.data(),
         derived_state_.w_.data(), dx.data(), state_.total_cl.data(), ie
     );
     if (always_check_finite_) {
@@ -1801,7 +1814,7 @@ void Model::add_adjoint_event_time_update(
         realtype dtaudp = 0.0;
         fdtaudp(
             &dtaudp, t, x_pos, state_.unscaled_parameters.data(),
-            state_.fixed_parameters.data(), state_.h.data(),
+            state_.fixed_parameters.data(), state_.ws.data(), state_.h.data(),
             derived_state_.w_.data(), dx.data(), state_.total_cl.data(),
             plist(ip), ie
         );
@@ -2187,15 +2200,34 @@ void Model::set_always_check_finite(bool alwaysCheck) {
 
 bool Model::get_always_check_finite() const { return always_check_finite_; }
 
+void Model::fws(realtype const t) {
+    std::ranges::fill(state_.ws, 0.0);
+    fws(state_.ws.data(), t, state_.unscaled_parameters.data(),
+        state_.fixed_parameters.data());
+    check_finite(state_.ws, ModelQuantity::ws, t);
+}
+
+void Model::fws_fixedParameters(realtype const t) {
+    if (!get_reinitialize_fixed_parameter_initial_states())
+        return;
+
+    fws_fixedParameters(
+        state_.ws.data(), t, state_.unscaled_parameters.data(),
+        state_.fixed_parameters.data()
+    );
+    check_finite(state_.ws, ModelQuantity::ws, t);
+}
+
 void Model::fx0(realtype t, AmiVector& x) {
     std::ranges::fill(derived_state_.x_rdata_, 0.0);
     /* this function  also computes initial total abundances */
     fx0(derived_state_.x_rdata_.data(), t, state_.unscaled_parameters.data(),
-        state_.fixed_parameters.data());
+        state_.fixed_parameters.data(), state_.ws.data());
     fx_solver(x.data(), derived_state_.x_rdata_.data());
     ftotal_cl(
         state_.total_cl.data(), derived_state_.x_rdata_.data(),
-        state_.unscaled_parameters.data(), state_.fixed_parameters.data()
+        state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
+        state_.ws.data()
     );
 
     check_finite(derived_state_.x_rdata_, ModelQuantity::x0_rdata, t);
@@ -2212,18 +2244,19 @@ void Model::fx0_fixedParameters(realtype t, AmiVector& x) {
     fx_rdata(
         derived_state_.x_rdata_.data(), compute_x_pos(x),
         state_.total_cl.data(), state_.unscaled_parameters.data(),
-        state_.fixed_parameters.data()
+        state_.fixed_parameters.data(), state_.ws.data()
     );
     fx0_fixedParameters(
         derived_state_.x_rdata_.data(), t, state_.unscaled_parameters.data(),
-        state_.fixed_parameters.data(),
+        state_.fixed_parameters.data(), state_.ws.data(),
         simulation_parameters_.reinitialization_state_idxs_sim
     );
     fx_solver(x.data(), derived_state_.x_rdata_.data());
     /* update total abundances */
     ftotal_cl(
         state_.total_cl.data(), derived_state_.x_rdata_.data(),
-        state_.unscaled_parameters.data(), state_.fixed_parameters.data()
+        state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
+        state_.ws.data()
     );
 }
 
@@ -2237,13 +2270,14 @@ void Model::fsx0(realtype t, AmiVectorArray& sx, AmiVector const& x) {
         fsx0(
             derived_state_.sx_rdata_.data(), t, compute_x_pos(x),
             state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-            plist(ip)
+            state_.ws.data(), plist(ip)
         );
         fsx_solver(sx.data(ip), derived_state_.sx_rdata_.data());
         fstotal_cl(
             stcl, derived_state_.sx_rdata_.data(), plist(ip),
             derived_state_.x_rdata_.data(), state_.unscaled_parameters.data(),
-            state_.fixed_parameters.data(), state_.total_cl.data()
+            state_.fixed_parameters.data(), state_.ws.data(),
+            state_.total_cl.data()
         );
     }
 }
@@ -2260,18 +2294,20 @@ void Model::fsx0_fixedParameters(
         fsx_rdata(
             derived_state_.sx_rdata_.data(), sx.data(ip), stcl,
             state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-            x.data(), state_.total_cl.data(), plist(ip)
+            state_.ws.data(), x.data(), state_.total_cl.data(), plist(ip)
         );
         fsx0_fixedParameters(
             derived_state_.sx_rdata_.data(), t, compute_x_pos(x),
             state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-            plist(ip), simulation_parameters_.reinitialization_state_idxs_sim
+            state_.ws.data(), plist(ip),
+            simulation_parameters_.reinitialization_state_idxs_sim
         );
         fsx_solver(sx.data(ip), derived_state_.sx_rdata_.data());
         fstotal_cl(
             stcl, derived_state_.sx_rdata_.data(), plist(ip),
             derived_state_.x_rdata_.data(), state_.unscaled_parameters.data(),
-            state_.fixed_parameters.data(), state_.total_cl.data()
+            state_.fixed_parameters.data(), state_.ws.data(),
+            state_.total_cl.data()
         );
     }
 }
@@ -2281,7 +2317,8 @@ void Model::fsdx0() {}
 void Model::fx_rdata(gsl::span<realtype> x_rdata, AmiVector const& x) {
     fx_rdata(
         x_rdata.data(), compute_x_pos(x), state_.total_cl.data(),
-        state_.unscaled_parameters.data(), state_.fixed_parameters.data()
+        state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
+        state_.ws.data()
     );
     if (always_check_finite_)
         check_finite(
@@ -2301,7 +2338,7 @@ void Model::fsx_rdata(
         fsx_rdata(
             &sx_rdata[ip * nx_rdata], sx.data(ip), stcl,
             state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-            x_solver.data(), state_.total_cl.data(), plist(ip)
+            state_.ws.data(), x_solver.data(), state_.total_cl.data(), plist(ip)
         );
     }
 }
@@ -2368,7 +2405,7 @@ void Model::fy(realtype const t, AmiVector const& x) {
 
     fw(t, x_pos, false);
     fy(derived_state_.y_.data(), t, x_pos, state_.unscaled_parameters.data(),
-       state_.fixed_parameters.data(), state_.h.data(),
+       state_.fixed_parameters.data(), state_.ws.data(), state_.h.data(),
        derived_state_.w_.data());
 
     if (always_check_finite_) {
@@ -2393,9 +2430,10 @@ void Model::fdydp(realtype const t, AmiVector const& x) {
         fdydp(
             &derived_state_.dydp_.at(ip * ny), t, x_pos,
             state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-            state_.h.data(), plist(ip), derived_state_.w_.data(),
-            state_.total_cl.data(), state_.stotal_cl.data(),
-            derived_state_.spl_.data(), derived_state_.sspl_.data()
+            state_.ws.data(), state_.h.data(), plist(ip),
+            derived_state_.w_.data(), state_.total_cl.data(),
+            state_.stotal_cl.data(), derived_state_.spl_.data(),
+            derived_state_.sspl_.data()
         );
 
     if (always_check_finite_) {
@@ -2415,7 +2453,7 @@ void Model::fdydx(realtype const t, AmiVector const& x) {
     fdydx(
         derived_state_.dydx_.data(), t, x_pos,
         state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-        state_.h.data(), derived_state_.w_.data()
+        state_.ws.data(), state_.h.data(), derived_state_.w_.data()
     );
 
     if (always_check_finite_) {
@@ -2432,7 +2470,7 @@ void Model::fsigmay(int const it, ExpData const* edata) {
     fsigmay(
         derived_state_.sigmay_.data(), get_timepoint(it),
         state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-        derived_state_.y_.data()
+        state_.ws.data(), derived_state_.y_.data()
     );
 
     if (edata) {
@@ -2476,7 +2514,7 @@ void Model::fdsigmaydp(int const it, ExpData const* edata) {
         fdsigmaydp(
             &derived_state_.dsigmaydp_.at(ip * ny), get_timepoint(it),
             state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-            derived_state_.y_.data(), plist(ip)
+            state_.ws.data(), derived_state_.y_.data(), plist(ip)
         );
 
     // sigmas in edata override model-sigma -> for those sigmas, set dsigmaydp
@@ -2508,7 +2546,7 @@ void Model::fdsigmaydy(int const it, ExpData const* edata) {
     fdsigmaydy(
         derived_state_.dsigmaydy_.data(), get_timepoint(it),
         state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-        derived_state_.y_.data()
+        state_.ws.data(), derived_state_.y_.data()
     );
 
     // sigmas in edata override model-sigma -> for those sigmas, set dsigmaydy
@@ -2554,8 +2592,8 @@ void Model::fdJydy(int const it, AmiVector const& x, ExpData const& edata) {
         fdJydy(
             derived_state_.dJydy_.at(iyt).data(), iyt,
             state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-            derived_state_.y_.data(), derived_state_.sigmay_.data(),
-            edata.get_measurements_ptr(it)
+            state_.ws.data(), derived_state_.y_.data(),
+            derived_state_.sigmay_.data(), edata.get_measurements_ptr(it)
         );
 
         // dJydy += dJydsigmay * dsigmaydy
@@ -2607,8 +2645,9 @@ void Model::fdJydsigmay(
             fdJydsigmay(
                 &derived_state_.dJydsigmay_.at(iyt * ny * nJ), iyt,
                 state_.unscaled_parameters.data(),
-                state_.fixed_parameters.data(), derived_state_.y_.data(),
-                derived_state_.sigmay_.data(), edata.get_measurements_ptr(it)
+                state_.fixed_parameters.data(), state_.ws.data(),
+                derived_state_.y_.data(), derived_state_.sigmay_.data(),
+                edata.get_measurements_ptr(it)
             );
             if (always_check_finite_) {
                 check_finite(
@@ -2703,7 +2742,7 @@ void Model::fz(int const ie, realtype const t, AmiVector const& x) {
 
     fz(derived_state_.z_.data(), ie, t, compute_x_pos(x),
        state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-       state_.h.data());
+       state_.ws.data(), state_.h.data());
 }
 
 void Model::fdzdp(int const ie, realtype const t, AmiVector const& x) {
@@ -2716,7 +2755,7 @@ void Model::fdzdp(int const ie, realtype const t, AmiVector const& x) {
         fdzdp(
             &derived_state_.dzdp_.at(ip * nz), ie, t, compute_x_pos(x),
             state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-            state_.h.data(), plist(ip)
+            state_.ws.data(), state_.h.data(), plist(ip)
         );
     }
 
@@ -2734,7 +2773,7 @@ void Model::fdzdx(int const ie, realtype const t, AmiVector const& x) {
     fdzdx(
         derived_state_.dzdx_.data(), ie, t, compute_x_pos(x),
         state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-        state_.h.data()
+        state_.ws.data(), state_.h.data()
     );
 
     if (always_check_finite_) {
@@ -2748,7 +2787,7 @@ void Model::frz(int const ie, realtype const t, AmiVector const& x) {
 
     frz(derived_state_.rz_.data(), ie, t, compute_x_pos(x),
         state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-        state_.h.data());
+        state_.ws.data(), state_.h.data());
 }
 
 void Model::fdrzdp(int const ie, realtype const t, AmiVector const& x) {
@@ -2761,7 +2800,7 @@ void Model::fdrzdp(int const ie, realtype const t, AmiVector const& x) {
         fdrzdp(
             &derived_state_.drzdp_.at(ip * nz), ie, t, compute_x_pos(x),
             state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-            state_.h.data(), plist(ip)
+            state_.ws.data(), state_.h.data(), plist(ip)
         );
     }
 
@@ -2779,7 +2818,7 @@ void Model::fdrzdx(int const ie, realtype const t, AmiVector const& x) {
     fdrzdx(
         derived_state_.drzdx_.data(), ie, t, compute_x_pos(x),
         state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-        state_.h.data()
+        state_.ws.data(), state_.h.data()
     );
 
     if (always_check_finite_) {
@@ -2796,7 +2835,7 @@ void Model::fsigmaz(
     derived_state_.sigmaz_.assign(nz, 0.0);
     fsigmaz(
         derived_state_.sigmaz_.data(), t, state_.unscaled_parameters.data(),
-        state_.fixed_parameters.data()
+        state_.fixed_parameters.data(), state_.ws.data()
     );
 
     if (edata) {
@@ -2836,7 +2875,7 @@ void Model::fdsigmazdp(
         fdsigmazdp(
             &derived_state_.dsigmazdp_.at(ip * nz), t,
             state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-            plist(ip)
+            state_.ws.data(), plist(ip)
         );
     }
 
@@ -2876,8 +2915,8 @@ void Model::fdJzdz(
             fdJzdz(
                 &derived_state_.dJzdz_.at(iztrue * nz * nJ), iztrue,
                 state_.unscaled_parameters.data(),
-                state_.fixed_parameters.data(), derived_state_.z_.data(),
-                derived_state_.sigmaz_.data(),
+                state_.fixed_parameters.data(), state_.ws.data(),
+                derived_state_.z_.data(), derived_state_.sigmaz_.data(),
                 edata.get_event_measurements_ptr(nroots)
             );
             if (always_check_finite_) {
@@ -2909,8 +2948,8 @@ void Model::fdJzdsigmaz(
             fdJzdsigmaz(
                 &derived_state_.dJzdsigmaz_.at(iztrue * nz * nJ), iztrue,
                 state_.unscaled_parameters.data(),
-                state_.fixed_parameters.data(), derived_state_.z_.data(),
-                derived_state_.sigmaz_.data(),
+                state_.fixed_parameters.data(), state_.ws.data(),
+                derived_state_.z_.data(), derived_state_.sigmaz_.data(),
                 edata.get_event_measurements_ptr(nroots)
             );
             if (always_check_finite_) {
@@ -3063,8 +3102,8 @@ void Model::fdJrzdrz(
             fdJrzdrz(
                 &derived_state_.dJrzdrz_.at(iztrue * nz * nJ), iztrue,
                 state_.unscaled_parameters.data(),
-                state_.fixed_parameters.data(), derived_state_.rz_.data(),
-                derived_state_.sigmaz_.data()
+                state_.fixed_parameters.data(), state_.ws.data(),
+                derived_state_.rz_.data(), derived_state_.sigmaz_.data()
             );
             if (always_check_finite_) {
                 check_finite(
@@ -3095,8 +3134,8 @@ void Model::fdJrzdsigmaz(
             fdJrzdsigmaz(
                 &derived_state_.dJrzdsigmaz_.at(iztrue * nz * nJ), iztrue,
                 state_.unscaled_parameters.data(),
-                state_.fixed_parameters.data(), derived_state_.rz_.data(),
-                derived_state_.sigmaz_.data()
+                state_.fixed_parameters.data(), state_.ws.data(),
+                derived_state_.rz_.data(), derived_state_.sigmaz_.data()
             );
             if (always_check_finite_) {
                 check_finite(
@@ -3133,8 +3172,8 @@ void Model::fw(realtype const t, realtype const* x, bool include_static) {
     }
     fspl(t);
     fw(derived_state_.w_.data(), t, x, state_.unscaled_parameters.data(),
-       state_.fixed_parameters.data(), state_.h.data(), state_.total_cl.data(),
-       derived_state_.spl_.data(), include_static);
+       state_.fixed_parameters.data(), state_.ws.data(), state_.h.data(),
+       state_.total_cl.data(), derived_state_.spl_.data(), include_static);
 
     if (always_check_finite_) {
         check_finite(derived_state_.w_, ModelQuantity::w, t);
@@ -3159,9 +3198,9 @@ void Model::fdwdp(realtype const t, realtype const* x, bool include_static) {
     fdwdp(
         derived_state_.dwdp_hierarchical_.at(0).data(), t, x,
         state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-        state_.h.data(), derived_state_.w_.data(), state_.total_cl.data(),
-        state_.stotal_cl.data(), derived_state_.spl_.data(),
-        derived_state_.sspl_.data(), include_static
+        state_.ws.data(), state_.h.data(), derived_state_.w_.data(),
+        state_.total_cl.data(), state_.stotal_cl.data(),
+        derived_state_.spl_.data(), derived_state_.sspl_.data(), include_static
     );
 
     for (int irecursion = 1; irecursion <= w_recursion_depth; irecursion++) {
@@ -3199,7 +3238,7 @@ void Model::fdwdx(realtype const t, realtype const* x, bool include_static) {
     }
     fdwdx(
         dwdx_hierarchical_0.data(), t, x, state_.unscaled_parameters.data(),
-        state_.fixed_parameters.data(), state_.h.data(),
+        state_.fixed_parameters.data(), state_.ws.data(), state_.h.data(),
         derived_state_.w_.data(), state_.total_cl.data(),
         derived_state_.spl_.data(), include_static
     );
@@ -3229,7 +3268,7 @@ void Model::fdwdw(realtype const t, realtype const* x, bool include_static) {
 
     fdwdw(
         derived_state_.dwdw_.data(), t, x, state_.unscaled_parameters.data(),
-        state_.fixed_parameters.data(), state_.h.data(),
+        state_.fixed_parameters.data(), state_.ws.data(), state_.h.data(),
         derived_state_.w_.data(), state_.total_cl.data(), include_static
     );
 
@@ -3240,7 +3279,7 @@ void Model::fdwdw(realtype const t, realtype const* x, bool include_static) {
 
 void Model::fx_rdata(
     realtype* x_rdata, realtype const* x_solver, realtype const* /*tcl*/,
-    realtype const* /*p*/, realtype const* /*k*/
+    realtype const* /*p*/, realtype const* /*k*/, realtype const* /*ws*/
 ) {
     if (nx_solver != nx_rdata)
         throw AmiException(
@@ -3252,8 +3291,8 @@ void Model::fx_rdata(
 
 void Model::fsx_rdata(
     realtype* sx_rdata, realtype const* sx_solver, realtype const* stcl,
-    realtype const* p, realtype const* k, realtype const* x_solver,
-    realtype const* tcl, int const ip
+    realtype const* p, realtype const* k, realtype const* ws,
+    realtype const* x_solver, realtype const* tcl, int const ip
 ) {
     if (nx_solver == nx_rdata) {
         std::copy_n(sx_solver, nx_solver, sx_rdata);
@@ -3265,7 +3304,7 @@ void Model::fsx_rdata(
 
     // 1) sx_rdata(nx_rdata, 1) = dx_rdatadp
     std::fill_n(sx_rdata, nx_rdata, 0.0);
-    fdx_rdatadp(sx_rdata, x_solver, tcl, p, k, ip);
+    fdx_rdatadp(sx_rdata, x_solver, tcl, p, k, ws, ip);
 
     // the following could be moved to the calling function, as it's independent
     //  of `ip`
@@ -3274,7 +3313,7 @@ void Model::fsx_rdata(
     //          dx_rdata/dx_solver(nx_rdata,nx_solver) * sx_solver(nx_solver, 1)
     derived_state_.dx_rdatadx_solver.zero();
     fdx_rdatadx_solver(
-        derived_state_.dx_rdatadx_solver.data(), x_solver, tcl, p, k
+        derived_state_.dx_rdatadx_solver.data(), x_solver, tcl, p, k, ws
     );
     fdx_rdatadx_solver_colptrs(derived_state_.dx_rdatadx_solver);
     fdx_rdatadx_solver_rowvals(derived_state_.dx_rdatadx_solver);
@@ -3284,7 +3323,7 @@ void Model::fsx_rdata(
 
     // 3) sx_rdata(nx_rdata, 1) += dx_rdata/d_tcl(nx_rdata,ntcl) * stcl
     derived_state_.dx_rdatadtcl.zero();
-    fdx_rdatadtcl(derived_state_.dx_rdatadtcl.data(), x_solver, tcl, p, k);
+    fdx_rdatadtcl(derived_state_.dx_rdatadtcl.data(), x_solver, tcl, p, k, ws);
     fdx_rdatadtcl_colptrs(derived_state_.dx_rdatadtcl);
     fdx_rdatadtcl_rowvals(derived_state_.dx_rdatadtcl);
     derived_state_.dx_rdatadtcl.multiply(
@@ -3311,7 +3350,7 @@ void Model::fsx_solver(realtype* sx_solver, realtype const* sx_rdata) {
 
 void Model::ftotal_cl(
     realtype* /*total_cl*/, realtype const* /*x_rdata*/, realtype const* /*p*/,
-    realtype const* /*k*/
+    realtype const* /*k*/, realtype const* /*ws*/
 ) {
     if (nx_solver != nx_rdata)
         throw AmiException(
@@ -3323,7 +3362,7 @@ void Model::ftotal_cl(
 void Model::fstotal_cl(
     realtype* stotal_cl, realtype const* sx_rdata, int const ip,
     realtype const* x_rdata, realtype const* p, realtype const* k,
-    realtype const* tcl
+    realtype const* ws, realtype const* tcl
 ) {
     if (nx_solver == nx_rdata)
         return;
@@ -3334,12 +3373,12 @@ void Model::fstotal_cl(
 
     // 1) stotal_cl = dtotal_cl/dp
     std::fill_n(stotal_cl, ncl(), 0.0);
-    fdtotal_cldp(stotal_cl, x_rdata, p, k, ip);
+    fdtotal_cldp(stotal_cl, x_rdata, p, k, ws, ip);
 
     // 2) stotal_cl += dtotal_cl/dx_rdata(ncl,nx_rdata) * sx_rdata(nx_rdata,1)
     derived_state_.dtotal_cldx_rdata.zero();
     fdtotal_cldx_rdata(
-        derived_state_.dtotal_cldx_rdata.data(), x_rdata, p, k, tcl
+        derived_state_.dtotal_cldx_rdata.data(), x_rdata, p, k, ws, tcl
     );
     fdtotal_cldx_rdata_colptrs(derived_state_.dtotal_cldx_rdata);
     fdtotal_cldx_rdata_rowvals(derived_state_.dtotal_cldx_rdata);
