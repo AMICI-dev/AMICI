@@ -3319,10 +3319,13 @@ class SbmlImporter:
                 state.set_val(new)
                 changed_indices.append(i_state)
         if changed_indices:
-            # Replace any newly introduced state variables
-            #  by their x0 expressions.
-            subs = w_toposorted | toposort_symbols(
-                {
+            # Replace any newly introduced expressions and state variables
+            #  by their definitions and x0 expressions, respectively.
+            #  Expressions may depend on state variables and vice versa,
+            #  so they have to be sorted jointly.
+            subs = toposort_symbols(
+                w_toposorted
+                | {
                     state.get_x_rdata(): state.get_val()
                     for state in de_model.differential_states()
                 }
