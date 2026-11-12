@@ -207,6 +207,7 @@ void EventHandlingSimulator::run(
         model_->ne, -std::numeric_limits<realtype>::infinity()
     );
     t_dropped_roots_ = NAN;
+    n_dropped_roots_repeats_ = 0;
 
     handle_initial_events(edata);
 
@@ -299,6 +300,7 @@ void EventHandlingSimulator::run_steady_state(
         model_->ne, -std::numeric_limits<realtype>::infinity()
     );
     t_dropped_roots_ = NAN;
+    n_dropped_roots_repeats_ = 0;
 
     while (true) {
         handle_close_trigger_timepoints(
@@ -852,6 +854,7 @@ void EventHandlingSimulator::handle_events(
     // so the roots just crossed are not reported again.
     solver_->reinit(ws_->sol.t, ws_->sol.x, ws_->sol.dx);
     t_dropped_roots_ = NAN;
+    n_dropped_roots_repeats_ = 0;
 
     if (solver_->computing_fsa()) {
         solver_->sens_reinit(ws_->sol.sx, ws_->sdx);
@@ -1252,12 +1255,37 @@ bool EventHandlingSimulator::collect_roots(realtype const t_trigger) {
     // last root, the solver may still report root functions that are exactly
     // zero slightly after the last return point, regardless of their
     // direction (`cvRcheck2`/`IDARcheck2`).
+    // Also, a root function that was crossed at the last root is zero there.
+    // After reinitialization, the solver determines its sign slightly after
+    // the root. If the first step is shorter, the root function may still be
+    // exactly zero at its end, which the solver reports as a root in the
+    // opposite direction.
+    constexpr auto eps = std::numeric_limits<realtype>::epsilon();
     auto const& h = model_->get_model_state().h;
+    auto const t_tol = std::max(
+        solver_->get_root_time_tolerance(),
+        100 * eps * std::max(std::abs(ws_->sol.t), 1.0)
+    );
+    bool const after_last_root
+        = std::abs(ws_->sol.t - ws_->tlastroot) <= t_tol;
+    std::vector<realtype> rootvals;
     int first_dropped = -1;
     for (int ie = 0; ie < model_->ne_solver; ++ie) {
         auto& root_found = ws_->roots_found.at(ie);
-        if (root_found == 0 || (root_found > 0) == (h.at(ie) == 0.0))
+        if (root_found == 0)
             continue;
+        if ((root_found > 0) == (h.at(ie) == 0.0)) {
+            // changes the Heaviside variable, unless re-reported
+            if (!after_last_root
+                || ws_->t_root_crossed.at(ie) != ws_->tlastroot)
+                continue;
+            if (rootvals.empty()) {
+                rootvals.resize(model_->ne);
+                model_->froot(ws_->sol.t, ws_->sol.x, ws_->sol.dx, rootvals);
+            }
+            if (rootvals.at(ie) != 0.0)
+                continue;
+        }
         if (first_dropped < 0)
             first_dropped = ie;
         if (solver_->get_logger()) {
@@ -1286,9 +1314,14 @@ bool EventHandlingSimulator::collect_roots(realtype const t_trigger) {
         return true;
 
     // If only dropped roots were found, the simulation just continues.
-    // The solver reports such exact zeros without taking a step, so if this
-    // repeats at the same time, it would report them again and again.
-    if (ws_->sol.t == t_dropped_roots_) {
+    // The solver reports such exact zeros without taking a step. It may do so
+    // a few times at the same time, e.g., if a root function of algebraic
+    // states remains exactly zero, but not indefinitely.
+    if (ws_->sol.t != t_dropped_roots_) {
+        t_dropped_roots_ = ws_->sol.t;
+        n_dropped_roots_repeats_ = 0;
+    } else if (constexpr int max_repeats = 10;
+               ++n_dropped_roots_repeats_ > max_repeats) {
         throw AmiException(
             "AMICI is stuck at time %.17g, as the solver repeatedly reports "
             "the trigger of event %s at zero, which does not change its "
@@ -1296,7 +1329,6 @@ bool EventHandlingSimulator::collect_roots(realtype const t_trigger) {
             ws_->sol.t, model_->get_event(first_dropped).get_id().c_str()
         );
     }
-    t_dropped_roots_ = ws_->sol.t;
     return false;
 }
 

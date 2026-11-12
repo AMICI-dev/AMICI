@@ -611,6 +611,10 @@ class EventHandlingSimulator {
     /** Time of the last solver return with only dropped roots */
     realtype t_dropped_roots_{NAN};
 
+    /** Number of repeated solver returns with only dropped roots at
+     * `t_dropped_roots_` */
+    int n_dropped_roots_repeats_{0};
+
     /** The model to simulate. */
     Model* model_{nullptr};
 
