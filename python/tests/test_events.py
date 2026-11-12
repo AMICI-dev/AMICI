@@ -3763,3 +3763,66 @@ def test_dae_explicit_and_solver_tracked_events(tempdir):
         assert_allclose(
             rdatas[dae].by_id("y"), 2 * rdatas[dae].by_id("x"), rtol=1e-8
         )
+
+
+@skip_on_valgrind
+def test_ite_and_boolean_piecewise_triggers(tempdir):
+    """Test ITE in piecewise conditions and in event triggers.
+
+    A Boolean-valued piecewise function in a piecewise condition becomes
+    an ITE; as event trigger, it is converted to an ITE.
+    """
+    model_name = "test_ite_triggers"
+    antimony2amici(
+        r"""
+        s = 0
+        s' = 1
+        g = 1
+        a = 2
+        b = 3
+        f = 1.5
+        d = 2.5
+        e = 3.5
+        # rate 1 on [0, g) and (a, b), 0 otherwise
+        x = 0
+        x' = piecewise(1, piecewise(s < b, s > a, s < g), 0)
+        # ITE(s > d, s > e, s > f): becomes true at f and at e
+        y = 0
+        E1: at piecewise(s > e, s > d, s > f): y = y + 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    assert model.ne_solver > 0
+    par = dict(
+        zip(
+            model.get_free_parameter_ids(),
+            model.get_free_parameters(),
+            strict=True,
+        )
+    )
+    g, a, b, f, e = (par[p] for p in ("g", "a", "b", "f", "e"))
+    # avoid timepoints at discontinuities
+    t = np.linspace(0.05, 4.95, 50)
+    model.set_timepoints(t)
+    solver = model.create_solver()
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+
+    x_expected = np.select([t < g, t < a, t < b], [t, g, g + t - a], g + b - a)
+    assert_allclose(rdata.by_id("x"), x_expected, rtol=1e-6, atol=1e-8)
+    y_expected = np.select([t < f, t < e], [0, 1], 2)
+    assert_allclose(rdata.by_id("y"), y_expected, rtol=0, atol=1e-12)
+
+    # dx/d(g, a, b)
+    sx_expected = np.select(
+        [t[:, None] < g, t[:, None] < a, t[:, None] < b],
+        [[0, 0, 0], [1, 0, 0], [1, -1, 0]],
+        [1, -1, 1],
+    )
+    ix = model.get_state_ids().index("x")
+    ip = [model.get_free_parameter_ids().index(p) for p in ("g", "a", "b")]
+    assert_allclose(rdata.sx[:, ip, ix], sx_expected, rtol=1e-6, atol=1e-8)
