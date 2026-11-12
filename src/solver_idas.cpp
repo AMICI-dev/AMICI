@@ -416,6 +416,18 @@ void IDASolver::get_root_info(int* rootsfound) const {
         throw IDAException(status, "IDAGetRootInfo");
 }
 
+realtype IDASolver::get_root_time_tolerance() const {
+    // as in IDARcheck2/IDARcheck3
+    auto const* ida_mem = static_cast<IDAMem>(solver_memory_.get());
+    if (!ida_mem)
+        return 0.0;
+    // The step size is not reset at reinitialization.
+    if (ida_mem->ida_nst == 0)
+        return 0.0;
+    return 100 * ida_mem->ida_uround
+           * (std::abs(ida_mem->ida_tn) + std::abs(ida_mem->ida_hh));
+}
+
 void IDASolver::set_user_data() const {
     int status = IDASetUserData(solver_memory_.get(), &user_data_);
     if (status != IDA_SUCCESS)

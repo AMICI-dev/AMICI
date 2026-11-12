@@ -181,6 +181,15 @@ class Solver {
     virtual void get_root_info(int* rootsfound) const = 0;
 
     /**
+     * @brief Time tolerance of the root-finding at the current time.
+     *
+     * Roots closer than this to each other are not distinguished.
+     *
+     * @return time tolerance
+     */
+    virtual realtype get_root_time_tolerance() const = 0;
+
+    /**
      * @brief Calculates consistent initial conditions, assumes initial
      * states to be correct (DAE only)
      *

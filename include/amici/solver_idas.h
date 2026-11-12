@@ -86,6 +86,8 @@ class IDASolver : public Solver {
 
     void get_root_info(int* rootsfound) const override;
 
+    realtype get_root_time_tolerance() const override;
+
     void get_dky(realtype t, int k) const override;
 
     void get_sens() const override;

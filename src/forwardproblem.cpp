@@ -14,6 +14,122 @@
 
 namespace amici {
 
+namespace {
+
+/**
+ * @brief Time derivative of the states of a DAE, including the algebraic
+ * states.
+ *
+ * The derivatives of the algebraic states in `dx` are not necessarily
+ * consistent, e.g., after event assignments. They are computed from the
+ * time derivative of the algebraic equations, `0 = df_a/dt + df_a/dx_d dx_d
+ * + df_a/dx_a dx_a`, with finite differences. This requires an index-1 DAE;
+ * if `df_a/dx_a` is singular or not finite, `xdot` is left unchanged.
+ *
+ * @param model Model
+ * @param t timepoint
+ * @param x consistent state
+ * @param xdot time derivative of the states, with consistent derivatives of
+ * the differential states, whose entries for the algebraic states are
+ * replaced if the algebraic equations can be solved for them
+ * @param rtol relative tolerance
+ * @param atol absolute tolerance
+ */
+void set_algebraic_state_derivatives(
+    Model& model, realtype const t, AmiVector const& x, AmiVector& xdot,
+    realtype const rtol, realtype const atol
+) {
+    auto const& id_list = model.get_id_list();
+    std::vector<int> ia;
+    for (int ix = 0; ix < x.size(); ++ix) {
+        if (id_list.at(ix) == 0.0)
+            ia.push_back(ix);
+    }
+    auto const na = gsl::narrow<int>(ia.size());
+    if (na == 0)
+        return;
+
+    constexpr auto eps = std::numeric_limits<realtype>::epsilon();
+    // The algebraic equations do not depend on `dx`.
+    AmiVector const dx_none(x.size(), x.get_ctx());
+    AmiVector xp(x);
+    AmiVector res_fwd(x.size(), x.get_ctx());
+    AmiVector res_bwd(x.size(), x.get_ctx());
+
+    // b = df_a/dt + df_a/dx_d dx_d, with a step that is small compared to
+    // the time scales of the differential states
+    std::vector<realtype> b(na);
+    realtype x_max = 0.0;
+    for (int ix = 0; ix < x.size(); ++ix)
+        x_max = std::max(x_max, std::abs(x[ix]));
+    auto dt = std::cbrt(eps) * std::max(std::abs(t), 1.0);
+    for (int ix = 0; ix < x.size(); ++ix) {
+        auto const x_scale = std::abs(x[ix]) + rtol * x_max + atol;
+        if (id_list.at(ix) != 0.0
+            && dt * std::abs(xdot[ix]) > std::cbrt(eps) * x_scale)
+            dt = std::cbrt(eps) * x_scale / std::abs(xdot[ix]);
+    }
+    // resolvable in `t`
+    dt = std::max(dt, 64 * eps * std::max(std::abs(t), 1.0));
+    for (int ix = 0; ix < x.size(); ++ix)
+        xp[ix] = x[ix] + (id_list.at(ix) == 0.0 ? 0.0 : dt * xdot[ix]);
+    model.fxdot(t + dt, xp, dx_none, res_fwd);
+    for (int ix = 0; ix < x.size(); ++ix)
+        xp[ix] = x[ix] - (id_list.at(ix) == 0.0 ? 0.0 : dt * xdot[ix]);
+    model.fxdot(t - dt, xp, dx_none, res_bwd);
+    for (int i = 0; i < na; ++i)
+        b[i] = (res_fwd[ia[i]] - res_bwd[ia[i]]) / (2 * dt);
+
+    // A = df_a/dx_a, column-wise
+    std::vector<realtype> A(na * na);
+    xp.copy(x);
+    for (int j = 0; j < na; ++j) {
+        auto const x_ref
+            = std::abs(x[ia[j]]) + (rtol > 0.0 ? atol / rtol : atol);
+        auto const dxa = std::cbrt(eps) * (x_ref > 0.0 ? x_ref : 1.0);
+        xp[ia[j]] = x[ia[j]] + dxa;
+        model.fxdot(t, xp, dx_none, res_fwd);
+        xp[ia[j]] = x[ia[j]] - dxa;
+        model.fxdot(t, xp, dx_none, res_bwd);
+        xp[ia[j]] = x[ia[j]];
+        for (int i = 0; i < na; ++i)
+            A[i * na + j] = (res_fwd[ia[i]] - res_bwd[ia[i]]) / (2 * dxa);
+    }
+
+    // solve A dx_a = -b by Gaussian elimination with partial pivoting
+    for (int k = 0; k < na; ++k) {
+        int piv = k;
+        for (int i = k + 1; i < na; ++i) {
+            if (std::abs(A[i * na + k]) > std::abs(A[piv * na + k]))
+                piv = i;
+        }
+        if (!(std::abs(A[piv * na + k]) > 0.0))
+            return; // not solvable for the algebraic states
+        if (piv != k) {
+            for (int j = 0; j < na; ++j)
+                std::swap(A[k * na + j], A[piv * na + j]);
+            std::swap(b[k], b[piv]);
+        }
+        for (int i = k + 1; i < na; ++i) {
+            auto const f = A[i * na + k] / A[k * na + k];
+            for (int j = k; j < na; ++j)
+                A[i * na + j] -= f * A[k * na + j];
+            b[i] -= f * b[k];
+        }
+    }
+    std::vector<realtype> dxa(na);
+    for (int i = na - 1; i >= 0; --i) {
+        auto sum = -b[i];
+        for (int j = i + 1; j < na; ++j)
+            sum -= A[i * na + j] * dxa[j];
+        dxa[i] = sum / A[i * na + i];
+    }
+    for (int i = 0; i < na; ++i)
+        xdot[ia[i]] = dxa[i];
+}
+
+} // namespace
+
 constexpr realtype conv_thresh = 1.0;
 
 /**
@@ -586,10 +702,21 @@ void EventHandlingSimulator::handle_events(
         return false;
     };
 
+    // number of applications of each event in this discontinuity
+    std::vector<int> n_applied(model_->ne, 0);
     while (!ws_->pending_events.empty() || detect_final_crossings()) {
         // get the next event to be handled
         auto const& pending_event = ws_->pending_events.pop();
         auto const ie = pending_event.idx;
+        // e.g., `E1: at x >= 0: r = -1` and `E2: at x < 0: r = 1` at `x = 0`
+        // for `x' = r`
+        if (++n_applied.at(ie) > model_->ne) {
+            throw AmiException(
+                "AMICI is stuck in a discontinuity at time %.17g, as event "
+                "%s triggered more often than there are events.",
+                ws_->sol.t, pending_event.event.get_id().c_str()
+            );
+        }
         auto const& state_at_trigger = pending_event.state_at_trigger;
 
         gsl_Assert(
@@ -661,11 +788,14 @@ void EventHandlingSimulator::handle_events(
 
         // Execute the event
         // Apply bolus to the state and the sensitivities
+        AmiVector const x_pre_assignment(ws_->sol.x);
         model_->add_state_event_update(
             ws_->sol.x, ie, ws_->sol.t, ws_->xdot, ws_->xdot_at_trigger, x_eval,
             state_at_trigger.has_value() ? state_at_trigger->mod
                                          : model_->get_model_state()
         );
+        bool const state_changed
+            = ws_->sol.x.get_vector() != x_pre_assignment.get_vector();
         // For DAEs, the algebraic states and the state derivatives have to be
         // made consistent with the post-event differential states before
         // they are stored or used for sensitivity updates.
@@ -697,6 +827,11 @@ void EventHandlingSimulator::handle_events(
                 *std::move(event_application)
             );
         }
+
+        // Only Heaviside updates without state changes in between count as
+        // switching back and forth.
+        if (state_changed)
+            std::ranges::fill(ws_->n_slope_flips, 0);
 
         // check if the event assignment triggered another event
         // and add it to the list of pending events if necessary
@@ -738,18 +873,65 @@ void EventHandlingSimulator::handle_initial_events(ExpData const* edata) {
     estimate_root_noise_and_slope(root_noise, root_slope);
     auto const& h = model_->get_model_state().h;
     std::vector<int> h_update(model_->ne, 0);
+    std::vector<bool> by_slope(model_->ne, false);
     for (int ie = 0; ie < model_->ne_solver; ie++) {
         if (ws_->roots_found.at(ie) == 0 && h.at(ie) > 0.0
             && std::abs(ws_->rootvals.at(ie)) <= root_noise[ie]
-            && root_slope[ie] < 0.0)
+            && root_slope[ie] < 0.0) {
             h_update.at(ie) = -1;
+            by_slope.at(ie) = true;
+        }
     }
-    model_->update_heaviside(h_update);
+    if (std::ranges::any_of(by_slope, [](bool const b) { return b; })) {
+        model_->update_heaviside(h_update);
+        update_heaviside_after_initial_flips(by_slope);
+    }
 
     if (std::ranges::any_of(ws_->roots_found, [](int const rf) {
             return rf == 1;
         })) {
         handle_events(true, edata);
+    }
+}
+
+void EventHandlingSimulator::update_heaviside_after_initial_flips(
+    std::vector<bool> const& flipped
+) {
+    auto const& h = model_->get_model_state().h;
+    std::vector<int> h_update(model_->ne, 0);
+    // Root functions may depend on the updated Heaviside variables (see
+    // Model::reinit_events)
+    for (int iter = 0; iter < model_->ne; ++iter) {
+        model_->froot(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->rootvals);
+        std::ranges::fill(h_update, 0);
+        bool h_changed = false;
+        for (int ie = 0; ie < model_->ne; ie++) {
+            if (flipped.at(ie))
+                continue;
+            realtype const h_new = ws_->rootvals.at(ie) < 0.0 ? 0.0 : 1.0;
+            if (h_new == h.at(ie))
+                continue;
+            h_changed = true;
+            h_update.at(ie) = h_new > 0.0 ? 1 : -1;
+            if (h_new == 0.0)
+                ws_->roots_found.at(ie) = 0;
+            else if (!model_->get_event(ie).get_initial_value())
+                ws_->roots_found.at(ie) = 1;
+        }
+        if (!h_changed)
+            break;
+        model_->update_heaviside(h_update);
+    }
+
+    // For DAEs, the algebraic states may depend on the Heaviside variables.
+    if (model_->has_algebraic_states()) {
+        solver_->calc_consistent_state(
+            ws_->sol.t, ws_->sol.x, ws_->sol.dx,
+            next_output_timepoint(*model_, ws_->sol.t)
+        );
+        solver_->reinit(ws_->sol.t, ws_->sol.x, ws_->sol.dx);
+        if (solver_->computing_fsa())
+            solver_->sens_reinit(ws_->sol.sx, ws_->sdx);
     }
 }
 
@@ -941,6 +1123,18 @@ int EventHandlingSimulator::detect_secondary_events() {
                 ws_->t_root_crossed.at(ie) = ws_->sol.t;
             }
         }
+        if (by_slope && changed && above && rootval < 0.0 && h.at(ie) > 0.0
+            && solver_->get_logger()) {
+            solver_->get_logger()->log(
+                LogSeverity::warning, "TRIGGER_WITHIN_TOLERANCE",
+                "At t = %.17g, an event assignment moved the trigger of event "
+                "%s below zero by less than its uncertainty while it is "
+                "increasing. The trigger is considered to remain true, so an "
+                "event that is expected to trigger again faster than the "
+                "tolerances can resolve does not trigger again.",
+                ws_->sol.t, model_->get_event(ie).get_id().c_str()
+            );
+        }
         // Compare to the Heaviside variable, not to the previous root value,
         // to also detect roots that are crossed back
         realtype const h_new = above ? 1.0 : 0.0;
@@ -1003,6 +1197,8 @@ void EventHandlingSimulator::estimate_root_noise_and_slope(
     // small compared to the time scales of the states
     AmiVector xdot(x0);
     model_->fdxdt(t, x0, ws_->sol.dx, xdot);
+    if (model_->has_algebraic_states())
+        set_algebraic_state_derivatives(*model_, t, x0, xdot, rtol, atol);
     auto dt = std::cbrt(eps) * std::max(std::abs(t), 1.0);
     for (int ix = 0; ix < x0.size(); ++ix) {
         auto const x_scale = std::abs(x0[ix]) + rtol * x_max + atol;
@@ -1022,8 +1218,11 @@ void EventHandlingSimulator::estimate_root_noise_and_slope(
 
     // restore the model's derived state at the current state
     model_->froot(t, x0, ws_->sol.dx, ws_->rootvals);
-    // as the root time tolerance of CVODES/IDAS
-    auto const t_tol = 100 * eps * std::max(std::abs(t), 1.0);
+    // time tolerance of the root-finding, at least the resolution of `t`
+    auto const t_tol = std::max(
+        solver_->get_root_time_tolerance(),
+        100 * eps * std::max(std::abs(t), 1.0)
+    );
     for (int ie = 0; ie < model_->ne; ++ie) {
         slope[ie] = (slope[ie] - root_backward[ie]) / ((t + dt) - (t - dt));
         // The perturbation of all states in the same direction may cancel
@@ -1041,7 +1240,8 @@ bool EventHandlingSimulator::collect_roots(realtype const t_trigger) {
 
     // The root directions set in the solver only allow crossings that change
     // the Heaviside variables. The solver may still report a root that is
-    // exactly zero right after a step, regardless of its direction.
+    // exactly zero right after a step, regardless of its direction
+    // (`cvRcheck2`/`IDARcheck2`).
     auto const& h = model_->get_model_state().h;
     bool dropped = false;
     for (int ie = 0; ie < model_->ne_solver; ++ie) {

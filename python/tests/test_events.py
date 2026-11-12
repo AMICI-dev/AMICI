@@ -2254,6 +2254,9 @@ def test_root_after_reinit_ignores_just_fired_event(tempdir):
     assert rdata.status == AMICI_SUCCESS
     # E1's own immediate repeat is (deliberately) suppressed.
     assert rdata.by_id("n_fired_1")[-1] == 1
+    assert any(
+        m.identifier == "TRIGGER_WITHIN_TOLERANCE" for m in rdata.messages
+    )
     # E2's genuine, simultaneous first crossing is still correctly handled.
     assert rdata.by_id("n_fired_2")[-1] == 1
 
@@ -4168,3 +4171,227 @@ def test_root_at_threshold_changes_direction(tempdir):
     assert_allclose(rdata.by_id("x"), [1, 0, -1, 2], rtol=0, atol=1e-8)
     assert_allclose(rdata.by_id("c"), [0, 0, 0, 1], rtol=0, atol=0)
     assert_allclose(rdata.by_id("z"), [1, 2, 2, 3], rtol=0, atol=1e-8)
+
+
+@skip_on_valgrind
+def test_root_at_threshold_changes_direction_dae(tempdir):
+    """As `test_root_at_threshold_changes_direction`, for a trigger depending
+    on an algebraic state."""
+    model_name = "test_root_at_threshold_changes_direction_dae"
+    antimony2amici(
+        r"""
+        x = 1; y = 1; r = 0; c = 0; z = 0
+        x' = r
+        0 = y - x
+        z' = piecewise(1, y >= 1, 0)
+        E3: at time >= 2: r = -1
+        E4: at time >= 5: r = 1
+        E2: at y >= 1: c = c + 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    assert model.has_algebraic_states()
+    model.set_timepoints([1.0, 3.0, 6.0, 9.0])
+    rdata = run_simulation(model, model.create_solver())
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.by_id("y"), [1, 0, -1, 2], rtol=0, atol=1e-8)
+    assert_allclose(rdata.by_id("c"), [0, 0, 0, 1], rtol=0, atol=0)
+    assert_allclose(rdata.by_id("z"), [1, 2, 2, 3], rtol=0, atol=1e-8)
+
+
+@skip_on_valgrind
+def test_nested_condition_at_threshold_at_t0(tempdir):
+    """A `piecewise` condition at its threshold at the initial time that
+    decreases, inside the condition of another `piecewise` expression.
+
+    `x >= 1` is false right after `t = 0`, so `a >= 1` is false as well, and
+    `y` stays at 0.
+    """
+    model_name = "test_nested_condition_at_threshold_at_t0"
+    antimony2amici(
+        r"""
+        x = 1; x' = -1
+        a := piecewise(2, x >= 1, 0)
+        y = 0; y' = piecewise(1, a >= 1, 0)
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    assert model.ne_solver == 4
+    model.set_timepoints([0.5, 1.0])
+    rdata = run_simulation(model, model.create_solver())
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.by_id("x"), [0.5, 0.0], rtol=0, atol=1e-8)
+    assert_allclose(rdata.by_id("y"), [0.0, 0.0], rtol=0, atol=1e-8)
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize(
+    "mode",
+    [
+        SteadyStateComputationMode.integrationOnly,
+        SteadyStateComputationMode.newtonOnly,
+    ],
+)
+def test_preeq_starts_at_threshold(tempdir, mode):
+    """A `piecewise` condition at its threshold at the start of
+    pre-equilibration that decreases.
+
+    `x >= 1` is false right after the start, so the steady state is
+    `x = z = 0`.
+    """
+    model_name = "test_preeq_starts_at_threshold"
+    antimony2amici(
+        r"""
+        k = 1
+        x = 1; x' = -k * x
+        z = 0; z' = piecewise(1, x >= 1, 0) - z
+        """,
+        fixed_parameters=["k"],
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_steady_state_computation_mode(mode)
+    model.set_timepoints([1.0])
+    edata = ExpData(model)
+    edata.fixed_parameters = [1.0]
+    edata.fixed_parameters_pre_equilibration = [1.0]
+    solver = model.create_solver()
+    solver.set_newton_max_steps(100)
+    rdata = run_simulation(model, solver, edata=edata)
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.x_ss, [0.0, 0.0], rtol=0, atol=1e-6)
+    assert_allclose(rdata.by_id("z"), [0.0], rtol=0, atol=1e-6)
+
+
+@skip_on_valgrind
+def test_falling_switch_changes_direction_of_root_at_threshold(tempdir):
+    """A `piecewise` switch that is not an event trigger changes the direction
+    of a root function at its threshold.
+
+    At `t = 1 / k`, `x >= 1` becomes false, so `w` starts decreasing, which
+    makes `w >= 1` false. Both conditions only change from true to false,
+    so the time of the discontinuity is that of `x >= 1`.
+    """
+    model_name = "test_falling_switch_changes_direction_of_root_at_threshold"
+    antimony2amici(
+        r"""
+        k = 1
+        x = 2; x' = -k
+        w = 1; w' = piecewise(0, x >= 1, -1)
+        z = 0; z' = piecewise(1, w >= 1, 0)
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[
+            MC("obs_w", formula="w"),
+            MC("obs_z", formula="z"),
+        ],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    assert list(model.get_free_parameter_ids()) == ["k"]
+    model.set_timepoints([0.5, 2.0])
+    rdata = run_simulation(model, model.create_solver())
+    assert rdata.status == AMICI_SUCCESS
+    # `x >= 1` becomes false at t = 1 / k = 1
+    assert_allclose(rdata.by_id("w"), [1.0, 0.0], rtol=0, atol=1e-8)
+    assert_allclose(rdata.by_id("z"), [0.5, 1.0], rtol=0, atol=1e-8)
+
+    # at t = 2: w = 1 - (t - 1 / k) and z = 1 / k, so dw/dk = dz/dk = -1
+    edata = ExpData(rdata, 1, 0, 0)
+    edata.set_measurements(np.asarray(rdata.y).flatten() + 0.1)
+    edata.set_noise_scales(np.ones(rdata.y.size))
+    for sens_method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver = model.create_solver()
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(sens_method)
+        rdata = run_simulation(model, solver, edata=edata)
+        assert rdata.status == AMICI_SUCCESS, str(sens_method)
+        assert_allclose(
+            rdata.sllh, [0.1 * -2.0], rtol=1e-6, err_msg=str(sens_method)
+        )
+
+
+@skip_on_valgrind
+def test_events_reverse_root_direction_repeatedly(tempdir):
+    """Simultaneous events that each reverse the direction of a root function
+    at its threshold.
+
+    At `t = 2`, `Ea`, `Eb`, and `Ec` are applied in this order, so `x`
+    decreases afterwards.
+    """
+    model_name = "test_events_reverse_root_direction_repeatedly"
+    antimony2amici(
+        r"""
+        x = 1; r = 0; z = 0
+        x' = r
+        z' = piecewise(1, x >= 1, 0)
+        Ea: at time >= 2, priority=3: r = -1
+        Eb: at time >= 2, priority=2: r = 1
+        Ec: at time >= 2, priority=1: r = -1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints([1.0, 3.0])
+    rdata = run_simulation(model, model.create_solver())
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.by_id("x"), [1.0, 0.0], rtol=0, atol=1e-8)
+    assert_allclose(rdata.by_id("z"), [1.0, 2.0], rtol=0, atol=1e-8)
+
+
+@skip_on_valgrind
+def test_events_triggering_each_other_fail(tempdir):
+    """Events that trigger each other again and again at the same time fail
+    instead of hanging."""
+    model_name = "test_events_triggering_each_other_fail"
+    antimony2amici(
+        r"""
+        x = -1; r = 1
+        x' = r
+        E1: at x >= 0: r = -1
+        E2: at x < 0: r = 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints([0.5, 2.0])
+    rdata = run_simulation(model, model.create_solver())
+    assert rdata.status != AMICI_SUCCESS
+    assert any("stuck in a discontinuity" in m.message for m in rdata.messages)
+    assert_allclose(rdata.by_id("x")[0], -0.5, rtol=1e-8)
+
+
+@skip_on_valgrind
+def test_root_at_threshold_changes_direction_dae_large_t(tempdir):
+    """A trigger on an algebraic state at its threshold starts decreasing at
+    an event at a large time.
+
+    `y = exp(1 - x^2)` is at its threshold 1 until `x` starts increasing at
+    `T`, after which `y >= 1` is false.
+    """
+    model_name = "test_root_at_threshold_changes_direction_dae_large_t"
+    T = 2e6
+    antimony2amici(
+        rf"""
+        x = 1; r = 0; z = 0; y = 1
+        x' = r
+        0 = y - exp(1 - x^2)
+        z' = piecewise(1, y >= 1, 0)
+        E3: at time >= {T}: r = 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    assert model.has_algebraic_states()
+    model.set_timepoints([T - 1, T + 1, T + 2])
+    rdata = run_simulation(model, model.create_solver())
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.by_id("z"), [T - 1, T, T], rtol=1e-10, atol=0)

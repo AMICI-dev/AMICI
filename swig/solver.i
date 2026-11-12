@@ -36,6 +36,7 @@ using namespace amici;
 %ignore store_diagnosis_b;
 %ignore turn_off_root_finding;
 %ignore get_root_info;
+%ignore get_root_time_tolerance;
 %ignore update_and_reinit_states_and_sensitivities;
 %ignore get_cpu_time;
 %ignore get_cpu_time_b;

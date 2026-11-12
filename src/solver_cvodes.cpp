@@ -377,6 +377,18 @@ void CVodeSolver::get_root_info(int* rootsfound) const {
         throw CvodeException(status, "CVodeGetRootInfo");
 }
 
+realtype CVodeSolver::get_root_time_tolerance() const {
+    // as in cvRcheck2/cvRcheck3
+    auto const* cv_mem = static_cast<CVodeMem>(solver_memory_.get());
+    if (!cv_mem)
+        return 0.0;
+    // The step size is not reset at reinitialization.
+    if (cv_mem->cv_nst == 0)
+        return 0.0;
+    return 100 * cv_mem->cv_uround
+           * (std::abs(cv_mem->cv_tn) + std::abs(cv_mem->cv_h));
+}
+
 void CVodeSolver::set_linear_solver() const {
     int status = CVodeSetLinearSolver(
         solver_memory_.get(), linear_solver_->get(), linear_solver_->getMatrix()

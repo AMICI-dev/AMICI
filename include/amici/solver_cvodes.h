@@ -77,6 +77,8 @@ class CVodeSolver : public Solver {
 
     void get_root_info(int* rootsfound) const override;
 
+    realtype get_root_time_tolerance() const override;
+
     void set_stop_time(realtype tstop) const override;
 
     void turn_off_root_finding() const override;

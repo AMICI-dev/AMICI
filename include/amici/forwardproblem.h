@@ -419,6 +419,20 @@ class EventHandlingSimulator {
 
   private:
     /**
+     * @brief Update the Heaviside variables after some were set by the
+     * direction of their root functions at the initial time.
+     *
+     * The other Heaviside variables are set by the sign of their root
+     * functions, which may depend on the updated ones, and their triggers
+     * are updated accordingly. For DAEs, the algebraic states are made
+     * consistent.
+     *
+     * @param flipped whether the respective Heaviside variable was set by
+     * the direction of its root function (dimension: ne)
+     */
+    void update_heaviside_after_initial_flips(std::vector<bool> const& flipped);
+
+    /**
      * @brief Store the state at which the latest discontinuity was reached.
      *
      * For forward sensitivities, this also computes the event time

@@ -103,8 +103,9 @@ The uncertainty is estimated from the change of the
 root function for a state perturbation within the integration tolerances
 and within the time tolerance of the root-finding.
 Likewise, at the start of a simulation or steady-state computation, the
-Heaviside helper variables of root functions at zero are set by the direction
-in which they move, unless the respective event triggers at the initial time.
+Heaviside helper variable of a root function at zero that decreases is set to
+`0`, unless the respective event triggers at the initial time, and conditions
+depending on it are re-evaluated.
 
 In order to fully support SBML events and Piecewise functions, events only
 trigger at zero crossings from negative to positive. For Heaviside

@@ -16,31 +16,6 @@
 namespace amici {
 
 /**
- * @brief Index of the root function that defines the event time of a
- * discontinuity.
- *
- * The last root that changed from negative to positive, or, if there is
- * none, the last root that crossed zero.
- *
- * @param roots_found Root crossing directions (1, -1, or 0)
- * @return Root index, or -1 if no root crossed zero
- */
-inline int event_time_root(std::vector<int> const& roots_found) {
-    int ie_tau = -1;
-    for (int ie = 0; ie < gsl::narrow<int>(roots_found.size()); ++ie) {
-        if (roots_found[ie] == 1)
-            ie_tau = ie;
-    }
-    if (ie_tau >= 0)
-        return ie_tau;
-    for (int ie = 0; ie < gsl::narrow<int>(roots_found.size()); ++ie) {
-        if (roots_found[ie] != 0)
-            ie_tau = ie;
-    }
-    return ie_tau;
-}
-
-/**
  * @brief creates a slice from existing data
  *
  * @param data to be sliced
