@@ -4447,3 +4447,28 @@ def test_trigger_close_to_unrelated_event(tempdir, dt, touched):
         assert_allclose(rdata.sllh[0], 1 / k**2, rtol=1e-4)
         if method == SensitivityMethod.forward:
             assert_allclose(rdata.sx[0, 0, iq], 1 / k**2, rtol=1e-4)
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize(
+    "condition, expected", [("x <= 1", [0, 0, 0]), ("x > 1", [0, 2, 4])]
+)
+def test_condition_at_threshold_at_t0(tempdir, condition, expected):
+    """A `piecewise` condition at its threshold at the initial time changes
+    right after it (#3515)."""
+    model_name = "test_condition_at_threshold_at_t0_" + (
+        "leq" if "<=" in condition else "gt"
+    )
+    antimony2amici(
+        rf"""
+        x = 1; x' = 1
+        y = 0; y' = piecewise(2, {condition}, 0)
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints([0.0, 1.0, 2.0])
+    rdata = run_simulation(model, model.create_solver())
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.by_id("y"), expected, rtol=0, atol=1e-8)
