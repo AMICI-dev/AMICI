@@ -46,6 +46,7 @@ from amici.testing import skip_on_valgrind
 from conftest import MODEL_STEADYSTATE_SCALED_XML
 from numpy.testing import assert_allclose, assert_array_equal
 from requests import HTTPError
+from sympy.logic.boolalg import BooleanAtom
 
 
 def simple_sbml_model():
@@ -121,6 +122,211 @@ def test_negated_event_trigger(trigger, expected):
     )
     # must not raise
     importer._sympify(model.getAssignmentRuleByVariable("b"))
+
+
+_boolean_triggers = [
+    sp.ITE(sp.Symbol("a") > 0, sp.Symbol("b") > 1, sp.Symbol("c") <= 0),
+    sp.Not(sp.And(sp.Symbol("a") > 0, sp.Symbol("b") >= 1)),
+    sp.ITE(
+        sp.Or(sp.Symbol("a") > 0, sp.Symbol("c") > 0),
+        sp.Not(sp.And(sp.Symbol("b") > 1, sp.Symbol("c") < 0)),
+        sp.Symbol("a") < -1,
+    ),
+]
+
+
+@pytest.mark.parametrize("trigger", _boolean_triggers)
+def test_ite_and_not_event_trigger_to_root_function(trigger):
+    """Test root functions for ITE and Not triggers."""
+    from amici.importers.sbml import _parse_event_trigger
+
+    root = _parse_event_trigger(trigger)
+    assert not root.has(sp.ITE, sp.Not)
+
+    a, b, c = sp.symbols("a b c")
+    # values off the boundaries of all relations
+    values = [-2.5, -0.5, 0.5, 1.5]
+    for point in np.array(np.meshgrid(values, values, values)).T.reshape(
+        -1, 3
+    ):
+        subs = dict(zip((a, b, c), point, strict=True))
+        assert (root.subs(subs) > 0) == bool(trigger.subs(subs)), subs
+
+
+def test_ite_event_trigger_condition_change():
+    """Test ITE root functions when only the condition changes."""
+    from amici.importers.sbml import _parse_event_trigger
+
+    a, b, c = sp.symbols("a b c")
+    root = _parse_event_trigger(sp.ITE(a > 0, b > 0, c > 0))
+    # The value of the ITE does not change if both branches agree.
+    #  The root function must not touch zero in that case.
+    assert root.subs({a: 0, b: 1, c: 1}) > 0
+    assert root.subs({a: 0, b: -1, c: -1}) < 0
+
+    root = _parse_event_trigger(sp.Not(sp.ITE(a > 0, b > 0, c > 0)))
+    assert root.subs({a: 0, b: 1, c: 1}) < 0
+    assert root.subs({a: 0, b: -1, c: -1}) > 0
+
+
+@pytest.mark.parametrize("trigger", _boolean_triggers)
+def test_ite_and_not_piecewise_to_heaviside(trigger):
+    """Test conversion of piecewise functions with ITE and Not conditions."""
+    from amici.importers.utils import _parse_piecewise_to_heaviside
+
+    a, b, c = sp.symbols("a b c")
+    pw = sp.Piecewise((2, trigger), (3, True))
+    heavisides = _parse_piecewise_to_heaviside(pw.args)
+    assert not heavisides.has(sp.ITE, sp.Not, sp.Piecewise)
+    assert heavisides.has(sp.Heaviside)
+
+    # including values on the boundaries of all relations
+    values = [-2, -1, -0.5, 0, 0.5, 1, 2]
+    for point in np.array(np.meshgrid(values, values, values)).T.reshape(
+        -1, 3
+    ):
+        subs = dict(zip((a, b, c), point, strict=True))
+        assert heavisides.subs(subs) == pw.subs(subs), subs
+
+
+def test_boolean_piecewise_to_ite():
+    """Test conversion of Boolean-valued piecewise functions to ITE."""
+    from amici.importers.utils import _boolean_piecewise_to_ite
+
+    a, b = sp.symbols("a b")
+    pw = sp.Piecewise((a > 1, b > 0), (a < 0, b > -1))
+    assert _boolean_piecewise_to_ite(*pw.args) == sp.ITE(
+        b > 0, a > 1, sp.ITE(b > -1, a < 0, sp.false)
+    )
+    # numeric piecewise functions are left unchanged
+    pw = sp.Piecewise((a, b > 0), (2, True))
+    assert _boolean_piecewise_to_ite(*pw.args) == pw
+    # symbols are sympy Booleans, but here they are numeric
+    pw = sp.Piecewise((a, b > 0), (b, True))
+    assert _boolean_piecewise_to_ite(*pw.args) == pw
+
+
+def test_convert_boolean_piecewise_used_as_number():
+    """Test Boolean-valued piecewise functions in numeric contexts."""
+    from amici.importers.utils import _convert_boolean_piecewise
+
+    a = sp.Symbol("a")
+    bool_pw = sp.Piecewise((sp.true, a > 1), (sp.false, True))
+    as_number = sp.Piecewise((1, a > 1), (0, True))
+    # relational operand
+    rel = sp.StrictGreaterThan(bool_pw, 0.5, evaluate=False)
+    assert _convert_boolean_piecewise(rel) == (as_number > 0.5)
+    # piece of a numeric piecewise function
+    pw = sp.Piecewise((bool_pw, a > 0), (3, True))
+    assert _convert_boolean_piecewise(pw) == sp.Piecewise(
+        (as_number, a > 0), (3, True)
+    )
+
+
+def test_boolean_piecewise_rule_and_trigger_to_roots():
+    """Test import of Boolean-valued piecewise rules and event triggers.
+
+    Both are converted to ITEs, and then to Heaviside functions or root
+    functions, respectively.
+    """
+    # rule ID -> (formula, expected value as function of s, a, b, g)
+    rules = {
+        "z1": (
+            "piecewise(s < b, s > a, s < g)",
+            lambda s, a, b, g: sp.ITE(s > a, s < b, s < g),
+        ),
+        # no otherwise (defaults to false)
+        "z2": (
+            "piecewise(s > a, s < b)",
+            lambda s, a, b, g: sp.And(s < b, s > a),
+        ),
+        # constant pieces
+        "z3": (
+            "piecewise(true, s < g, s > a)",
+            lambda s, a, b, g: sp.Or(s < g, s > a),
+        ),
+        # used as number
+        "z4": (
+            "2 * piecewise(s < b, s > a, s < g) + 1",
+            lambda s, a, b, g: 2 * int(bool(sp.ITE(s > a, s < b, s < g))) + 1,
+        ),
+        "z5": (
+            "2 * piecewise(true, s > a, false)",
+            lambda s, a, b, g: 2 * int(bool(s > a)),
+        ),
+        # Boolean pieces of numeric piecewise functions
+        "z6": (
+            "piecewise(piecewise(true, s > a, false), s > g, 3)",
+            lambda s, a, b, g: int(bool(s > a)) if s > g else 3,
+        ),
+        "z7": (
+            "piecewise(s > a, s < b, 2)",
+            lambda s, a, b, g: int(bool(s > a)) if s < b else 2,
+        ),
+    }
+    rules_str = "\n".join(
+        f"{rule_id} := {formula}" for rule_id, (formula, _) in rules.items()
+    )
+    sbml_str = antimony2sbml(f"""
+        s = 0
+        s' = 1
+        a = 2; b = 3; g = 1
+        d = 2.5; e = 3.5; f = 1.5
+        {rules_str}
+        x = 0
+        x' = z1 + z2 + z3 + z4 + z5 + z6 + z7
+        # ITE(s > d, s > e, s > f)
+        y = 0
+        E1: at piecewise(s > e, s > d, s > f): y = y + 1
+    """)
+    de_model = SbmlImporter(
+        sbml_source=sbml_str, from_file=False
+    )._build_ode_model()
+
+    roots = {event.get_sym(): event.get_val() for event in de_model.events()}
+    # model symbols carry assumptions
+    model_syms = {
+        str(sym): sym for root in roots.values() for sym in root.free_symbols
+    }
+    s, a, b, g, d, e, f = (model_syms[x] for x in "sabgdef")
+    par = {a: 2, b: 3, g: 1, d: 2.5, e: 3.5, f: 1.5}
+    trigger_expected = sp.ITE(s > d, s > e, s > f)
+
+    rule_exprs = {
+        expr.get_id(): expr.get_val()
+        for expr in de_model.expressions()
+        if expr.get_id() in rules
+    }
+    assert set(rule_exprs) == set(rules)
+    trigger = roots[sp.Symbol("E1")]
+    for expr in (*rule_exprs.values(), trigger):
+        assert not expr.has(sp.ITE, sp.Piecewise, sp.Heaviside)
+        assert not expr.atoms(sp.core.relational.Relational)
+        assert not expr.atoms(BooleanAtom)
+    # the rules only depend on the time-dependent root functions,
+    # which are tracked by the solver
+    for expr in rule_exprs.values():
+        assert expr.free_symbols <= set(roots)
+    assert not trigger.has(*roots)
+
+    # including values on the boundaries of all relations
+    for s_val in np.arange(0, 4.25, 0.25):
+        subs = {**par, s: s_val}
+        # Heaviside functions are 1 at 0
+        h = {
+            sym: int(bool(root.subs(subs) >= 0))
+            for sym, root in roots.items()
+            if sym != sp.Symbol("E1")
+        }
+        for rule_id, (_, expected) in rules.items():
+            val = expected(*(x.subs(subs) for x in (s, a, b, g)))
+            if isinstance(val, BooleanAtom):
+                val = int(bool(val))
+            assert rule_exprs[rule_id].subs(h) == val, (rule_id, s_val)
+        if s_val not in (par[d], par[e], par[f]):
+            assert (trigger.subs(subs) > 0) == bool(
+                trigger_expected.subs(subs)
+            ), s_val
 
 
 def test_sbml2amici_no_observables(tempdir):

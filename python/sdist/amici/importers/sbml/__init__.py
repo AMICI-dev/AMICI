@@ -56,6 +56,7 @@ from amici.importers.sbml.utils import SBMLException
 from amici.importers.utils import (
     MeasurementChannel,
     _check_unsupported_functions,
+    _convert_boolean_piecewise,
     _default_simplify,
     _eq_to_and,
     _get_str_symbol_identifiers,
@@ -3070,6 +3071,10 @@ class SbmlImporter:
             expr = expr.simplify().evalf()
             _check_unsupported_functions_sbml(expr, expression_type=ele_name)
 
+        # boolean-valued piecewise to ITE
+        #  (must happen before bool2num and piecewise_to_heaviside)
+        expr = _convert_boolean_piecewise(expr)
+
         # boolean to numeric piecewise
         #  (this may introduce piecewise functions and must happen before
         #   piecewise_to_heaviside)
@@ -3431,6 +3436,11 @@ def _parse_event_trigger(trigger: sp.Expr) -> sp.Expr:
             # y >= x or y > x
             return root
 
+    # ~ite(c, a, b) = ite(c, ~a, ~b), to keep the consensus term (see below)
+    if isinstance(trigger, sp.Not) and isinstance(trigger.args[0], sp.ITE):
+        cond, if_true, if_false = trigger.args[0].args
+        return _parse_event_trigger(sp.ITE(cond, ~if_true, ~if_false))
+
     if isinstance(trigger, sp.Not) and not isinstance(
         nnf := _not_to_nnf(trigger), sp.Not
     ):
@@ -3448,6 +3458,16 @@ def _parse_event_trigger(trigger: sp.Expr) -> sp.Expr:
     # and(x,y): all out of {x,y} are > 0: sp.Min(x, y)
     if isinstance(trigger, sp.And):
         return sp.Min(*[_parse_event_trigger(arg) for arg in trigger.args])
+    # ite(c, a, b) = (c & a) | (~c & b) | (a & b)
+    #  The redundant consensus term (a & b) avoids a root function that
+    #  touches zero without changing sign when c changes while a == b.
+    if isinstance(trigger, sp.ITE):
+        cond, if_true, if_false = map(_parse_event_trigger, trigger.args)
+        return sp.Max(
+            sp.Min(cond, if_true),
+            sp.Min(-cond, if_false),
+            sp.Min(if_true, if_false),
+        )
 
     raise SBMLException(
         "AMICI can not parse piecewise/event trigger functions with argument "
