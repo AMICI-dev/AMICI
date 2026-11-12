@@ -701,6 +701,21 @@ def test_vector_to_ndarray(monkeypatch, sbml_example_presimulation_module):
         assert getattr(rdata, field).flatten().tolist() == expected[field]
 
 
+def test_vector_iterator():
+    """Vector iterators work without `SwigPyIterator.value()`.
+
+    `value()` is not exposed, since it segfaulted when called from Python
+    (https://github.com/AMICI-dev/AMICI/issues/3509).
+    """
+    vec = DoubleVector([1.5, 2.5])
+    it = iter(vec)
+    assert not hasattr(it, "value")
+    assert next(it) == 1.5
+    assert it.previous() == 1.5
+    assert list(vec) == [1.5, 2.5]
+    assert list(IntVector([1, 2])) == [1, 2]
+
+
 def test_rdata_ids(sbml_example_presimulation_module):
     """Test that rdata IDs are correctly set."""
     model_module = sbml_example_presimulation_module
