@@ -14,6 +14,122 @@
 
 namespace amici {
 
+namespace {
+
+/**
+ * @brief Time derivative of the states of a DAE, including the algebraic
+ * states.
+ *
+ * The derivatives of the algebraic states in `dx` are not necessarily
+ * consistent, e.g., after event assignments. They are computed from the
+ * time derivative of the algebraic equations, `0 = df_a/dt + df_a/dx_d dx_d
+ * + df_a/dx_a dx_a`, with finite differences. This requires an index-1 DAE;
+ * if `df_a/dx_a` is singular or not finite, `xdot` is left unchanged.
+ *
+ * @param model Model
+ * @param t timepoint
+ * @param x consistent state
+ * @param xdot time derivative of the states, with consistent derivatives of
+ * the differential states, whose entries for the algebraic states are
+ * replaced if the algebraic equations can be solved for them
+ * @param rtol relative tolerance
+ * @param atol absolute tolerance
+ */
+void set_algebraic_state_derivatives(
+    Model& model, realtype const t, AmiVector const& x, AmiVector& xdot,
+    realtype const rtol, realtype const atol
+) {
+    auto const& id_list = model.get_id_list();
+    std::vector<int> ia;
+    for (int ix = 0; ix < x.size(); ++ix) {
+        if (id_list.at(ix) == 0.0)
+            ia.push_back(ix);
+    }
+    auto const na = gsl::narrow<int>(ia.size());
+    if (na == 0)
+        return;
+
+    constexpr auto eps = std::numeric_limits<realtype>::epsilon();
+    // The algebraic equations do not depend on `dx`.
+    AmiVector const dx_none(x.size(), x.get_ctx());
+    AmiVector xp(x);
+    AmiVector res_fwd(x.size(), x.get_ctx());
+    AmiVector res_bwd(x.size(), x.get_ctx());
+
+    // b = df_a/dt + df_a/dx_d dx_d, with a step that is small compared to
+    // the time scales of the differential states
+    std::vector<realtype> b(na);
+    realtype x_max = 0.0;
+    for (int ix = 0; ix < x.size(); ++ix)
+        x_max = std::max(x_max, std::abs(x[ix]));
+    auto dt = std::cbrt(eps) * std::max(std::abs(t), 1.0);
+    for (int ix = 0; ix < x.size(); ++ix) {
+        auto const x_scale = std::abs(x[ix]) + rtol * x_max + atol;
+        if (id_list.at(ix) != 0.0
+            && dt * std::abs(xdot[ix]) > std::cbrt(eps) * x_scale)
+            dt = std::cbrt(eps) * x_scale / std::abs(xdot[ix]);
+    }
+    // resolvable in `t`
+    dt = std::max(dt, 64 * eps * std::max(std::abs(t), 1.0));
+    for (int ix = 0; ix < x.size(); ++ix)
+        xp[ix] = x[ix] + (id_list.at(ix) == 0.0 ? 0.0 : dt * xdot[ix]);
+    model.fxdot(t + dt, xp, dx_none, res_fwd);
+    for (int ix = 0; ix < x.size(); ++ix)
+        xp[ix] = x[ix] - (id_list.at(ix) == 0.0 ? 0.0 : dt * xdot[ix]);
+    model.fxdot(t - dt, xp, dx_none, res_bwd);
+    for (int i = 0; i < na; ++i)
+        b[i] = (res_fwd[ia[i]] - res_bwd[ia[i]]) / (2 * dt);
+
+    // A = df_a/dx_a, column-wise
+    std::vector<realtype> A(na * na);
+    xp.copy(x);
+    for (int j = 0; j < na; ++j) {
+        auto const x_ref
+            = std::abs(x[ia[j]]) + (rtol > 0.0 ? atol / rtol : atol);
+        auto const dxa = std::cbrt(eps) * (x_ref > 0.0 ? x_ref : 1.0);
+        xp[ia[j]] = x[ia[j]] + dxa;
+        model.fxdot(t, xp, dx_none, res_fwd);
+        xp[ia[j]] = x[ia[j]] - dxa;
+        model.fxdot(t, xp, dx_none, res_bwd);
+        xp[ia[j]] = x[ia[j]];
+        for (int i = 0; i < na; ++i)
+            A[i * na + j] = (res_fwd[ia[i]] - res_bwd[ia[i]]) / (2 * dxa);
+    }
+
+    // solve A dx_a = -b by Gaussian elimination with partial pivoting
+    for (int k = 0; k < na; ++k) {
+        int piv = k;
+        for (int i = k + 1; i < na; ++i) {
+            if (std::abs(A[i * na + k]) > std::abs(A[piv * na + k]))
+                piv = i;
+        }
+        if (!(std::abs(A[piv * na + k]) > 0.0))
+            return; // not solvable for the algebraic states
+        if (piv != k) {
+            for (int j = 0; j < na; ++j)
+                std::swap(A[k * na + j], A[piv * na + j]);
+            std::swap(b[k], b[piv]);
+        }
+        for (int i = k + 1; i < na; ++i) {
+            auto const f = A[i * na + k] / A[k * na + k];
+            for (int j = k; j < na; ++j)
+                A[i * na + j] -= f * A[k * na + j];
+            b[i] -= f * b[k];
+        }
+    }
+    std::vector<realtype> dxa(na);
+    for (int i = na - 1; i >= 0; --i) {
+        auto sum = -b[i];
+        for (int j = i + 1; j < na; ++j)
+            sum -= A[i * na + j] * dxa[j];
+        dxa[i] = sum / A[i * na + i];
+    }
+    for (int i = 0; i < na; ++i)
+        xdot[ia[i]] = dxa[i];
+}
+
+} // namespace
+
 constexpr realtype conv_thresh = 1.0;
 
 /**
@@ -84,10 +200,14 @@ void EventHandlingSimulator::run(
     is_main_simulation_ = is_main_simulation;
     ws_->sol.t = t0;
     ws_->tlastroot = t0;
-    ws_->t_roots_for_ignore = NAN;
+    std::ranges::fill(
+        ws_->t_root_crossed, -std::numeric_limits<realtype>::infinity()
+    );
     t_last_trigger_.assign(
         model_->ne, -std::numeric_limits<realtype>::infinity()
     );
+    t_dropped_roots_ = NAN;
+    n_dropped_roots_repeats_ = 0;
 
     handle_initial_events(edata);
 
@@ -148,8 +268,8 @@ void EventHandlingSimulator::run(
                 status == AMICI_ROOT_RETURN || ws_->sol.t == next_t_event
             ) {
                 // solver-tracked or time-triggered event
-                collect_roots(next_t_event);
-                handle_events(false, edata);
+                if (collect_roots(next_t_event))
+                    handle_events(false, edata);
             }
         }
         handle_datapoint(next_t_out);
@@ -179,6 +299,8 @@ void EventHandlingSimulator::run_steady_state(
     t_last_trigger_.assign(
         model_->ne, -std::numeric_limits<realtype>::infinity()
     );
+    t_dropped_roots_ = NAN;
+    n_dropped_roots_repeats_ = 0;
 
     while (true) {
         handle_close_trigger_timepoints(
@@ -232,8 +354,8 @@ void EventHandlingSimulator::run_steady_state(
             }
 
             // solver-tracked or time-triggered event
-            collect_roots(next_t_event);
-            handle_events(false, nullptr);
+            if (collect_roots(next_t_event))
+                handle_events(false, nullptr);
         }
     }
 
@@ -507,24 +629,11 @@ void EventHandlingSimulator::handle_events(
     }
     ws_->tlastroot = ws_->sol.t;
 
-    // Crossing directions of all roots found in this discontinuity, as a
-    // per-root bitmask. The same root may cross in both directions here,
-    // e.g. when an event assignment moves the state back across the
-    // event's own trigger, and `detect_secondary_events()` resets
-    // `roots_found` entries, so directions are accumulated rather than
-    // copied. This includes the roots of preceding discontinuities at the
-    // same time, as the solver forgets them on reinitialization.
-    if (ws_->sol.t != ws_->t_roots_for_ignore) {
-        std::ranges::fill(ws_->roots_for_ignore, 0);
-        ws_->t_roots_for_ignore = ws_->sol.t;
+    for (int ie = 0; ie < model_->ne; ++ie) {
+        if (ws_->roots_found.at(ie) != 0)
+            ws_->t_root_crossed.at(ie) = ws_->sol.t;
     }
-    auto& roots_for_ignore = ws_->roots_for_ignore;
-    auto const record_roots_for_ignore = [this, &roots_for_ignore]() {
-        for (int ie = 0; ie < model_->ne; ++ie)
-            roots_for_ignore.at(ie)
-                |= Solver::root_direction_bit(ws_->roots_found.at(ie));
-    };
-    record_roots_for_ignore();
+    std::ranges::fill(ws_->n_slope_flips, 0);
 
     // start a new discontinuity record whenever a new event is triggered
     auto record_new_discontinuity
@@ -566,10 +675,52 @@ void EventHandlingSimulator::handle_events(
     // computed for sensitivities
     AmiVector xdot_pre(ws_->xdot_at_trigger);
 
-    while (!ws_->pending_events.empty()) {
+    auto const handle_secondary_events = [&]() {
+        record_new_discontinuity(true);
+        model_->update_heaviside(ws_->roots_found);
+        first_since_discontinuity = true;
+        queue_triggered_events();
+
+        if (ws_->pending_events.empty()) {
+            // If another event is pending, its sensitivity update includes
+            // the jump in the right-hand side, and the algebraic states are
+            // made consistent after its application. If there is none, e.g.,
+            // if roots were only crossed in the negative direction, do that
+            // here.
+            solver_->calc_consistent_state(
+                ws_->sol.t, ws_->sol.x, ws_->sol.dx,
+                next_output_timepoint(*model_, ws_->sol.t)
+            );
+            apply_xdot_jump_sensitivity_update();
+        }
+    };
+    // Once all events are applied, check the roots once more: Those moved to
+    // their threshold by the last event assignment are now checked for the
+    // direction in which they move.
+    auto const detect_final_crossings = [&]() {
+        while (detect_secondary_events()) {
+            handle_secondary_events();
+            if (!ws_->pending_events.empty())
+                return true;
+        }
+        return false;
+    };
+
+    // number of applications of each event in this discontinuity
+    std::vector<int> n_applied(model_->ne, 0);
+    while (!ws_->pending_events.empty() || detect_final_crossings()) {
         // get the next event to be handled
         auto const& pending_event = ws_->pending_events.pop();
         auto const ie = pending_event.idx;
+        // e.g., `E1: at x >= 0: r = -1` and `E2: at x < 0: r = 1` at `x = 0`
+        // for `x' = r`
+        if (++n_applied.at(ie) > model_->ne) {
+            throw AmiException(
+                "AMICI is stuck in a discontinuity at time %.17g, as event "
+                "%s triggered more often than there are events.",
+                ws_->sol.t, pending_event.event.get_id().c_str()
+            );
+        }
         auto const& state_at_trigger = pending_event.state_at_trigger;
 
         gsl_Assert(
@@ -641,11 +792,14 @@ void EventHandlingSimulator::handle_events(
 
         // Execute the event
         // Apply bolus to the state and the sensitivities
+        AmiVector const x_pre_assignment(ws_->sol.x);
         model_->add_state_event_update(
             ws_->sol.x, ie, ws_->sol.t, ws_->xdot, ws_->xdot_at_trigger, x_eval,
             state_at_trigger.has_value() ? state_at_trigger->mod
                                          : model_->get_model_state()
         );
+        bool const state_changed
+            = ws_->sol.x.get_vector() != x_pre_assignment.get_vector();
         // For DAEs, the algebraic states and the state derivatives have to be
         // made consistent with the post-event differential states before
         // they are stored or used for sensitivity updates.
@@ -678,31 +832,15 @@ void EventHandlingSimulator::handle_events(
             );
         }
 
+        // Only Heaviside updates without state changes in between count as
+        // switching back and forth.
+        if (state_changed)
+            std::ranges::fill(ws_->n_slope_flips, 0);
+
         // check if the event assignment triggered another event
         // and add it to the list of pending events if necessary
-        if (detect_secondary_events()) {
-            record_new_discontinuity(true);
-
-            model_->update_heaviside(ws_->roots_found);
-            first_since_discontinuity = true;
-            queue_triggered_events();
-
-            if (ws_->pending_events.empty()) {
-                // If another event is pending, its sensitivity update
-                // includes the jump in the right-hand side, and the
-                // algebraic states are made consistent after its
-                // application. If there is none, e.g., if roots were only
-                // crossed in the negative direction, do that here.
-                solver_->calc_consistent_state(
-                    ws_->sol.t, ws_->sol.x, ws_->sol.dx,
-                    next_output_timepoint(*model_, ws_->sol.t)
-                );
-                apply_xdot_jump_sensitivity_update();
-            }
-        }
-
-        // record any newly-found roots
-        record_roots_for_ignore();
+        if (detect_secondary_events())
+            handle_secondary_events();
     }
 
     // The explicit trigger timepoints may depend on states that were changed
@@ -711,13 +849,12 @@ void EventHandlingSimulator::handle_events(
         model_->reinit_explicit_roots(ws_->sol.x);
     }
 
-    // reinitialize the solver after all events have been processed
+    // Reinitialize the solver after all events have been processed. The
+    // solver only reports root crossings that change the Heaviside variables,
+    // so the roots just crossed are not reported again.
     solver_->reinit(ws_->sol.t, ws_->sol.x, ws_->sol.dx);
-
-    // Remember encountered roots so that an identical root reported
-    // immediately after the reinitialization can be recognized as
-    // a spurious re-detection rather than a genuine new event.
-    solver_->ignore_roots_after_reinit(roots_for_ignore);
+    t_dropped_roots_ = NAN;
+    n_dropped_roots_repeats_ = 0;
 
     if (solver_->computing_fsa()) {
         solver_->sens_reinit(ws_->sol.sx, ws_->sdx);
@@ -725,10 +862,82 @@ void EventHandlingSimulator::handle_events(
 }
 
 void EventHandlingSimulator::handle_initial_events(ExpData const* edata) {
-    if (model_->ne && std::ranges::any_of(ws_->roots_found, [](int const rf) {
+    if (!model_->ne)
+        return;
+
+    std::ranges::fill(
+        ws_->t_root_crossed, -std::numeric_limits<realtype>::infinity()
+    );
+
+    // The Heaviside variables were set by the sign of the root functions.
+    // A root function at zero that decreases does not cross zero for the
+    // solver, so it would keep its Heaviside variable of 1, and its next
+    // increasing crossing would not be an event.
+    model_->froot(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->rootvals);
+    std::vector<realtype> root_noise;
+    std::vector<realtype> root_slope;
+    estimate_root_noise_and_slope(root_noise, root_slope);
+    auto const& h = model_->get_model_state().h;
+    std::vector<int> h_update(model_->ne, 0);
+    std::vector<bool> by_slope(model_->ne, false);
+    for (int ie = 0; ie < model_->ne_solver; ie++) {
+        if (ws_->roots_found.at(ie) == 0 && h.at(ie) > 0.0
+            && std::abs(ws_->rootvals.at(ie)) <= root_noise[ie]
+            && root_slope[ie] < 0.0) {
+            h_update.at(ie) = -1;
+            by_slope.at(ie) = true;
+        }
+    }
+    if (std::ranges::any_of(by_slope, [](bool const b) { return b; })) {
+        model_->update_heaviside(h_update);
+        update_heaviside_after_initial_flips(by_slope);
+    }
+
+    if (std::ranges::any_of(ws_->roots_found, [](int const rf) {
             return rf == 1;
         })) {
         handle_events(true, edata);
+    }
+}
+
+void EventHandlingSimulator::update_heaviside_after_initial_flips(
+    std::vector<bool> const& flipped
+) {
+    auto const& h = model_->get_model_state().h;
+    std::vector<int> h_update(model_->ne, 0);
+    // Root functions may depend on the updated Heaviside variables (see
+    // Model::reinit_events)
+    for (int iter = 0; iter < model_->ne; ++iter) {
+        model_->froot(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->rootvals);
+        std::ranges::fill(h_update, 0);
+        bool h_changed = false;
+        for (int ie = 0; ie < model_->ne; ie++) {
+            if (flipped.at(ie))
+                continue;
+            realtype const h_new = ws_->rootvals.at(ie) < 0.0 ? 0.0 : 1.0;
+            if (h_new == h.at(ie))
+                continue;
+            h_changed = true;
+            h_update.at(ie) = h_new > 0.0 ? 1 : -1;
+            if (h_new == 0.0)
+                ws_->roots_found.at(ie) = 0;
+            else if (!model_->get_event(ie).get_initial_value())
+                ws_->roots_found.at(ie) = 1;
+        }
+        if (!h_changed)
+            break;
+        model_->update_heaviside(h_update);
+    }
+
+    // For DAEs, the algebraic states may depend on the Heaviside variables.
+    if (model_->has_algebraic_states()) {
+        solver_->calc_consistent_state(
+            ws_->sol.t, ws_->sol.x, ws_->sol.dx,
+            next_output_timepoint(*model_, ws_->sol.t)
+        );
+        solver_->reinit(ws_->sol.t, ws_->sol.x, ws_->sol.dx);
+        if (solver_->computing_fsa())
+            solver_->sens_reinit(ws_->sol.sx, ws_->sdx);
     }
 }
 
@@ -798,14 +1007,14 @@ void EventHandlingSimulator::store_state_at_trigger(
         // is this really well-defined then?), in that case, just use the
         // last ie and hope for the best.
         if (!seflag && !initial_event) {
-            for (int ie = 0; ie < model_->ne; ie++) {
-                // only consider transitions false -> true
-                if (ws_->roots_found.at(ie) == 1) {
-                    model_->get_event_time_sensitivity(
-                        ws_->stau, ws_->sol.t, ie, ws_->sol.x, ws_->sol.sx,
-                        ws_->sol.dx
-                    );
-                }
+            // Transitions false -> true, or, if there are none, any
+            // transition, as secondary events may still be triggered.
+            int const ie_tau = event_time_root(ws_->roots_found);
+            if (ie_tau >= 0) {
+                model_->get_event_time_sensitivity(
+                    ws_->stau, ws_->sol.t, ie_tau, ws_->sol.x, ws_->sol.sx,
+                    ws_->sol.dx
+                );
             }
         }
         if (initial_event) {
@@ -871,22 +1080,92 @@ int EventHandlingSimulator::detect_secondary_events() {
 
     // check whether we need to fire a secondary event
     model_->froot(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->rootvals);
+    auto const& h = model_->get_model_state().h;
+
+    // uncertainty and time derivative of the root functions, only computed
+    // if needed
+    std::vector<realtype> root_noise;
+    std::vector<realtype> root_slope;
+
     for (int ie = 0; ie < model_->ne; ie++) {
-        // the same event should not trigger itself
-        if (ws_->roots_found.at(ie) == 0) {
-            // check whether the value of the Heaviside function changed
-            if (heaviside_differs(ws_->rval_tmp.at(ie), ws_->rootvals.at(ie))) {
-                ws_->roots_found.at(ie)
-                    = ws_->rval_tmp.at(ie) < ws_->rootvals.at(ie) ? 1 : -1;
-                secondevent++;
+        ws_->roots_found.at(ie) = 0;
+        auto const rootval = ws_->rootvals.at(ie);
+        bool const crossed = ws_->t_root_crossed.at(ie) == ws_->sol.t;
+        bool const changed = rootval != ws_->rval_tmp.at(ie);
+        if (std::isnan(rootval)
+            || (!crossed && !changed && ie >= model_->ne_solver))
+            continue;
+        if (root_noise.empty())
+            estimate_root_noise_and_slope(root_noise, root_slope);
+        // Root functions keep their Heaviside value, unless they crossed zero
+        // at this time, an event assignment moved them to the other side of
+        // zero, or they are exactly zero, where the event may have changed
+        // their direction. Otherwise, the solver finds their crossings, at
+        // their own time, also if an event assignment changed them slightly.
+        bool const moved_across
+            = changed && (rootval >= 0.0) != (h.at(ie) > 0.0);
+        bool const near_zero = (crossed || moved_across)
+                                   ? std::abs(rootval) <= root_noise[ie]
+                                   : rootval == 0.0;
+        if (!crossed && !changed && !near_zero)
+            continue;
+        bool above = rootval >= 0.0;
+        bool by_slope = false;
+        if (near_zero) {
+            if (ie >= model_->ne_solver) {
+                // Crossings of explicit trigger times are handled when these
+                // times are reached.
+                if (crossed)
+                    continue;
+            } else if ((crossed || !changed)
+                       && (root_slope[ie] > 0.0 || root_slope[ie] < 0.0)) {
+                by_slope = true;
+                // The sign of a root function close to zero may be due to
+                // roundoff or, for DAEs, the re-computation of the algebraic
+                // states. The direction in which it moves decides.
+                above = root_slope[ie] > 0.0;
+            } else if (!changed) {
+                // no direction, e.g., a constant root function
+                continue;
             } else {
-                ws_->roots_found.at(ie) = 0;
+                // Moved to its threshold by an event assignment, or changed by
+                // it without a direction. The sign decides whether the event
+                // triggers, the next check decides by the direction in which
+                // it moves.
+                ws_->t_root_crossed.at(ie) = ws_->sol.t;
             }
-        } else {
-            // don't fire the same event again
-            ws_->roots_found.at(ie) = 0;
+        }
+        if (by_slope && changed && above && rootval < 0.0 && h.at(ie) > 0.0
+            && solver_->get_logger()) {
+            solver_->get_logger()->log(
+                LogSeverity::warning, "TRIGGER_WITHIN_TOLERANCE",
+                "At t = %.17g, an event assignment moved the trigger of event "
+                "%s below zero by less than its uncertainty while it is "
+                "increasing. The trigger is considered to remain true, so an "
+                "event that is expected to trigger again faster than the "
+                "tolerances can resolve does not trigger again.",
+                ws_->sol.t, model_->get_event(ie).get_id().c_str()
+            );
+        }
+        // Compare to the Heaviside variable, not to the previous root value,
+        // to also detect roots that are crossed back
+        realtype const h_new = above ? 1.0 : 0.0;
+        if (h_new != h.at(ie)) {
+            // e.g., `x' = piecewise(-1, x > 0, 1)` at `x = 0`
+            if (by_slope && ++ws_->n_slope_flips.at(ie) > 2) {
+                throw AmiException(
+                    "AMICI is stuck in a discontinuity at time %g, as a "
+                    "Heaviside function switches back and forth.",
+                    ws_->sol.t
+                );
+            }
+            ws_->roots_found.at(ie) = h_new > h.at(ie) ? 1 : -1;
+            ws_->t_root_crossed.at(ie) = ws_->sol.t;
+            secondevent++;
         }
     }
+    // the next event assignment is compared to the current values
+    ws_->rval_tmp = ws_->rootvals;
 
     // fire the secondary event?
     if (secondevent > 0) {
@@ -905,9 +1184,120 @@ int EventHandlingSimulator::detect_secondary_events() {
     return secondevent;
 }
 
-void EventHandlingSimulator::collect_roots(realtype const t_trigger) {
+void EventHandlingSimulator::estimate_root_noise_and_slope(
+    std::vector<realtype>& noise, std::vector<realtype>& slope
+) {
+    constexpr auto eps = std::numeric_limits<realtype>::epsilon();
+    auto const t = ws_->sol.t;
+    auto const rtol = solver_->get_relative_tolerance();
+    auto const atol = solver_->get_absolute_tolerance();
+    auto const& x0 = ws_->sol.x;
+    realtype x_max = 0.0;
+    for (int ix = 0; ix < x0.size(); ++ix)
+        x_max = std::max(x_max, std::abs(x0[ix]));
+
+    AmiVector x(x0);
+    AmiVector dx(ws_->sol.dx);
+    for (int ix = 0; ix < x.size(); ++ix)
+        x[ix] += atol + rtol * std::abs(x[ix]);
+    for (int ix = 0; ix < dx.size(); ++ix)
+        dx[ix] += atol + rtol * std::abs(dx[ix]);
+    noise.resize(model_->ne);
+    model_->froot(t, x, dx, noise);
+
+    // Central difference along the right-hand side, with a step that is
+    // small compared to the time scales of the states
+    AmiVector xdot(x0);
+    model_->fdxdt(t, x0, ws_->sol.dx, xdot);
+    if (model_->has_algebraic_states())
+        set_algebraic_state_derivatives(*model_, t, x0, xdot, rtol, atol);
+    auto dt = std::cbrt(eps) * std::max(std::abs(t), 1.0);
+    for (int ix = 0; ix < x0.size(); ++ix) {
+        auto const x_scale = std::abs(x0[ix]) + rtol * x_max + atol;
+        if (dt * std::abs(xdot[ix]) > std::cbrt(eps) * x_scale)
+            dt = std::cbrt(eps) * x_scale / std::abs(xdot[ix]);
+    }
+    // resolvable in `t`
+    dt = std::max(dt, 64 * eps * std::max(std::abs(t), 1.0));
+    std::vector<realtype> root_backward(model_->ne);
+    for (int ix = 0; ix < x.size(); ++ix)
+        x[ix] = x0[ix] - dt * xdot[ix];
+    model_->froot(t - dt, x, ws_->sol.dx, root_backward);
+    for (int ix = 0; ix < x.size(); ++ix)
+        x[ix] = x0[ix] + dt * xdot[ix];
+    slope.resize(model_->ne);
+    model_->froot(t + dt, x, ws_->sol.dx, slope);
+
+    // restore the model's derived state at the current state
+    model_->froot(t, x0, ws_->sol.dx, ws_->rootvals);
+    // time tolerance of the root-finding, at least the resolution of `t`
+    auto const t_tol = std::max(
+        solver_->get_root_time_tolerance(),
+        100 * eps * std::max(std::abs(t), 1.0)
+    );
+    for (int ie = 0; ie < model_->ne; ++ie) {
+        slope[ie] = (slope[ie] - root_backward[ie]) / ((t + dt) - (t - dt));
+        // The perturbation of all states in the same direction may cancel
+        // out, e.g., for differences of states, hence the roundoff term.
+        noise[ie] = std::max(
+            {std::abs(noise[ie] - ws_->rootvals.at(ie)),
+             std::abs(slope[ie]) * t_tol, 16 * eps * x_max}
+        );
+    }
+}
+
+bool EventHandlingSimulator::collect_roots(realtype const t_trigger) {
     // roots of the root functions tracked by the solver
     solver_->get_root_info(ws_->roots_found.data());
+
+    // The root directions set in the solver only allow crossings that change
+    // the Heaviside variables. If a root function was exactly zero at the
+    // last root, the solver may still report root functions that are exactly
+    // zero slightly after the last return point, regardless of their
+    // direction (`cvRcheck2`/`IDARcheck2`).
+    // Also, a root function that was crossed at the last root is zero there.
+    // After reinitialization, the solver determines its sign slightly after
+    // the root. If the first step is shorter, the root function may still be
+    // exactly zero at its end, which the solver reports as a root in the
+    // opposite direction.
+    constexpr auto eps = std::numeric_limits<realtype>::epsilon();
+    auto const& h = model_->get_model_state().h;
+    auto const t_tol = std::max(
+        solver_->get_root_time_tolerance(),
+        100 * eps * std::max(std::abs(ws_->sol.t), 1.0)
+    );
+    bool const after_last_root
+        = std::abs(ws_->sol.t - ws_->tlastroot) <= t_tol;
+    std::vector<realtype> rootvals;
+    int first_dropped = -1;
+    for (int ie = 0; ie < model_->ne_solver; ++ie) {
+        auto& root_found = ws_->roots_found.at(ie);
+        if (root_found == 0)
+            continue;
+        if ((root_found > 0) == (h.at(ie) == 0.0)) {
+            // changes the Heaviside variable, unless re-reported
+            if (!after_last_root
+                || ws_->t_root_crossed.at(ie) != ws_->tlastroot)
+                continue;
+            if (rootvals.empty()) {
+                rootvals.resize(model_->ne);
+                model_->froot(ws_->sol.t, ws_->sol.x, ws_->sol.dx, rootvals);
+            }
+            if (rootvals.at(ie) != 0.0)
+                continue;
+        }
+        if (first_dropped < 0)
+            first_dropped = ie;
+        if (solver_->get_logger()) {
+            solver_->get_logger()->log(
+                LogSeverity::debug, "ROOT_IGNORED",
+                "Ignored root of root function %d at t = %g, as it does not "
+                "change the Heaviside variable.",
+                ie, ws_->sol.t
+            );
+        }
+        root_found = 0;
+    }
 
     // Roots of the events with explicit trigger times. Reset first, as
     // these entries may still hold values from the previous discontinuity.
@@ -917,6 +1307,29 @@ void EventHandlingSimulator::collect_roots(realtype const t_trigger) {
     if (ws_->sol.t == t_trigger) {
         set_explicit_roots_found(t_trigger);
     }
+    if (first_dropped < 0
+        || std::ranges::any_of(
+            ws_->roots_found, [](int const rf) { return rf != 0; }
+        ))
+        return true;
+
+    // If only dropped roots were found, the simulation just continues.
+    // The solver reports such exact zeros without taking a step. It may do so
+    // a few times at the same time, e.g., if a root function of algebraic
+    // states remains exactly zero, but not indefinitely.
+    if (ws_->sol.t != t_dropped_roots_) {
+        t_dropped_roots_ = ws_->sol.t;
+        n_dropped_roots_repeats_ = 0;
+    } else if (constexpr int max_repeats = 10;
+               ++n_dropped_roots_repeats_ > max_repeats) {
+        throw AmiException(
+            "AMICI is stuck at time %.17g, as the solver repeatedly reports "
+            "the trigger of event %s at zero, which does not change its "
+            "value.",
+            ws_->sol.t, model_->get_event(first_dropped).get_id().c_str()
+        );
+    }
+    return false;
 }
 
 void EventHandlingSimulator::set_explicit_roots_found(

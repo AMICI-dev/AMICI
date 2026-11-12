@@ -77,6 +77,8 @@ class CVodeSolver : public Solver {
 
     void get_root_info(int* rootsfound) const override;
 
+    realtype get_root_time_tolerance() const override;
+
     void set_stop_time(realtype tstop) const override;
 
     void turn_off_root_finding() const override;
@@ -285,6 +287,9 @@ class CVodeSolver : public Solver {
     void qb_init(int which, AmiVector const& xQB0) const override;
 
     void root_init(int ne) const override;
+
+    void
+    set_root_direction(std::vector<int> const& rootdir) const override;
 
     void set_dense_jac_fn() const override;
 
