@@ -57,9 +57,6 @@ jobs:
           CMAKE_EXPORT_COMPILE_COMMANDS: "ON"
       run: scripts/installAmiciSource.sh
 
-    - name: Check OpenMP support
-      run: source venv/bin/activate && python -c "from amici.sim.sundials import compiled_with_openmp; import sys; sys.exit(not compiled_with_openmp())"
-
     - name: Check that test models are up to date
       # Regenerating all test models is slow, so only run this as part of
       # the merge queue gate, not on every push/PR run.
@@ -78,7 +75,8 @@ jobs:
           --cov-report=xml:"${AMICI_DIR}/build/coverage_py.xml" \
           --cov-append \
           --durations=10 \
-          ${AMICI_DIR}/python/tests
+          ${AMICI_DIR}/python/tests \
+          ${AMICI_DIR}/python/sdist/amici
 
     - name: Python tests splines
       if: ${{ github.base_ref == 'master' || github.event.merge_group.base_ref == 'master'}}
@@ -287,9 +285,6 @@ jobs:
     - name: Install python package
       run: scripts/installAmiciSource.sh
 
-    - name: Check OpenMP support
-      run: source venv/bin/activate && python -c "from amici.sim.sundials import compiled_with_openmp; import sys; sys.exit(not compiled_with_openmp())"
-
     - name: cppcheck
       run: scripts/run-cppcheck.sh
 
@@ -348,9 +343,6 @@ jobs:
       run: |
         pip show numpy > /dev/null || python3 -m pip install numpy
         scripts/installAmiciSource.sh
-
-    - name: Check OpenMP support
-      run: source venv/bin/activate && python -c "from amici.sim.sundials import compiled_with_openmp; import sys; sys.exit(not compiled_with_openmp())"
 
     - name: Get BioNetGen
       run: scripts/buildBNGL.sh

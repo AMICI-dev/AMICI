@@ -47,6 +47,12 @@ struct EventApplication {
     AmiVector xdot_eval;
 
     /**
+     * Heaviside variables with which this event's assignments were
+     * evaluated (see `x_eval`).
+     */
+    std::vector<realtype> h_assign;
+
+    /**
      * `xdot` right before this event's own bolus was applied. For the first
      * event of a discontinuity, this is evaluated with the Heaviside
      * variables before the discontinuity.
@@ -146,6 +152,14 @@ struct Discontinuity {
 
     /** State derivative corresponding to `x_at_trigger` (DAE only). */
     AmiVector dx_at_trigger;
+
+    /**
+     * Jump in `xdot` due to the Heaviside update of a secondary
+     * discontinuity that is not followed by any event application, e.g.,
+     * if event assignments crossed root functions only in the negative
+     * direction. Empty otherwise. Only populated for adjoint sensitivities.
+     */
+    AmiVector xdot_jump;
 
     /** Whether this discontinuity is due to events at the initial time. */
     bool initial_event{false};
@@ -292,7 +306,7 @@ class EventHandlingSimulator {
      * @param solver The solver to use for the simulation.
      * @param ws The workspace to use for the simulation.
      * @param dJzdx State-derivative of event likelihood
-     * (dimension nJ x nx x nMaxEvent, ordering =?)
+     * (dimension nJ x nx_solver x n_max_event x ne, column-major)
      */
     EventHandlingSimulator(
         gsl::not_null<Model*> model, gsl::not_null<Solver const*> solver,
@@ -320,12 +334,14 @@ class EventHandlingSimulator {
      * @param timepoints The output timepoints or measurement timepoints of
      * this period. This must contain at least the final timepoint of this
      * period.
-     * @param store_diagnosis Whether to store diagnosis in the solver at each
-     * timepoint in `timepoints`.
+     * @param is_main_simulation Whether this is the main simulation. If so,
+     * diagnosis is stored in the solver at each timepoint in `timepoints`,
+     * and the outputs of events that did not occur are filled in at the last
+     * output timepoint.
      */
     void
     run(realtype t, ExpData const* edata,
-        std::vector<realtype> const& timepoints, bool store_diagnosis);
+        std::vector<realtype> const& timepoints, bool is_main_simulation);
 
     /**
      * @brief Simulate until steady state and handle events along the way.
@@ -432,6 +448,18 @@ class EventHandlingSimulator {
     void queue_triggered_events();
 
     /**
+     * @brief Account for the jump in the right-hand side due to the latest
+     * Heaviside update in the sensitivities.
+     *
+     * The jump is `xdot` at the current state minus `xdot_at_trigger`.
+     * For forward sensitivities, `sx` is updated by the jump times the
+     * event time sensitivity. For adjoint sensitivities, the jump is stored
+     * in the latest discontinuity and applied in
+     * `EventHandlingBwdSimulator::handle_event_b`.
+     */
+    void apply_xdot_jump_sensitivity_update();
+
+    /**
      * @brief Get the next trigger timepoint of the events with explicit
      * trigger times after the current time, at which not all events have
      * been handled yet.
@@ -490,6 +518,21 @@ class EventHandlingSimulator {
     void handle_datapoint(realtype t);
 
     /**
+     * @brief Whether the main simulation is at the last output timepoint.
+     *
+     * Only then are the outputs of events that did not occur filled in.
+     * This is never the case if the last output timepoint is infinite
+     * (post-equilibration), nor during pre-equilibration, presimulation or
+     * post-equilibration.
+     *
+     * @return `true` if at the last output timepoint of the main simulation.
+     */
+    [[nodiscard]] bool at_last_output_timepoint() const {
+        return is_main_simulation_ && model_->nt() > 0
+               && ws_->sol.t == model_->get_timepoint(model_->nt() - 1);
+    }
+
+    /**
      * @brief fills events at final timepoint if necessary
      *
      * @param nmaxevent maximal number of events
@@ -513,6 +556,9 @@ class EventHandlingSimulator {
     /** Initial time of the current period. */
     realtype t0_{NAN};
 
+    /** Whether this simulator runs the main simulation, see `run`. */
+    bool is_main_simulation_{false};
+
     /**
      * The last trigger timepoint at which each event with an explicit
      * trigger time was handled (dimension: ne). This may be after the
@@ -531,7 +577,7 @@ class EventHandlingSimulator {
     gsl::not_null<FwdSimWorkspace*> ws_;
 
     /** state derivative of event likelihood
-     * (dimension nJ x nx x nMaxEvent, ordering =?) */
+     * (dimension nJ x nx_solver x n_max_event x ne, column-major) */
     std::vector<realtype>* dJzdx_ = nullptr;
 };
 
@@ -809,6 +855,13 @@ class SteadyStateProblem {
 
     /** Simulator for event handling */
     std::optional<EventHandlingSimulator> simulator_;
+
+    /**
+     * Initial events pending before the first attempt (`ws_->roots_found`),
+     * to handle them again if the simulation is restarted from the initial
+     * state.
+     */
+    std::vector<int> initial_roots_found_;
 };
 
 /**
@@ -1074,7 +1127,7 @@ class ForwardProblem {
     void store_final_state();
 
     /** state derivative of event likelihood
-     * (dimension nJ x nx x nMaxEvent, ordering =?) */
+     * (dimension nJ x nx_solver x n_max_event x ne, column-major) */
     std::vector<realtype> dJzdx_;
 
     /** flag to indicate whether solver was pre-initialized via

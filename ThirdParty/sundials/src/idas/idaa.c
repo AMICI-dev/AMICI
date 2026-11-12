@@ -3,8 +3,11 @@
  * Programmer(s): Radu Serban @ LLNL
  * -----------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2024, Lawrence Livermore National Security
+ * Copyright (c) 2025-2026, Lawrence Livermore National Security,
+ * University of Maryland Baltimore County, and the SUNDIALS contributors.
+ * Copyright (c) 2013-2025, Lawrence Livermore National Security
  * and Southern Methodist University.
+ * Copyright (c) 2002-2013, Lawrence Livermore National Security.
  * All rights reserved.
  *
  * See the top-level LICENSE and NOTICE files for details.
@@ -40,7 +43,9 @@
 /* Shortcuts                                                       */
 /*=================================================================*/
 
+#if defined(SUNDIALS_ENABLE_PROFILING)
 #define IDA_PROFILER IDA_mem->ida_sunctx->profiler
+#endif
 
 /*=================================================================*/
 /*               Private Functions Prototypes                      */
@@ -72,7 +77,7 @@ static int IDAApolynomialStorePnt(IDAMem IDA_mem, IDAdtpntMem d);
 static int IDAApolynomialGetY(IDAMem IDA_mem, sunrealtype t, N_Vector yy,
                               N_Vector yp, N_Vector* yyS, N_Vector* ypS);
 
-static int IDAAfindIndex(IDAMem ida_mem, sunrealtype t, long int* indx,
+static int IDAAfindIndex(IDAMem ida_mem, sunrealtype t, long int* index,
                          sunbooleantype* newpoint);
 
 static int IDAAres(sunrealtype tt, N_Vector yyB, N_Vector ypB, N_Vector resvalB,
@@ -153,7 +158,7 @@ int IDAAdjInit(void* ida_mem, long int steps, int interp)
   IDAADJ_mem->ia_interpType = interp;
   IDAADJ_mem->ia_nsteps     = steps;
 
-  /* Last index used in IDAAfindIndex, initailize to invalid value */
+  /* Last index used in IDAAfindIndex, initialize to invalid value */
   IDAADJ_mem->ia_ilast = -1;
 
   /* Allocate space for the array of Data Point structures. */
@@ -308,7 +313,8 @@ void IDAAdjFree(void* ida_mem)
     /* Free IDAA memory. */
     free(IDAADJ_mem);
 
-    IDA_mem->ida_adj_mem = NULL;
+    IDA_mem->ida_adj_mem       = NULL;
+    IDA_mem->ida_adjMallocDone = SUNFALSE;
   }
 }
 
@@ -594,7 +600,7 @@ int IDASolveF(void* ida_mem, sunrealtype tout, sunrealtype* tret, N_Vector yret,
                               dt_mem[IDA_mem->ida_nst % IDAADJ_mem->ia_nsteps]);
     }
 
-    /* Set t1 field of the current ckeck point structure
+    /* Set t1 field of the current check point structure
        for the case in which there will be no future
        check points */
     IDAADJ_mem->ck_mem->ck_t1 = IDA_mem->ida_tn;
@@ -689,10 +695,15 @@ int IDACreateB(void* ida_mem, int* which)
   ida_memB = IDACreate(IDA_mem->ida_sunctx);
   if (ida_memB == NULL)
   {
+    free(new_IDAB_mem);
     IDAProcessError(IDA_mem, IDA_MEM_FAIL, __LINE__, __func__, __FILE__,
                     MSG_MEM_FAIL);
     return (IDA_MEM_FAIL);
   }
+
+  /* We need to ensure Ns is set in the new IDAS object so that Ns is accessible 
+     in the Python callbacks which only have access to ida_memB, not the original cvode_mem */
+  ((IDAMem)ida_memB)->ida_Ns = IDA_mem->ida_Ns;
 
   /* Save ida_mem in ida_memB as user data. */
   IDASetUserData(ida_memB, ida_mem);
@@ -1415,7 +1426,7 @@ int IDACalcICB(void* ida_mem, int which, sunrealtype tout1, N_Vector yy0,
   ida_memB = (void*)IDAB_mem->IDA_mem;
 
   /* The wrapper for user supplied res function requires ia_bckpbCrt from
-     IDAAdjMem to be set to curent problem. */
+     IDAAdjMem to be set to current problem. */
   IDAADJ_mem->ia_bckpbCrt = IDAB_mem;
 
   /* Save (y, y') in yyTmp and ypTmp for use in the res wrapper.*/
@@ -1515,7 +1526,7 @@ int IDACalcICBS(void* ida_mem, int which, sunrealtype tout1, N_Vector yy0,
   }
 
   /* The wrapper for user supplied res function requires ia_bckpbCrt from
-     IDAAdjMem to be set to curent problem. */
+     IDAAdjMem to be set to current problem. */
   IDAADJ_mem->ia_bckpbCrt = IDAB_mem;
 
   /* Save (y, y') and (y_p, y'_p) in yyTmp, ypTmp and yySTmp, ypSTmp.The wrapper
@@ -1815,7 +1826,7 @@ int IDASolveB(void* ida_mem, sunrealtype tBout, int itaskB)
     /* If in IDA_ONE_STEP mode, return now (flag = IDA_SUCCESS) */
     if (itaskB == IDA_ONE_STEP) { break; }
 
-    /* If all backward problems have succesfully reached tBout, return now */
+    /* If all backward problems have successfully reached tBout, return now */
     reachedTBout = SUNTRUE;
 
     tmp_IDAB_mem = IDAB_mem;
@@ -2827,7 +2838,7 @@ static int IDAAhermiteGetY(IDAMem IDA_mem, sunrealtype t, N_Vector yy,
   N_Vector *yS0 = NULL, *ySd0 = NULL, *yS1, *ySd1;
 
   int flag, is, NS;
-  long int indx;
+  long int index;
   sunbooleantype newpoint;
 
   /* local variables for fused vector oerations */
@@ -2843,13 +2854,13 @@ static int IDAAhermiteGetY(IDAMem IDA_mem, sunrealtype t, N_Vector yy,
   NS = (IDAADJ_mem->ia_interpSensi && (yyS != NULL)) ? IDA_mem->ida_Ns : 0;
 
   /* Get the index in dt_mem */
-  flag = IDAAfindIndex(IDA_mem, t, &indx, &newpoint);
+  flag = IDAAfindIndex(IDA_mem, t, &index, &newpoint);
   if (flag != IDA_SUCCESS) { return (flag); }
 
   /* If we are beyond the left limit but close enough,
      then return y at the left limit. */
 
-  if (indx == 0)
+  if (index == 0)
   {
     content0 = (IDAhermiteDataMem)(dt_mem[0]->content);
     N_VScale(ONE, content0->y, yy);
@@ -2870,11 +2881,11 @@ static int IDAAhermiteGetY(IDAMem IDA_mem, sunrealtype t, N_Vector yy,
   }
 
   /* Extract stuff from the appropriate data points */
-  t0    = dt_mem[indx - 1]->t;
-  t1    = dt_mem[indx]->t;
+  t0    = dt_mem[index - 1]->t;
+  t1    = dt_mem[index]->t;
   delta = t1 - t0;
 
-  content0 = (IDAhermiteDataMem)(dt_mem[indx - 1]->content);
+  content0 = (IDAhermiteDataMem)(dt_mem[index - 1]->content);
   y0       = content0->y;
   yd0      = content0->yd;
   if (IDAADJ_mem->ia_interpSensi)
@@ -2886,7 +2897,7 @@ static int IDAAhermiteGetY(IDAMem IDA_mem, sunrealtype t, N_Vector yy,
   if (newpoint)
   {
     /* Recompute Y0 and Y1 */
-    content1 = (IDAhermiteDataMem)(dt_mem[indx]->content);
+    content1 = (IDAhermiteDataMem)(dt_mem[index]->content);
 
     y1  = content1->y;
     yd1 = content1->yd;
@@ -3305,7 +3316,7 @@ static int IDAApolynomialGetY(IDAMem IDA_mem, sunrealtype t, N_Vector yy,
   IDApolynomialDataMem content;
 
   int flag, dir, order, i, j, is, NS, retval;
-  long int indx, base;
+  long int index, base;
   sunbooleantype newpoint;
   sunrealtype delt, factor, Psi, Psiprime;
 
@@ -3316,13 +3327,13 @@ static int IDAApolynomialGetY(IDAMem IDA_mem, sunrealtype t, N_Vector yy,
   NS = (IDAADJ_mem->ia_interpSensi && (yyS != NULL)) ? IDA_mem->ida_Ns : 0;
 
   /* Get the index in dt_mem */
-  flag = IDAAfindIndex(IDA_mem, t, &indx, &newpoint);
+  flag = IDAAfindIndex(IDA_mem, t, &index, &newpoint);
   if (flag != IDA_SUCCESS) { return (flag); }
 
   /* If we are beyond the left limit but close enough,
      then return y at the left limit. */
 
-  if (indx == 0)
+  if (index == 0)
   {
     content = (IDApolynomialDataMem)(dt_mem[0]->content);
     N_VScale(ONE, content->y, yy);
@@ -3343,7 +3354,7 @@ static int IDAApolynomialGetY(IDAMem IDA_mem, sunrealtype t, N_Vector yy,
   }
 
   /* Scaling factor */
-  delt = SUNRabs(dt_mem[indx]->t - dt_mem[indx - 1]->t);
+  delt = SUNRabs(dt_mem[index]->t - dt_mem[index - 1]->t);
 
   /* Find the direction of the forward integration */
   dir = (IDAADJ_mem->ia_tfinal - IDAADJ_mem->ia_tinitial > ZERO) ? 1 : -1;
@@ -3353,19 +3364,19 @@ static int IDAApolynomialGetY(IDAMem IDA_mem, sunrealtype t, N_Vector yy,
 
   if (dir == 1)
   {
-    base    = indx;
+    base    = index;
     content = (IDApolynomialDataMem)(dt_mem[base]->content);
     order   = content->order;
-    if (indx < order) { base += order - indx; }
+    if (index < order) { base += order - index; }
   }
   else
   {
-    base    = indx - 1;
+    base    = index - 1;
     content = (IDApolynomialDataMem)(dt_mem[base]->content);
     order   = content->order;
-    if (IDAADJ_mem->ia_np - indx > order)
+    if (IDAADJ_mem->ia_np - index > order)
     {
-      base -= indx + order - IDAADJ_mem->ia_np;
+      base -= index + order - IDAADJ_mem->ia_np;
     }
   }
 
@@ -3455,7 +3466,7 @@ static int IDAApolynomialGetY(IDAMem IDA_mem, sunrealtype t, N_Vector yy,
      The formula used for p'(t) is:
        - p'(t) = f[t0,t1] + psi_1'(t)*f[t0,t1,t2] + ... + psi_n'(t)*f[t0,t1,...,tn]
 
-     We reccursively compute psi_k'(t) from:
+     We recursively compute psi_k'(t) from:
        - psi_k'(t) = (t-tk)*psi_{k-1}'(t) + psi_{k-1}
 
      psi_k is rescaled with 1/delt each time is computed, because the Newton DDs from Y were
@@ -3589,17 +3600,17 @@ static int IDAAGettnSolutionYpS(IDAMem IDA_mem, N_Vector* ypS)
 /*
  * IDAAfindIndex
  *
- * Finds the index in the array of data point strctures such that
- *     dt_mem[indx-1].t <= t < dt_mem[indx].t
- * If indx is changed from the previous invocation, then newpoint = SUNTRUE
+ * Finds the index in the array of data point structures such that
+ *     dt_mem[index-1].t <= t < dt_mem[index].t
+ * If index is changed from the previous invocation, then newpoint = SUNTRUE
  *
- * If t is beyond the leftmost limit, but close enough, indx=0.
+ * If t is beyond the leftmost limit, but close enough, index=0.
  *
  * Returns IDA_SUCCESS if successful and IDA_GETY_BADT if unable to
- * find indx (t is too far beyond limits).
+ * find index (t is too far beyond limits).
  */
 
-static int IDAAfindIndex(IDAMem ida_mem, sunrealtype t, long int* indx,
+static int IDAAfindIndex(IDAMem ida_mem, sunrealtype t, long int* index,
                          sunbooleantype* newpoint)
 {
   IDAadjMem IDAADJ_mem;
@@ -3625,28 +3636,28 @@ static int IDAAfindIndex(IDAMem ida_mem, sunrealtype t, long int* indx,
     IDAADJ_mem->ia_newData = SUNFALSE;
   }
 
-  /* Search for indx starting from ilast */
+  /* Search for index starting from ilast */
   to_left  = (sign * (t - dt_mem[IDAADJ_mem->ia_ilast - 1]->t) < ZERO);
   to_right = (sign * (t - dt_mem[IDAADJ_mem->ia_ilast]->t) > ZERO);
 
   if (to_left)
   {
-    /* look for a new indx to the left */
+    /* look for a new index to the left */
 
     *newpoint = SUNTRUE;
 
-    *indx = IDAADJ_mem->ia_ilast;
+    *index = IDAADJ_mem->ia_ilast;
     for (;;)
     {
-      if (*indx == 0) { break; }
-      if (sign * (t - dt_mem[*indx - 1]->t) <= ZERO) { (*indx)--; }
+      if (*index == 0) { break; }
+      if (sign * (t - dt_mem[*index - 1]->t) <= ZERO) { (*index)--; }
       else { break; }
     }
 
-    if (*indx == 0) { IDAADJ_mem->ia_ilast = 1; }
-    else { IDAADJ_mem->ia_ilast = *indx; }
+    if (*index == 0) { IDAADJ_mem->ia_ilast = 1; }
+    else { IDAADJ_mem->ia_ilast = *index; }
 
-    if (*indx == 0)
+    if (*index == 0)
     {
       /* t is beyond leftmost limit. Is it too far? */
       if (SUNRabs(t - dt_mem[0]->t) > FUZZ_FACTOR * IDA_mem->ida_uround)
@@ -3657,24 +3668,24 @@ static int IDAAfindIndex(IDAMem ida_mem, sunrealtype t, long int* indx,
   }
   else if (to_right)
   {
-    /* look for a new indx to the right */
+    /* look for a new index to the right */
 
     *newpoint = SUNTRUE;
 
-    *indx = IDAADJ_mem->ia_ilast;
+    *index = IDAADJ_mem->ia_ilast;
     for (;;)
     {
-      if (sign * (t - dt_mem[*indx]->t) > ZERO) { (*indx)++; }
+      if (sign * (t - dt_mem[*index]->t) > ZERO) { (*index)++; }
       else { break; }
     }
 
-    IDAADJ_mem->ia_ilast = *indx;
+    IDAADJ_mem->ia_ilast = *index;
   }
   else
   {
     /* ilast is still OK */
 
-    *indx = IDAADJ_mem->ia_ilast;
+    *index = IDAADJ_mem->ia_ilast;
   }
   return (IDA_SUCCESS);
 }

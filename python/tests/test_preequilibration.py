@@ -792,21 +792,41 @@ def test_preequilibration_t0(tempdir):
     edata.set_timepoints([0.0, 10_000.0])
     edata.fixed_parameters_pre_equilibration = [1.0]
     edata.fixed_parameters = [0.0]
-    amici_model.set_t0_preeq(-10_000.0)
-    amici_model.set_t0(-2.0)
+    edata.t_start = -2.0
+    edata.t_start_preeq = -10_000.0
     amici_solver = amici_model.create_solver()
     amici_solver.set_relative_tolerance_steady_state(1e-5)
     amici_model.set_steady_state_computation_mode(
         SteadyStateComputationMode.integrationOnly
     )
-
-    rdata = run_simulation(amici_model, amici_solver, edata)
-    assert rdata.status == AMICI_SUCCESS
-    assert set(rdata.by_id("t0_preeq")) == {-10_000.0}
     idx_time_integral = amici_model.get_state_ids().index("T")
-    assert np.isclose(
-        rdata.x_ss[idx_time_integral], rdata.preeq_t - amici_model.t0_preeq()
-    )
+
+    def check_preeq_start(t0_preeq):
+        rdata = run_simulation(amici_model, amici_solver, edata)
+        assert rdata.status == AMICI_SUCCESS
+        assert set(rdata.by_id("t0_preeq")) == {t0_preeq}
+        assert np.isclose(
+            rdata.x_ss[idx_time_integral], rdata.preeq_t - t0_preeq
+        )
+        return rdata
+
+    check_preeq_start(-10_000.0)
+
+    # without ExpData.t_start_preeq, pre-equilibration starts at t_start
+    edata.t_start_preeq = np.nan
+    check_preeq_start(-2.0)
+
+    # deprecated: Model.t0_preeq() is used if ExpData.t_start_preeq is NaN
+    with pytest.warns(DeprecationWarning, match="set_t0_preeq"):
+        amici_model.set_t0_preeq(-5_000.0)
+    rdata = check_preeq_start(-5_000.0)
+    assert any(msg.identifier == "DEPRECATION" for msg in rdata.messages)
+
+    # ExpData.t_start_preeq takes precedence over Model.t0_preeq()
+    edata.t_start_preeq = -10_000.0
+    rdata = check_preeq_start(-10_000.0)
+    assert not any(msg.identifier == "DEPRECATION" for msg in rdata.messages)
+    assert amici_model.t0_preeq() == -5_000.0
 
 
 def test_preequilibration_events(tempdir):
@@ -946,32 +966,58 @@ def test_preequilibration_events(tempdir):
             assert rdata.sx0 is not None
 
 
-def test_preequilibration_reinit_adjoint_sensitivities(tempdir):
-    """Regression test for GH#3278: wrong gradients when the main simulation
-    uses adjoint sensitivities, pre-equilibration uses forward sensitivities,
-    and fixed-parameter-dependent state reinitialization is enabled."""
+@pytest.fixture(scope="module")
+def reinit_model_module(tmp_path_factory):
+    """Model with fixed-parameter-dependent initial states and an event."""
     ant_str = """
     model test_preequilibration_reinit_adjoint_sensitivities
         kinit = 5
+        tev = 1e6
         kdecay = 0.7
         ksyn = 2
-        x1 = kinit
+        scale = 1.5
+        c = 0.4
+        x1 = kinit * scale
+        x2 = kinit
         x1' = ksyn - kdecay * x1
+        x2' = c * x1 - kdecay * x2
+        E1: at time >= tev: x2 = x2 + 1
     end
     """
     module_name = "test_preequilibration_reinit_adjoint_sensitivities"
+    output_dir = tmp_path_factory.mktemp(module_name)
     antimony2amici(
         ant_str,
         model_name=module_name,
-        output_dir=tempdir,
-        fixed_parameters=["kinit"],
+        output_dir=output_dir,
+        fixed_parameters=["kinit", "tev"],
     )
-    model_module = amici.import_model_module(
-        module_name=module_name, module_path=tempdir
+    return amici.import_model_module(
+        module_name=module_name, module_path=output_dir
     )
-    model = model_module.get_model()
-    model.set_reinitialize_fixed_parameter_initial_states(True)
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize("preeq_event", [False, True])
+@pytest.mark.parametrize("reinit_states", [None, ["x1"], ["x2"]])
+def test_preequilibration_reinit_adjoint_sensitivities(
+    reinit_model_module, reinit_states, preeq_event
+):
+    """Sensitivities with reinitialization after pre-equilibration.
+
+    Adjoint sensitivities for the main simulation with forward (GH#3278) or
+    adjoint (GH#1156) pre-equilibration, with reinitialization of all states
+    or a subset of states. With an event during pre-equilibration, the
+    pre-equilibration backward problem is integrated, otherwise the
+    steady-state shortcut is used.
+    """
+    model = reinit_model_module.get_model()
+    assert model.nx_reinit() == 2
     model.set_timepoints([0.0, 1.0, 2.0])
+    if preeq_event:
+        model.set_steady_state_computation_mode(
+            SteadyStateComputationMode.integrationOnly
+        )
     solver = model.create_solver()
     solver.set_sensitivity_order(SensitivityOrder.first)
     solver.set_relative_tolerance(1e-10)
@@ -979,45 +1025,701 @@ def test_preequilibration_reinit_adjoint_sensitivities(tempdir):
     solver.set_relative_tolerance_quadratures(1e-10)
     solver.set_absolute_tolerance_quadratures(1e-14)
 
-    edata_gen = ExpData(model)
-    edata_gen.fixed_parameters = [10.0]
-    edata_gen.set_timepoints(model.get_timepoints())
-    rdata_gen = run_simulation(model, solver, edata_gen)
-    assert rdata_gen.status == AMICI_SUCCESS
+    def fixed_parameters(**kwargs):
+        return [kwargs[id_] for id_ in model.get_fixed_parameter_ids()]
 
-    edata = ExpData(rdata_gen, 0.05, 0.0, 1)
-    edata.fixed_parameters = [10.0]
-    edata.fixed_parameters_pre_equilibration = [3.0]
-    edata.reinitialize_fixed_parameter_initial_states = True
+    edata = ExpData(model)
+    edata.fixed_parameters = fixed_parameters(kinit=10.0, tev=1e6)
+    edata.fixed_parameters_pre_equilibration = fixed_parameters(
+        kinit=3.0, tev=1.0 if preeq_event else 1e6
+    )
+    if reinit_states is None:
+        edata.reinitialize_fixed_parameter_initial_states = True
+    else:
+        edata.reinitialization_state_idxs_sim = [
+            model.get_state_ids().index(id_) for id_ in reinit_states
+        ]
+    edata.set_measurements(np.full(model.nt() * model.ny, 1.0))
+    edata.set_noise_scales(np.full(model.nt() * model.ny, 0.1))
 
-    point = np.array(model.get_free_parameters())
-
+    sllh = {}
     for sensi_meth, sensi_meth_preeq in (
         (SensitivityMethod.forward, SensitivityMethod.forward),
         (SensitivityMethod.adjoint, SensitivityMethod.forward),
+        (SensitivityMethod.adjoint, SensitivityMethod.adjoint),
     ):
         solver.set_sensitivity_method(sensi_meth)
         solver.set_sensitivity_method_pre_equilibration(sensi_meth_preeq)
         rdata = run_simulation(model, solver, edata)
-        assert rdata.status == AMICI_SUCCESS
+        assert rdata.status == AMICI_SUCCESS, (sensi_meth, sensi_meth_preeq)
+        if preeq_event:
+            assert rdata.preeq_status[1] == SteadyStateStatus.success
+        sllh[sensi_meth, sensi_meth_preeq] = np.array(rdata.sllh)
 
-        function, derivative = run_simulation_to_function_and_derivative(
-            amici_model=model,
-            amici_solver=solver,
-            amici_edata=edata,
-            derivative_variables=["llh"],
-        )
-        expected = derivative(point)
-        # not a degenerate all-zero-gradient check
-        assert not np.allclose(expected["llh"], 0)
-        result = check_gradient(function, point, expected["llh"])
-        result.assert_success(always_print=True)
+    expected = sllh[SensitivityMethod.forward, SensitivityMethod.forward]
+    # `scale` only enters via the initial value of `x1`
+    scale_idx = model.get_free_parameter_ids().index("scale")
+    others = np.delete(expected, scale_idx)
+    assert np.all(np.abs(others) > 1e-2)
+    if reinit_states != ["x2"]:
+        assert abs(expected[scale_idx]) > 1e-2
+    for key, actual in sllh.items():
+        assert_allclose(actual, expected, rtol=1e-6, atol=1e-5, err_msg=key)
 
-    # adjoint pre-equilibration with state reinitialization is not (yet)
-    # supported (GH#1156) and must fail cleanly rather than silently produce
-    # wrong gradients
+    function, derivative = run_simulation_to_function_and_derivative(
+        amici_model=model,
+        amici_solver=solver,
+        amici_edata=edata,
+        derivative_variables=["llh"],
+    )
+    point = np.array(model.get_free_parameters())
+    check_gradient(function, point, derivative(point)["llh"]).assert_success(
+        always_print=True
+    )
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize("variant", ["log10_plist", "event_at_t0"])
+def test_preequilibration_reinit_adjoint_sensitivities_variants(
+    reinit_model_module, variant
+):
+    """Adjoint pre-equilibration with reinitialization: parameter scaling
+    with a parameter subset, and an event at the start of the main
+    simulation after the reinitialization."""
+    model = reinit_model_module.get_model()
+    model.set_timepoints([0.0, 1.0, 2.0])
+    if variant == "log10_plist":
+        model.set_parameter_scale(ParameterScaling.log10)
+        plist = [
+            model.get_free_parameter_ids().index(id_)
+            for id_ in ("scale", "kdecay")
+        ]
+        model.set_parameter_list(plist)
+    solver = model.create_solver()
     solver.set_sensitivity_order(SensitivityOrder.first)
-    solver.set_sensitivity_method(SensitivityMethod.adjoint)
-    solver.set_sensitivity_method_pre_equilibration(SensitivityMethod.adjoint)
+    solver.set_relative_tolerance(1e-10)
+    solver.set_absolute_tolerance(1e-14)
+    solver.set_relative_tolerance_quadratures(1e-10)
+    solver.set_absolute_tolerance_quadratures(1e-14)
+
+    def fixed_parameters(**kwargs):
+        return [kwargs[id_] for id_ in model.get_fixed_parameter_ids()]
+
+    edata = ExpData(model)
+    edata.fixed_parameters = fixed_parameters(
+        kinit=10.0, tev=0.0 if variant == "event_at_t0" else 1e6
+    )
+    edata.fixed_parameters_pre_equilibration = fixed_parameters(
+        kinit=3.0, tev=1e6
+    )
+    edata.reinitialize_fixed_parameter_initial_states = True
+    edata.set_measurements(np.full(model.nt() * model.ny, 1.0))
+    edata.set_noise_scales(np.full(model.nt() * model.ny, 0.1))
+
+    sllh = {}
+    for sensi_meth, sensi_meth_preeq in (
+        (SensitivityMethod.forward, SensitivityMethod.forward),
+        (SensitivityMethod.adjoint, SensitivityMethod.adjoint),
+    ):
+        solver.set_sensitivity_method(sensi_meth)
+        solver.set_sensitivity_method_pre_equilibration(sensi_meth_preeq)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS, (sensi_meth, sensi_meth_preeq)
+        if variant == "event_at_t0":
+            # the event fired at t0: x2 = kinit + 1
+            x2_idx = model.get_state_ids().index("x2")
+            assert_allclose(rdata.x[0, x2_idx], 11.0, rtol=1e-8)
+        sllh[sensi_meth] = np.array(rdata.sllh)
+
+    expected = sllh[SensitivityMethod.forward]
+    assert np.all(np.abs(expected) > 1e-2)
+    assert_allclose(
+        sllh[SensitivityMethod.adjoint], expected, rtol=1e-6, atol=1e-5
+    )
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize(
+    "period", ["preeq_switch", "preeq_no_switch", "presimulation"]
+)
+def test_adjoint_switch_differs_from_main_simulation(tempdir, period):
+    """Adjoint sensitivities for switches differing from the main simulation.
+
+    `r = 2` at the end of pre-equilibration or presimulation, and `r = 1`
+    during the main simulation. The solution is linear in `k`, so
+    `sllh = -sum(x^2) / k` for measurements 0 with sigma 1.
+    """
+    model_name = "test_adjoint_switch_differs_from_main_simulation"
+    antimony2amici(
+        """
+        fp = 0
+        k = 0.5
+        x = 0; x' = k - r * x
+        r := piecewise(2, time >= fp, 1)
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        fixed_parameters=["fp"],
+        observation_model=[MeasurementChannel("obs_x", formula="x")],
+    )
+    model = amici.import_model_module(model_name, tempdir).get_model()
+    assert model.get_free_parameter_ids() == ("k",)
+    model.set_steady_state_computation_mode(
+        SteadyStateComputationMode.integrationOnly
+    )
+    model.set_steady_state_sensitivity_mode(
+        SteadyStateSensitivityMode.integrationOnly
+    )
+    t = np.array([0.0, 0.5])
+    model.set_timepoints(t)
+    edata = ExpData(model)
+    edata.set_measurements([0.0] * len(t))
+    edata.set_noise_scales([1.0] * len(t))
+    edata.fixed_parameters = [1.0]
+
+    k = 0.5
+    match period:
+        case "preeq_switch":
+            # the switch flips at t=1 during pre-equilibration
+            edata.fixed_parameters_pre_equilibration = [1.0]
+            x0 = k / 2
+        case "preeq_no_switch":
+            # the switch is on throughout pre-equilibration, i.e., without
+            # discontinuities, which uses the steady-state backward problem
+            edata.fixed_parameters_pre_equilibration = [-1.0]
+            x0 = k / 2
+        case "presimulation":
+            # presimulation over [-2, 0], the switch flips at t=-1
+            edata.t_presim = 2.0
+            edata.fixed_parameters_presimulation = [-1.0]
+            x0 = k / 2 + (k * (1 - np.exp(-1)) - k / 2) * np.exp(-2)
+    x = k + (x0 - k) * np.exp(-t)
+    expected_sllh = -np.sum(x**2) / k
+
+    for sens_method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver = model.create_solver()
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(sens_method)
+        solver.set_sensitivity_method_pre_equilibration(sens_method)
+        solver.set_relative_tolerance(1e-12)
+        solver.set_absolute_tolerance(1e-14)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS
+        assert_allclose(rdata.x[:, 0], x, rtol=1e-8)
+        assert_allclose(
+            rdata.sllh[0],
+            expected_sllh,
+            rtol=1e-6,
+            err_msg=sens_method.name,
+        )
+
+
+@skip_on_valgrind
+def test_event_assignment_switch_preequilibration_adjoint(tempdir):
+    """Adjoint sensitivities of an event assignment during pre-equilibration
+    that depends on a switch re-initialized for the main simulation.
+
+    During pre-equilibration, `E` fires at t=2 with `r = 2`. The main
+    simulation re-initializes the switch at t0 and flips it at t=1 again, so
+    the backward pass of the main simulation ends with the switch value
+    before t=1.
+    """
+    model_name = "test_event_assignment_switch_preeq_adjoint"
+    antimony2amici(
+        """
+        fp = 0
+        k = 0.5
+        x = 1; x' = -k * x
+        v = 0; v' = 0
+        r := piecewise(2, time >= 1, 1)
+        E: at time >= 2, fromTrigger=false: v = v + r * x
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        # only to request pre-equilibration
+        fixed_parameters=["fp"],
+        observation_model=[MeasurementChannel("obs_v", formula="v")],
+    )
+    model = amici.import_model_module(model_name, tempdir).get_model()
+    assert model.get_free_parameter_ids() == ("k",)
+    model.set_steady_state_computation_mode(
+        SteadyStateComputationMode.integrationOnly
+    )
+    model.set_steady_state_sensitivity_mode(
+        SteadyStateSensitivityMode.integrationOnly
+    )
+    model.set_timepoints([0.0, 1.5])
+    edata = ExpData(model)
+    edata.set_measurements([0.0, 0.0])
+    edata.set_noise_scales([1.0, 1.0])
+    edata.fixed_parameters = [0.0]
+    edata.fixed_parameters_pre_equilibration = [0.0]
+
+    # v = r * x(2) after pre-equilibration, sllh = -sum(v * dv/dk)
+    k = 0.5
+    v = 2 * np.exp(-2 * k)
+    dv_dk = -4 * np.exp(-2 * k)
+    expected_sllh = -2 * v * dv_dk
+
+    for sens_method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver = model.create_solver()
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(sens_method)
+        solver.set_sensitivity_method_pre_equilibration(sens_method)
+        solver.set_relative_tolerance(1e-12)
+        solver.set_absolute_tolerance(1e-14)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS
+        assert_allclose(rdata.y[:, 0], [v, v], rtol=1e-8)
+        assert_allclose(
+            rdata.sllh[0], expected_sllh, rtol=1e-6, err_msg=sens_method.name
+        )
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize(
+    "period, differing",
+    [
+        ("presimulation", "k"),
+        ("preeq_simulation", "k"),
+        ("preeq_steady_state", "k"),
+        ("presimulation", "c0"),
+        ("preeq_steady_state", "c0"),
+    ],
+)
+def test_adjoint_condition_differs_from_main_simulation(
+    tempdir, period, differing
+):
+    """Adjoint sensitivities and outputs for fixed parameters differing
+    between pre-equilibration or presimulation and the main simulation.
+
+    `k` enters the static expression `a`, `c0` the initial value of the
+    constant species `C`, i.e., a conservation law total. Conservation laws
+    are not supported with `piecewise`, so the switch `r`, which introduces
+    a discontinuity during pre-equilibration, is only included for `k`.
+    """
+    switch = "piecewise(2, time >= tsw, 1)" if differing == "k" else "1"
+    model_name = (
+        f"test_adjoint_condition_differs_from_main_simulation_{differing}"
+    )
+    antimony2amici(
+        f"""
+        species x = 1
+        species C
+        C = c0
+        J1: x -> ; a * C * x
+        J2: -> x; q * r
+        a := k * p
+        r := {switch}
+        k = 1
+        c0 = 1
+        tsw = 10
+        p = 0.5
+        q = 0.3
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        fixed_parameters=["k", "c0", "tsw"],
+        observation_model=[
+            MeasurementChannel("obs_x", formula="a * x"),
+            MeasurementChannel("obs_c", formula="C"),
+        ],
+    )
+    model = amici.import_model_module(model_name, tempdir).get_model()
+    assert set(model.get_free_parameter_ids()) == {"p", "q"}
+    # `C` is eliminated by its conservation law
+    assert model.nx_solver == (2 if differing == "k" else 1)
+    model.set_steady_state_computation_mode(
+        SteadyStateComputationMode.integrationOnly
+    )
+    model.set_steady_state_sensitivity_mode(
+        SteadyStateSensitivityMode.integrationOnly
+    )
+    t = np.array([0.5, 1.0, 2.0])
+    model.set_timepoints(t)
+    edata = ExpData(model)
+    edata.set_measurements([0.0] * len(t) * model.ny)
+    edata.set_noise_scales([1.0] * len(t) * model.ny)
+
+    def fixed_parameters(**kwargs):
+        values = {"k": 1.0, "c0": 1.0, "tsw": 10.0} | kwargs
+        return [values[id_] for id_ in model.get_fixed_parameter_ids()]
+
+    edata.fixed_parameters = fixed_parameters()
+    # reinitialize `C`, which is only constant with conservation laws
+    edata.reinitialize_fixed_parameter_initial_states = differing == "c0"
+    other = {"k": 5.0} if differing == "k" else {"c0": 3.0}
+    match period:
+        case "presimulation":
+            edata.t_presim = 2.0
+            edata.fixed_parameters_presimulation = fixed_parameters(**other)
+        case "preeq_simulation":
+            # the switch flips at t=1 during pre-equilibration
+            edata.fixed_parameters_pre_equilibration = fixed_parameters(
+                **other, tsw=1.0
+            )
+        case "preeq_steady_state":
+            # without discontinuities, this uses the steady-state backward
+            # problem
+            edata.fixed_parameters_pre_equilibration = fixed_parameters(
+                **other, tsw=-1.0
+            )
+
+    rdatas = {}
+    for sens_method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver = model.create_solver()
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(sens_method)
+        solver.set_sensitivity_method_pre_equilibration(sens_method)
+        solver.set_relative_tolerance(1e-12)
+        solver.set_absolute_tolerance(1e-14)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS
+        rdatas[sens_method] = rdata
+
+    fsa = rdatas[SensitivityMethod.forward]
+    asa = rdatas[SensitivityMethod.adjoint]
+    # `C` has the value of the main simulation
+    assert_allclose(fsa.y[:, 1], 1.0, rtol=1e-12)
+    assert np.all(np.abs(fsa.sllh) > 1e-2)
+    assert_allclose(asa.y, fsa.y, rtol=1e-10)
+    assert_allclose(asa.llh, fsa.llh, rtol=1e-10)
+    assert_allclose(asa.sllh, fsa.sllh, rtol=1e-6)
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize("dae", [False, True])
+def test_presimulation_reinitialization_after_preequilibration(tempdir, dae):
+    """State reinitialization at the start of presimulation after
+    pre-equilibration.
+
+    `x` is reinitialized to `p * k` at the start of presimulation, so
+    `x = a + (2 p - a) exp(-(t + 1))` and `dx/dp = 2 exp(-(t + 1))`.
+    For the ODE, the reinitialization triggers an event at the start of
+    presimulation. For the DAE, the algebraic state `z` has to be made
+    consistent with the reinitialized `x`.
+    """
+    if dae:
+        ant_str = """
+        a = 1; p = 1.5; k = 1
+        x = p * k; x' = a - z / 2
+        z = 0; 0 = z - 2 * x
+        """
+    else:
+        ant_str = """
+        a = 1; p = 1.5; k = 1
+        x = p * k; x' = a - x
+        y = 0; y' = 0
+        E: at x > 2: y = y + 1
+        """
+    module_name = f"test_presim_reinit_{'dae' if dae else 'ode'}"
+    antimony2amici(
+        ant_str,
+        model_name=module_name,
+        output_dir=tempdir,
+        fixed_parameters=["k"],
+    )
+    model_module = amici.import_model_module(
+        module_name=module_name, module_path=tempdir
+    )
+    model = model_module.get_model()
+    model.set_parameter_scale(ParameterScaling.none)
+    t = np.array([0.0, 1.0])
+    model.set_timepoints(t)
+    edata = ExpData(model)
+    edata.fixed_parameters_pre_equilibration = [1.0]
+    edata.fixed_parameters_presimulation = [2.0]
+    edata.fixed_parameters = [2.0]
+    edata.t_presim = 1.0
+    ix = model.get_state_ids().index("x")
+    edata.reinitialization_state_idxs_presim = [ix]
+
+    solver = model.create_solver()
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-12)
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
     rdata = run_simulation(model, solver, edata)
-    assert rdata.status == AMICI_ERROR
+    assert rdata.status == AMICI_SUCCESS
+
+    if not dae:
+        # the event was triggered at the start of presimulation
+        iy = model.get_state_ids().index("y")
+        assert_allclose(rdata.x[:, iy], 1.0)
+    ip = model.get_free_parameter_ids().index("p")
+    assert_allclose(rdata.x[:, ix], 1 + 2 * np.exp(-(t + 1)), rtol=1e-8)
+    assert_allclose(rdata.sx[:, ip, ix], 2 * np.exp(-(t + 1)), rtol=1e-6)
+    if dae:
+        iz = model.get_state_ids().index("z")
+        assert_allclose(rdata.x[:, iz], 2 * rdata.x[:, ix], rtol=1e-8)
+        assert_allclose(
+            rdata.sx[:, ip, iz], 2 * rdata.sx[:, ip, ix], rtol=1e-6
+        )
+
+
+@skip_on_valgrind
+def test_presimulation_without_preequilibration_custom_initial_state(tempdir):
+    """Without pre-equilibration, a custom initial state is kept at the start
+    of presimulation, and states are reinitialized only at the start of the
+    main simulation."""
+    model_name = "test_presim_custom_x0"
+    antimony2amici(
+        """
+        k = 1
+        x1 = k; x1' = 0
+        x2 = 0; x2' = x1 - x2
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        fixed_parameters=["k"],
+    )
+    model = amici.import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints([0.0])
+    model.set_initial_state([5.0, 0.0])
+    solver = model.create_solver()
+    edata = ExpData(model)
+    edata.fixed_parameters_presimulation = [2.0]
+    edata.t_presim = 1.0
+    edata.fixed_parameters = [3.0]
+    edata.reinitialize_fixed_parameter_initial_states = True
+    rdata = run_simulation(model, solver, edata)
+    assert rdata.status == AMICI_SUCCESS
+    # x1 = 5 during presimulation, reinitialized to k = 3 at t = 0
+    assert_allclose(rdata.x[0], [3.0, 5.0 * (1 - np.exp(-1.0))], rtol=1e-6)
+
+
+@pytest.fixture(scope="module")
+def dae_posteq_event_module(tmp_path_factory):
+    """A DAE model with a steady state and an event at `t_event`."""
+    model_name = "dae_posteq_event"
+    outdir = tmp_path_factory.mktemp(model_name)
+    antimony2amici(
+        """
+        const k = 0.5, p = 2, q = 0.3, t_event = 5
+        x = 1; y = 0.3
+        x' = p - k * x + y
+        0 = y - q * x
+        E1: at time > t_event: x = x + 1
+        """,
+        observation_model=[MeasurementChannel("obs_y", formula="y")],
+        fixed_parameters=["t_event"],
+        model_name=model_name,
+        output_dir=outdir,
+    )
+    return amici.import_model_module(model_name, outdir)
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize(
+    "with_event", [False, True], ids=["no_event", "event"]
+)
+def test_dae_posteq_forward_sensitivities_newton(
+    dae_posteq_event_module, with_event
+):
+    """Forward sensitivities for post-equilibration of a DAE by simulation,
+    with steady-state sensitivities from the Newton solver.
+
+    Forward sensitivities are switched off during post-equilibration. With
+    `with_event`, an event occurs during post-equilibration. Re-using the
+    solver must give the same results as a fresh one.
+    """
+    model = dae_posteq_event_module.get_model()
+    t_event = 5.0 if with_event else 1e10
+    model.set_fixed_parameter_by_id("t_event", t_event)
+    model.set_timepoints([1.0, np.inf])
+    model.set_steady_state_computation_mode(
+        SteadyStateComputationMode.integrationOnly
+    )
+    model.set_steady_state_sensitivity_mode(
+        SteadyStateSensitivityMode.newtonOnly
+    )
+    solver = model.create_solver()
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-14)
+    edata = ExpData(model)
+    edata.set_measurements([0.5, 1.0])
+    edata.set_noise_scales([1.0, 1.0])
+
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    rdata = run_simulation(model, solver, edata)
+    assert rdata.status == AMICI_SUCCESS
+    # the event only occurs during post-equilibration, if at all
+    assert (rdata.posteq_t > t_event) == with_event
+
+    # y_ss = p * q / (k - q), independent of the event
+    k, p, q = 0.5, 2.0, 0.3
+    sy_ss = [-p * q / (k - q) ** 2, q / (k - q), p * k / (k - q) ** 2]
+    assert_allclose(rdata.sy[1, :, 0], sy_ss, rtol=1e-6)
+
+    # the sensitivities and their error control are re-enabled
+    rdata2 = run_simulation(model, solver, edata)
+    rdata_fresh = run_simulation(model, solver.clone(), edata)
+    assert rdata2.status == AMICI_SUCCESS
+    assert rdata_fresh.status == AMICI_SUCCESS
+    assert_equal(rdata2.numsteps, rdata_fresh.numsteps)
+    assert_allclose(rdata2.sy, rdata_fresh.sy, rtol=1e-10)
+    assert_allclose(rdata2.sy, rdata.sy, rtol=1e-10)
+
+
+@skip_on_valgrind
+def test_initial_events_after_failed_newton(tempdir):
+    """Check initial events in pre-equilibration after Newton's method failed.
+
+    If Newton's method fails, the simulation is restarted from the initial
+    state, and the initial events have to be handled again (gh-3451).
+    """
+    model_name = "test_initial_events_after_failed_newton"
+    antimony2amici(
+        """
+        p = 2
+        q = 5
+        k = 1
+        x = 1; x' = p - x^3
+        v = 0; v' = 0
+        # initial event during pre-equilibration only (k = 0)
+        E: at k < 0.5, t0=false: v = q
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        fixed_parameters=["k"],
+        observation_model=[
+            MeasurementChannel("obs_x", formula="x"),
+            MeasurementChannel("obs_v", formula="v"),
+        ],
+    )
+    model = amici.import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints([0.0])
+    model.set_steady_state_sensitivity_mode(
+        SteadyStateSensitivityMode.integrateIfNewtonFails
+    )
+    p, q = 2.0, 5.0
+    assert model.get_free_parameter_ids() == ("p", "q")
+    x_ss_expected = {"x": p ** (1 / 3), "v": q}
+    x_ss_expected = [x_ss_expected[x_id] for x_id in model.get_state_ids()]
+    y_expected = [p ** (1 / 3), q]
+    # residuals of -1
+    edata = ExpData(model)
+    edata.fixed_parameters_pre_equilibration = [0.0]
+    edata.set_measurements(np.array(y_expected) + 1)
+    edata.set_noise_scales([1.0, 1.0])
+    # d llh / d theta = sum_i (m_i - y_i) d y_i / d theta
+    sllh_expected = [1 / 3 * p ** (-2 / 3), 1.0]
+
+    for mode, sensi_meth in itertools.product(
+        (
+            SteadyStateComputationMode.integrationOnly,
+            SteadyStateComputationMode.integrateIfNewtonFails,
+        ),
+        (SensitivityMethod.forward, SensitivityMethod.adjoint),
+    ):
+        model.set_steady_state_computation_mode(mode)
+        solver = model.create_solver()
+        # enable Newton's method, which fails due to the singular Jacobian
+        # (v' = 0)
+        solver.set_newton_max_steps(10)
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(sensi_meth)
+        solver.set_sensitivity_method_pre_equilibration(sensi_meth)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS
+        assert rdata.preeq_status[1] == SteadyStateStatus.success
+        if mode == SteadyStateComputationMode.integrateIfNewtonFails:
+            # the simulation was restarted after Newton's method failed
+            assert (
+                rdata.preeq_status[0] == SteadyStateStatus.failed_factorization
+            )
+        assert_allclose(rdata.x_ss, x_ss_expected, rtol=1e-5)
+        assert_allclose(rdata.x[0], x_ss_expected, rtol=1e-5)
+        assert_allclose(rdata.sllh, sllh_expected, rtol=1e-4)
+
+
+@pytest.fixture(scope="module")
+def spline_fixed_parameter_module(tmp_path_factory):
+    """A model with a spline whose values depend on the fixed parameter
+    `k`."""
+    import libsbml
+    import sympy as sp
+    from amici.importers.antimony import antimony2sbml
+    from amici.importers.sbml import SbmlImporter, splines
+
+    sbml_doc = libsbml.SBMLReader().readSBMLFromString(
+        antimony2sbml("p = 1; k = 1; x = 0; x' = spl - x; spl = 0")
+    )
+    sbml_model = sbml_doc.getModel()
+    p, k = sp.symbols("p k")
+    splines.CubicHermiteSpline(
+        sbml_id="spl",
+        nodes=[0, 1, 2],
+        values_at_nodes=[p * k, p * k, p * k],
+        extrapolate="constant",
+    ).add_to_sbml_model(sbml_model)
+    sbml_model.getElementBySId("spl").setConstant(False)
+    model_name = "test_splines_fixed_parameters"
+    outdir = tmp_path_factory.mktemp(model_name)
+    SbmlImporter(sbml_model, from_file=False).sbml2amici(
+        model_name,
+        outdir,
+        fixed_parameters=["k"],
+        observation_model=[MeasurementChannel("obs_x", formula="x")],
+    )
+    return amici.import_model_module(model_name, outdir)
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize("period", ["preequilibration", "presimulation"])
+def test_splines_with_fixed_parameters_across_periods(
+    spline_fixed_parameter_module, period
+):
+    """Check splines depending on fixed parameters across periods.
+
+    Each simulation period uses its own fixed parameters (gh-3450).
+    """
+    model = spline_fixed_parameter_module.get_model()
+    model.set_steady_state_computation_mode(
+        SteadyStateComputationMode.integrationOnly
+    )
+    model.set_steady_state_sensitivity_mode(
+        SteadyStateSensitivityMode.integrationOnly
+    )
+    t = np.array([0.0, 1.0, 2.0])
+    model.set_timepoints(t)
+    p_val = model.get_free_parameter_by_id("p")
+
+    edata = ExpData(model)
+    edata.fixed_parameters = [1.0]
+    if period == "preequilibration":
+        edata.fixed_parameters_pre_equilibration = [5.0]
+        # x approaches 5 p during pre-equilibration, then p
+        x_expected = p_val + 4 * p_val * np.exp(-t)
+        sx_expected = 1 + 4 * np.exp(-t)
+    else:
+        edata.fixed_parameters_presimulation = [5.0]
+        edata.t_presim = 1.0
+        # x approaches 5 p during presimulation, starting from 0
+        x_presim = 5 * p_val * (1 - np.exp(-1.0))
+        x_expected = p_val + (x_presim - p_val) * np.exp(-t)
+        sx_expected = 1 + (x_presim / p_val - 1) * np.exp(-t)
+    edata.set_measurements(np.zeros(len(t)))
+    edata.set_noise_scales(np.ones(len(t)))
+    sllh_expected = -np.sum(x_expected * sx_expected)
+
+    rdata = run_simulation(model, model.create_solver(), edata)
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.x[:, 0], x_expected, rtol=1e-5)
+
+    for sensitivity_method in (
+        SensitivityMethod.forward,
+        SensitivityMethod.adjoint,
+    ):
+        solver = model.create_solver()
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(sensitivity_method)
+        solver.set_sensitivity_method_pre_equilibration(sensitivity_method)
+        solver.set_relative_tolerance(1e-10)
+        solver.set_absolute_tolerance(1e-10)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS
+        if sensitivity_method == SensitivityMethod.forward:
+            assert_allclose(rdata.sx[:, 0, 0], sx_expected, rtol=1e-5)
+        assert_allclose(rdata.sllh, [sllh_expected], rtol=1e-5)

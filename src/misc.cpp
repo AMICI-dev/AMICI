@@ -4,6 +4,7 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
+#include <ctime>
 #include <sstream>
 
 #if defined(_WIN32)
@@ -16,6 +17,10 @@
 #include <cxxabi.h> // for __cxa_demangle
 #include <dlfcn.h>  // for dladdr
 #include <execinfo.h>
+#endif
+
+#if !defined(_WIN32)
+#include <time.h> // for clock_gettime
 #endif
 
 namespace amici {
@@ -185,6 +190,27 @@ std::string printf_to_string(char const* fmt, va_list ap) {
 std::pair<size_t, size_t>
 unravel_index(size_t const flat_idx, size_t const num_cols) {
     return {flat_idx / num_cols, flat_idx % num_cols};
+}
+
+// Windows' per-thread CPU time (GetThreadTimes) only advances with the
+// scheduler tick (about 15.6 ms), which is too coarse for timing single
+// simulations. There, std::clock is used instead.
+bool const CpuTimer::uses_thread_clock =
+#if !defined(_WIN32) && defined(CLOCK_THREAD_CPUTIME_ID)
+    true;
+#else
+    false;
+#endif
+
+double CpuTimer::now_seconds() {
+#if !defined(_WIN32) && defined(CLOCK_THREAD_CPUTIME_ID)
+    timespec ts{};
+    clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ts);
+    return static_cast<double>(ts.tv_sec)
+           + static_cast<double>(ts.tv_nsec) * 1e-9;
+#else
+    return static_cast<double>(std::clock()) / CLOCKS_PER_SEC;
+#endif
 }
 
 } // namespace amici

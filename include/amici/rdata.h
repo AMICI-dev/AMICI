@@ -118,6 +118,19 @@ class ReturnData : public ModelDimensions {
         ForwardProblem const* fwd, BackwardProblem const* bwd, Model& model,
         Solver const& solver, ExpData const* edata
     );
+
+    /**
+     * @brief Set likelihood, state variables, outputs and respective
+     * sensitivities to NaN (typically after integration failure)
+     *
+     * Timepoint-resolved quantities are invalidated from `it_start` on,
+     * the likelihood, its sensitivities and the FIM entirely.
+     * Does nothing if `it_start >= nt`.
+     *
+     * @param it_start time index at which to start invalidating
+     */
+    void invalidate(int it_start);
+
     /**
      * @brief Arbitrary (not necessarily unique) identifier.
      */
@@ -303,10 +316,10 @@ class ReturnData : public ModelDimensions {
     /**
      * @brief Computation time of forward solve [ms]
      *
-     * .. warning::
-     *      If AMICI was built without boost, this tracks the CPU-time of the
-     *      current process. Therefore, in a multi-threaded context, this value
-     *      may be incorrect.
+     * This is the CPU time of the simulating thread, except on platforms
+     * without a precise per-thread CPU clock, such as Windows (see
+     * CpuTimer::uses_thread_clock). There, it is measured with std::clock,
+     * so in a multi-threaded context, this value may be incorrect.
      *
      */
     double cpu_time = 0.0;
@@ -314,10 +327,10 @@ class ReturnData : public ModelDimensions {
     /**
      * @brief Computation time of backward solve [ms]
      *
-     * .. warning::
-     *      If AMICI was built without boost, this tracks the CPU-time of the
-     *      current process. Therefore, in a multi-threaded context, this value
-     *      may be incorrect.
+     * This is the CPU time of the simulating thread, except on platforms
+     * without a precise per-thread CPU clock, such as Windows (see
+     * CpuTimer::uses_thread_clock). There, it is measured with std::clock,
+     * so in a multi-threaded context, this value may be incorrect.
      *
      */
     double cpu_time_b = 0.0;
@@ -325,10 +338,10 @@ class ReturnData : public ModelDimensions {
     /**
      * @brief Total CPU time from entering runAmiciSimulation until exiting [ms]
      *
-     * .. warning::
-     *      If AMICI was built without boost, this tracks the CPU-time of the
-     *      current process. Therefore, in a multi-threaded context, this value
-     *      may be incorrect.
+     * This is the CPU time of the simulating thread, except on platforms
+     * without a precise per-thread CPU clock, such as Windows (see
+     * CpuTimer::uses_thread_clock). There, it is measured with std::clock,
+     * so in a multi-threaded context, this value may be incorrect.
      *
      */
     double cpu_time_total = 0.0;
@@ -340,10 +353,10 @@ class ReturnData : public ModelDimensions {
      * @brief Computation time of the steady state solver [ms]
      * (pre-equilibration)
      *
-     * .. warning::
-     *      If AMICI was built without boost, this tracks the CPU-time of the
-     *      current process. Therefore, in a multi-threaded context, this value
-     *      may be incorrect.
+     * This is the CPU time of the simulating thread, except on platforms
+     * without a precise per-thread CPU clock, such as Windows (see
+     * CpuTimer::uses_thread_clock). There, it is measured with std::clock,
+     * so in a multi-threaded context, this value may be incorrect.
      *
      */
     double preeq_cpu_time = 0.0;
@@ -352,10 +365,10 @@ class ReturnData : public ModelDimensions {
      * @brief Computation time of the steady state solver of the backward
      * problem [ms] (pre-equilibration)
      *
-     * .. warning::
-     *      If AMICI was built without boost, this tracks the CPU-time of the
-     *      current process. Therefore, in a multi-threaded context, this value
-     *      may be incorrect.
+     * This is the CPU time of the simulating thread, except on platforms
+     * without a precise per-thread CPU clock, such as Windows (see
+     * CpuTimer::uses_thread_clock). There, it is measured with std::clock,
+     * so in a multi-threaded context, this value may be incorrect.
      *
      */
     double preeq_cpu_time_b = 0.0;
@@ -367,10 +380,10 @@ class ReturnData : public ModelDimensions {
      * @brief Computation time of the steady-state solver [ms]
      * (postequilibration)
      *
-     * .. warning::
-     *      If AMICI was built without boost, this tracks the CPU-time of the
-     *      current process. Therefore, in a multi-threaded context, this value
-     *      may be incorrect.
+     * This is the CPU time of the simulating thread, except on platforms
+     * without a precise per-thread CPU clock, such as Windows (see
+     * CpuTimer::uses_thread_clock). There, it is measured with std::clock,
+     * so in a multi-threaded context, this value may be incorrect.
      *
      */
     double posteq_cpu_time = 0.0;
@@ -379,10 +392,10 @@ class ReturnData : public ModelDimensions {
      * @brief Computation time of the steady-state solver of the backward
      * problem [ms] (postequilibration)
      *
-     * .. warning::
-     *      If AMICI was built without boost, this tracks the CPU-time of the
-     *      current process. Therefore, in a multi-threaded context, this value
-     *      may be incorrect.
+     * This is the CPU time of the simulating thread, except on platforms
+     * without a precise per-thread CPU clock, such as Windows (see
+     * CpuTimer::uses_thread_clock). There, it is measured with std::clock,
+     * so in a multi-threaded context, this value may be incorrect.
      *
      */
     double posteq_cpu_time_b = 0.0;
@@ -709,6 +722,8 @@ class ReturnData : public ModelDimensions {
     template <class T>
     void store_jacobian_and_derivative(T const& problem, Model& model) {
         auto const& simulation_state = problem.get_final_simulation_state();
+        if (!simulation_state.has_solution())
+            return;
         model.set_model_state(simulation_state.mod);
         auto const& sol = simulation_state.sol;
         sundials::Context sunctx;
@@ -770,14 +785,6 @@ class ReturnData : public ModelDimensions {
      */
     void
     fFIM(int it, Model& model, SolutionState const& sol, ExpData const& edata);
-
-    /**
-     * @brief Set likelihood, state variables, outputs and respective
-     * sensitivities to NaN (typically after integration failure)
-     *
-     * @param it_start time index at which to start invalidating
-     */
-    void invalidate(int it_start);
 
     /**
      * @brief Set likelihood and chi2 to NaN

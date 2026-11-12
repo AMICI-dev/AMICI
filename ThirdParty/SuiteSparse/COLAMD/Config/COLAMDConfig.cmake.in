@@ -61,7 +61,12 @@ endif ( )
 
 
 # Import target
-include ( ${CMAKE_CURRENT_LIST_DIR}/COLAMDTargets.cmake )
+if ( @BUILD_SHARED_LIBS@ )
+    include ( ${CMAKE_CURRENT_LIST_DIR}/COLAMDTargets.cmake )
+endif ( )
+if ( @BUILD_STATIC_LIBS@ )
+    include ( ${CMAKE_CURRENT_LIST_DIR}/COLAMDTargets_static.cmake OPTIONAL )
+endif ( )
 
 # The following is only for backward compatibility with FindCOLAMD.
 

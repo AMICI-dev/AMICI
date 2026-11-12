@@ -470,6 +470,7 @@ def _handle_event(
     roots_dir = jnp.sign(droot_dt)  # direction of the root condition function
 
     y0_next, h_next = _apply_event_assignments(
+        t0_next,
         roots_found,
         roots_dir,
         y0_next,
@@ -477,6 +478,8 @@ def _handle_event(
         tcl,
         h,
         delta_x,
+        h_mask,
+        root_cond_fn,
     )
 
     h_next = jnp.where(h_mask, h_next, h)
@@ -527,6 +530,7 @@ def _check_cascading_events(
     roots_dir = jnp.sign(jnp.sign(rootvals) - jnp.sign(rootval_prev))
 
     y0_next, _ = _apply_event_assignments(
+        t0_next,
         root_vals_changed_sign,
         roots_dir,
         y0_next,
@@ -534,12 +538,15 @@ def _check_cascading_events(
         tcl,
         h,
         delta_x,
+        h_mask,
+        root_cond_fn,
     )
 
     return y0_next
 
 
 def _apply_event_assignments(
+    t,
     roots_found,
     roots_dir,
     y0_next,
@@ -547,12 +554,22 @@ def _apply_event_assignments(
     tcl,
     h,
     delta_x,
+    h_mask,
+    root_cond_fn,
+    h_eval=None,
 ):
     h_next = jnp.where(
         roots_found,
         jnp.logical_not(h),
         h,
     )  # update heaviside variables based on the root condition function
+    # The event assignments are evaluated with the updated Heaviside
+    # variables, as in the C++ backend. Masked-out ones keep their value.
+    if h_eval is None:
+        h_eval = jnp.where(h_mask, h_next, h)
+    # Roots not found at this time may be crossed by the preceding
+    # assignments of simultaneous events.
+    h_fixed = jnp.logical_or(roots_found, jnp.logical_not(h_mask))
 
     mask = jnp.array(
         [
@@ -575,7 +592,11 @@ def _apply_event_assignments(
 
         def body(y, e):
             inds = jnp.array([e])
-            delx = delta_x(y, p, tcl)
+            rootvals = root_cond_fn(t, y, (p, tcl, h_eval))
+            h_y = jnp.where(
+                h_fixed, h_eval, jnp.heaviside(rootvals, 1.0)
+            ).astype(h_eval.dtype)
+            delx = delta_x(t, y, p, tcl, h_y)
             if y.size:
                 delx = delx.reshape(delx.size // y.shape[0], y.shape[0])
             keep = jnp.zeros_like(mask).at[inds, :].set(True)

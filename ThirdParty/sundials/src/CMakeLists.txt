@@ -3,8 +3,11 @@
 #                Cody Balos @ LLNL
 # ---------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2024, Lawrence Livermore National Security
+# Copyright (c) 2025-2026, Lawrence Livermore National Security,
+# University of Maryland Baltimore County, and the SUNDIALS contributors.
+# Copyright (c) 2013-2025, Lawrence Livermore National Security
 # and Southern Methodist University.
+# Copyright (c) 2002-2013, Lawrence Livermore National Security.
 # All rights reserved.
 #
 # See the top-level LICENSE and NOTICE files for details.
@@ -23,38 +26,35 @@ add_subdirectory(sunlinsol)
 add_subdirectory(sunnonlinsol)
 add_subdirectory(sunmemory)
 add_subdirectory(sunadaptcontroller)
+add_subdirectory(sunadjointcheckpointscheme)
+add_subdirectory(sundomeigest)
 
 # ARKODE library
-if(BUILD_ARKODE)
+if(SUNDIALS_ENABLE_ARKODE)
   add_subdirectory(arkode)
 endif()
 
 # CVODE library
-if(BUILD_CVODE)
+if(SUNDIALS_ENABLE_CVODE)
   add_subdirectory(cvode)
 endif()
 
 # CVODES library
-if(BUILD_CVODES)
+if(SUNDIALS_ENABLE_CVODES)
   add_subdirectory(cvodes)
 endif()
 
 # IDA library
-if(BUILD_IDA)
+if(SUNDIALS_ENABLE_IDA)
   add_subdirectory(ida)
 endif()
 
 # IDAS library
-if(BUILD_IDAS)
+if(SUNDIALS_ENABLE_IDAS)
   add_subdirectory(idas)
 endif()
 
 # KINSOL library
-if(BUILD_KINSOL)
+if(SUNDIALS_ENABLE_KINSOL)
   add_subdirectory(kinsol)
-endif()
-
-# CPODES library
-if(BUILD_CPODES)
-  add_subdirectory(cpodes)
 endif()

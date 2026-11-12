@@ -1,7 +1,10 @@
 /* -----------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2024, Lawrence Livermore National Security
+ * Copyright (c) 2025-2026, Lawrence Livermore National Security,
+ * University of Maryland Baltimore County, and the SUNDIALS contributors.
+ * Copyright (c) 2013-2025, Lawrence Livermore National Security
  * and Southern Methodist University.
+ * Copyright (c) 2002-2013, Lawrence Livermore National Security.
  * All rights reserved.
  *
  * See the top-level LICENSE and NOTICE files for details.
@@ -48,6 +51,8 @@
         "operation is not implemented: function pointer is NULL")              \
   ENTRY(SUN_ERR_USER_FCN_FAIL, "the user provided callback function failed")   \
                                                                                \
+  ENTRY(SUN_ERR_DATANODE_NODENOTFOUND, "the data node could not be found")     \
+                                                                               \
   ENTRY(SUN_ERR_PROFILER_MAPFULL,                                              \
         "the number of profiler entries exceeded SUNPROFILER_MAX_ENTRIES")     \
   ENTRY(SUN_ERR_PROFILER_MAPGET, "unknown error getting SUNProfiler timer")    \
@@ -55,6 +60,18 @@
         "unknown error inserting SUNProfiler timer")                           \
   ENTRY(SUN_ERR_PROFILER_MAPKEYNOTFOUND, "timer was not found in SUNProfiler") \
   ENTRY(SUN_ERR_PROFILER_MAPSORT, "error sorting SUNProfiler map")             \
+                                                                               \
+  ENTRY(SUN_ERR_ADJOINT_STEPPERFAILED,                                         \
+        "SUNStepper stopped without successfully reaching the requested "      \
+        "output time when solving the adjoint system")                         \
+  ENTRY(SUN_ERR_ADJOINT_STEPPERINVALIDSTOP,                                    \
+        "SUNStepper stopped with a flag not supported by the "                 \
+        "adjoint solver")                                                      \
+                                                                               \
+  ENTRY(SUN_ERR_CHECKPOINT_NOT_FOUND,                                          \
+        "the requested checkpoint was not found")                              \
+  ENTRY(SUN_ERR_CHECKPOINT_MISMATCH, "the expected time for the checkpoint "   \
+                                     "and the stored time do not match")       \
                                                                                \
   ENTRY(SUN_ERR_SUNCTX_CORRUPT, "SUNContext is NULL or corrupt")               \
                                                                                \
@@ -64,7 +81,7 @@
   ENTRY(SUN_ERR_UNREACHABLE,                                                   \
         "Reached code that should be unreachable: open an issue at: "          \
         "https://github.com/LLNL/sundials")                                    \
-  ENTRY(SUN_ERR_UNKNOWN, "Unknown error occured: open an issue at "            \
+  ENTRY(SUN_ERR_UNKNOWN, "Unknown error occurred: open an issue at "           \
                          "https://github.com/LLNL/sundials")
 
 /* Expand SUN_ERR_CODE_LIST to enum */
@@ -74,7 +91,7 @@
    codes, and old/deprecated codes for matrix and (non)linear solvers. */
 
 /* clang-format off */
-enum
+enum SUNErrCode_
 {
   SUN_ERR_MINIMUM                                       = -10000,
   SUN_ERR_CODE_LIST(SUN_EXPAND_TO_ENUM)

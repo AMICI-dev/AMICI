@@ -2,8 +2,11 @@
  * Programmer(s): Alan C. Hindmarsh and Radu Serban @ LLNL
  * -----------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2024, Lawrence Livermore National Security
+ * Copyright (c) 2025-2026, Lawrence Livermore National Security,
+ * University of Maryland Baltimore County, and the SUNDIALS contributors.
+ * Copyright (c) 2013-2025, Lawrence Livermore National Security
  * and Southern Methodist University.
+ * Copyright (c) 2002-2013, Lawrence Livermore National Security.
  * All rights reserved.
  *
  * See the top-level LICENSE and NOTICE files for details.
@@ -189,12 +192,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <cvodes/cvodes.h>
+#include <sundials/priv/sundials_errors_impl.h>
+#include <sundials/sundials_context.h>
 #include <sundials/sundials_types.h>
 #include <sunnonlinsol/sunnonlinsol_newton.h>
 
 #include "cvodes_impl.h"
-#include "sundials/priv/sundials_errors_impl.h"
-#include "sundials/sundials_context.h"
+#include "cvodes_ls_impl.h"
+#include "sundials/sundials_nonlinearsolver.h"
+#include "sundials_utils.h"
 
 /*=================================================================*/
 /* CVODE Private Constants                                         */
@@ -312,7 +320,7 @@ static sunbooleantype cvCheckNvector(N_Vector tmpl);
 
 /* Initial setup */
 
-static int cvInitialSetup(CVodeMem cv_mem);
+static int cvInitialSetup(CVodeMem cv_mem, sunrealtype tout);
 
 /* Memory allocation/deallocation */
 
@@ -387,10 +395,11 @@ static int cvStgrNls(CVodeMem cv_mem);
 static int cvStgr1Nls(CVodeMem cv_mem, int is);
 static int cvQuadSensNls(CVodeMem cv_mem);
 
-static int cvCheckConstraints(CVodeMem cv_mem);
-
 static int cvHandleNFlag(CVodeMem cv_mem, int* nflagPtr, sunrealtype saved_t,
                          int* ncfPtr, long int* ncfnPtr);
+
+static int cvCheckConstraints(CVodeMem cv_mem, int* nflagPtr,
+                              sunrealtype saved_t, int* step_constraint_fails);
 
 /* Error Test */
 
@@ -420,7 +429,7 @@ static int cvSLdet(CVodeMem cv_mem);
 
 static int cvRcheck1(CVodeMem cv_mem);
 static int cvRcheck2(CVodeMem cv_mem);
-static int cvRcheck3(CVodeMem cv_mem);
+static int cvRcheck3(CVodeMem cv_mem, sunrealtype tout, int itask);
 static int cvRootfind(CVodeMem cv_mem);
 
 /* Function for combined norms */
@@ -497,6 +506,8 @@ void* CVodeCreate(int lmm, SUNContext sunctx)
 
   maxord = (lmm == CV_ADAMS) ? ADAMS_Q_MAX : BDF_Q_MAX;
 
+  cv_mem->python = NULL;
+
   /* Copy input parameters into cv_mem */
   cv_mem->cv_sunctx = sunctx;
   cv_mem->cv_lmm    = lmm;
@@ -540,8 +551,12 @@ void* CVodeCreate(int lmm, SUNContext sunctx)
   cv_mem->cv_msbp             = MSBP_DEFAULT;
   cv_mem->cv_dgmax_lsetup     = DGMAX_LSETUP_DEFAULT;
   cv_mem->convfail            = CV_NO_FAILURES;
-  cv_mem->cv_constraints      = NULL;
-  cv_mem->cv_constraintsSet   = SUNFALSE;
+
+  /* Initialize inequality constraint variables */
+  cv_mem->cv_constraints         = NULL;
+  cv_mem->constraint_corrections = 0;
+  cv_mem->constraint_fails       = 0;
+  cv_mem->max_constraint_fails   = MAX_CONSTRAINT_FAILS;
 
   /* Initialize root finding variables */
 
@@ -559,6 +574,9 @@ void* CVodeCreate(int lmm, SUNContext sunctx)
   cv_mem->proj_mem     = NULL;
   cv_mem->proj_enabled = SUNFALSE;
   cv_mem->proj_applied = SUNFALSE;
+
+  /* Initialize resize variables */
+  cv_mem->first_step_after_resize = SUNFALSE;
 
   /* Set default values for quad. optional inputs */
 
@@ -819,11 +837,12 @@ int CVodeInit(void* cvode_mem, CVRhsFn f, sunrealtype t0, N_Vector y0)
   /* Set the linear solver addresses to NULL.
      (We check != NULL later, in CVode) */
 
-  cv_mem->cv_linit  = NULL;
-  cv_mem->cv_lsetup = NULL;
-  cv_mem->cv_lsolve = NULL;
-  cv_mem->cv_lfree  = NULL;
-  cv_mem->cv_lmem   = NULL;
+  cv_mem->cv_linit   = NULL;
+  cv_mem->cv_lreinit = NULL;
+  cv_mem->cv_lsetup  = NULL;
+  cv_mem->cv_lsolve  = NULL;
+  cv_mem->cv_lfree   = NULL;
+  cv_mem->cv_lmem    = NULL;
 
   /* Set forceSetup to SUNFALSE */
 
@@ -958,6 +977,11 @@ int CVodeReInit(void* cvode_mem, sunrealtype t0, N_Vector y0)
   cv_mem->cv_nge     = 0;
 
   cv_mem->cv_irfnd = 0;
+
+  cv_mem->constraint_corrections = 0;
+  cv_mem->constraint_fails       = 0;
+
+  if (cv_mem->cv_lreinit) { cv_mem->cv_lreinit(cv_mem); }
 
   /* Initialize other integrator optional outputs */
 
@@ -1193,7 +1217,7 @@ int CVodeQuadInit(void* cvode_mem, CVQuadRhsFn fQ, N_Vector yQ0)
   cv_mem->cv_quadr          = SUNTRUE;
   cv_mem->cv_QuadMallocDone = SUNTRUE;
 
-  /* Quadrature initialization was successfull */
+  /* Quadrature initialization was successful */
   return (CV_SUCCESS);
 }
 
@@ -1224,7 +1248,7 @@ int CVodeQuadReInit(void* cvode_mem, N_Vector yQ0)
   }
   cv_mem = (CVodeMem)cvode_mem;
 
-  /* Ckeck if quadrature was initialized? */
+  /* Check if quadrature was initialized? */
   if (cv_mem->cv_QuadMallocDone == SUNFALSE)
   {
     cvProcessError(cv_mem, CV_NO_QUAD, __LINE__, __func__, __FILE__,
@@ -1242,7 +1266,7 @@ int CVodeQuadReInit(void* cvode_mem, N_Vector yQ0)
   /* Quadrature integration turned ON */
   cv_mem->cv_quadr = SUNTRUE;
 
-  /* Quadrature re-initialization was successfull */
+  /* Quadrature re-initialization was successful */
   return (CV_SUCCESS);
 }
 
@@ -1275,7 +1299,7 @@ int CVodeQuadSStolerances(void* cvode_mem, sunrealtype reltolQ,
   }
   cv_mem = (CVodeMem)cvode_mem;
 
-  /* Ckeck if quadrature was initialized? */
+  /* Check if quadrature was initialized? */
 
   if (cv_mem->cv_QuadMallocDone == SUNFALSE)
   {
@@ -1323,7 +1347,7 @@ int CVodeQuadSVtolerances(void* cvode_mem, sunrealtype reltolQ, N_Vector abstolQ
   }
   cv_mem = (CVodeMem)cvode_mem;
 
-  /* Ckeck if quadrature was initialized? */
+  /* Check if quadrature was initialized? */
 
   if (cv_mem->cv_QuadMallocDone == SUNFALSE)
   {
@@ -1588,7 +1612,7 @@ int CVodeSensInit(void* cvode_mem, int Ns, int ism, CVSensRhsFn fS, N_Vector* yS
   if (ism == CV_SIMULTANEOUS) { cv_mem->ownNLSsim = SUNTRUE; }
   else { cv_mem->ownNLSstg = SUNTRUE; }
 
-  /* Sensitivity initialization was successfull */
+  /* Sensitivity initialization was successful */
   return (CV_SUCCESS);
 }
 
@@ -1844,7 +1868,7 @@ int CVodeSensInit1(void* cvode_mem, int Ns, int ism, CVSensRhs1Fn fS1,
   else if (ism == CV_STAGGERED) { cv_mem->ownNLSstg = SUNTRUE; }
   else { cv_mem->ownNLSstg1 = SUNTRUE; }
 
-  /* Sensitivity initialization was successfull */
+  /* Sensitivity initialization was successful */
   return (CV_SUCCESS);
 }
 
@@ -2039,7 +2063,7 @@ int CVodeSensReInit(void* cvode_mem, int ism, N_Vector* yS0)
     }
   }
 
-  /* Sensitivity re-initialization was successfull */
+  /* Sensitivity re-initialization was successful */
   return (CV_SUCCESS);
 }
 
@@ -2329,7 +2353,7 @@ int CVodeQuadSensInit(void* cvode_mem, CVQuadSensRhsFn fQS, N_Vector* yQS0)
   cv_mem->cv_quadr_sensi        = SUNTRUE;
   cv_mem->cv_QuadSensMallocDone = SUNTRUE;
 
-  /* Sensitivity initialization was successfull */
+  /* Sensitivity initialization was successful */
   return (CV_SUCCESS);
 }
 
@@ -2439,7 +2463,7 @@ int CVodeQuadSensSStolerances(void* cvode_mem, sunrealtype reltolQS,
     return (CV_NO_SENS);
   }
 
-  /* Ckeck if quadrature sensitivity was initialized? */
+  /* Check if quadrature sensitivity was initialized? */
 
   if (cv_mem->cv_QuadSensMallocDone == SUNFALSE)
   {
@@ -2523,7 +2547,7 @@ int CVodeQuadSensSVtolerances(void* cvode_mem, sunrealtype reltolQS,
     return (CV_NO_SENS);
   }
 
-  /* Ckeck if quadrature sensitivity was initialized? */
+  /* Check if quadrature sensitivity was initialized? */
 
   if (cv_mem->cv_QuadSensMallocDone == SUNFALSE)
   {
@@ -2617,7 +2641,7 @@ int CVodeQuadSensEEtolerances(void* cvode_mem)
     return (CV_NO_SENS);
   }
 
-  /* Ckeck if quadrature sensitivity was initialized? */
+  /* Check if quadrature sensitivity was initialized? */
 
   if (cv_mem->cv_QuadSensMallocDone == SUNFALSE)
   {
@@ -2948,9 +2972,6 @@ int CVode(void* cvode_mem, sunrealtype tout, N_Vector yout, sunrealtype* tret,
     return (CV_ILL_INPUT);
   }
 
-  if (itask == CV_NORMAL) { cv_mem->cv_toutc = tout; }
-  cv_mem->cv_taskc = itask;
-
   /*
    * ----------------------------------------
    * 2. Initializations performed only at
@@ -2960,6 +2981,11 @@ int CVode(void* cvode_mem, sunrealtype tout, N_Vector yout, sunrealtype* tret,
    *    - compute initial step size
    *    - check for approach to tstop
    *    - check for approach to a root
+   *    Or initializations performed after
+   *    resizing the integrator
+   *    - check constraints
+   *    - initialize linear solver
+   *    - initialize nonlinear solver
    * ----------------------------------------
    */
 
@@ -2967,9 +2993,9 @@ int CVode(void* cvode_mem, sunrealtype tout, N_Vector yout, sunrealtype* tret,
   {
     cv_mem->cv_tretlast = *tret = cv_mem->cv_tn;
 
-    /* Check inputs for corectness */
+    /* Check inputs for correctness */
 
-    ier = cvInitialSetup(cv_mem);
+    ier = cvInitialSetup(cv_mem, tout);
     if (ier != CV_SUCCESS)
     {
       SUNDIALS_MARK_FUNCTION_END(CV_PROFILER);
@@ -3192,7 +3218,45 @@ int CVode(void* cvode_mem, sunrealtype tout, N_Vector yout, sunrealtype* tret,
       }
     }
 
-  } /* end of first call block */
+    /* end of first call block */
+  }
+  else if (cv_mem->first_step_after_resize)
+  {
+    /* Check if the resized y satisfies the constraints */
+    if (cv_mem->cv_constraints)
+    {
+      sunbooleantype conOK = N_VConstrMask(cv_mem->cv_constraints,
+                                           cv_mem->cv_zn[0], cv_mem->cv_tempv);
+      if (!conOK)
+      {
+        cvProcessError(cv_mem, CV_ILL_INPUT, __LINE__, __func__, __FILE__,
+                       "y does not satisfy the constraints");
+        return CV_ILL_INPUT;
+      }
+    }
+
+    /* Initialize the linear solver */
+    if (cv_mem->cv_linit)
+    {
+      ier = cv_mem->cv_linit(cv_mem);
+      if (ier)
+      {
+        cvProcessError(cv_mem, CV_LINIT_FAIL, __LINE__, __func__, __FILE__,
+                       MSGCV_LINIT_FAIL);
+        return CV_LINIT_FAIL;
+      }
+    }
+
+    /* Initialize the nonlinear solver (must occur after linear solver is
+       initialized) so the lsetup and lsolve pointers have been set */
+    ier = cvNlsInit(cv_mem);
+    if (ier)
+    {
+      cvProcessError(cv_mem, CV_NLS_INIT_FAIL, __LINE__, __func__, __FILE__,
+                     MSGCV_NLS_INIT_FAIL);
+      return CV_NLS_INIT_FAIL;
+    }
+  }
 
   /*
    * ------------------------------------------------------
@@ -3248,7 +3312,7 @@ int CVode(void* cvode_mem, sunrealtype tout, N_Vector yout, sunrealtype* tret,
          check remaining interval for roots */
       if (SUNRabs(cv_mem->cv_tn - cv_mem->cv_tretlast) > troundoff)
       {
-        retval = cvRcheck3(cv_mem);
+        retval = cvRcheck3(cv_mem, tout, itask);
 
         if (retval == CV_SUCCESS)
         { /* no root found */
@@ -3517,7 +3581,7 @@ int CVode(void* cvode_mem, sunrealtype tout, N_Vector yout, sunrealtype* tret,
     /* Check for root in last step taken. */
     if (cv_mem->cv_nrtfn > 0)
     {
-      retval = cvRcheck3(cv_mem);
+      retval = cvRcheck3(cv_mem, tout, itask);
 
       if (retval == RTFOUND)
       { /* A new root was found */
@@ -4407,6 +4471,11 @@ void CVodeFree(void** cvode_mem)
 
   if (cv_mem->proj_mem) { cvProjFree(&(cv_mem->proj_mem)); }
 
+#if defined(SUNDIALS_ENABLE_PYTHON)
+  cvode_user_supplied_fn_table_destroy(cv_mem->python);
+#endif
+  cv_mem->python = NULL;
+
   free(*cvode_mem);
   *cvode_mem = NULL;
 }
@@ -4718,7 +4787,7 @@ static void cvFreeVectors(CVodeMem cv_mem)
     cv_mem->cv_liw -= cv_mem->cv_liw1;
   }
 
-  if (cv_mem->cv_constraintsMallocDone)
+  if (cv_mem->cv_constraints)
   {
     N_VDestroy(cv_mem->cv_constraints);
     cv_mem->cv_lrw -= cv_mem->cv_lrw1;
@@ -5137,10 +5206,22 @@ static void cvQuadSensFreeVectors(CVodeMem cv_mem)
  * linear solver initialization routine.
  */
 
-static int cvInitialSetup(CVodeMem cv_mem)
+static int cvInitialSetup(CVodeMem cv_mem, sunrealtype tout)
 {
   int ier;
   sunbooleantype conOK;
+
+  /* Is tout too close to tn? */
+  sunrealtype tdist  = SUNRabs(tout - cv_mem->cv_tn);
+  sunrealtype tround = cv_mem->cv_uround *
+                       SUNMAX(SUNRabs(cv_mem->cv_tn), SUNRabs(tout));
+
+  if (tdist == ZERO || tdist < TWO * tround)
+  {
+    cvProcessError(cv_mem, CV_TOO_CLOSE, __LINE__, __func__, __FILE__,
+                   MSGCV_TOO_CLOSE);
+    return (CV_TOO_CLOSE);
+  }
 
   /* Did the user specify tolerances? */
   if (cv_mem->cv_itol == CV_NN)
@@ -5165,7 +5246,7 @@ static int cvInitialSetup(CVodeMem cv_mem)
   else { cv_mem->cv_e_data = cv_mem; }
 
   /* Check to see if y0 satisfies constraints */
-  if (cv_mem->cv_constraintsSet)
+  if (cv_mem->cv_constraints)
   {
     if (cv_mem->cv_sensi && (cv_mem->cv_ism == CV_SIMULTANEOUS))
     {
@@ -5401,15 +5482,13 @@ static int cvInitialSetup(CVodeMem cv_mem)
 /*
  * cvHin
  *
- * This routine computes a tentative initial step size h0.
- * If tout is too close to tn (= t0), then cvHin returns CV_TOO_CLOSE
- * and h remains uninitialized. Note that here tout is either the value
- * passed to CVode at the first call or the value of tstop (if tstop is
- * enabled and it is closer to t0=tn than tout).
- * If any RHS function fails unrecoverably, cvHin returns CV_*RHSFUNC_FAIL.
- * If any RHS function fails recoverably too many times and recovery is
- * not possible, cvHin returns CV_REPTD_*RHSFUNC_ERR.
- * Otherwise, cvHin sets h to the chosen value h0 and returns CV_SUCCESS.
+ * This routine computes a tentative initial step size h0. Note that here tout
+ * is either the value passed to CVode at the first call or the value of tstop
+ * (if tstop is enabled and it is closer to t0=tn than tout). If any RHS
+ * function fails unrecoverably, cvHin returns CV_*RHSFUNC_FAIL. If any RHS
+ * function fails recoverably too many times and recovery is not possible, cvHin
+ * returns CV_REPTD_*RHSFUNC_ERR. Otherwise, cvHin sets h to the chosen value
+ * h0 and returns CV_SUCCESS.
  *
  * The algorithm used seeks to find h0 as a solution of
  *       (WRMS norm of (h0^2 ydd / 2)) = 1,
@@ -5440,15 +5519,11 @@ static int cvHin(CVodeMem cv_mem, sunrealtype tout)
   sunrealtype hg, hgs, hs, hnew, hrat, h0, yddnrm;
   sunbooleantype hgOK;
 
-  /* If tout is too close to tn, give up */
-
-  if ((tdiff = tout - cv_mem->cv_tn) == ZERO) { return (CV_TOO_CLOSE); }
-
+  /* cvInitialSetup checks for tdiff = 0 or < 2 * troundoff */
+  tdiff  = tout - cv_mem->cv_tn;
   sign   = (tdiff > ZERO) ? 1 : -1;
   tdist  = SUNRabs(tdiff);
   tround = cv_mem->cv_uround * SUNMAX(SUNRabs(cv_mem->cv_tn), SUNRabs(tout));
-
-  if (tdist < TWO * tround) { return (CV_TOO_CLOSE); }
 
   /*
      Set lower and upper bounds on h0, and take geometric mean
@@ -5804,13 +5879,6 @@ static int cvStep(CVodeMem cv_mem)
   sunrealtype dsmQ;    /* quadrature error estimate                */
   sunrealtype dsmS;    /* sensitivity error estimate               */
   sunrealtype dsmQS;   /* quadrature sensitivity error estimate    */
-  int ncf;             /* corrector failures in this step attempt  */
-  int ncfS;            /* sensitivity corrector failures           */
-  int npf;             /* projection failures in this step attempt */
-  int nef;             /* error test failures in this step attempt */
-  int nefQ;            /* quadrature error test fails              */
-  int nefS;            /* sensitivity error test fails             */
-  int nefQS;           /* quadrature sensitivity error test fails  */
   int nflag, kflag;    /* nonlinear solver flags                   */
   int pflag;           /* projection return flag                   */
   int eflag;           /* error test return flag                   */
@@ -5824,11 +5892,18 @@ static int cvStep(CVodeMem cv_mem)
   do_sensi_stg  = (cv_mem->cv_sensi && (cv_mem->cv_ism == CV_STAGGERED));
   do_sensi_stg1 = (cv_mem->cv_sensi && (cv_mem->cv_ism == CV_STAGGERED1));
 
-  /* Initialize local counters for convergence and error test failures */
+  /* Initialize failure counters for this step attempt */
 
-  ncf = npf = nef = 0;
-  nefQ = nefQS = 0;
-  ncfS = nefS = 0;
+  int ncf                   = 0; /* corrector failures  */
+  int npf                   = 0; /* projection failures */
+  int nef                   = 0; /* error test failures */
+  int step_constraint_fails = 0;
+
+  int ncfS  = 0; /* sensitivity corrector failures           */
+  int nefS  = 0; /* sensitivity error test fails             */
+  int nefQ  = 0; /* quadrature error test fails              */
+  int nefQS = 0; /* quadrature sensitivity error test fails  */
+
   if (do_sensi_stg1)
   {
     for (is = 0; is < cv_mem->cv_Ns; is++) { cv_mem->cv_ncfS1[is] = 0; }
@@ -5852,18 +5927,15 @@ static int cvStep(CVodeMem cv_mem)
 
   /* Looping point for attempts to take a step */
 
-  saved_t = cv_mem->cv_tn;
+  saved_t = cv_mem->cv_tn; /* tn is updated in cvPredict */
   nflag   = FIRST_CALL;
 
   for (;;)
   {
-#if SUNDIALS_LOGGING_LEVEL >= SUNDIALS_LOGGING_DEBUG
-    SUNLogger_QueueMsg(CV_LOGGER, SUN_LOGLEVEL_DEBUG, "CVODES::cvStep",
-                       "enter-step-attempt-loop",
-                       "step = %li, h = %.16g, q = %d, t_n = %.16g",
-                       cv_mem->cv_nst, cv_mem->cv_next_h, cv_mem->cv_next_q,
-                       cv_mem->cv_tn);
-#endif
+    SUNLogInfo(CV_LOGGER, "begin-step-attempt",
+               "step = %li, tn = " SUN_FORMAT_G ", h = " SUN_FORMAT_G
+               ", q = %d",
+               cv_mem->cv_nst + 1, cv_mem->cv_tn, cv_mem->cv_h, cv_mem->cv_q);
 
     cvPredict(cv_mem);
     cvSet(cv_mem);
@@ -5873,11 +5945,30 @@ static int cvStep(CVodeMem cv_mem)
     nflag = cvNls(cv_mem, nflag);
     kflag = cvHandleNFlag(cv_mem, &nflag, saved_t, &ncf, &(cv_mem->cv_ncfn));
 
+    SUNLogInfoIf(kflag == PREDICT_AGAIN || kflag != DO_ERROR_TEST, CV_LOGGER,
+                 "end-step-attempt", "status = failed solve, kflag = %i", kflag);
+
     /* Go back in loop if we need to predict again (nflag=PREV_CONV_FAIL) */
     if (kflag == PREDICT_AGAIN) { continue; }
 
     /* Return if nonlinear solve failed and recovery is not possible. */
     if (kflag != DO_ERROR_TEST) { return (kflag); }
+
+    /* Check inequality constraints */
+    if (cv_mem->cv_constraints)
+    {
+      int cflag = cvCheckConstraints(cv_mem, &nflag, saved_t,
+                                     &step_constraint_fails);
+
+      SUNLogInfoIf(cflag != CV_SUCCESS, CV_LOGGER, "end-step-attempt",
+                   "status = failed inequality constraints, cflag = %i", cflag);
+
+      /* Go back in loop if we need to predict again (nflag=PREV_CONV_FAIL) */
+      if (cflag == PREDICT_AGAIN) { continue; }
+
+      /* Return if the check failed and recovery is not possible. */
+      if (cflag != CV_SUCCESS) { return cflag; }
+    }
 
     /* Check if a projection needs to be performed */
     cv_mem->proj_applied = SUNFALSE;
@@ -5886,6 +5977,9 @@ static int cvStep(CVodeMem cv_mem)
     {
       /* Perform projection (nflag=CV_SUCCESS) */
       pflag = cvDoProjection(cv_mem, &nflag, saved_t, &npf);
+
+      SUNLogInfoIf(pflag != CV_SUCCESS, CV_LOGGER, "end-step-attempt",
+                   "status = failed projection, pflag = %i", pflag);
 
       /* Go back in loop if we need to predict again (nflag=PREV_PROJ_FAIL) */
       if (pflag == PREDICT_AGAIN) { continue; }
@@ -5897,6 +5991,11 @@ static int cvStep(CVodeMem cv_mem)
     /* Perform error test (nflag=CV_SUCCESS) */
     eflag = cvDoErrorTest(cv_mem, &nflag, saved_t, cv_mem->cv_acnrm, &nef,
                           &(cv_mem->cv_netf), &dsm);
+
+    SUNLogInfoIf(eflag != CV_SUCCESS, CV_LOGGER, "end-step-attempt",
+                 "status = failed error test, dsm = " SUN_FORMAT_G
+                 ", eflag = %i",
+                 dsm, eflag);
 
     /* Go back in loop if we need to predict again (nflag=PREV_ERR_FAIL) */
     if (eflag == TRY_AGAIN) { continue; }
@@ -5915,6 +6014,10 @@ static int cvStep(CVodeMem cv_mem)
       nflag = cvQuadNls(cv_mem);
       kflag = cvHandleNFlag(cv_mem, &nflag, saved_t, &ncf, &(cv_mem->cv_ncfn));
 
+      SUNLogInfoIf(kflag == PREDICT_AGAIN || kflag != DO_ERROR_TEST, CV_LOGGER,
+                   "end-step-attempt", "status = failed quad solve, kflag = %i",
+                   kflag);
+
       if (kflag == PREDICT_AGAIN) { continue; }
       if (kflag != DO_ERROR_TEST) { return (kflag); }
 
@@ -5924,6 +6027,11 @@ static int cvStep(CVodeMem cv_mem)
         cv_mem->cv_acnrmQ = N_VWrmsNorm(cv_mem->cv_acorQ, cv_mem->cv_ewtQ);
         eflag = cvDoErrorTest(cv_mem, &nflag, saved_t, cv_mem->cv_acnrmQ, &nefQ,
                               &(cv_mem->cv_netfQ), &dsmQ);
+
+        SUNLogInfoIf(eflag != CV_SUCCESS, CV_LOGGER, "end-step-attempt",
+                     "status = failed quad error test, dsmQ = " SUN_FORMAT_G
+                     ", eflag = %i",
+                     dsmQ, eflag);
 
         if (eflag == TRY_AGAIN) { continue; }
         if (eflag != CV_SUCCESS) { return (eflag); }
@@ -5947,6 +6055,10 @@ static int cvStep(CVodeMem cv_mem)
       retval = cv_mem->cv_f(cv_mem->cv_tn, cv_mem->cv_y, cv_mem->cv_ftemp,
                             cv_mem->cv_user_data);
       cv_mem->cv_nfe++;
+
+      SUNLogInfoIf(retval != 0, CV_LOGGER, "end-step-attempt",
+                   "status = failed rhs eval, retval = %i", retval);
+
       if (retval < 0) { return (CV_RHSFUNC_FAIL); }
       if (retval > 0)
       {
@@ -5967,12 +6079,17 @@ static int cvStep(CVodeMem cv_mem)
         for (is = 0; is < cv_mem->cv_Ns; is++)
         {
           cv_mem->sens_solve_idx = is;
-          nflag                  = cvStgr1Nls(cv_mem, is);
+
+          nflag = cvStgr1Nls(cv_mem, is);
           kflag = cvHandleNFlag(cv_mem, &nflag, saved_t, &(cv_mem->cv_ncfS1[is]),
                                 &(cv_mem->cv_ncfnS1[is]));
           if (kflag != DO_ERROR_TEST) { break; }
         }
       }
+
+      SUNLogInfoIf(kflag == PREDICT_AGAIN || kflag != DO_ERROR_TEST, CV_LOGGER,
+                   "end-step-attempt", "status = failed sens solve, kflag = %i",
+                   kflag);
 
       if (kflag == PREDICT_AGAIN) { continue; }
       if (kflag != DO_ERROR_TEST) { return (kflag); }
@@ -5988,6 +6105,11 @@ static int cvStep(CVodeMem cv_mem)
 
         eflag = cvDoErrorTest(cv_mem, &nflag, saved_t, cv_mem->cv_acnrmS, &nefS,
                               &(cv_mem->cv_netfS), &dsmS);
+
+        SUNLogInfoIf(eflag != CV_SUCCESS, CV_LOGGER, "end-step-attempt",
+                     "status = failed sens error test, dsmS = " SUN_FORMAT_G
+                     ", eflag = %i",
+                     dsmS, eflag);
 
         if (eflag == TRY_AGAIN) { continue; }
         if (eflag != CV_SUCCESS) { return (eflag); }
@@ -6017,6 +6139,10 @@ static int cvStep(CVodeMem cv_mem)
       nflag = cvQuadSensNls(cv_mem);
       kflag = cvHandleNFlag(cv_mem, &nflag, saved_t, &ncf, &(cv_mem->cv_ncfn));
 
+      SUNLogInfoIf(kflag == PREDICT_AGAIN || kflag != DO_ERROR_TEST, CV_LOGGER,
+                   "end-step-attempt",
+                   "status = failed quad sens solve, kflag = %i", kflag);
+
       if (kflag == PREDICT_AGAIN) { continue; }
       if (kflag != DO_ERROR_TEST) { return (kflag); }
 
@@ -6027,6 +6153,11 @@ static int cvStep(CVodeMem cv_mem)
                                             cv_mem->cv_ewtQS);
         eflag = cvDoErrorTest(cv_mem, &nflag, saved_t, cv_mem->cv_acnrmQS,
                               &nefQS, &(cv_mem->cv_netfQS), &dsmQS);
+
+        SUNLogInfoIf(eflag != CV_SUCCESS, CV_LOGGER, "end-step-attempt",
+                     "status = failed quad sens error test, dsmQS "
+                     "= " SUN_FORMAT_G ", eflag = %i",
+                     dsmQS, eflag);
 
         if (eflag == TRY_AGAIN) { continue; }
         if (eflag != CV_SUCCESS) { return (eflag); }
@@ -6090,6 +6221,9 @@ static int cvStep(CVodeMem cv_mem)
     if (retval != CV_SUCCESS) { return (CV_VECTOROP_ERR); }
   }
 
+  SUNLogInfo(CV_LOGGER, "end-step-attempt",
+             "status = success, dsm = " SUN_FORMAT_G, dsm);
+
   return (CV_SUCCESS);
 }
 
@@ -6113,7 +6247,11 @@ static void cvAdjustParams(CVodeMem cv_mem)
 {
   if (cv_mem->cv_qprime != cv_mem->cv_q)
   {
-    cvAdjustOrder(cv_mem, cv_mem->cv_qprime - cv_mem->cv_q);
+    /* History adjustments for an order change were applied when resizing */
+    if (!(cv_mem->first_step_after_resize))
+    {
+      cvAdjustOrder(cv_mem, cv_mem->cv_qprime - cv_mem->cv_q);
+    }
     cv_mem->cv_q     = cv_mem->cv_qprime;
     cv_mem->cv_L     = cv_mem->cv_q + 1;
     cv_mem->cv_qwait = cv_mem->cv_L;
@@ -6506,9 +6644,6 @@ void cvRescale(CVodeMem cv_mem)
 
 static void cvPredict(CVodeMem cv_mem)
 {
-#ifdef SUNDIALS_LOGGING_EXTRA_DEBUG
-  int i;
-#endif
   int j, k;
 
   cv_mem->cv_tn += cv_mem->cv_h;
@@ -6529,11 +6664,7 @@ static void cvPredict(CVodeMem cv_mem)
     }
   }
 
-#ifdef SUNDIALS_LOGGING_EXTRA_DEBUG
-  SUNLogger_QueueMsg(CV_LOGGER, SUN_LOGLEVEL_DEBUG, "CVODES::cvPredict",
-                     "forward", "zn_0(:) =", "");
-  N_VPrintFile(cv_mem->cv_zn[0], CV_LOGGER->debug_fp);
-#endif
+  SUNLogExtraDebugVec(CV_LOGGER, "forward", cv_mem->cv_zn[0], "zn_0(:) =");
 
   if (cv_mem->cv_quadr)
   {
@@ -6546,11 +6677,7 @@ static void cvPredict(CVodeMem cv_mem)
       }
     }
 
-#ifdef SUNDIALS_LOGGING_EXTRA_DEBUG
-    SUNLogger_QueueMsg(CV_LOGGER, SUN_LOGLEVEL_DEBUG, "CVODES::cvPredict",
-                       "quad", "znQ_0(:) =", "");
-    N_VPrintFile(cv_mem->cv_znQ[0], CV_LOGGER->debug_fp);
-#endif
+    SUNLogExtraDebugVec(CV_LOGGER, "quad", cv_mem->cv_znQ[0], "znQ_0(:) =");
   }
 
   if (cv_mem->cv_sensi)
@@ -6562,14 +6689,8 @@ static void cvPredict(CVodeMem cv_mem)
         (void)N_VLinearSumVectorArray(cv_mem->cv_Ns, ONE, cv_mem->cv_znS[j - 1],
                                       ONE, cv_mem->cv_znS[j],
                                       cv_mem->cv_znS[j - 1]);
-#ifdef SUNDIALS_LOGGING_EXTRA_DEBUG
-        for (i = 0; i < cv_mem->cv_Ns; i++)
-        {
-          SUNLogger_QueueMsg(CV_LOGGER, SUN_LOGLEVEL_DEBUG, "CVODES::cvPredict",
-                             "sensi", " i = %d,  znS_i(:) = ", i);
-          N_VPrintFile(cv_mem->cv_znS[0][i], CV_LOGGER->debug_fp);
-        }
-#endif
+        SUNLogExtraDebugVecArray(CV_LOGGER, "sensi", cv_mem->cv_Ns,
+                                 cv_mem->cv_znS[0], "znS_%d(:) =");
       }
     }
   }
@@ -6583,14 +6704,8 @@ static void cvPredict(CVodeMem cv_mem)
         (void)N_VLinearSumVectorArray(cv_mem->cv_Ns, ONE, cv_mem->cv_znQS[j - 1],
                                       ONE, cv_mem->cv_znQS[j],
                                       cv_mem->cv_znQS[j - 1]);
-#ifdef SUNDIALS_LOGGING_EXTRA_DEBUG
-        for (i = 0; i < cv_mem->cv_Ns; i++)
-        {
-          SUNLogger_QueueMsg(CV_LOGGER, SUN_LOGLEVEL_DEBUG, "CVODES::cvPredict",
-                             "quad-sensi", " i = %d,  znQS_i(:) = ", i);
-          N_VPrintFile(cv_mem->cv_znQS[0][i], CV_LOGGER->debug_fp);
-        }
-#endif
+        SUNLogExtraDebugVecArray(CV_LOGGER, "quad-sensi", cv_mem->cv_Ns,
+                                 cv_mem->cv_znQS[0], "znQS_%d(:) =");
       }
     }
   }
@@ -6911,7 +7026,7 @@ static int cvNls(CVodeMem cv_mem, int nflag)
                          : CV_FAIL_OTHER;
 
     callSetup = (nflag == PREV_CONV_FAIL) || (nflag == PREV_ERR_FAIL) ||
-                (cv_mem->cv_nst == 0) ||
+                (cv_mem->cv_nst == 0) || (cv_mem->first_step_after_resize) ||
                 (cv_mem->cv_nst >= cv_mem->cv_nstlp + cv_mem->cv_msbp) ||
                 (SUNRabs(cv_mem->cv_gamrat - ONE) > cv_mem->cv_dgmax_lsetup);
 
@@ -6946,6 +7061,9 @@ static int cvNls(CVodeMem cv_mem, int nflag)
     if (flag > 0) { return (SUN_NLS_CONV_RECVR); }
   }
 
+  SUNLogInfo(CV_LOGGER, "begin-nonlinear-solve", "tol = " SUN_FORMAT_G,
+             cv_mem->cv_tq[4]);
+
   /* solve the nonlinear system */
   if (do_sensi_sim)
   {
@@ -6973,7 +7091,13 @@ static int cvNls(CVodeMem cv_mem, int nflag)
   }
 
   /* if the solve failed return */
-  if (flag != SUN_SUCCESS) { return (flag); }
+  if (flag != SUN_SUCCESS)
+  {
+    SUNLogInfo(CV_LOGGER, "end-nonlinear-solve",
+               "status = failed, flag = %i, iters = %li", flag, nni_inc);
+
+    return (flag);
+  }
 
   /* solve successful */
 
@@ -6997,11 +7121,11 @@ static int cvNls(CVodeMem cv_mem, int nflag)
     else { cv_mem->cv_acnrm = N_VWrmsNorm(cv_mem->cv_acor, cv_mem->cv_ewt); }
   }
 
+  SUNLogInfo(CV_LOGGER, "end-nonlinear-solve", "status = success, iters = %li",
+             nni_inc);
+
   /* update Jacobian status */
   cv_mem->cv_jcur = SUNFALSE;
-
-  /* check inequality constraints */
-  if (cv_mem->cv_constraintsSet) { flag = cvCheckConstraints(cv_mem); }
 
   return (flag);
 }
@@ -7016,58 +7140,124 @@ static int cvNls(CVodeMem cv_mem, int nflag)
  *
  *   CV_SUCCESS     ---> allows stepping forward
  *
- *   CONSTR_RECVR   ---> values failed to satisfy constraints
+ *   PREDICT_AGAIN  ---> values failed to satisfy constraints
  *
  *   CV_CONSTR_FAIL ---> values failed to satisfy constraints with hmin
  */
 
-static int cvCheckConstraints(CVodeMem cv_mem)
+static int cvCheckConstraints(CVodeMem cv_mem, int* nflagPtr,
+                              sunrealtype saved_t, int* step_constraint_fails)
 {
-  sunbooleantype constraintsPassed;
-  sunrealtype vnorm;
-  N_Vector mm  = cv_mem->cv_ftemp;
-  N_Vector tmp = cv_mem->cv_tempv;
+  SUNLogInfo(CV_LOGGER, "begin-constraint-check", "");
 
-  /* Get mask vector mm, set where constraints failed */
-  constraintsPassed = N_VConstrMask(cv_mem->cv_constraints, cv_mem->cv_y, mm);
-  if (constraintsPassed) { return (CV_SUCCESS); }
+  N_Vector mm  = cv_mem->cv_ftemp; /* mask      */
+  N_Vector tmp = cv_mem->cv_tempv; /* workspace */
 
-  /* Constraints not met */
-
-  /* Compute correction to satisfy constraints */
-  N_VCompare(ONEPT5, cv_mem->cv_constraints, tmp); /* a[i]=1 when |c[i]|=2  */
-  N_VProd(tmp, cv_mem->cv_constraints, tmp);       /* a * c                 */
-  N_VDiv(tmp, cv_mem->cv_ewt, tmp);                /* a * c * wt            */
-  N_VLinearSum(ONE, cv_mem->cv_y, -PT1, tmp, tmp); /* y - 0.1 * a * c * wt  */
-  N_VProd(tmp, mm, tmp);                           /* v = mm*(y-0.1*a*c*wt) */
-
-  vnorm = N_VWrmsNorm(tmp, cv_mem->cv_ewt); /* ||v|| */
-
-  /* If vector v of constraint corrections is small in norm, correct and
-     accept this step */
-  if (vnorm <= cv_mem->cv_tq[4])
+  /* Get mask vector mm, 1 where constraints failed and 0 otherwise */
+  sunbooleantype constraintsPassed = N_VConstrMask(cv_mem->cv_constraints,
+                                                   cv_mem->cv_y, mm);
+  if (constraintsPassed)
   {
-    N_VLinearSum(ONE, cv_mem->cv_acor, -ONE, tmp,
-                 cv_mem->cv_acor); /* acor <- acor - v */
+    SUNLogInfo(CV_LOGGER, "end-constraint-check", "status = success");
     return (CV_SUCCESS);
   }
 
-  /* Return with error if |h| == hmin */
+  /* Constraints not met */
+
+  /* Compute correction v such that y - v will satisfy the constraints
+   *
+   * 1. Create a mask array that is +1 where constraints are strictly greater
+   *    than or less than zero (|c[i]| = 2) and 0 otherwise
+   *
+   * 2. Create a mask array that is +/- 2 where constraints are strictly greater
+   *    than (+) or less than (-) zero and 0 otherwise
+   *
+   * 3. Use error weights to compute an adjustment vector for values with strict
+   *    constraints, a[i] = +/- 2 * w[i] = +/- 2 * (atol * |y[i]| + rtol[i]),
+   *    and is 0 otherwise
+   *
+   * 4. Save the adjustment vector for possible use later
+   *
+   * 5. Compute correction vector for all values, v[i] = y[i] - 0.1 * a[i] for
+   *    strict constraints and v[i] = y[i] otherwise
+   *
+   * 6. Zero out entries where the constraints passed, v = mask * v
+   */
+  N_VCompare(ONEPT5, cv_mem->cv_constraints, tmp);
+  N_VProd(tmp, cv_mem->cv_constraints, tmp);
+  N_VDiv(tmp, cv_mem->cv_ewt, tmp);
+  N_VScale(-PT1, tmp, cv_mem->cv_vtemp1);
+  N_VLinearSum(ONE, cv_mem->cv_y, -PT1, tmp, tmp);
+  N_VProd(tmp, mm, tmp);
+
+  sunrealtype vnorm = N_VWrmsNorm(tmp, cv_mem->cv_ewt); /* ||v|| */
+
+  /* If constraint correction vector is small in norm (satisfies the nonlinear
+     solver convergence condition with R = 1), correct and accept this step */
+  if (vnorm <= cv_mem->cv_tq[4])
+  {
+    /* Update constraint correction count */
+    cv_mem->constraint_corrections++;
+
+    /* To reduce roundoff errors that can violate the constraints, split the
+     * correction update, acor = acor - v, into three steps */
+
+    /* Zero out the correction where any constraint failed */
+    N_VProd(mm, cv_mem->cv_acor, tmp);
+    N_VLinearSum(ONE, cv_mem->cv_acor, -ONE, tmp, cv_mem->cv_acor);
+
+    /* Set correction to zero out the predictor where any constraint failed */
+    N_VProd(mm, cv_mem->cv_zn[0], tmp);
+    N_VLinearSum(ONE, cv_mem->cv_acor, -ONE, tmp, cv_mem->cv_acor);
+
+    /* Update the correction where constraints failed and are strictly greater
+       or less than zero to shift the state with the adjustment saved above */
+    N_VProd(mm, cv_mem->cv_vtemp1, cv_mem->cv_vtemp1);
+    N_VLinearSum(ONE, cv_mem->cv_acor, -ONE, cv_mem->cv_vtemp1, cv_mem->cv_acor);
+
+    SUNLogInfo(CV_LOGGER, "end-constraint-check",
+               "status = success corrected, vnorm = " SUN_FORMAT_G, vnorm);
+
+    return (CV_SUCCESS);
+  }
+
+  /* update failure counts */
+  (*step_constraint_fails)++;
+  cv_mem->constraint_fails++;
+
+  /* restore zn */
+  cvRestore(cv_mem, saved_t);
+
+  /* Check for |h| == hmin */
   if (SUNRabs(cv_mem->cv_h) <= cv_mem->cv_hmin * ONEPSM)
   {
+    SUNLogInfo(CV_LOGGER, "end-constraint-check", "status = failed min step");
+    return (CV_CONSTR_FAIL);
+  }
+
+  /* Check for max step attempt failures */
+  if (*step_constraint_fails == cv_mem->max_constraint_fails)
+  {
+    SUNLogInfo(CV_LOGGER, "end-constraint-check", "status = failed max attempts");
     return (CV_CONSTR_FAIL);
   }
 
   /* Constraint correction is too large, reduce h by computing eta = h'/h */
   N_VLinearSum(ONE, cv_mem->cv_zn[0], -ONE, cv_mem->cv_y, tmp);
   N_VProd(mm, tmp, tmp);
+
+  /* Reduce step size; return to reattempt the step */
   cv_mem->cv_eta = PT9 * N_VMinQuotient(cv_mem->cv_zn[0], tmp);
   cv_mem->cv_eta = SUNMAX(cv_mem->cv_eta, PT1);
   cv_mem->cv_eta = SUNMAX(cv_mem->cv_eta,
                           cv_mem->cv_hmin / SUNRabs(cv_mem->cv_h));
+  cvRescale(cv_mem);
+  *nflagPtr = PREV_CONV_FAIL;
 
-  /* Reattempt step with new step size */
-  return (CONSTR_RECVR);
+  SUNLogInfo(CV_LOGGER, "end-constraint-check",
+             "status = failed, eta = " SUN_FORMAT_G, cv_mem->cv_eta);
+
+  return PREDICT_AGAIN;
 }
 
 /*
@@ -7342,21 +7532,16 @@ static int cvHandleNFlag(CVodeMem cv_mem, int* nflagPtr, sunrealtype saved_t,
       (*ncfPtr == cv_mem->cv_maxncf))
   {
     if (nflag == SUN_NLS_CONV_RECVR) { return (CV_CONV_FAILURE); }
-    if (nflag == CONSTR_RECVR) { return (CV_CONSTR_FAIL); }
     if (nflag == RHSFUNC_RECVR) { return (CV_REPTD_RHSFUNC_ERR); }
     if (nflag == QRHSFUNC_RECVR) { return (CV_REPTD_QRHSFUNC_ERR); }
     if (nflag == SRHSFUNC_RECVR) { return (CV_REPTD_SRHSFUNC_ERR); }
     if (nflag == QSRHSFUNC_RECVR) { return (CV_REPTD_QSRHSFUNC_ERR); }
   }
 
-  /* Reduce step size; return to reattempt the step
-     Note that if nflag = CONSTR_RECVR, then eta was already set in cvCheckConstraints */
-  if (nflag != CONSTR_RECVR)
-  {
-    cv_mem->cv_eta = SUNMAX(cv_mem->cv_eta_cf,
-                            cv_mem->cv_hmin / SUNRabs(cv_mem->cv_h));
-  }
-  *nflagPtr = PREV_CONV_FAIL;
+  /* Reduce step size; return to reattempt the step */
+  cv_mem->cv_eta = SUNMAX(cv_mem->cv_eta_cf,
+                          cv_mem->cv_hmin / SUNRabs(cv_mem->cv_h));
+  *nflagPtr      = PREV_CONV_FAIL;
   cvRescale(cv_mem);
 
   return (PREDICT_AGAIN);
@@ -7468,12 +7653,6 @@ static int cvDoErrorTest(CVodeMem cv_mem, int* nflagPtr, sunrealtype saved_t,
 
   dsm = acor_nrm * cv_mem->cv_tq[2];
 
-#if SUNDIALS_LOGGING_LEVEL >= SUNDIALS_LOGGING_DEBUG
-  SUNLogger_QueueMsg(CV_LOGGER, SUN_LOGLEVEL_DEBUG, "CVODES::cvDoErrorTest",
-                     "error-test", "step = %li, h = %.16g, dsm = %.16g",
-                     cv_mem->cv_nst, cv_mem->cv_h, dsm);
-#endif
-
   /* If est. local error norm dsm passes test, return CV_SUCCESS */
   *dsmPtr = dsm;
   if (dsm <= ONE) { return (CV_SUCCESS); }
@@ -7508,10 +7687,7 @@ static int cvDoErrorTest(CVodeMem cv_mem, int* nflagPtr, sunrealtype saved_t,
 
     cvRescale(cv_mem);
 
-#if SUNDIALS_LOGGING_LEVEL >= SUNDIALS_LOGGING_DEBUG
-    SUNLogger_QueueMsg(CV_LOGGER, SUN_LOGLEVEL_DEBUG, "CVODES::cvDoErrorTest",
-                       "new-step-eta", "eta = %.16g", cv_mem->cv_eta);
-#endif
+    SUNLogDebug(CV_LOGGER, "new-step-eta", "eta = " SUN_FORMAT_G, cv_mem->cv_eta);
 
     return (TRY_AGAIN);
   }
@@ -7526,10 +7702,8 @@ static int cvDoErrorTest(CVodeMem cv_mem, int* nflagPtr, sunrealtype saved_t,
     cv_mem->cv_q--;
     cv_mem->cv_qwait = cv_mem->cv_L;
     cvRescale(cv_mem);
-#if SUNDIALS_LOGGING_LEVEL >= SUNDIALS_LOGGING_DEBUG
-    SUNLogger_QueueMsg(CV_LOGGER, SUN_LOGLEVEL_DEBUG, "CVODES::cvDoErrorTest",
-                       "new-step-eta-mxnef1", "eta = %.16g", cv_mem->cv_eta);
-#endif
+    SUNLogDebug(CV_LOGGER, "new-step-eta-mxnef1", "eta = " SUN_FORMAT_G,
+                cv_mem->cv_eta);
     return (TRY_AGAIN);
   }
 
@@ -7551,10 +7725,8 @@ static int cvDoErrorTest(CVodeMem cv_mem, int* nflagPtr, sunrealtype saved_t,
 
   N_VScale(cv_mem->cv_h, cv_mem->cv_tempv, cv_mem->cv_zn[1]);
 
-#if SUNDIALS_LOGGING_LEVEL >= SUNDIALS_LOGGING_DEBUG
-  SUNLogger_QueueMsg(CV_LOGGER, SUN_LOGLEVEL_DEBUG, "CVODES::cvDoErrorTest",
-                     "new-step-eta-mxnef1-q1", "eta = %.16g", cv_mem->cv_eta);
-#endif
+  SUNLogDebug(CV_LOGGER, "new-step-eta-mxnef1-q1", "eta = " SUN_FORMAT_G,
+              cv_mem->cv_eta);
 
   if (cv_mem->cv_quadr)
   {
@@ -7641,6 +7813,8 @@ static void cvCompleteStep(CVodeMem cv_mem)
   cv_mem->cv_hu = cv_mem->cv_h;
   cv_mem->cv_qu = cv_mem->cv_q;
 
+  cv_mem->first_step_after_resize = SUNFALSE;
+
   for (i = cv_mem->cv_q; i >= 2; i--)
   {
     cv_mem->cv_tau[i] = cv_mem->cv_tau[i - 1];
@@ -7719,7 +7893,7 @@ static void cvCompleteStep(CVodeMem cv_mem)
     cv_mem->cv_indx_acor = cv_mem->cv_qmax;
   }
 
-#ifdef SUNDIALS_BUILD_WITH_MONITORING
+#ifdef SUNDIALS_ENABLE_MONITORING
   /* If user access function was provided, call it now */
   if (cv_mem->cv_monitorfun != NULL &&
       !(cv_mem->cv_nst % cv_mem->cv_monitor_interval))
@@ -7728,11 +7902,8 @@ static void cvCompleteStep(CVodeMem cv_mem)
   }
 #endif
 
-#if SUNDIALS_LOGGING_LEVEL >= SUNDIALS_LOGGING_DEBUG
-  SUNLogger_QueueMsg(CV_LOGGER, SUN_LOGLEVEL_DEBUG, "CVODES::cvCompleteStep",
-                     "return", "nst = %d, nscon = %d", cv_mem->cv_nst,
-                     cv_mem->cv_nscon);
-#endif
+  SUNLogDebug(CV_LOGGER, "return", "nst = %d, nscon = %d", cv_mem->cv_nst,
+              cv_mem->cv_nscon);
 }
 
 /*
@@ -7779,13 +7950,11 @@ static void cvPrepareNextStep(CVodeMem cv_mem, sunrealtype dsm)
     }
   }
 
-#if SUNDIALS_LOGGING_LEVEL >= SUNDIALS_LOGGING_DEBUG
-  SUNLogger_QueueMsg(CV_LOGGER, SUN_LOGLEVEL_DEBUG, "CVODES::cvPrepareNextStep",
-                     "return",
-                     "eta = %.16g, hprime = %.16g, qprime = %d, qwait = %d\n",
-                     cv_mem->cv_eta, cv_mem->cv_hprime, cv_mem->cv_qprime,
-                     cv_mem->cv_qwait);
-#endif
+  SUNLogDebug(CV_LOGGER, "return",
+              "eta = " SUN_FORMAT_G ", hprime = " SUN_FORMAT_G
+              ", qprime = %d, qwait = %d",
+              cv_mem->cv_eta, cv_mem->cv_hprime, cv_mem->cv_qprime,
+              cv_mem->cv_qwait);
 }
 
 /*
@@ -8130,7 +8299,7 @@ static int cvHandleFailure(CVodeMem cv_mem, int flag)
   default:
     /* This return should never happen */
     cvProcessError(cv_mem, CV_UNRECOGNIZED_ERR, __LINE__, __func__,
-                   __FILE__, "CVODES encountered an unrecognized error. Please report this to the Sundials developers at sundials-users@llnl.gov");
+                   __FILE__, "CVODES encountered an unrecognized error. Please report this to the SUNDIALS developers at sundials-users@llnl.gov");
     return (CV_UNRECOGNIZED_ERR);
   }
 
@@ -8722,26 +8891,26 @@ static int cvRcheck2(CVodeMem cv_mem)
  *     CV_SUCCESS      = 0 otherwise.
  */
 
-static int cvRcheck3(CVodeMem cv_mem)
+static int cvRcheck3(CVodeMem cv_mem, sunrealtype tout, int itask)
 {
   int i, ier, retval;
 
   /* Set thi = tn or tout, whichever comes first; set y = y(thi). */
-  if (cv_mem->cv_taskc == CV_ONE_STEP)
+  if (itask == CV_ONE_STEP)
   {
     cv_mem->cv_thi = cv_mem->cv_tn;
     N_VScale(ONE, cv_mem->cv_zn[0], cv_mem->cv_y);
   }
-  if (cv_mem->cv_taskc == CV_NORMAL)
+  if (itask == CV_NORMAL)
   {
-    if ((cv_mem->cv_toutc - cv_mem->cv_tn) * cv_mem->cv_h >= ZERO)
+    if ((tout - cv_mem->cv_tn) * cv_mem->cv_h >= ZERO)
     {
       cv_mem->cv_thi = cv_mem->cv_tn;
       N_VScale(ONE, cv_mem->cv_zn[0], cv_mem->cv_y);
     }
     else
     {
-      cv_mem->cv_thi = cv_mem->cv_toutc;
+      cv_mem->cv_thi = tout;
       (void)CVodeGetDky(cv_mem, cv_mem->cv_thi, 0, cv_mem->cv_y);
     }
   }
@@ -8776,8 +8945,6 @@ static int cvRcheck3(CVodeMem cv_mem)
   (void)CVodeGetDky(cv_mem, cv_mem->cv_trout, 0, cv_mem->cv_y);
   return (RTFOUND);
 }
-
-#define DIFFERENT_SIGN(a, b) (((a) < 0 && (b) > 0) || ((a) > 0 && (b) < 0))
 
 /*
  * cvRootfind
@@ -8880,7 +9047,7 @@ static int cvRootfind(CVodeMem cv_mem)
     }
     else
     {
-      if ((DIFFERENT_SIGN(cv_mem->cv_glo[i], cv_mem->cv_ghi[i])) &&
+      if ((SUNRdifferentsign(cv_mem->cv_glo[i], cv_mem->cv_ghi[i])) &&
           (cv_mem->cv_rootdir[i] * cv_mem->cv_glo[i] <= ZERO))
       {
         gfrac =
@@ -8987,7 +9154,7 @@ static int cvRootfind(CVodeMem cv_mem)
       }
       else
       {
-        if ((DIFFERENT_SIGN(cv_mem->cv_glo[i], cv_mem->cv_grout[i])) &&
+        if ((SUNRdifferentsign(cv_mem->cv_glo[i], cv_mem->cv_grout[i])) &&
             (cv_mem->cv_rootdir[i] * cv_mem->cv_glo[i] <= ZERO))
         {
           gfrac = SUNRabs(cv_mem->cv_grout[i] /
@@ -9054,7 +9221,7 @@ static int cvRootfind(CVodeMem cv_mem)
     {
       cv_mem->cv_iroots[i] = cv_mem->cv_glo[i] > 0 ? -1 : 1;
     }
-    if ((DIFFERENT_SIGN(cv_mem->cv_glo[i], cv_mem->cv_ghi[i])) &&
+    if ((SUNRdifferentsign(cv_mem->cv_glo[i], cv_mem->cv_ghi[i])) &&
         (cv_mem->cv_rootdir[i] * cv_mem->cv_glo[i] <= ZERO))
     {
       cv_mem->cv_iroots[i] = cv_mem->cv_glo[i] > 0 ? -1 : 1;
@@ -9108,7 +9275,7 @@ int cvEwtSet(N_Vector ycur, N_Vector weight, void* data)
 /*
  * cvEwtSetSS
  *
- * This routine sets ewt as decribed above in the case tol_type = CV_SS.
+ * This routine sets ewt as described above in the case tol_type = CV_SS.
  * If the absolute tolerance is zero, it tests for non-positive components
  * before inverting. cvEwtSetSS returns 0 if ewt is successfully set to a
  * positive vector and -1 otherwise. In the latter case, ewt is considered
@@ -9131,7 +9298,7 @@ static int cvEwtSetSS(CVodeMem cv_mem, N_Vector ycur, N_Vector weight)
 /*
  * cvEwtSetSV
  *
- * This routine sets ewt as decribed above in the case tol_type = CV_SV.
+ * This routine sets ewt as described above in the case tol_type = CV_SV.
  * If any absolute tolerance is zero, it tests for non-positive components
  * before inverting. cvEwtSetSV returns 0 if ewt is successfully set to a
  * positive vector and -1 otherwise. In the latter case, ewt is considered
@@ -9583,7 +9750,7 @@ int cvSensRhs1Wrapper(CVodeMem cv_mem, sunrealtype time, N_Vector ycur,
  * -----------------------------------------------------------------
  */
 
-/* Undefine Readibility Constants */
+/* Undefine Readability Constants */
 
 #undef y
 
@@ -9914,7 +10081,8 @@ void cvProcessError(CVodeMem cv_mem, int error_code, int line, const char* func,
 
   /* Compose the message */
   va_start(ap, msgfmt);
-  size_t msglen = vsnprintf(NULL, 0, msgfmt, ap) + 1;
+  size_t msglen = 1;
+  if (msgfmt) { msglen += vsnprintf(NULL, 0, msgfmt, ap); }
   va_end(ap);
 
   char* msg = (char*)malloc(msglen);

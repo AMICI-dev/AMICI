@@ -33,6 +33,8 @@ def get_model_for_preeq(
         A copy of *model* with the same parameters, initial states, ...
         as *amici_model* for the preequilibration condition.
         Output timepoints are set to ``[inf]`` and will have to be adjusted.
+        :meth:`t0 <amici.Model.t0>` is set to the pre-equilibration start
+        time.
     """
     model = model.clone()
     model.set_timepoints([np.inf])
@@ -46,6 +48,14 @@ def get_model_for_preeq(
     model.set_initial_state(edata.x0)
     # has to be set *after* parameter list/scale!
     model.set_initial_state_sensitivities(edata.sx0)
-    model.set_t0(edata.t_start)
+    # same precedence as for simulation with *edata*
+    t0 = edata.t_start_preeq
+    if np.isnan(t0):
+        # deprecated
+        t0 = model.t0_preeq()
+    if np.isnan(t0):
+        t0 = edata.t_start
+    model.set_t0(t0)
+    model.set_t0_preeq(np.nan)
 
     return model

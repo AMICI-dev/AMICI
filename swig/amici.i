@@ -107,6 +107,8 @@ _SWIG_VERSION = (SWIG_VERSION_MAJOR, SWIG_VERSION_MINOR, SWIG_VERSION_PATCH)
 #define SWIG_FILE_WITH_INIT
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
+#include <algorithm>
+#include <cstring>
 #include <vector>
 #include <stdexcept>
 %}
@@ -118,8 +120,44 @@ import_array();
 
 // Expose vectors
 %include <stl.i>
+
+// `_to_ndarray` creates Python objects, so the wrapper must keep the GIL
+// (the module is built with `-threads`, which releases it by default).
+%feature("nothreadallow") _to_ndarray;
+
+// numpy can't access the data of the vector proxies directly and would
+// otherwise build arrays element by element via the Python iterator.
+// `__array__` copies the data in C++ instead.
+%define AMICI_VECTOR_ARRAY_PROTOCOL
+%pythoncode %{
+def __array__(self, dtype=None, copy=None):
+    """Copy the vector into a new :class:`numpy.ndarray`."""
+    if copy is False:
+        raise ValueError(
+            "Unable to avoid copy while creating an array as requested: "
+            f"the data of a {type(self).__name__} is always copied."
+        )
+    arr = self._to_ndarray()
+    return arr if dtype is None else arr.astype(dtype, copy=False)
+
+%}
+%enddef
+
 %template(DoubleVector) std::vector<double>;
 %extend std::vector<double> {
+    /** Copy the data into a new 1D float64 numpy array. */
+    PyObject* _to_ndarray() const {
+        npy_intp dims[1] = {static_cast<npy_intp>($self->size())};
+        PyObject* array = PyArray_SimpleNew(1, dims, NPY_DOUBLE);
+        if (array && !$self->empty()) {
+            std::memcpy(
+                PyArray_DATA(reinterpret_cast<PyArrayObject*>(array)),
+                $self->data(), $self->size() * sizeof(double)
+            );
+        }
+        return array;
+    }
+AMICI_VECTOR_ARRAY_PROTOCOL
 %pythoncode %{
 def __repr__(self):
     return self.this.__repr__()[:-1] + '; ' + repr(np.asarray(self, dtype=np.float64)) + ' >'
@@ -128,6 +166,21 @@ def __repr__(self):
 };
 %template(IntVector) std::vector<int>;
 %extend std::vector<int> {
+    /** Copy the data into a new 1D int64 numpy array. */
+    PyObject* _to_ndarray() const {
+        npy_intp dims[1] = {static_cast<npy_intp>($self->size())};
+        PyObject* array = PyArray_SimpleNew(1, dims, NPY_INT64);
+        if (array) {
+            std::copy(
+                $self->begin(), $self->end(),
+                static_cast<npy_int64*>(
+                    PyArray_DATA(reinterpret_cast<PyArrayObject*>(array))
+                )
+            );
+        }
+        return array;
+    }
+AMICI_VECTOR_ARRAY_PROTOCOL
 %pythoncode %{
 def __repr__(self):
     return self.this.__repr__()[:-1] + '; ' + repr(np.asarray(self, dtype=np.int64)) + ' >'
@@ -341,25 +394,6 @@ def __repr__(self):
 %}
 };
 
-
-// Add function to check if amici was compiled with OpenMP
-%feature("docstring") compiled_with_openmp
-    "AMICI extension was compiled with OpenMP?";
-%{
-namespace amici {
-/** AMICI extension was compiled with OpenMP? */
-bool compiled_with_openmp() {
-#if defined(_OPENMP)
-    return true;
-#else
-    return false;
-#endif
-}
-};
-%}
-namespace amici {
-bool compiled_with_openmp();
-}
 
 %pythoncode %{
 from enum import IntEnum

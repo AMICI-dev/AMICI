@@ -1,8 +1,16 @@
+[![arch-emu](https://github.com/DrTimothyAldenDavis/SuiteSparse/actions/workflows/build-arch-emu.yaml/badge.svg)](https://github.com/DrTimothyAldenDavis/SuiteSparse/actions/workflows/build-arch-emu.yaml)
+[![build](https://github.com/DrTimothyAldenDavis/SuiteSparse/actions/workflows/build.yaml/badge.svg)](https://github.com/DrTimothyAldenDavis/SuiteSparse/actions/workflows/build.yaml)
+[![build-mingw](https://github.com/DrTimothyAldenDavis/SuiteSparse/actions/workflows/build-mingw.yaml/badge.svg)](https://github.com/DrTimothyAldenDavis/SuiteSparse/actions/workflows/build-mingw.yaml)
+[![cross-compile](https://github.com/DrTimothyAldenDavis/SuiteSparse/actions/workflows/cross-compile.yaml/badge.svg)](https://github.com/DrTimothyAldenDavis/SuiteSparse/actions/workflows/cross-compile.yaml)
+[![macos](https://github.com/DrTimothyAldenDavis/SuiteSparse/actions/workflows/macos.yaml/badge.svg)](https://github.com/DrTimothyAldenDavis/SuiteSparse/actions/workflows/macos.yaml)
+[![root-cmakelists](https://github.com/DrTimothyAldenDavis/SuiteSparse/actions/workflows/root-cmakelists.yaml/badge.svg)](https://github.com/DrTimothyAldenDavis/SuiteSparse/actions/workflows/root-cmakelists.yaml)
+[![root-cmakelists-msvc](https://github.com/DrTimothyAldenDavis/SuiteSparse/actions/workflows/root-cmakelists-msvc.yaml/badge.svg)](https://github.com/DrTimothyAldenDavis/SuiteSparse/actions/workflows/root-cmakelists-msvc.yaml)
+
 -----------------------------------------------------------------------------
 SuiteSparse:  A Suite of Sparse matrix packages at http://suitesparse.com
 -----------------------------------------------------------------------------
 
-Aug 20, 2024, SuiteSparse VERSION 7.8.2
+Sept 12, 2026, SuiteSparse VERSION 7.14.1
 
 SuiteSparse is a set of sparse-matrix-related packages written or co-authored
 by Tim Davis, available at https://github.com/DrTimothyAldenDavis/SuiteSparse .
@@ -13,7 +21,7 @@ Code co-authors, in alphabetical order (not including METIS or LAGraph):
     Patrick Amestoy, Mohsen Aznaveh, David Bateman, Jinhao Chen, Yanqing Chen,
     Iain Duff, Joe Eaton, Les Foster, William Hager, Raye Kimmerer, Scott
     Kolodziej, Chris Lourenco, Stefan Larimore, Lorena Mejia Domenzain, Erick
-    Moreno-Centeno, Markus Mützel, Corey Nolel, Ekanathan Palamadai,
+    Moreno-Centeno, Markus Mützel, Corey Nolet, Ekanathan Palamadai,
     Sivasankaran Rajamanickam, Sanjay Ranka, Wissam Sid-Lakhdar, and
     Nuri Yeralan.
 
@@ -21,29 +29,42 @@ LAGraph has been developed by the highest number of developers of any of
 the packages in SuiteSparse and deserves its own list.  The list also
 appears in LAGraph/Contibutors.txt:
 
-    Janos B. Antal,    Budapest University of Technology and Economics, Hungary
-    Mohsen Aznaveh,    Texas A&M University
-    David A. Bader     New Jersey Institute of Technology
-    Aydin Buluc,       Lawrence Berkeley National Lab
-    Jinhao Chen,       Texas A&M University
-    Tim Davis,         Texas A&M University
-    Florentin Dorre,   Technische Univeritat Dresden, Neo4j
-    Marton Elekes,     Budapest University of Technology and Economics, Hungary
-    Balint Hegyi,      Budapest University of Technology and Economics, Hungary
-    Tanner Hoke,       Texas A&M University
-    James Kitchen,     Anaconda
-    Scott Kolodziej,   Texas A&M University
-    Pranav Konduri,    Texas A&M University
-    Roi Lipman,        Redis Labs (now FalkorDB)
-    Tze Meng Low,      Carnegie Mellon University
-    Tim Mattson,       Intel
-    Scott McMillan,    Carnegie Mellon University
+    Janos B. Antal      Budapest University of Technology and Economics, Hungary
+    Mohsen Aznaveh      Texas A&M University
+    David A. Bader      New Jersey Institute of Technology
+    Georgiy Belyanin    St. Petersburg State University
+    Aydin Buluc         Lawrence Berkeley National Lab
+    Jinhao Chen         Texas A&M University
+    Tim Davis           Texas A&M University
+    Florentin Dorre     Technische Univeritat Dresden, Neo4j
+    Marton Elekes       Budapest University of Technology and Economics, Hungary
+    Alexandra Goff      Texas A&M University
+    Gabriel Gomez       Texas A&M University
+    Semyon Grigoriev    St. Petersburg State University
+    Balint Hegyi        Budapest University of Technology and Economics, Hungary
+    Tanner Hoke         Texas A&M University
+    James Kitchen       Anaconda
+    Scott Kolodziej     Texas A&M University
+    Ilhom Kombaev       St. Petersburg State University
+    Pranav Konduri      Texas A&M University
+    Christina Koutsou   Aristotle University of Thessaloniki
+    Roi Lipman          Redis Labs
+    Tze Meng Low        Carnegie Mellon University
+    Vidith Madhu        Texas A&M University
+    Tim Mattson         Intel
+    Scott McMillan      Carnegie Mellon University
     Markus Muetzel
-    Michel Pelletier,  Graphegon
-    Gabor Szarnyas,    CWI Amsterdam, The Netherlands
-    Erik Welch,        Anaconda, NVIDIA
-    Carl Yang,         University of California at Davis, Waymo
-    Yongzhe Zhang,     SOKENDAI, Japan
+    Hemanth Mukesh      Texas A&M University
+    Olumayowa Olowomeye Texas A&M University
+    Casey Pei           Texas A&M University
+    Michel Pelletier    Graphegon, OneSparse
+    Darin Peries        Texas A&M University
+    Cameron Quilici     Texas A&M University
+    Aurko Routh         Texas A&M University
+    Gabor Szarnyas      CWI Amsterdam, The Netherlands
+    Erik Welch          Anaconda, then NVIDIA
+    Carl Yang           University of California at Davis, Waymo
+    Yongzhe Zhang       SOKENDAI, Japan
 
 METIS is authored by George Karypis.
 
@@ -391,8 +412,6 @@ Packages in SuiteSparse, and files in this directory:
 * `ParU`
 
   a parallel unsymmetric pattern multifrontal method.
-
-  Currently a pre-release.
 
   authors: Mohsen Aznaveh and Tim Davis
 
@@ -881,6 +900,8 @@ build type).  The static libraries will not be built (since
   `suitesparse_config;mongoose;amd;btf;camd;ccolamd;colamd;cholmod;cxsparse;ldl;klu;umfpack;paru;rbio;spqr;spex;graphblas;lagraph`
 
   Additionally, `csparse` can be included in that list to build CSparse.
+  If you place this string in a cmake command inside another cmake script,
+  you will likely need to replace the literal semicolon with `$<SEMICOLON>`.
 
 * `CMAKE_BUILD_TYPE`:
 
@@ -966,7 +987,7 @@ build type).  The static libraries will not be built (since
 
   A string, such as `"all"` or `"35;50;75;80"` that lists the CUDA
   architectures to use when compiling CUDA kernels with `nvcc`.  The `"all"`
-  option requires CMake 3.23 or later.  Default: `"52;75;80"`.
+  option requires CMake 3.23 or later.  Default: `"all"`.
 
 * `BLA_VENDOR`:
 
@@ -991,12 +1012,12 @@ build type).  The static libraries will not be built (since
 
   GraphBLAS, LAGraph, and ParU will be vastly slower if OpenMP is not used.
   CHOLMOD will be somewhat slower without OpenMP (as long as it still has a
-  parallel BLAS/LAPACK).  Three packages (UMFPACK, CHOLMOD, and SPQR) rely
+  parallel BLAS/LAPACK).  Four packages (UMFPACK, CHOLMOD, SPQR, and ParU) rely
   heavily on parallel BLAS/LAPACK libraries and those libraries may use OpenMP
   internally.  If you wish to disable OpenMP in an entire application, select a
   single-threaded BLAS/LAPACK, or a parallel BLAS/LAPACK that does not use
   OpenMP (such as the Apple Accelerate Framework).  Using a single-threaded
-  BLAS/LAPACK library will cause UMFPACK, CHOLMOD, and SPQR to be vastly
+  BLAS/LAPACK library will cause UMFPACK, CHOLMOD, SPQR, and ParU to be vastly
   slower.
 
   WARNING: GraphBLAS may not be thread-safe if built without OpenMP or pthreads
@@ -1084,6 +1105,15 @@ build type).  The static libraries will not be built (since
   If `ON`, use the Fortran compiler to determine how C calls Fortan, and to
   build several optional Fortran routines. If `OFF`, use
   `SUITESPARSE_C_TO_FORTRAN` to define how C calls Fortran.
+  WARNING: mixing C/C++/Fortran compilers from different places is not
+  recommended.  Using the Intel C compiler (icx), GNU Fortran (gfortran or
+  f95), and the Intel MKL BLAS together will result in two OpenMP libraries
+  being linked (Intel's libiomp and the GNU libgomp).  This is a recipe for
+  disaster, and the cmake scripts check this and report fatal error if it's
+  attempted.  Other cases lead to a cmake warning.  If you get the warning,
+  check your built libraries and ensure that only one OpenMP library is in
+  use (GNU: libgomp, Intel: libiomp, Clang: libomp).  If you see this case,
+  use compatible compilers, or switch Fortran off.
   Default: `ON`.
 
 * `SUITESPARSE_C_TO_FORTRAN`

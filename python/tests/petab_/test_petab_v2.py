@@ -1,4 +1,5 @@
 import copy
+from collections import Counter
 
 import pytest
 from amici.importers.petab import (
@@ -525,6 +526,58 @@ def test_aggregated_residuals_failed_simulation(residual_test_importer):
     assert result.s2llh is None
 
 
+def test_simulate_does_not_scan_petab_problem(
+    residual_test_importer, monkeypatch
+):
+    """Simulation does not use the linear-time lookups of the PEtab problem.
+
+    Looking up experiments, conditions, or measurements by ID via
+    `petab.v2.Problem` scans the respective tables, which would make
+    creating the `ExpData` objects and aggregating the sensitivities
+    quadratic in the size of the problem
+    (https://github.com/AMICI-dev/AMICI/issues/3519).
+    """
+    from amici.sim.sundials import SensitivityMethod
+
+    ps = residual_test_importer.create_simulator()
+    ps.solver.set_sensitivity_method(SensitivityMethod.forward)
+    ps.solver.set_sensitivity_order(SensitivityOrder.first)
+
+    def fail(*args, **kwargs):
+        raise AssertionError("Linear-time lookup in the PEtab problem")
+
+    for method in (
+        "__getitem__",
+        "get_changes_for_period",
+        "get_measurements_for_experiment",
+    ):
+        monkeypatch.setattr(Problem, method, fail)
+
+    result = ps.simulate({"k_decay": 0.4, "scale": 1.5})
+    assert result.sllh is not None
+    assert result.s2llh is not None
+    assert result.sres is not None
+    assert ps.exp_man.create_edata("exp_hi").id == "exp_hi"
+
+
+def test_apply_parameters_checks_parameter_ids(residual_test_importer):
+    """`apply_parameters` rejects missing and unknown problem parameters."""
+    em = residual_test_importer.create_simulator().exp_man
+    edata = em.create_edata("exp_lo")
+
+    with pytest.raises(ValueError) as exc_info:
+        em.apply_parameters(edata, {"k_decay": 0.4, "foo": 1.0})
+    msg = str(exc_info.value)
+    assert "missing parameters: {'scale'}" in msg
+    assert "unknown parameters: {'foo'}" in msg
+
+    with pytest.raises(ValueError) as exc_info:
+        em.apply_parameters(edata, {"k_decay": 0.4, "scale": 1.5, "foo": 1.0})
+    msg = str(exc_info.value)
+    assert "missing" not in msg
+    assert "unknown parameters: {'foo'}" in msg
+
+
 def test_fiddy_derivative_check_leaves_solver_unchanged(
     residual_test_importer,
 ):
@@ -958,6 +1011,69 @@ def test_parameter_scales_sensitivities(parameter_scales_simulators):
         result_lin.s2llh * np.outer(dlin_dscaled, dlin_dscaled),
         rtol=1e-8,
     )
+
+
+def test_simulate_reuses_edatas(parameter_scales_test_importer, monkeypatch):
+    """`PetabSimulator.simulate` creates the `ExpData`s on the first call
+    only, applies the parameters once per experiment and call, and gives the
+    same results as freshly created `ExpData`s
+    (https://github.com/AMICI-dev/AMICI/issues/3521)."""
+    from amici.sim.sundials import SensitivityMethod
+    from amici.sim.sundials.petab import ExperimentManager
+
+    def create_simulator():
+        ps = parameter_scales_test_importer.create_simulator(
+            parameter_scales=_PSCALE_TEST_SCALES
+        )
+        ps.solver.set_sensitivity_method(SensitivityMethod.forward)
+        ps.solver.set_sensitivity_order(SensitivityOrder.first)
+        return ps
+
+    ps = create_simulator()
+    em = ps.exp_man
+    n_experiments = len(em.petab_problem.experiments)
+    x1 = em.scale_parameters(_PSCALE_TEST_X)
+    # differs from `x1` and from the nominal values in all parameters,
+    #  including `k2` (fixed model parameter) and `s` and `sigma`
+    #  (placeholder overrides)
+    x2 = em.scale_parameters({"k1": 0.7, "s": 0.9, "k2": 0.05, "sigma": 0.2})
+
+    calls = Counter()
+    for method_name in ("create_edata", "apply_parameters"):
+        method = getattr(ExperimentManager, method_name)
+
+        def counting_method(*args, _method=method, _name=method_name, **kw):
+            calls[_name] += 1
+            return _method(*args, **kw)
+
+        monkeypatch.setattr(ExperimentManager, method_name, counting_method)
+
+    result1 = ps.simulate(x1)
+    assert calls == {
+        "create_edata": n_experiments,
+        "apply_parameters": n_experiments,
+    }
+    result2 = ps.simulate(x2)
+    assert calls == {
+        "create_edata": n_experiments,
+        "apply_parameters": 2 * n_experiments,
+    }
+    assert len(result2.edatas) == n_experiments
+    assert all(
+        edata1 is edata2
+        for edata1, edata2 in zip(result1.edatas, result2.edatas, strict=True)
+    )
+    monkeypatch.undo()
+
+    # the reused `ExpData`s equal freshly created ones, and so do the results
+    #  -- also for the nominal parameters after using other ones
+    for x in (x2, None):
+        result = ps.simulate(x)
+        expected = create_simulator().simulate(x)
+        assert result.edatas == expected.edatas
+        assert result.edatas == em.create_edatas(x)
+        assert result.llh == expected.llh
+        assert result.sllh == expected.sllh
 
 
 def test_parameter_scales_simulate(parameter_scales_simulators):

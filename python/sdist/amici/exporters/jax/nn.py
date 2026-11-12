@@ -391,7 +391,7 @@ def generate_equinox(
         list of layer names to freeze during training
     """
     # TODO: move to top level import and replace forward type definitions
-    from petab_sciml import Layer
+    from petab_sciml.standard.nn_model import Layer
 
     filename.parent.mkdir(parents=True, exist_ok=True)
 

@@ -2,8 +2,11 @@
 # Programmer(s): Steven Smith and Cody J. Balos @ LLNL
 # ---------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2024, Lawrence Livermore National Security
+# Copyright (c) 2025-2026, Lawrence Livermore National Security,
+# University of Maryland Baltimore County, and the SUNDIALS contributors.
+# Copyright (c) 2013-2025, Lawrence Livermore National Security
 # and Southern Methodist University.
+# Copyright (c) 2002-2013, Lawrence Livermore National Security.
 # All rights reserved.
 #
 # See the top-level LICENSE and NOTICE files for details.
@@ -30,25 +33,40 @@
 #   KLU_LIBRARIES   - all of the libraries needed for KLU
 # ---------------------------------------------------------------
 
-if (NOT (KLU_INCLUDE_DIR OR KLU_LIBRARY_DIR OR KLU_LIBRARY))
-  # Prefer the import target from upstream SuiteSparse if it is available
-  # and the user didn't point to a specific (different) version.
+if(NOT
+   (KLU_INCLUDE_DIR
+    OR KLU_LIBRARY_DIR
+    OR KLU_LIBRARY))
+  # Prefer the import target from upstream SuiteSparse if it is available and
+  # the user didn't point to a specific (different) version.
   find_package(KLU CONFIG)
 
   if(TARGET SuiteSparse::KLU)
-    if(NOT TARGET SUNDIALS::KLU)
-      # AMICI -- https://github.com/LLNL/sundials/issues/579
+    # Some upstream SuiteSparse config packages create SuiteSparse::KLU but omit
+    # other SuiteSparse component targets (e.g., SuiteSparse::AMD). In that case
+    # we prefer to fall back to creating our own imported target using the
+    # discovered library paths rather than aliasing the possibly incomplete
+    # upstream targets which can cause generator-expression evaluation errors
+    # later. Only alias the upstream target if the key companion targets are
+    # also present.
+    if(TARGET SuiteSparse::AMD AND NOT TARGET SUNDIALS::KLU)
+      # For static-only builds of SuiteSparse, SuiteSparse::KLU will itself be
+      # an ALIAS target which can't be aliased.
       get_target_property(klu_aliased_target SuiteSparse::KLU ALIASED_TARGET)
-      if (klu_aliased_target)
-          add_library(SUNDIALS::KLU ALIAS ${klu_aliased_target})
+      if(klu_aliased_target)
+        add_library(SUNDIALS::KLU ALIAS ${klu_aliased_target})
       else()
-          add_library(SUNDIALS::KLU ALIAS SuiteSparse::KLU)
+        add_library(SUNDIALS::KLU ALIAS SuiteSparse::KLU)
       endif()
-      # add_library(SUNDIALS::KLU ALIAS SuiteSparse::KLU)
       set(KLU_SUITESPARSE_TARGET ON)
       mark_as_advanced(KLU_SUITESPARSE_TARGET)
+      return()
+    else()
+      message(
+        STATUS
+          "Found SuiteSparse::KLU but companion SuiteSparse targets are missing; falling back to manual imported target creation"
+      )
     endif()
-    return()
   endif()
 endif()
 
@@ -60,63 +78,86 @@ elseif(APPLE)
   set(CMAKE_FIND_LIBRARY_SUFFIXES d.a ${CMAKE_FIND_LIBRARY_SUFFIXES})
 endif()
 
-### Find include dir
+# Find include dir
 find_path(temp_KLU_INCLUDE_DIR klu.h ${KLU_INCLUDE_DIR})
-if (temp_KLU_INCLUDE_DIR)
-    set(KLU_INCLUDE_DIR ${temp_KLU_INCLUDE_DIR})
+if(temp_KLU_INCLUDE_DIR)
+  set(KLU_INCLUDE_DIR ${temp_KLU_INCLUDE_DIR})
 endif()
 unset(temp_KLU_INCLUDE_DIR CACHE)
 
-if (KLU_LIBRARY)
-    # We have (or were given) KLU_LIBRARY - get path to use for other Suitesparse libs
-    get_filename_component(KLU_LIBRARY_DIR ${KLU_LIBRARY} PATH)
+if(KLU_LIBRARY)
+  # We have (or were given) KLU_LIBRARY - get path to use for other Suitesparse
+  # libs
+  get_filename_component(KLU_LIBRARY_DIR ${KLU_LIBRARY} PATH)
 
-    # force CACHE update to show user DIR that will be used
-    set(KLU_LIBRARY_DIR ${KLU_LIBRARY_DIR} CACHE PATH "" FORCE)
+  # force CACHE update to show user DIR that will be used
+  set(KLU_LIBRARY_DIR
+      ${KLU_LIBRARY_DIR}
+      CACHE PATH "" FORCE)
 
-else ()
-    # find library with user provided directory path
-    set(KLU_LIBRARY_NAME klu)
-    find_library(KLU_LIBRARY ${KLU_LIBRARY_NAME} ${KLU_LIBRARY_DIR} NO_DEFAULT_PATH)
-endif ()
+else()
+  # find library with user provided directory path
+  set(KLU_LIBRARY_NAME klu)
+  find_library(KLU_LIBRARY ${KLU_LIBRARY_NAME} ${KLU_LIBRARY_DIR})
+endif()
 mark_as_advanced(KLU_LIBRARY)
 
-if (NOT AMD_LIBRARY)
-    set(AMD_LIBRARY_NAME amd)
-    find_library(AMD_LIBRARY ${AMD_LIBRARY_NAME} ${KLU_LIBRARY_DIR} NO_DEFAULT_PATH)
-    mark_as_advanced(AMD_LIBRARY)
-endif ()
+if(NOT AMD_LIBRARY)
+  set(AMD_LIBRARY_NAME amd)
+  find_library(AMD_LIBRARY ${AMD_LIBRARY_NAME} ${KLU_LIBRARY_DIR})
+  mark_as_advanced(AMD_LIBRARY)
+endif()
 
-if (NOT COLAMD_LIBRARY)
-    set(COLAMD_LIBRARY_NAME colamd)
-    find_library(COLAMD_LIBRARY ${COLAMD_LIBRARY_NAME} ${KLU_LIBRARY_DIR} NO_DEFAULT_PATH)
-    mark_as_advanced(COLAMD_LIBRARY)
-endif ()
+if(NOT COLAMD_LIBRARY)
+  set(COLAMD_LIBRARY_NAME colamd)
+  find_library(COLAMD_LIBRARY ${COLAMD_LIBRARY_NAME} ${KLU_LIBRARY_DIR})
+  mark_as_advanced(COLAMD_LIBRARY)
+endif()
 
-if (NOT BTF_LIBRARY)
-    set(BTF_LIBRARY_NAME btf)
-    find_library( BTF_LIBRARY ${BTF_LIBRARY_NAME} ${KLU_LIBRARY_DIR} NO_DEFAULT_PATH)
-    mark_as_advanced(BTF_LIBRARY)
-endif ()
+if(NOT BTF_LIBRARY)
+  set(BTF_LIBRARY_NAME btf)
+  find_library(BTF_LIBRARY ${BTF_LIBRARY_NAME} ${KLU_LIBRARY_DIR})
+  mark_as_advanced(BTF_LIBRARY)
+endif()
 
-if (NOT SUITESPARSECONFIG_LIBRARY)
-    set(SUITESPARSECONFIG_LIBRARY_NAME suitesparseconfig)
-    # NOTE: no prefix for this library on windows
-    if(MSVC OR ("${CMAKE_C_SIMULATE_ID}" STREQUAL "MSVC"))
-        set(CMAKE_FIND_LIBRARY_PREFIXES "")
-    endif()
-    find_library( SUITESPARSECONFIG_LIBRARY ${SUITESPARSECONFIG_LIBRARY_NAME} ${KLU_LIBRARY_DIR} NO_DEFAULT_PATH)
-    mark_as_advanced(SUITESPARSECONFIG_LIBRARY)
-endif ()
+if(NOT SUITESPARSECONFIG_LIBRARY)
+  set(SUITESPARSECONFIG_LIBRARY_NAME suitesparseconfig)
+  # NOTE: no prefix for this library on windows
+  if(MSVC OR ("${CMAKE_C_SIMULATE_ID}" STREQUAL "MSVC"))
+    set(CMAKE_FIND_LIBRARY_PREFIXES "")
+  endif()
+  find_library(SUITESPARSECONFIG_LIBRARY ${SUITESPARSECONFIG_LIBRARY_NAME}
+               ${KLU_LIBRARY_DIR})
+  mark_as_advanced(SUITESPARSECONFIG_LIBRARY)
+endif()
 
-set(KLU_LIBRARIES ${KLU_LIBRARY} ${AMD_LIBRARY} ${COLAMD_LIBRARY} ${BTF_LIBRARY} ${SUITESPARSECONFIG_LIBRARY})
+set(KLU_LIBRARIES ${KLU_LIBRARY} ${AMD_LIBRARY} ${COLAMD_LIBRARY}
+                  ${BTF_LIBRARY} ${SUITESPARSECONFIG_LIBRARY})
+
+# Keep the library list usable by the generated example makefiles and
+# CMakeLists.txt files. Imported targets are valid in a SUNDIALS build, but
+# those installed examples are standalone projects and cannot use a target such
+# as BLAS::BLAS without defining it themselves.
+set(KLU_LINK_LIBRARIES ${KLU_LIBRARIES})
+
+# Manual library discovery does not get the transitive SuiteSparse link
+# interface from an upstream config package. Add BLAS when available so KLU link
+# checks and consumers can resolve SuiteSparse components such as CHOLMOD.
+find_package(BLAS)
+if(BLAS_FOUND)
+  list(APPEND KLU_LIBRARIES ${BLAS_LIBRARIES})
+  list(APPEND KLU_LINK_LIBRARIES BLAS::BLAS)
+  message(STATUS "Found BLAS target: BLAS::BLAS")
+else()
+  message(
+    STATUS
+      "BLAS not found by CMake; linking KLU may fail if SuiteSparse components require BLAS"
+  )
+endif()
 
 # set package variables including KLU_FOUND
-find_package_handle_standard_args(KLU
-  REQUIRED_VARS
-    KLU_LIBRARY
-    KLU_LIBRARIES
-    KLU_INCLUDE_DIR)
+find_package_handle_standard_args(KLU REQUIRED_VARS KLU_LIBRARY KLU_LIBRARIES
+                                                    KLU_INCLUDE_DIR)
 
 # Create target for KLU
 if(KLU_FOUND)
@@ -125,9 +166,10 @@ if(KLU_FOUND)
     add_library(SUNDIALS::KLU UNKNOWN IMPORTED)
   endif()
 
-  set_target_properties(SUNDIALS::KLU PROPERTIES
-    INTERFACE_INCLUDE_DIRECTORIES "${KLU_INCLUDE_DIR}"
-    INTERFACE_LINK_LIBRARIES "${KLU_LIBRARIES}"
-    IMPORTED_LOCATION "${KLU_LIBRARY}")
+  set_target_properties(
+    SUNDIALS::KLU
+    PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${KLU_INCLUDE_DIR}"
+               INTERFACE_LINK_LIBRARIES "${KLU_LINK_LIBRARIES}"
+               IMPORTED_LOCATION "${KLU_LIBRARY}")
 
 endif()

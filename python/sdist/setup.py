@@ -44,6 +44,10 @@ def get_extensions():
     global_cmake_configure_options = [
         "-DCMAKE_VERBOSE_MAKEFILE=ON",
         f"-DCMAKE_MODULE_PATH={prefix_path.as_posix()}",
+        # Install to lib/ independent of the build host. GNUInstallDirs
+        #  would use lib64/ on RHEL-based systems (e.g., manylinux), where
+        #  find_package() won't look on Debian-based systems.
+        "-DCMAKE_INSTALL_LIBDIR=lib",
     ]
 
     debug_build = os.getenv("ENABLE_AMICI_DEBUGGING", "").lower() in [
@@ -63,11 +67,10 @@ def get_extensions():
             "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
             "-DBUILD_SHARED_LIBS=OFF",
             "-DBUILD_TESTING=OFF",
-            # Building SuiteSparse_config does not require a BLAS
-            #  we just set BLAS_LIBRARIES to skip the search,
-            #  the value is not used
-            # "-DBLA_VENDOR=All",
-            "-DBLAS_LIBRARIES=dummy",
+            # None of the SuiteSparse packages we build require a BLAS.
+            #  SUITESPARSE_USE_64BIT_BLAS has to stay ON, as the bundled
+            #  SuiteSparse only includes SuiteSparseBLAS64.cmake.
+            "-DSUITESPARSE_REQUIRE_BLAS=OFF",
             "-DSUITESPARSE_USE_64BIT_BLAS=ON",
             "-DSUITESPARSE_ENABLE_PROJECTS=amd;btf;colamd;klu",
             "-DSUITESPARSE_USE_CUDA=OFF",
@@ -94,16 +97,16 @@ def get_extensions():
         cmake_build_type=build_type,
         cmake_configure_options=[
             *global_cmake_configure_options,
-            "-DBUILD_ARKODE=OFF",
-            "-DBUILD_CVODE=OFF",
-            "-DBUILD_IDA=OFF",
-            "-DBUILD_KINSOL=OFF",
+            "-DSUNDIALS_ENABLE_ARKODE=OFF",
+            "-DSUNDIALS_ENABLE_CVODE=OFF",
+            "-DSUNDIALS_ENABLE_IDA=OFF",
+            "-DSUNDIALS_ENABLE_KINSOL=OFF",
             "-DBUILD_SHARED_LIBS=OFF",
             "-DBUILD_STATIC_LIBS=ON",
-            "-DBUILD_NVECTOR_MANYVECTOR=OFF",
-            "-DEXAMPLES_ENABLE_C=OFF",
-            "-DEXAMPLES_INSTALL=OFF",
-            "-DENABLE_KLU=ON",
+            "-DSUNDIALS_ENABLE_NVECTOR_MANYVECTOR=OFF",
+            "-DSUNDIALS_ENABLE_C_EXAMPLES=OFF",
+            "-DSUNDIALS_ENABLE_EXAMPLES_INSTALL=OFF",
+            "-DSUNDIALS_ENABLE_KLU=ON",
             f"-DCMAKE_PREFIX_PATH='{';'.join(cmake_prefix_path)}'",
         ],
     )

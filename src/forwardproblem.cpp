@@ -59,7 +59,16 @@ ForwardProblem::ForwardProblem(
     : model(model)
     , solver(solver)
     , edata(edata)
-    , dJzdx_(model->nJ * model->nx_solver * model->n_max_event(), 0.0)
+    , dJzdx_(
+          // only needed for adjoint sensitivities of event outputs
+          edata && model->nz > 0
+                  && solver->get_sensitivity_order() >= SensitivityOrder::first
+                  && solver->get_sensitivity_method()
+                         == SensitivityMethod::adjoint
+              ? model->nJ * model->nx_solver * model->n_max_event() * model->ne
+              : 0,
+          0.0
+      )
     , uses_presimulation_(edata && edata->t_presim > 0)
     , ws_(model, solver)
     , main_simulator_(model, solver, &ws_, &dJzdx_)
@@ -67,11 +76,12 @@ ForwardProblem::ForwardProblem(
 
 void EventHandlingSimulator::run(
     realtype const t0, ExpData const* edata,
-    std::vector<realtype> const& timepoints, bool store_diagnosis
+    std::vector<realtype> const& timepoints, bool const is_main_simulation
 ) {
     std::ranges::fill(ws_->nroots, 0);
 
     t0_ = t0;
+    is_main_simulation_ = is_main_simulation;
     ws_->sol.t = t0;
     ws_->tlastroot = t0;
     ws_->t_roots_for_ignore = NAN;
@@ -143,14 +153,16 @@ void EventHandlingSimulator::run(
             }
         }
         handle_datapoint(next_t_out);
-        if (store_diagnosis) {
+        if (is_main_simulation) {
             // store diagnosis information for debugging
             solver_->store_diagnosis();
         }
     }
 
-    // fill events
-    if (model_->nz > 0 && model_->nt() > 0) {
+    // Fill in the outputs of events that did not occur. This is only done at
+    // the last output timepoint of the main simulation, not at the end of a
+    // presimulation or before post-equilibration.
+    if (model_->nz > 0 && at_last_output_timepoint()) {
         fill_events(model_->n_max_event(), edata);
     }
 
@@ -268,6 +280,25 @@ void ForwardProblem::handle_preequilibration() {
         return;
     }
 
+    // Adjoint pre-equilibration requires the adjoint of the reinitialization
+    // at the start of the main simulation. Check before simulating, while
+    // the reinitialization settings of the main simulation are applied.
+    if (solver->computing_asa()
+        && solver->get_sensitivity_method_pre_equilibration()
+               == SensitivityMethod::adjoint)
+        model->check_reinitialize_b_supported();
+
+    if (std::isnan(edata->t_start_preeq) && !std::isnan(model->t0_preeq())
+        && model->get_logger()) {
+        model->get_logger()->log(
+            LogSeverity::warning, "DEPRECATION",
+            "Pre-equilibration starts at Model.t0_preeq() since "
+            "ExpData.t_start_preeq is not set. Model.t0_preeq is deprecated "
+            "and will no longer be used in a future release. Set "
+            "ExpData.t_start_preeq instead."
+        );
+    }
+
     ConditionContext cc2(model, edata, FixedParameterContext::preequilibration);
 
     preeq_problem_.emplace(&ws_, *solver, *model, true);
@@ -305,8 +336,7 @@ void ForwardProblem::handle_presimulation() {
     ConditionContext cond(model, edata, FixedParameterContext::presimulation);
 
     // Reinitialization of non-constant states is not yet supported for
-    // adjoint sensitivity analysis (analogous to the restriction on adjoint
-    // preequilibration in BackwardProblem::workBackwardProblem, gh-1156).
+    // adjoint presimulation (gh-1156).
     if (solver->computing_asa()
         && (reinit_sim
             || model->get_reinitialize_fixed_parameter_initial_states())
@@ -328,14 +358,32 @@ void ForwardProblem::handle_presimulation() {
         );
     }
     solver->setup(ws_.sol.t, model, ws_.sol.x, ws_.sol.dx, ws_.sol.sx, ws_.sdx);
-    solver->update_and_reinit_states_and_sensitivities(model);
+    // Heaviside variables at the end of pre-equilibration (copy, since the
+    // model state is updated in reinit_events)
+    auto const h_old = model->get_model_state().h;
+    // Without pre-equilibration, the model was just initialized with the
+    // fixed parameters of the presimulation, and reinitializing would
+    // overwrite a custom initial state.
+    if (preequilibrated_)
+        solver->update_and_reinit_states_and_sensitivities(model);
+    if (preequilibrated_ && model->ne) {
+        // The consistent algebraic states depend on the Heaviside
+        // variables, so update those first.
+        ws_.sol.x = solver->get_state(ws_.sol.t);
+        model->reinit_events(
+            ws_.sol.t, ws_.sol.x, ws_.sol.dx, h_old, ws_.roots_found
+        );
+    }
+    // For DAEs, the algebraic states (and their sensitivities) have to be
+    // made consistent with the re-initialized differential states and the
+    // fixed parameters of the presimulation.
+    solver->calc_ic(model->t0());
+    solver->write_solution(ws_.sol.t, ws_.sol);
 
     if (preequilibrated_ && model->ne) {
         // Re-evaluate the event triggers based on the state after applying
-        // the re-initialization of the presimulation condition.
-        ws_.sol.x = solver->get_state(ws_.sol.t);
-        // copy, since model state will be updated in reinit_events
-        auto h_old = model->get_model_state().h;
+        // the re-initialization of the presimulation condition and making
+        // the algebraic states consistent.
         model->reinit_events(
             ws_.sol.t, ws_.sol.x, ws_.sol.dx, h_old, ws_.roots_found
         );
@@ -373,9 +421,21 @@ void ForwardProblem::handle_main_simulation() {
         );
     }
 
-    if (preequilibrated_ || uses_presimulation_) {
+    bool const continued = preequilibrated_ || uses_presimulation_;
+    // Heaviside variables at the end of the previous period (copy, since the
+    // model state is updated in reinit_events)
+    auto const h_old = model->get_model_state().h;
+    if (continued) {
         // Reset the time and re-initialize events for the main simulation
         solver->update_and_reinit_states_and_sensitivities(model);
+        if (model->ne) {
+            // The consistent algebraic states depend on the Heaviside
+            // variables, so update those first.
+            ws_.sol.x = solver->get_state(model->t0());
+            model->reinit_events(
+                ws_.sol.t, ws_.sol.x, ws_.sol.dx, h_old, ws_.roots_found
+            );
+        }
         // For DAEs, the algebraic states (and their sensitivities) have to be
         // made consistent with the re-initialized differential states and the
         // fixed parameters of the main simulation before the initial output
@@ -385,12 +445,12 @@ void ForwardProblem::handle_main_simulation() {
 
     // update x0 after computing consistence IC/reinitialization
     ws_.sol.x = solver->get_state(model->t0());
+    ws_.sol.dx = solver->get_derivative_state(model->t0());
 
-    if ((preequilibrated_ || uses_presimulation_) && model->ne) {
+    if (continued && model->ne) {
         // Re-evaluate the event triggers based on the state after applying
-        // the re-initialization of the main simulation condition.
-        // copy, since model state will be updated in reinit_events
-        auto h_old = model->get_model_state().h;
+        // the re-initialization of the main simulation condition and making
+        // the algebraic states consistent.
         model->reinit_events(
             ws_.sol.t, ws_.sol.x, ws_.sol.dx, h_old, ws_.roots_found
         );
@@ -557,6 +617,10 @@ void EventHandlingSimulator::handle_events(
         AmiVector const& xdot_eval = pending_event.xdot_at_trigger.has_value()
                                          ? *pending_event.xdot_at_trigger
                                          : xdot_pre;
+        // Heaviside variables with which the event assignments are evaluated
+        auto const h_assign = state_at_trigger.has_value()
+                                  ? state_at_trigger->mod.h
+                                  : model_->get_model_state().h;
 
         // For adjoint sensitivities, `deltaxB`/`deltaqB` need the states
         // around this event's application.
@@ -566,6 +630,7 @@ void EventHandlingSimulator::handle_events(
             event_application->ie = ie;
             event_application->x_eval = x_eval;
             event_application->xdot_eval = xdot_eval;
+            event_application->h_assign = h_assign;
             event_application->xdot_pre = xdot_pre;
             if (state_at_trigger.has_value()) {
                 event_application->trigger_disc_offset = gsl::narrow<int>(
@@ -599,7 +664,7 @@ void EventHandlingSimulator::handle_events(
                 xdot_eval, xdot_pre,
                 state_at_trigger.has_value() ? state_at_trigger->sol.sx
                                              : ws_->sol.sx,
-                ws_->stau
+                ws_->stau, h_assign
             );
         }
         // store post-event state
@@ -621,6 +686,19 @@ void EventHandlingSimulator::handle_events(
             model_->update_heaviside(ws_->roots_found);
             first_since_discontinuity = true;
             queue_triggered_events();
+
+            if (ws_->pending_events.empty()) {
+                // If another event is pending, its sensitivity update
+                // includes the jump in the right-hand side, and the
+                // algebraic states are made consistent after its
+                // application. If there is none, e.g., if roots were only
+                // crossed in the negative direction, do that here.
+                solver_->calc_consistent_state(
+                    ws_->sol.t, ws_->sol.x, ws_->sol.dx,
+                    next_output_timepoint(*model_, ws_->sol.t)
+                );
+                apply_xdot_jump_sensitivity_update();
+            }
         }
 
         // record any newly-found roots
@@ -655,8 +733,7 @@ void EventHandlingSimulator::handle_initial_events(ExpData const* edata) {
 }
 
 void EventHandlingSimulator::store_event(ExpData const* edata) {
-    bool const is_last_timepoint
-        = (ws_->sol.t == model_->get_timepoint(model_->nt() - 1));
+    bool const is_last_timepoint = at_last_output_timepoint();
 
     if (is_last_timepoint) {
         // call from fillEvent at last timepoint
@@ -691,7 +768,8 @@ void EventHandlingSimulator::store_event(ExpData const* edata) {
             Expects(dJzdx_ != nullptr);
             model_->get_adjoint_state_event_update(
                 slice(
-                    *dJzdx_, ws_->nroots.at(ie), model_->nx_solver * model_->nJ
+                    *dJzdx_, ie * model_->n_max_event() + ws_->nroots.at(ie),
+                    model_->nx_solver * model_->nJ
                 ),
                 ie, ws_->nroots.at(ie), ws_->sol.t, ws_->sol.x, *edata
             );
@@ -768,10 +846,28 @@ void EventHandlingSimulator::queue_triggered_events() {
     }
 }
 
+void EventHandlingSimulator::apply_xdot_jump_sensitivity_update() {
+    if (!solver_->computing_fsa() && !solver_->computing_asa())
+        return;
+
+    // `xdot` with the updated Heaviside variables
+    model_->fdxdt(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->xdot);
+    AmiVector xdot_jump(ws_->xdot);
+    for (int ix = 0; ix < model_->nx_solver; ++ix)
+        xdot_jump[ix] -= ws_->xdot_at_trigger[ix];
+
+    if (solver_->computing_fsa()) {
+        for (int ip = 0; ip < model_->nplist(); ++ip)
+            for (int ix = 0; ix < model_->nx_solver; ++ix)
+                ws_->sol.sx.at(ix, ip) += xdot_jump[ix] * ws_->stau.at(ip);
+    }
+    if (solver_->computing_asa()) {
+        result.discs.back().xdot_jump = xdot_jump;
+    }
+}
+
 int EventHandlingSimulator::detect_secondary_events() {
     int secondevent = 0;
-    // whether an event assignment triggered another event
-    bool triggered_event = false;
 
     // check whether we need to fire a secondary event
     model_->froot(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->rootvals);
@@ -782,8 +878,6 @@ int EventHandlingSimulator::detect_secondary_events() {
             if (heaviside_differs(ws_->rval_tmp.at(ie), ws_->rootvals.at(ie))) {
                 ws_->roots_found.at(ie)
                     = ws_->rval_tmp.at(ie) < ws_->rootvals.at(ie) ? 1 : -1;
-                if (ws_->roots_found.at(ie) == 1)
-                    triggered_event = true;
                 secondevent++;
             } else {
                 ws_->roots_found.at(ie) = 0;
@@ -797,23 +891,14 @@ int EventHandlingSimulator::detect_secondary_events() {
     // fire the secondary event?
     if (secondevent > 0) {
         // Known limitations of sensitivities at secondary events.
-        // If no further event is executed at this time, the event
-        // assignment only changed the sign of root functions, and the
-        // resulting jump in the right-hand side is not accounted for in the
-        // sensitivities.
-        bool const no_further_event
-            = !triggered_event && ws_->pending_events.empty();
         if ((solver_->computing_fsa() || solver_->computing_asa())
-            && (model_->has_algebraic_states() || model_->nz > 0
-                || no_further_event)
+            && (model_->has_algebraic_states() || model_->nz > 0)
             && solver_->get_logger())
             solver_->get_logger()->log(
                 LogSeverity::warning, "SECONDARY_EVENT",
                 "Secondary event was triggered. Sensitivities can be "
-                "incorrect for models with algebraic states, for event "
-                "outputs of secondary events, and if an event assignment "
-                "changes the sign of a root function without triggering "
-                "another event."
+                "incorrect for models with algebraic states and for event "
+                "outputs of secondary events."
             );
     }
 
@@ -1083,13 +1168,14 @@ SteadyStateStatus SteadyStateProblem::find_steady_state_by_simulation(
 ) {
     if (simulator_.has_value()) {
         // There was already a (failed) Newton attempt
-        // reset the workspace to its initial state and restart with a fresh
-        // simulator. (Depending on the combination of methods, the old one
-        // might not have stored all required information for sensitivity
-        // computation.)
+        // reset the workspace to its initial state, including the pending
+        // initial events, and restart with a fresh simulator. (Depending on
+        // the combination of methods, the old one might not have stored all
+        // required information for sensitivity computation.)
         auto const& init_sim_state = simulator_->result.initial_state_;
         model_->set_model_state(init_sim_state.mod);
         ws_->sol = init_sim_state.sol;
+        ws_->roots_found = initial_roots_found_;
     }
 
     try {
@@ -1379,6 +1465,7 @@ void SteadyStateProblem::find_steady_state_by_newtons_method(
         // store initial state
         simulator_->result.initial_state_.mod = model_->get_model_state();
         simulator_->result.initial_state_.sol = ws_->sol;
+        initial_roots_found_ = ws_->roots_found;
 
         simulator_->handle_initial_events(nullptr);
         period_result_ = simulator_->result;

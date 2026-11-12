@@ -1,3 +1,404 @@
+Sept 12, 2026: version 7.14.1
+
+    * GraphBLAS 10.5.1: bug fix
+    * SuiteSparse_config 7.14.1: version update
+        SuiteSparse_config 7.14.1   *
+        AMD 3.3.4
+        BTF 2.3.3
+        CAMD 3.3.5
+        CCOLAMD 3.3.5
+        CHOLMOD 5.3.5
+        COLAMD 3.3.5
+        CSparse 4.4.2
+        CXSparse 4.4.2
+        Example 1.8.13
+        GraphBLAS 10.5.1            *
+        KLU 2.3.6
+        LDL 3.3.3
+        LAGraph 1.2.2
+        SuiteSparse_Mongoose 3.3.6
+        ParU 1.1.2
+        RBio 4.3.5
+        SPEX 3.2.4
+        SPQR 4.3.6
+        UMFPACK 6.3.8
+
+Aug 16, 2026: version 7.14.0
+
+    * GraphBLAS 10.5.0: faster resize, post-iso check revised, and a bug fix
+    * SuiteSparse_config 7.14.0: version update to match SuiteSparse.
+    * Package versions in this release: (* denotes a new version)
+        SuiteSparse_config 7.14.0   *
+        AMD 3.3.4
+        BTF 2.3.3
+        CAMD 3.3.5
+        CCOLAMD 3.3.5
+        CHOLMOD 5.3.5
+        COLAMD 3.3.5
+        CSparse 4.4.2
+        CXSparse 4.4.2
+        Example 1.8.13              *
+        GraphBLAS 10.5.0            *
+        KLU 2.3.6
+        LDL 3.3.3
+        LAGraph 1.2.2
+        SuiteSparse_Mongoose 3.3.6
+        ParU 1.1.2
+        RBio 4.3.5
+        SPEX 3.2.4
+        SPQR 4.3.6
+        UMFPACK 6.3.8
+
+Aug 10, 2026: version 7.13.0
+
+    * GraphBLAS 10.4.1: memory arenas, faster GhB MATLAB/Octave interface
+    * ParU 1.1.2: backport to gcc 7.5.0
+    * SuiteSparse_config 7.13.0: version update to match SuiteSparse.
+    * Package versions in this release: (* denotes a new version)
+        SuiteSparse_config 7.13.0   *
+        AMD 3.3.4
+        BTF 2.3.3
+        CAMD 3.3.5
+        CCOLAMD 3.3.5
+        CHOLMOD 5.3.5
+        COLAMD 3.3.5
+        CSparse 4.4.2
+        CXSparse 4.4.2
+        Example 1.8.12              *
+        GraphBLAS 10.4.1            *
+        KLU 2.3.6
+        LDL 3.3.3
+        LAGraph 1.2.2
+        SuiteSparse_Mongoose 3.3.6
+        ParU 1.1.2                  *
+        RBio 4.3.5
+        SPEX 3.2.4
+        SPQR 4.3.6
+        UMFPACK 6.3.8
+
+July 31, 2026: version 7.12.3
+
+    * github workflow: remove deprecated environments
+    * CHOLMOD 5.3.5: typo in user guide; minor revision to API in cholmod.h
+    * ParU 1.1.1: MATLAB mexFunction does not #include mkl.h on Intel systems
+    * GraphBLAS 10.3.2: minor update for recent clang compilers
+    * LAGraph 1.2.2: minor update for MSVC compiler (with no stdalign.h)
+    * SuiteSparse_config 7.12.3: version update to match SuiteSparse.
+        Require cmake 3.23 for CUDA -arch="all" parameter to nvcc.
+    * CSparse 4.4.2: minor fix to build system; sync version with CXSparse
+    * UMFPACK 6.3.8: sync definition and declaration of umf_row_search.
+    * Package versions in this release: (* denotes a new version)
+        SuiteSparse_config 7.12.3   *
+        AMD 3.3.4
+        BTF 2.3.3
+        CAMD 3.3.5
+        CCOLAMD 3.3.5
+        CHOLMOD 5.3.5               *
+        COLAMD 3.3.5
+        CSparse 4.4.2               *
+        CXSparse 4.4.2
+        Example 1.8.11              *
+        GraphBLAS 10.3.2            *
+        KLU 2.3.6
+        LDL 3.3.3
+        LAGraph 1.2.2               *
+        SuiteSparse_Mongoose 3.3.6
+        ParU 1.1.1                  *
+        RBio 4.3.5
+        SPEX 3.2.4
+        SPQR 4.3.6
+        UMFPACK 6.3.8               *
+
+Feb 5, 2026: version 7.12.2
+
+    * GraphBLAS 10.3.1: bug and documentation fixes, performance improvements,
+        and printing of user-defined types using get/set with
+        GxB_PRINT_FUNCTION.
+    * SuiteSparse_config 7.12.2: checking for BLAS libraries; better handling
+        of BLA_VENDOR input parameter to cmake
+    * Package versions in this release: (* denotes a new version)
+        SuiteSparse_config 7.12.2   *
+        AMD 3.3.4
+        BTF 2.3.3
+        CAMD 3.3.5
+        CCOLAMD 3.3.5
+        CHOLMOD 5.3.4
+        COLAMD 3.3.5
+        CSparse 4.3.2
+        CXSparse 4.4.2
+        Example 1.8.10
+        GraphBLAS 10.3.1            *
+        KLU 2.3.6
+        LDL 3.3.3
+        LAGraph 1.2.1
+        SuiteSparse_Mongoose 3.3.6
+        ParU 1.1.0
+        RBio 4.3.5
+        SPEX 3.2.4
+        SPQR 4.3.6
+        UMFPACK 6.3.7
+
+Nov 4, 2025: version 7.12.1
+
+    * SuiteSparse_config 7.12.1: fix for ninja; checking BLAS properties
+    * Package versions in this release: (* denotes a new version)
+        SuiteSparse_config 7.12.1   *
+        AMD 3.3.4
+        BTF 2.3.3
+        CAMD 3.3.5
+        CCOLAMD 3.3.5
+        CHOLMOD 5.3.4
+        COLAMD 3.3.5
+        CSparse 4.3.2
+        CXSparse 4.4.2
+        Example 1.8.10
+        GraphBLAS 10.2.0
+        KLU 2.3.6
+        LDL 3.3.3
+        LAGraph 1.2.1
+        SuiteSparse_Mongoose 3.3.6
+        ParU 1.1.0
+        RBio 4.3.5
+        SPEX 3.2.4
+        SPQR 4.3.6
+        UMFPACK 6.3.7
+
+Nov 1, 2025: version 7.12.0
+
+    * UMFPACK 6.3.7: workaround for an Intel icx 2025.2 compiler bug
+    * LAGraph 1.2.1: bug fix for experimental maxflow method
+    * ParU 1.1.0: performance improvements, minor revisions for benchmarking
+    * GraphBLAS 10.2.0: printing user-defined types, GrB_assign performance
+    * SPQR 4.3.6: better handling of complex types for BLAS/LAPACK
+    * SuiteSparse_config 7.12.0: better handling of complex types for
+        BLAS/LAPACK
+    * Mongoose 3.3.6: minor change to build system
+    * Package versions in this release: (* denotes a new version)
+        SuiteSparse_config 7.12.0   *
+        AMD 3.3.4
+        BTF 2.3.3
+        CAMD 3.3.5
+        CCOLAMD 3.3.5
+        CHOLMOD 5.3.4
+        COLAMD 3.3.5
+        CSparse 4.3.2
+        CXSparse 4.4.2
+        Example 1.8.10              *
+        GraphBLAS 10.2.0            *
+        KLU 2.3.6
+        LDL 3.3.3
+        LAGraph 1.2.1               *
+        SuiteSparse_Mongoose 3.3.6  *
+        ParU 1.1.0                  *
+        RBio 4.3.5
+        SPEX 3.2.4
+        SPQR 4.3.6                  *
+        UMFPACK 6.3.7               *
+
+July 25, 2025: version 7.11.0
+
+    * LAGraph v1.2: many new experimental algorithms, LAGraph_Random in src/
+    * GraphBLAS v10.1.1: risc-V vectorization, GRAPHBLAS_VANILLA (optional;
+        to disable GxB extensions), and workaround for gcc compiler bug on
+        Power and s390x processors.
+    * nearly all packages: cmake updates, to move static targets into separate
+        exports (needed for Fedora packaging)
+    * Package versions in this release: (* denotes a new version)
+        SuiteSparse_config 7.11.0   *
+        AMD 3.3.4                   *
+        BTF 2.3.3                   *
+        CAMD 3.3.5                  *
+        CCOLAMD 3.3.5               *
+        CHOLMOD 5.3.4               *
+        COLAMD 3.3.5                *
+        CSparse 4.3.2
+        CXSparse 4.4.2              *
+        Example 1.8.9               *
+        GraphBLAS 10.1.1            *
+        KLU 2.3.6                   *
+        LDL 3.3.3                   *
+        LAGraph 1.2.0               *
+        SuiteSparse_Mongoose 3.3.5  *
+        ParU 1.0.1                  *
+        RBio 4.3.5                  *
+        SPEX 3.2.4                  *
+        SPQR 4.3.5                  *
+        UMFPACK 6.3.6               *
+
+May 5, 2025: version 7.10.3
+
+    * SuiteSparse_config: do not print info about the BLAS if no BLAS used,
+        in the cmake build script.  Added /usr/local to the build and install
+        paths on the Mac.
+    * GraphBLAS: cmake revisions and 2 bug fixes
+    * revised CI rules on github
+    * CAMD: minor typo in Makefile, for demos
+    * CHOLMOD: restore try_catch after trying ordering methods
+    * Package versions in this release: (* denotes a new version)
+        SuiteSparse_config 7.10.3   *
+        AMD 3.3.3
+        BTF 2.3.2
+        CAMD 3.3.4                  *
+        CCOLAMD 3.3.4
+        CHOLMOD 5.3.3               *
+        COLAMD 3.3.4
+        CSparse 4.3.2
+        CXSparse 4.4.1
+        Example 1.8.8               *
+        GraphBLAS 10.0.5            *
+        KLU 2.3.5
+        LDL 3.3.2
+        LAGraph 1.1.5
+        SuiteSparse_Mongoose 3.3.4
+        ParU 1.0.0
+        RBio 4.3.4
+        SPEX 3.2.3
+        SPQR 4.3.4
+        UMFPACK 6.3.5
+
+Apr 10, 2025: version 7.10.2
+
+    * GraphBLAS v10.0.3: performance of setElement.  Update to xxHash and
+        cpu_features.  Octave interface updated for the Mac.
+    * CHOLMOD 5.3.2: use CUDA as linker, if applicable
+    * SuiteSparse_config 7.10.2: allow the installer to compile without
+        the BLAS.
+    * Package versions in this release: (* denotes a new version)
+        SuiteSparse_config 7.10.2   *
+        AMD 3.3.3
+        BTF 2.3.2
+        CAMD 3.3.3
+        CCOLAMD 3.3.4
+        CHOLMOD 5.3.2               *
+        COLAMD 3.3.4
+        CSparse 4.3.2
+        CXSparse 4.4.1
+        Example 1.8.7               *
+        GraphBLAS 10.0.3            *
+        KLU 2.3.5
+        LDL 3.3.2
+        LAGraph 1.1.5
+        SuiteSparse_Mongoose 3.3.4
+        ParU 1.0.0
+        RBio 4.3.4
+        SPEX 3.2.3
+        SPQR 4.3.4
+        UMFPACK 6.3.5
+
+Mar 6, 2025: version 7.10.1
+
+    * GraphBLAS v10.0.1: bug fix, when using user-defined monoids in GrB_mxm
+    * Package versions in this release: (* denotes a new version)
+        SuiteSparse_config 7.10.1   *
+        AMD 3.3.3
+        BTF 2.3.2
+        CAMD 3.3.3
+        CCOLAMD 3.3.4
+        CHOLMOD 5.3.1
+        COLAMD 3.3.4
+        CSparse 4.3.2
+        CXSparse 4.4.1
+        Example 1.8.6               *
+        GraphBLAS 10.0.1            *
+        KLU 2.3.5
+        LDL 3.3.2
+        LAGraph 1.1.5
+        SuiteSparse_Mongoose 3.3.4
+        ParU 1.0.0
+        RBio 4.3.4
+        SPEX 3.2.3
+        SPQR 4.3.4
+        UMFPACK 6.3.5
+
+Mar 3, 2025: version 7.10.0
+
+    * GraphBLAS v10.0.0: major upgrade, now supporting 32-bit/64-bit integer
+        indices.  Note the SO version change from 9 to 10.  GraphBLAS v10 is
+        upward compatible with v9, but only if the user application is
+        recompiled.
+    * Package versions in this release: (* denotes a new version)
+        SuiteSparse_config 7.10.0   *
+        AMD 3.3.3
+        BTF 2.3.2
+        CAMD 3.3.3
+        CCOLAMD 3.3.4
+        CHOLMOD 5.3.1
+        COLAMD 3.3.4
+        CSparse 4.3.2
+        CXSparse 4.4.1
+        Example 1.8.5               *
+        GraphBLAS 10.0.0            *
+        KLU 2.3.5
+        LDL 3.3.2
+        LAGraph 1.1.5
+        SuiteSparse_Mongoose 3.3.4
+        ParU 1.0.0
+        RBio 4.3.4
+        SPEX 3.2.3
+        SPQR 4.3.4
+        UMFPACK 6.3.5
+
+Feb 20, 2025: version 7.9.0
+
+    * GraphBLAS v9.4.5: Added the GxB_IndexBinaryOp.  Added new JIT kernels.
+        Disabled more FactoryKernels to reduce compiled library size.
+        Added workaround for AppleClang compiler bug.
+    * LAGraph v1.1.5, SPEX v3.2.3, CHOLMOD 5.3.1: minor updates to github CI;
+        typos, reduce pedantic compiler warnings.
+    * Package versions in this release: (* denotes a new version)
+        SuiteSparse_config 7.9.0    *
+        AMD 3.3.3
+        BTF 2.3.2
+        CAMD 3.3.3
+        CCOLAMD 3.3.4
+        CHOLMOD 5.3.1               *
+        COLAMD 3.3.4
+        CSparse 4.3.2
+        CXSparse 4.4.1
+        Example 1.8.4               *
+        GraphBLAS 9.4.5             *
+        KLU 2.3.5
+        LDL 3.3.2
+        LAGraph 1.1.5               *
+        SuiteSparse_Mongoose 3.3.4
+        ParU 1.0.0
+        RBio 4.3.4
+        SPEX 3.2.3                  *
+        SPQR 4.3.4
+        UMFPACK 6.3.5
+
+Oct 10, 2024: version 7.8.3
+
+    * ParU 1.0.0: first stable release. No change since last version
+        v0.3.0, except for date, version, and updates to the User Guide.
+    * UMFPACK 6.3.5: a few typos in comments and user guide; no change to code
+    * SuiteSparse_config and Example: revised to reflect ParU 1.0.0.
+    * SuiteSparse_config.h: removed inclusion of MATLAB mex.h in
+        SuiteSparse_config.h (conflicts with C++ mex files)
+    * KLU and RBio: revised mexFunctions to handle change in
+        SuiteSparse_config.h
+    * Package versions in this release: (* denotes a new version)
+        SuiteSparse_config 7.8.3    *
+        AMD 3.3.3
+        BTF 2.3.2
+        CAMD 3.3.3
+        CCOLAMD 3.3.4
+        CHOLMOD 5.3.0
+        COLAMD 3.3.4
+        CSparse 4.3.2
+        CXSparse 4.4.1
+        Example 1.8.3               *
+        GraphBLAS 9.3.1
+        KLU 2.3.5                   *
+        LDL 3.3.2
+        LAGraph 1.1.4
+        SuiteSparse_Mongoose 3.3.4
+        ParU 1.0.0                  *
+        RBio 4.3.4                  *
+        SPEX 3.2.1
+        SPQR 4.3.4
+        UMFPACK 6.3.5               *
+
 Aug 20, 2024: version 7.8.2
 
     * LAGraph 1.1.4: bug fix for LAGraph_MMWrite when matrix is dense

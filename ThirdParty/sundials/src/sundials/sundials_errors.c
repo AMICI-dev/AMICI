@@ -1,7 +1,10 @@
 /* -----------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2024, Lawrence Livermore National Security
+ * Copyright (c) 2025-2026, Lawrence Livermore National Security,
+ * University of Maryland Baltimore County, and the SUNDIALS contributors.
+ * Copyright (c) 2013-2025, Lawrence Livermore National Security
  * and Southern Methodist University.
+ * Copyright (c) 2002-2013, Lawrence Livermore National Security.
  * All rights reserved.
  *
  * See the top-level LICENSE and NOTICE files for details.
@@ -79,12 +82,57 @@ void SUNAbortErrHandlerFn(int line, const char* func, const char* file,
                           SUNDIALS_MAYBE_UNUSED void* err_user_data,
                           SUNContext sunctx)
 {
+  /* Flush all buffered logging messages now before we abort */
+  SUNLogger_Flush(sunctx->logger, SUN_LOGLEVEL_ALL);
+
   char* file_and_line = sunCombineFileAndLine(line, file);
+  if (msg == NULL) { msg = SUNGetErrMsg(err_code); }
   SUNLogger_QueueMsg(sunctx->logger, SUN_LOGLEVEL_ERROR, file_and_line, func,
+                     msg);
+  free(file_and_line);
+  /* It is convenient to have the exit message point to the message line,
+     so we add 1 to the line number. As such, do not separate the following lines! */
+  file_and_line = sunCombineFileAndLine(__LINE__ + 1, __FILE__);
+  SUNLogger_QueueMsg(sunctx->logger, SUN_LOGLEVEL_ERROR, file_and_line, __func__,
                      "SUNAbortErrHandler: Calling abort now, use a different "
                      "error handler to avoid program termination.\n");
   free(file_and_line);
   abort();
+}
+
+static void sunCreateLogMessage(SUNLogLevel lvl, int rank, const char* scope,
+                                const char* label, const char* txt,
+                                va_list args, char** log_msg)
+{
+  const char* prefix;
+  char* formatted_txt;
+  int msg_length;
+
+  prefix        = NULL;
+  formatted_txt = NULL;
+  msg_length    = 0;
+  *log_msg      = NULL;
+
+  msg_length = sunvasnprintf(&formatted_txt, txt, args);
+  if (msg_length < 0)
+  {
+    char* fileAndLine = sunCombineFileAndLine(__LINE__ + 1, __FILE__);
+    fprintf(stderr, "[ERROR][rank %d][%s][%s] %s\n", rank, fileAndLine,
+            __func__, "FATAL LOGGER ERROR: message size too large");
+    free(fileAndLine);
+  }
+
+  if (lvl == SUN_LOGLEVEL_DEBUG) { prefix = "DEBUG"; }
+  else if (lvl == SUN_LOGLEVEL_WARNING) { prefix = "WARNING"; }
+  else if (lvl == SUN_LOGLEVEL_INFO) { prefix = "INFO"; }
+  else if (lvl == SUN_LOGLEVEL_ERROR) { prefix = "ERROR"; }
+
+  msg_length = snprintf(NULL, 0, "[%s][rank %d][%s][%s] %s\n", prefix, rank,
+                        scope, label, formatted_txt);
+  *log_msg   = (char*)malloc(msg_length + 1);
+  snprintf(*log_msg, msg_length + 1, "[%s][rank %d][%s][%s] %s\n", prefix, rank,
+           scope, label, formatted_txt);
+  free(formatted_txt);
 }
 
 void SUNGlobalFallbackErrHandler(int line, const char* func, const char* file,
@@ -94,23 +142,23 @@ void SUNGlobalFallbackErrHandler(int line, const char* func, const char* file,
   char* log_msg       = NULL;
   char* file_and_line = NULL;
 
-  va_start(ap, err_code);
-
   file_and_line = sunCombineFileAndLine(__LINE__, __FILE__);
+  va_start(ap, err_code);
   sunCreateLogMessage(SUN_LOGLEVEL_ERROR, 0, file_and_line,
                       __func__, "The SUNDIALS SUNContext was corrupt or NULL when an error occurred. As such, error messages have been printed to stderr.",
                       ap, &log_msg);
+  va_end(ap);
   fprintf(stderr, "%s", log_msg);
   free(log_msg);
   free(file_and_line);
 
   file_and_line = sunCombineFileAndLine(line, file);
   if (msgfmt == NULL) { msgfmt = SUNGetErrMsg(err_code); }
+  va_start(ap, err_code);
   sunCreateLogMessage(SUN_LOGLEVEL_ERROR, 0, file_and_line, func, msgfmt, ap,
                       &log_msg);
+  va_end(ap);
   fprintf(stderr, "%s", log_msg);
   free(log_msg);
   free(file_and_line);
-
-  va_end(ap);
 }

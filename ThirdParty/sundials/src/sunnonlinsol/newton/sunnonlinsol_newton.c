@@ -2,8 +2,11 @@
  * Programmer(s): David J. Gardner @ LLNL
  * -----------------------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2024, Lawrence Livermore National Security
+ * Copyright (c) 2025-2026, Lawrence Livermore National Security,
+ * University of Maryland Baltimore County, and the SUNDIALS contributors.
+ * Copyright (c) 2013-2025, Lawrence Livermore National Security
  * and Southern Methodist University.
+ * Copyright (c) 2002-2013, Lawrence Livermore National Security.
  * All rights reserved.
  *
  * See the top-level LICENSE and NOTICE files for details.
@@ -24,6 +27,8 @@
 #include <sundials/sundials_nvector_senswrapper.h>
 #include <sunnonlinsol/sunnonlinsol_newton.h>
 
+#include "sundials/sundials_nvector.h"
+#include "sundials/sundials_types.h"
 #include "sundials_logger_impl.h"
 #include "sundials_macros.h"
 
@@ -33,6 +38,30 @@
 /* Constant macros */
 #define ZERO SUN_RCONST(0.0) /* real 0.0 */
 #define ONE  SUN_RCONST(1.0) /* real 1.0 */
+
+/* Retrieve the update norm if its available, otherwise compute it. */
+static SUNErrCode GetUpdateNorm_Newton(SUNNonlinearSolver NLS, N_Vector delta,
+                                       N_Vector w)
+{
+  SUNFunctionBegin(NLS->sunctx);
+
+  if (NEWTON_CONTENT(NLS)->getupdatenorm_fn)
+  {
+    return NEWTON_CONTENT(NLS)
+      ->getupdatenorm_fn(&(NEWTON_CONTENT(NLS)->delnrm),
+                         NEWTON_CONTENT(NLS)->getupdatenorm_data);
+  }
+
+  if (NEWTON_CONTENT(NLS)->norm_fn)
+  {
+    return NEWTON_CONTENT(NLS)->norm_fn(delta, w, &(NEWTON_CONTENT(NLS)->delnrm),
+                                        NEWTON_CONTENT(NLS)->norm_fn_data);
+  }
+
+  NEWTON_CONTENT(NLS)->delnrm = N_VWrmsNorm(delta, w);
+  SUNCheckLastErr();
+  return SUN_SUCCESS;
+}
 
 /*==============================================================================
   Constructor to create a new Newton solver
@@ -54,18 +83,20 @@ SUNNonlinearSolver SUNNonlinSol_Newton(N_Vector y, SUNContext sunctx)
   SUNCheckLastErrNull();
 
   /* Attach operations */
-  NLS->ops->gettype         = SUNNonlinSolGetType_Newton;
-  NLS->ops->initialize      = SUNNonlinSolInitialize_Newton;
-  NLS->ops->solve           = SUNNonlinSolSolve_Newton;
-  NLS->ops->free            = SUNNonlinSolFree_Newton;
-  NLS->ops->setsysfn        = SUNNonlinSolSetSysFn_Newton;
-  NLS->ops->setlsetupfn     = SUNNonlinSolSetLSetupFn_Newton;
-  NLS->ops->setlsolvefn     = SUNNonlinSolSetLSolveFn_Newton;
-  NLS->ops->setctestfn      = SUNNonlinSolSetConvTestFn_Newton;
-  NLS->ops->setmaxiters     = SUNNonlinSolSetMaxIters_Newton;
-  NLS->ops->getnumiters     = SUNNonlinSolGetNumIters_Newton;
-  NLS->ops->getcuriter      = SUNNonlinSolGetCurIter_Newton;
-  NLS->ops->getnumconvfails = SUNNonlinSolGetNumConvFails_Newton;
+  NLS->ops->gettype            = SUNNonlinSolGetType_Newton;
+  NLS->ops->initialize         = SUNNonlinSolInitialize_Newton;
+  NLS->ops->solve              = SUNNonlinSolSolve_Newton;
+  NLS->ops->free               = SUNNonlinSolFree_Newton;
+  NLS->ops->setsysfn           = SUNNonlinSolSetSysFn_Newton;
+  NLS->ops->setlsetupfn        = SUNNonlinSolSetLSetupFn_Newton;
+  NLS->ops->setlsolvefn        = SUNNonlinSolSetLSolveFn_Newton;
+  NLS->ops->setctestfn         = SUNNonlinSolSetConvTestFn_Newton;
+  NLS->ops->setnormfn          = SUNNonlinSolSetNormFn_Newton;
+  NLS->ops->setgetupdatenormfn = SUNNonlinSolSetGetUpdateNormFn_Newton;
+  NLS->ops->setmaxiters        = SUNNonlinSolSetMaxIters_Newton;
+  NLS->ops->getnumiters        = SUNNonlinSolGetNumIters_Newton;
+  NLS->ops->getcuriter         = SUNNonlinSolGetCurIter_Newton;
+  NLS->ops->getnumconvfails    = SUNNonlinSolGetNumConvFails_Newton;
 
   /* Create content */
   content = NULL;
@@ -79,16 +110,23 @@ SUNNonlinearSolver SUNNonlinSol_Newton(N_Vector y, SUNContext sunctx)
   NLS->content = content;
 
   /* Fill general content */
-  content->Sys        = NULL;
-  content->LSetup     = NULL;
-  content->LSolve     = NULL;
-  content->CTest      = NULL;
-  content->jcur       = SUNFALSE;
-  content->curiter    = 0;
-  content->maxiters   = 3;
-  content->niters     = 0;
-  content->nconvfails = 0;
-  content->ctest_data = NULL;
+  content->Sys                = NULL;
+  content->LSetup             = NULL;
+  content->LSolve             = NULL;
+  content->CTest              = NULL;
+  content->norm_fn            = NULL;
+  content->norm_fn_data       = NULL;
+  content->getupdatenorm_fn   = NULL;
+  content->getupdatenorm_data = NULL;
+  content->jcur               = SUNFALSE;
+  content->curiter            = 0;
+  content->maxiters           = 3;
+  content->niters             = 0;
+  content->nconvfails         = 0;
+  content->compute_stiffr     = SUNFALSE;
+  content->stiffr             = SUN_RCONST(0.0);
+  content->delnrm             = SUN_RCONST(0.0);
+  content->ctest_data         = NULL;
 
   /* Fill allocatable content */
   content->delta = N_VClone(y);
@@ -145,6 +183,7 @@ SUNErrCode SUNNonlinSolInitialize_Newton(SUNNonlinearSolver NLS)
   /* reset the total number of iterations and convergence failures */
   NEWTON_CONTENT(NLS)->niters     = 0;
   NEWTON_CONTENT(NLS)->nconvfails = 0;
+  NEWTON_CONTENT(NLS)->stiffr     = SUN_RCONST(0.0);
 
   /* reset the Jacobian status */
   NEWTON_CONTENT(NLS)->jcur = SUNFALSE;
@@ -191,6 +230,8 @@ int SUNNonlinSolSolve_Newton(SUNNonlinearSolver NLS,
   SUNAssert(!callLSetup || (callLSetup && NEWTON_CONTENT(NLS)->LSetup),
             SUN_ERR_ARG_CORRUPT);
 
+  SUNLogInfo(NLS->sunctx->logger, "nonlinear-solver", "solver = Newton");
+
   /* set local shortcut variables */
   delta = NEWTON_CONTENT(NLS)->delta;
 
@@ -204,22 +245,13 @@ int SUNNonlinSolSolve_Newton(SUNNonlinearSolver NLS,
   /* looping point for attempts at solution of the nonlinear system:
        Evaluate the nonlinear residual function (store in delta)
        Setup the linear solver if necessary
-       Preform Newton iteraion */
+       Perform Newton iteration */
   for (;;)
   {
+    SUNLogInfo(NLS->sunctx->logger, "begin-iterations-list", "");
+
     /* initialize current iteration counter for this solve attempt */
     NEWTON_CONTENT(NLS)->curiter = 0;
-
-#if SUNDIALS_LOGGING_LEVEL >= SUNDIALS_LOGGING_INFO
-    SUNLogger_QueueMsg(NLS->sunctx->logger, SUN_LOGLEVEL_INFO, __func__,
-                       "begin-attempt", "iter = %ld, nni = %ld",
-                       (long int)NEWTON_CONTENT(NLS)->curiter,
-                       NEWTON_CONTENT(NLS)->niters);
-    SUNLogger_QueueMsg(NLS->sunctx->logger, SUN_LOGLEVEL_INFO, __func__,
-                       "start-iterate", "iter = %ld, nni = %ld",
-                       (long int)NEWTON_CONTENT(NLS)->curiter,
-                       NEWTON_CONTENT(NLS)->niters);
-#endif
 
     /* compute the nonlinear residual, store in delta */
     retval = NEWTON_CONTENT(NLS)->Sys(ycor, delta, mem);
@@ -255,27 +287,33 @@ int SUNNonlinSolSolve_Newton(SUNNonlinearSolver NLS,
       retval = NEWTON_CONTENT(NLS)->CTest(NLS, ycor, delta, tol, w,
                                           NEWTON_CONTENT(NLS)->ctest_data);
 
-#if SUNDIALS_LOGGING_LEVEL >= SUNDIALS_LOGGING_INFO
-      SUNLogger_QueueMsg(NLS->sunctx->logger, SUN_LOGLEVEL_INFO, __func__,
-                         "end-iterate", "iter = %ld, nni = %ld, wrmsnorm = %.16g",
-                         NEWTON_CONTENT(NLS)->curiter,
-                         NEWTON_CONTENT(NLS)->niters - 1, N_VWrmsNorm(delta, w));
-#endif
-
-      /* Update here so begin/end logging iterations match */
       NEWTON_CONTENT(NLS)->curiter++;
+
+      SUNErrCode ierr = GetUpdateNorm_Newton(NLS, delta, w);
+      if (ierr != SUN_SUCCESS)
+      {
+        SUNLogInfo(NLS->sunctx->logger, "end-iterations-list",
+                   "status = failed update norm, retval = %d", ierr);
+        return ierr;
+      }
+
+      SUNLogInfo(NLS->sunctx->logger,
+                 "nonlinear-iterate", "cur-iter = %i, total-iters = %li, update-norm = " SUN_FORMAT_G,
+                 NEWTON_CONTENT(NLS)->curiter, NEWTON_CONTENT(NLS)->niters,
+                 NEWTON_CONTENT(NLS)->delnrm);
 
       /* if successful update Jacobian status and return */
       if (retval == SUN_SUCCESS)
       {
-#if SUNDIALS_LOGGING_LEVEL >= SUNDIALS_LOGGING_INFO
-        SUNLogger_QueueMsg(NLS->sunctx->logger, SUN_LOGLEVEL_INFO, __func__,
-                           "end-attempt", "success, iter = %ld, nni = %ld",
-                           (long int)NEWTON_CONTENT(NLS)->curiter,
-                           NEWTON_CONTENT(NLS)->niters);
-#endif
+        SUNLogInfo(NLS->sunctx->logger, "end-iterations-list",
+                   "status = success");
         NEWTON_CONTENT(NLS)->jcur = SUNFALSE;
         return SUN_SUCCESS;
+      }
+      else if (retval == SUN_NLS_SWITCH)
+      {
+        SUNLogInfo(NLS->sunctx->logger, "end-iterations-list", "status = switch");
+        return SUN_NLS_SWITCH;
       }
 
       /* check if the iteration should continue; otherwise exit Newton loop */
@@ -288,27 +326,33 @@ int SUNNonlinSolSolve_Newton(SUNNonlinearSolver NLS,
         break;
       }
 
-#if SUNDIALS_LOGGING_LEVEL >= SUNDIALS_LOGGING_INFO
-      SUNLogger_QueueMsg(NLS->sunctx->logger, SUN_LOGLEVEL_INFO, __func__,
-                         "start-iterate", "iter = %ld, nni = %ld",
-                         (long int)NEWTON_CONTENT(NLS)->curiter,
-                         NEWTON_CONTENT(NLS)->niters);
-#endif
+      SUNLogInfo(NLS->sunctx->logger, "end-iterations-list", "status = continue");
+      SUNLogInfo(NLS->sunctx->logger, "begin-iterations-list", "");
 
       /* compute the nonlinear residual, store in delta */
       retval = NEWTON_CONTENT(NLS)->Sys(ycor, delta, mem);
       if (retval != SUN_SUCCESS) { break; }
 
+      if (NEWTON_CONTENT(NLS)->compute_stiffr)
+      {
+        sunrealtype delnrm = NEWTON_CONTENT(NLS)->delnrm;
+        sunrealtype resnrm;
+
+        if (NEWTON_CONTENT(NLS)->norm_fn)
+        {
+          retval = NEWTON_CONTENT(NLS)->norm_fn(delta, w, &resnrm,
+                                                NEWTON_CONTENT(NLS)->norm_fn_data);
+          if (retval != SUN_SUCCESS) { break; }
+        }
+        else { resnrm = N_VWrmsNorm(delta, w); }
+
+        /* Norsett's switching metric compares the next residual to the
+           previous Newton update norm. */
+        NEWTON_CONTENT(NLS)->stiffr = (delnrm > ZERO) ? resnrm / delnrm : ZERO;
+      }
     } /* end of Newton iteration loop */
 
     /* all errors go here */
-
-#if SUNDIALS_LOGGING_LEVEL >= SUNDIALS_LOGGING_INFO
-    SUNLogger_QueueMsg(NLS->sunctx->logger, SUN_LOGLEVEL_INFO, __func__,
-                       "end-attempt", "failure, iter = %ld, nni = %ld",
-                       (long int)NEWTON_CONTENT(NLS)->curiter,
-                       NEWTON_CONTENT(NLS)->niters);
-#endif
 
     /* If there is a recoverable convergence failure and the Jacobian-related
        data appears not to be current, increment the convergence failure count,
@@ -322,9 +366,17 @@ int SUNNonlinSolSolve_Newton(SUNNonlinearSolver NLS,
       jbad       = SUNTRUE;
       N_VConst(ZERO, ycor);
       SUNCheckLastErr();
+
+      SUNLogInfo(NLS->sunctx->logger, "end-iterations-list", "status = continue");
+
       continue;
     }
-    else { break; }
+    else
+    {
+      SUNLogInfo(NLS->sunctx->logger, "end-iterations-list",
+                 "status = failure, retval = %i", retval);
+      break;
+    }
 
   } /* end of setup loop */
 
@@ -412,11 +464,40 @@ SUNErrCode SUNNonlinSolSetConvTestFn_Newton(SUNNonlinearSolver NLS,
   return SUN_SUCCESS;
 }
 
+SUNErrCode SUNNonlinSolSetNormFn_Newton(SUNNonlinearSolver NLS,
+                                        SUNNonlinSolNormFn NormFn,
+                                        void* norm_fn_data)
+{
+  SUNFunctionBegin(NLS->sunctx);
+  NEWTON_CONTENT(NLS)->norm_fn      = NormFn;
+  NEWTON_CONTENT(NLS)->norm_fn_data = norm_fn_data;
+  return SUN_SUCCESS;
+}
+
+SUNErrCode SUNNonlinSolSetGetUpdateNormFn_Newton(
+  SUNNonlinearSolver NLS, SUNNonlinSolGetUpdateNormFn GetUpdateNormFn,
+  void* getupdatenorm_data)
+{
+  SUNFunctionBegin(NLS->sunctx);
+  NEWTON_CONTENT(NLS)->getupdatenorm_fn   = GetUpdateNormFn;
+  NEWTON_CONTENT(NLS)->getupdatenorm_data = getupdatenorm_data;
+  return SUN_SUCCESS;
+}
+
 SUNErrCode SUNNonlinSolSetMaxIters_Newton(SUNNonlinearSolver NLS, int maxiters)
 {
   SUNFunctionBegin(NLS->sunctx);
   SUNAssert(maxiters >= 1, SUN_ERR_ARG_OUTOFRANGE);
   NEWTON_CONTENT(NLS)->maxiters = maxiters;
+  return SUN_SUCCESS;
+}
+
+SUNErrCode SUNNonlinSolSetComputeStiffnessRatio_Newton(SUNNonlinearSolver NLS,
+                                                       sunbooleantype onoff)
+{
+  SUNFunctionBegin(NLS->sunctx);
+  NEWTON_CONTENT(NLS)->compute_stiffr = onoff;
+  if (!onoff) { NEWTON_CONTENT(NLS)->stiffr = SUN_RCONST(0.0); }
   return SUN_SUCCESS;
 }
 
@@ -451,5 +532,13 @@ SUNErrCode SUNNonlinSolGetSysFn_Newton(SUNNonlinearSolver NLS,
 {
   /* return the nonlinear system defining function */
   *SysFn = NEWTON_CONTENT(NLS)->Sys;
+  return SUN_SUCCESS;
+}
+
+SUNErrCode SUNNonlinSolGetStiffnessRatio_Newton(SUNNonlinearSolver NLS,
+                                                sunrealtype* stiffr)
+{
+  /* return the most recently computed stiffness metric */
+  *stiffr = NEWTON_CONTENT(NLS)->stiffr;
   return SUN_SUCCESS;
 }

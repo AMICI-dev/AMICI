@@ -6,7 +6,6 @@ RUN apt-get update && apt-get install -y \
     g++ \
     git \
     libboost-serialization-dev \
-    libboost-chrono-dev \
     libhdf5-serial-dev \
     python-is-python3 \
     python3 \
@@ -53,7 +52,7 @@ RUN . ./.profile && ${VENV_PATH}/bin/python3 -m build --sdist python/sdist && \
     ${VENV_PATH}/bin/pip install git+https://github.com/pysb/pysb@master && \
     ${VENV_PATH}/bin/pip install -U sympy && \
     ${VENV_PATH}/bin/pip install -v $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,vis,jax,sciml] && \
-    ${VENV_PATH}/bin/pip install "git+https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab.git@master#subdirectory=src/python&egg=benchmark_models_petab" && \
+    ${VENV_PATH}/bin/pip install "git+https://github.com/PEtab-dev/petab-benchmark-problems.git@main#subdirectory=src/python&egg=benchmark_models_petab" && \
     scripts/buildBNGL.sh
 
 ENV BNGPATH="${HOME}/ThirdParty/BioNetGen-2.9.2"

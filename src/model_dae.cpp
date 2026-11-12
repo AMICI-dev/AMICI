@@ -96,6 +96,8 @@ void Model_DAE::froot(
     realtype const t, const_N_Vector x, const_N_Vector dx,
     gsl::span<realtype> root
 ) {
+    // the generated function writes all `ne` root function values
+    Expects(root.size() == gsl::narrow<std::size_t>(ne));
     std::ranges::fill(root, 0.0);
     auto const x_pos = compute_x_pos(x);
     // TODO(performance) only dynamic expressions? consider storing a flag

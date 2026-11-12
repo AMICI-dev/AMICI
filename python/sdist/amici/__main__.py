@@ -7,7 +7,6 @@ from . import __version__
 try:
     from .sim.sundials import (
         CpuTimer,
-        compiled_with_openmp,
         has_clibs,
         hdf5_enabled,
     )
@@ -23,9 +22,6 @@ def print_info():
 
     if has_clibs:
         features.append("extensions")
-
-        if compiled_with_openmp():
-            features.append("OpenMP")
 
         if hdf5_enabled:
             features.append("HDF5")

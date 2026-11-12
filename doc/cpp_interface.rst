@@ -77,9 +77,8 @@ all simulation results.
 For running simulations for multiple experimental conditions
 (multiple :cpp:class:`amici::ExpData` instances),
 :cpp:func:`amici::run_simulations`
-provides an alternative entry point. If AMICI (and your application)
-have been compiled with OpenMP support (see installation guide), this allows
-for running those simulations in parallel.
+provides an alternative entry point, which can run those simulations in
+parallel.
 
 A scaffold for a standalone simulation program is automatically generated
 during model import in ``main.cpp`` in the model output directory. This program
@@ -120,8 +119,6 @@ and link the following libraries:
 * CBLAS-compatible BLAS
 * optionally HDF5 (C, HL, and CXX components)
   set CMake option ``ENABLE_HDF5`` to ``OFF`` to build without HDF5-support
-* optionally OpenMP (for parallel simulation of multiple conditions, see
-  :cpp:func:`amici::run_simulations`)
 * optionally boost (only when using serialization of AMICI object)
 
 The simplest and recommended way is using the provide CMake files which take

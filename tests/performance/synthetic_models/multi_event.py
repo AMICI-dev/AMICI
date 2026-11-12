@@ -28,7 +28,7 @@ SIGMA = 0.05
 class MultiEvent(JAXModel):
     """Three sequential impulses — stresses the while_loop in solve()."""
 
-    api_version = "0.0.4"
+    api_version = "0.0.5"
 
     def __init__(self):
         self.jax_py_file = Path(__file__).resolve()
@@ -89,7 +89,7 @@ class MultiEvent(JAXModel):
             ]
         )
 
-    def _delta_x(self, y, p, tcl):
+    def _delta_x(self, t, y, p, tcl, h):
         # delta_x shape: (n_events * n_solver_states,) = (6*1,) = (6,)
         # Odd-indexed events (1, 3, 5) never fire.
         d1, d2, d3 = p

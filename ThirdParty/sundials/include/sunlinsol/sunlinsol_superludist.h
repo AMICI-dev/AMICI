@@ -3,8 +3,11 @@
  * Programmer(s): Cody J. Balos @ LLNL
  * ----------------------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2024, Lawrence Livermore National Security
+ * Copyright (c) 2025-2026, Lawrence Livermore National Security,
+ * University of Maryland Baltimore County, and the SUNDIALS contributors.
+ * Copyright (c) 2013-2025, Lawrence Livermore National Security
  * and Southern Methodist University.
+ * Copyright (c) 2002-2013, Lawrence Livermore National Security.
  * All rights reserved.
  *
  * See the top-level LICENSE and NOTICE files for details.
@@ -36,8 +39,9 @@
 #include <sundials/sundials_matrix.h>
 #include <sundials/sundials_nvector.h>
 #include <sunmatrix/sunmatrix_slunrloc.h>
-#include <superlu_ddefs.h>
 
+#if defined(SUNDIALS_DOUBLE_PRECISION)
+#include <superlu_ddefs.h>
 #define xLUstructInit        dLUstructInit
 #define xScalePermstructInit dScalePermstructInit
 #define xScalePermstructFree dScalePermstructFree
@@ -46,6 +50,19 @@
 #define xScalePermstruct_t   dScalePermstruct_t
 #define xLUstruct_t          dLUstruct_t
 #define xSOLVEstruct_t       dSOLVEstruct_t
+#elif defined(SUNDIALS_SINGLE_PRECISION)
+#include <superlu_sdefs.h>
+#define xLUstructInit        sLUstructInit
+#define xScalePermstructInit sScalePermstructInit
+#define xScalePermstructFree sScalePermstructFree
+#define xLUstructFree        sLUstructFree
+#define xDestroy_LU          sDestroy_LU
+#define xScalePermstruct_t   sScalePermstruct_t
+#define xLUstruct_t          sLUstruct_t
+#define xSOLVEstruct_t       sSOLVEstruct_t
+#else
+#error "Incompatible sunrealtype for SuperLU_DIST"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -116,9 +133,10 @@ SUNDIALS_EXPORT int SUNLinSolSolve_SuperLUDIST(SUNLinearSolver S, SUNMatrix A,
                                                N_Vector x, N_Vector b,
                                                sunrealtype tol);
 SUNDIALS_EXPORT sunindextype SUNLinSolLastFlag_SuperLUDIST(SUNLinearSolver S);
-SUNDIALS_EXPORT SUNErrCode SUNLinSolSpace_SuperLUDIST(SUNLinearSolver S,
-                                                      long int* lenrwLS,
-                                                      long int* leniwLS);
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+  "Work space functions will be removed in version 8.0.0")
+SUNErrCode SUNLinSolSpace_SuperLUDIST(SUNLinearSolver S, long int* lenrwLS,
+                                      long int* leniwLS);
 SUNDIALS_EXPORT SUNErrCode SUNLinSolFree_SuperLUDIST(SUNLinearSolver S);
 
 #ifdef __cplusplus

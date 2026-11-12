@@ -207,11 +207,11 @@ void Solver::setup(
     if (!solver_memory_)
         throw AmiException("Failed to allocated solver memory!");
 
-    /* Initialize CVodes/IDAs solver*/
-    init(t0, x0, dx0);
-
     /* Clear diagnosis storage */
     reset_diagnosis();
+
+    /* Initialize CVodes/IDAs solver*/
+    init(t0, x0, dx0);
 
     /* Apply stored tolerances to sundials solver */
     apply_tolerances();
@@ -264,9 +264,6 @@ void Solver::setup(
     apply_max_nonlin_iters();
     apply_max_conv_fails();
     apply_max_step_size();
-
-    cpu_time_ = 0.0;
-    cpu_time_b_ = 0.0;
 
     apply_constraints();
 }
@@ -353,6 +350,10 @@ void Solver::reset_diagnosis() const {
     nrhsB_.clear();
     netfB_.clear();
     nnlscfB_.clear();
+
+    cpu_time_ = 0.0;
+    cpu_time_b_ = 0.0;
+    t_ = NAN;
 }
 
 void Solver::store_diagnosis() const {

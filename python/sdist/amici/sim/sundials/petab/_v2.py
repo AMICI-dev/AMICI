@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import numbers
+from bisect import bisect_left
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
@@ -108,10 +109,63 @@ class ExperimentManager:
         self._fixed_pid_to_idx: dict[str, int] = {
             id_: i for i, id_ in enumerate(self._fixed_parameter_ids)
         }
+        # maps model observable IDs to observable indices in the model
+        self._obs_id_to_idx: dict[str, int] = {
+            id_: i for i, id_ in enumerate(self._model.get_observable_ids())
+        }
+
+        # Lookup tables for the PEtab problem, which must not change after
+        #  this point.
         # maps PEtab observable IDs to petab Observable instances
         self._petab_id_to_obs: dict[str, v2.Observable] = {
             obs.id: obs for obs in self._petab_problem.observables
         }
+        self._id_to_experiment: dict[str, v2.Experiment] = {
+            exp.id: exp for exp in self._petab_problem.experiments
+        }
+        self._id_to_condition: dict[str, v2.Condition] = {
+            cond.id: cond for cond in self._petab_problem.conditions
+        }
+        self._experiment_id_to_measurements: dict[
+            str | None, list[v2.Measurement]
+        ] = {}
+        for measurement in self._petab_problem.measurements:
+            self._experiment_id_to_measurements.setdefault(
+                measurement.experiment_id, []
+            ).append(measurement)
+        self._x_ids: frozenset[str] = frozenset(self._petab_problem.x_ids)
+        # estimated problem parameter IDs to their indices in
+        #  `Problem.x_free_ids`
+        self._x_free_id_to_idx: dict[str, int] = {
+            pid: i for i, pid in enumerate(self._petab_problem.x_free_ids)
+        }
+        # Indices of free model parameters that are estimated problem
+        #  parameters, mapped to the indices of the latter in
+        #  `Problem.x_free_ids`, in ascending order of the model parameter
+        #  index. Output parameter placeholders are experiment-specific and
+        #  not included.
+        self._model_par_idx_to_x_free_idx: dict[int, int] = {
+            model_par_idx: x_free_idx
+            for model_par_idx, model_par_id in enumerate(
+                self._free_parameter_ids
+            )
+            if (x_free_idx := self._x_free_id_to_idx.get(model_par_id))
+            is not None
+        }
+        # (problem parameter ID, model parameter index) for all problem
+        #  parameters that are free model parameters
+        self._problem_par_to_free_model_par: list[tuple[str, int]] = [
+            (pid, idx)
+            for pid in self._petab_problem.x_ids
+            if (idx := self._pid_to_idx.get(pid)) is not None
+        ]
+        # (problem parameter ID, model parameter index) for all problem
+        #  parameters that are fixed model parameters
+        self._problem_par_to_fixed_model_par: list[tuple[str, int]] = [
+            (pid, idx)
+            for pid in self._petab_problem.x_ids
+            if (idx := self._fixed_pid_to_idx.get(pid)) is not None
+        ]
 
         # create a new model instance from the model module from which
         #  we can get the default parameters
@@ -119,10 +173,25 @@ class ExperimentManager:
         self._original_p = np.array(model0.get_free_parameters())
         self._original_k = np.array(model0.get_fixed_parameters())
 
-    def create_edatas(self) -> list[amici.sim.sundials.ExpData]:
-        """Create ExpData objects for all experiments."""
+    def create_edatas(
+        self, problem_parameters: dict[str, float] | None = None
+    ) -> list[amici.sim.sundials.ExpData]:
+        """Create ExpData objects for all experiments.
+
+        :param problem_parameters:
+            Optional dictionary of problem parameters to apply to the
+            `ExpData` objects, on the scales given by :attr:`parameter_scales`.
+            If `None`, the nominal parameters of the PEtab problem are used.
+        :return:
+            The created `ExpData` objects, in the order of the experiments
+            in the PEtab problem.
+        """
+        if problem_parameters is None:
+            problem_parameters = self.scale_parameters(
+                self._petab_problem.get_x_nominal_dict()
+            )
         return [
-            self.create_edata(experiment)
+            self.create_edata(experiment, problem_parameters)
             for experiment in self._petab_problem.experiments
         ]
 
@@ -148,7 +217,7 @@ class ExperimentManager:
         from amici.sim.sundials import ExpData
 
         if isinstance(experiment, str):
-            experiment = self._petab_problem[experiment]
+            experiment = self._id_to_experiment[experiment]
 
         if len(experiment.periods) > 2:
             raise AssertionError(
@@ -197,13 +266,13 @@ class ExperimentManager:
 
         def get_k(period: ExperimentPeriod):
             """Get the fixed parameters for the period."""
-            changes = self._petab_problem.get_changes_for_period(period)
             fixed_pars_vals = self._original_k.copy()
-            for change in changes:
-                pid = self._fixed_pid_to_idx[change.target_id]
-                # those are only indicator variables that are always number
-                #  literals
-                fixed_pars_vals[pid] = change.target_value
+            for condition_id in period.condition_ids:
+                for change in self._id_to_condition[condition_id].changes:
+                    pid = self._fixed_pid_to_idx[change.target_id]
+                    # those are only indicator variables that are always
+                    #  number literals
+                    fixed_pars_vals[pid] = change.target_value
             return fixed_pars_vals
 
         if experiment.sorted_periods[0].time == -np.inf:
@@ -237,19 +306,14 @@ class ExperimentManager:
         # Get the required time points: this is the superset of timepoints
         #  of the measurements of all observables, including the different
         #  replicates
-        measurements = self._petab_problem.get_measurements_for_experiment(
-            experiment
-        )
-        t_counters = {o.id: Counter() for o in self._petab_problem.observables}
-        unique_t = set()
-        for m in measurements:
-            t_counters[m.observable_id].update([m.time])
-            unique_t.add(m.time)
-
+        measurements = self._get_measurements(experiment.id)
+        # number of replicates for each (observable ID, time) pair
+        n_replicates = Counter((m.observable_id, m.time) for m in measurements)
+        # each time point is needed as often as the maximum number of
+        #  replicates of any observable at that time point
         max_counter = Counter()
-        for t in unique_t:
-            for counter in t_counters.values():
-                max_counter[t] = max(max_counter[t], counter[t])
+        for (_, t), count in n_replicates.items():
+            max_counter[t] = max(max_counter[t], count)
 
         timepoints_w_reps = sorted(max_counter.elements())
 
@@ -259,16 +323,16 @@ class ExperimentManager:
         y, sigma_y = self._get_measurements_and_sigmas(
             measurements=measurements,
             timepoints_w_reps=timepoints_w_reps,
-            observable_ids=self._model.get_observable_ids(),
+            observable_id_to_idx=self._obs_id_to_idx,
         )
         edata.set_measurements(y.flatten())
         edata.set_noise_scales(sigma_y.flatten())
 
     def _get_measurements_and_sigmas(
         self,
-        measurements: list[v2.Measurement],
+        measurements: Sequence[v2.Measurement],
         timepoints_w_reps: Sequence[numbers.Number],
-        observable_ids: Sequence[str],
+        observable_id_to_idx: Mapping[str, int],
     ) -> tuple[np.ndarray, np.ndarray]:
         """
         Get measurements and sigmas
@@ -279,16 +343,16 @@ class ExperimentManager:
         :param measurements:
             Subset of PEtab measurement table for one experiment
         :param timepoints_w_reps:
-            Timepoints for which there exist measurements, including
+            Sorted timepoints for which there exist measurements, including
             replicates.
-        :param observable_ids:
-            List of observable IDs for mapping IDs to indices.
+        :param observable_id_to_idx:
+            Mapping of all model observable IDs to observable indices.
         :return:
             arrays for measurement and sigmas
         """
         # prepare measurement matrix
         y = np.full(
-            shape=(len(timepoints_w_reps), len(observable_ids)),
+            shape=(len(timepoints_w_reps), len(observable_id_to_idx)),
             fill_value=np.nan,
         )
         # prepare sigma matrix
@@ -300,7 +364,7 @@ class ExperimentManager:
 
         for time in sorted(time_to_meas):
             # subselect for time
-            time_ix_0 = timepoints_w_reps.index(time)
+            time_ix_0 = bisect_left(timepoints_w_reps, time)
 
             # remember used time indices for each observable
             time_ix_for_obs_ix = {}
@@ -308,7 +372,7 @@ class ExperimentManager:
             # iterate over measurements
             for m in time_to_meas[time]:
                 # extract observable index
-                observable_ix = observable_ids.index(m.observable_id)
+                observable_ix = observable_id_to_idx[m.observable_id]
 
                 # update time index for observable
                 if observable_ix in time_ix_for_obs_ix:
@@ -362,9 +426,9 @@ class ExperimentManager:
         # TODO: support ndarray in addition to dict?
 
         # check parameter IDs
-        if set(problem_parameters) != set(self._petab_problem.x_ids):
-            missing = set(self._petab_problem.x_ids) - set(problem_parameters)
-            extra = set(problem_parameters) - set(self._petab_problem.x_ids)
+        if problem_parameters.keys() != self._x_ids:
+            missing = self._x_ids - problem_parameters.keys()
+            extra = problem_parameters.keys() - self._x_ids
             msg_parts = []
             if missing:
                 # TODO: support a subset of parameters?
@@ -383,31 +447,34 @@ class ExperimentManager:
         par_vals = np.array(self._original_p)
         pid_to_idx = self._pid_to_idx
         experiment_id = edata.id
-        experiment = self._petab_problem[experiment_id]
+        experiment = self._id_to_experiment[experiment_id]
 
         # plist -- estimated parameters + those mapped via placeholders
         # TODO sufficient to set them during creation of edata
         #   or allow dynamic fixing of parameters?
-        plist = []
+        plist = list(self._model_par_idx_to_x_free_idx)
         placeholder_mappings = self._get_placeholder_mapping(experiment)
-        estimated_par_ids = self._petab_problem.x_free_ids
-        for model_par_idx, model_par_id in enumerate(
-            self._model.get_free_parameter_ids()
-        ):
-            if model_par_id in estimated_par_ids or (
-                (maps_to := placeholder_mappings.get(model_par_id)) is not None
-                and maps_to in estimated_par_ids
-            ):
-                plist.append(model_par_idx)
+        # placeholders mapped to estimated parameters
+        estimated_placeholder_idxs = {
+            model_par_idx
+            for model_par_id, maps_to in placeholder_mappings.items()
+            if maps_to in self._x_free_id_to_idx
+            and (model_par_idx := pid_to_idx.get(model_par_id)) is not None
+            and model_par_idx not in self._model_par_idx_to_x_free_idx
+        }
+        if estimated_placeholder_idxs:
+            plist.extend(estimated_placeholder_idxs)
+            plist.sort()
         edata.plist = plist
 
         # Update fixed parameters in case they are affected by problem
         #  parameters (i.e., parameter table parameters).
         #  Fixed parameters are always on linear scale.
         fixed_par_updates = {
-            p_idx: unscale_parameter(p_val, self._parameter_scales[p_id])
-            for p_id, p_val in problem_parameters.items()
-            if (p_idx := self._fixed_pid_to_idx.get(p_id)) is not None
+            p_idx: unscale_parameter(
+                problem_parameters[p_id], self._parameter_scales[p_id]
+            )
+            for p_id, p_idx in self._problem_par_to_fixed_model_par
         }
         fixed_par_vals = np.asarray(edata.fixed_parameters)
         for p_idx, p_val in fixed_par_updates.items():
@@ -428,15 +495,12 @@ class ExperimentManager:
         # Apply problem parameter values to identical model parameters.
         #  Any other parameter mapping, except for output parameter
         #  placeholders, is handled by events.
-        for k, v in problem_parameters.items():
-            if (idx := pid_to_idx.get(k)) is not None:
-                par_vals[idx] = v
-                pscale[idx] = self._amici_scales[k]
+        for p_id, idx in self._problem_par_to_free_model_par:
+            par_vals[idx] = problem_parameters[p_id]
+            pscale[idx] = self._amici_scales[p_id]
 
         # Handle measurement-specific mappings to placeholders
-        measurements = self._petab_problem.get_measurements_for_experiment(
-            experiment
-        )
+        measurements = self._get_measurements(experiment_id)
 
         def apply_override(placeholder: str, override: sp.Basic):
             """Apply a single placeholder override."""
@@ -560,6 +624,20 @@ class ExperimentManager:
             for par_id, value in problem_parameters.items()
         }
 
+    def _get_measurements(
+        self, experiment_id: str
+    ) -> Sequence[v2.Measurement]:
+        """Get the measurements for the given experiment.
+
+        Equivalent to :meth:`petab.v2.Problem.get_measurements_for_experiment`,
+        but in constant time. The result must not be modified.
+
+        :param experiment_id: The ID of the experiment.
+        :return: The measurements for the given experiment, in the order of
+            the measurement table.
+        """
+        return self._experiment_id_to_measurements.get(experiment_id, ())
+
     def _get_placeholder_mapping(
         self, experiment: v2.Experiment
     ) -> dict[str, str]:
@@ -573,10 +651,8 @@ class ExperimentManager:
         :return: The mapping from model parameter IDs to problem parameter IDs.
         """
         mapping = {}
-        for measurement in self._petab_problem.get_measurements_for_experiment(
-            experiment
-        ):
-            observable = self._petab_problem[measurement.observable_id]
+        for measurement in self._get_measurements(experiment.id):
+            observable = self._petab_id_to_obs[measurement.observable_id]
             for placeholder, override in zip(
                 observable.observable_placeholders,
                 measurement.observable_parameters,
@@ -685,6 +761,11 @@ class PetabSimulator:
 
     This class is used to simulate all experiments of a given PEtab problem
     using a given AMICI model and solver, and to aggregate the results.
+
+    The :class:`amici.sim.sundials.ExpData` objects for the experiments are
+    created by the first call to :meth:`simulate` and reused by all subsequent
+    calls, which only update their parameter-dependent values
+    (see :meth:`ExperimentManager.apply_parameters`).
     """
 
     def __init__(
@@ -694,7 +775,6 @@ class PetabSimulator:
         solver: amici.sim.sundials.Solver | None = None,
         num_threads: int = 1,
         # TODO: allow selecting specific experiments?
-        # TODO: store_edatas: bool
     ):
         """
         Initialize the simulator.
@@ -706,8 +786,7 @@ class PetabSimulator:
             If not provided, a new solver with default settings will be used.
         :param num_threads:
             The number of threads to use for parallel simulation of experiments.
-            Only relevant if multiple experiments are present in the PEtab problem,
-            and if AMICI was compiled with OpenMP support.
+            Only relevant if multiple experiments are present in the PEtab problem.
         """
         self._petab_problem: v2.Problem = em.petab_problem
         self._model = em.model
@@ -722,6 +801,11 @@ class PetabSimulator:
         self._plist_to_problem_par_ix: dict[
             tuple[str, tuple[int, ...]], dict[int, int]
         ] = {}
+        # The `ExpData`s for all experiments, created by the first call to
+        #  `simulate`. Apart from the values set by
+        #  `ExperimentManager.apply_parameters`, they only depend on the
+        #  (immutable) PEtab problem and the model.
+        self._edatas: list[amici.sim.sundials.ExpData] | None = None
 
     @property
     def model(self) -> amici.sim.sundials.Model:
@@ -753,8 +837,8 @@ class PetabSimulator:
             per-experiment data objects and aggregated results.
 
             Note that the returned :class:`amici.sim.sundials.ExpData`
-            instances may be changed by subsequent calls to this function.
-            Create a copy if needed.
+            instances are reused and updated by subsequent calls to this
+            function. They must not be modified. Create a copy if needed.
         """
         if problem_parameters is None:
             # use default parameters, i.e., nominal values for all parameters
@@ -767,20 +851,23 @@ class PetabSimulator:
         )
         problem_parameters = problem_parameters_default | problem_parameters
 
-        # TODO cache edatas
-        edatas = self._exp_man.create_edatas()
-
-        for edata in edatas:
-            self._exp_man.apply_parameters(
-                edata=edata, problem_parameters=problem_parameters
-            )
+        if self._edatas is None:
+            self._edatas = self._exp_man.create_edatas(problem_parameters)
+        else:
+            for edata in self._edatas:
+                self._exp_man.apply_parameters(
+                    edata=edata, problem_parameters=problem_parameters
+                )
 
         rdatas = amici.sim.sundials.run_simulations(
-            self._model, self._solver, edatas, num_threads=self.num_threads
+            self._model,
+            self._solver,
+            self._edatas,
+            num_threads=self.num_threads,
         )
 
         return PetabSimulationResult(
-            edatas=edatas,
+            edatas=list(self._edatas),
             rdatas=rdatas,
             sllh=self._aggregate_sllh(rdatas),
             s2llh=self._aggregate_s2llh(rdatas, use_fim=True),
@@ -825,7 +912,7 @@ class PetabSimulator:
 
         # still needs parameter mapping for placeholders
         for rdata in rdatas:
-            experiment = self._petab_problem[rdata.id]
+            experiment = self._exp_man._id_to_experiment[rdata.id]
             placeholder_mappings = self._exp_man._get_placeholder_mapping(
                 experiment
             )
@@ -873,34 +960,30 @@ class PetabSimulator:
         ) is not None:
             return cached
 
-        model_par_ids = self._model.get_free_parameter_ids()
+        exp_man = self._exp_man
         # problem parameter ID to index of the estimated problem parameters
-        x_free_ix = {
-            pid: ix for ix, pid in enumerate(self._petab_problem.x_free_ids)
-        }
+        x_free_ix = exp_man._x_free_id_to_idx
 
         # Model parameter index to problem parameter index map for estimated
         #  parameters except placeholders.
         #  This is the same for all experiments.
-        ix_map: dict[int, int] = {
-            model_ix: x_free_ix[model_pid]
-            for model_ix, model_pid in enumerate(model_par_ids)
-            if model_pid in x_free_ix
-        }
+        ix_map: dict[int, int] = dict(exp_man._model_par_idx_to_x_free_idx)
 
         # still needs experiment-specific parameter mapping for placeholders
-        experiment = self._petab_problem[rdata.id]
-        placeholder_mappings = self._exp_man._get_placeholder_mapping(
-            experiment
-        )
+        experiment = exp_man._id_to_experiment[rdata.id]
+        placeholder_mappings = exp_man._get_placeholder_mapping(experiment)
         for model_pid, problem_pid in placeholder_mappings.items():
             if (problem_par_ix := x_free_ix.get(problem_pid)) is not None:
-                ix_map[model_par_ids.index(model_pid)] = problem_par_ix
+                ix_map[exp_man._pid_to_idx[model_pid]] = problem_par_ix
             # else: mapped-to parameter is not estimated
 
         # translate model parameter index to plist index
+        model_par_ix_to_plist_ix = {
+            model_par_ix: plist_ix
+            for plist_ix, model_par_ix in enumerate(plist)
+        }
         ix_map = {
-            plist.index(model_par_ix): problem_par_ix
+            model_par_ix_to_plist_ix[model_par_ix]: problem_par_ix
             for model_par_ix, problem_par_ix in ix_map.items()
         }
         self._plist_to_problem_par_ix[cache_key] = ix_map
@@ -989,11 +1072,9 @@ class PetabSimulator:
             # handle non-unique mappings if any
             if problem_par_slice_unique.size < problem_par_slice.size:
                 # index in the mapping arrays of non-unique entries
-                non_unique_indices = [
-                    idx
-                    for idx in range(len(problem_par_slice))
-                    if idx not in unique_index
-                ]
+                is_unique = np.zeros(len(problem_par_slice), dtype=bool)
+                is_unique[unique_index] = True
+                non_unique_indices = np.flatnonzero(~is_unique)
                 for idx in non_unique_indices:
                     s2llh_total[
                         problem_par_slice[idx], problem_par_slice_unique

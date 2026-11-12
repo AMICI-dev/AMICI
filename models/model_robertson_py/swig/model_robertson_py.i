@@ -52,15 +52,13 @@ if t_imported < t_modified:
 _SWIG_VERSION = (SWIG_VERSION_MAJOR, SWIG_VERSION_MINOR, SWIG_VERSION_PATCH)
 
 if (amici_swig := amici.sim.sundials._SWIG_VERSION) != (model_swig := _SWIG_VERSION):
-    import warnings
-    warnings.warn(
+    # Model and amici extensions share SWIG runtime type information, which
+    # differs between SWIG versions.
+    raise amici.AmiciVersionError(
         f"SWIG version mismatch between amici ({amici_swig}) and model "
-        f"({model_swig}). This may lead to unexpected behavior. "
-        "In that case, please recompile the model with swig=="
-        f"{amici_swig[0]}.{amici_swig[1]}.{amici_swig[2]} or rebuild amici "
-        f"with swig=={model_swig[0]}.{model_swig[1]}.{model_swig[2]}.",
-        RuntimeWarning,
-        stacklevel=2,
+        f"({model_swig}). Recompile the model with swig=="
+        f"{amici_swig[0]}.{amici_swig[1]}.{amici_swig[2]}, or rebuild amici "
+        f"with swig=={model_swig[0]}.{model_swig[1]}.{model_swig[2]}."
     )
 %}
 

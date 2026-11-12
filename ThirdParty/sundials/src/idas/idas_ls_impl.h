@@ -1,10 +1,13 @@
 /*-----------------------------------------------------------------
- * Programmer(s): Daniel R. Reynolds @ SMU
+ * Programmer(s): Daniel R. Reynolds @ UMBC
  *                Alan C. Hindmarsh and Radu Serban @ LLNL
  *-----------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2024, Lawrence Livermore National Security
+ * Copyright (c) 2025-2026, Lawrence Livermore National Security,
+ * University of Maryland Baltimore County, and the SUNDIALS contributors.
+ * Copyright (c) 2013-2025, Lawrence Livermore National Security
  * and Southern Methodist University.
+ * Copyright (c) 2002-2013, Lawrence Livermore National Security.
  * All rights reserved.
  *
  * See the top-level LICENSE and NOTICE files for details.
@@ -93,7 +96,7 @@ typedef struct IDALsMemRec
   int (*pfree)(IDAMem IDA_mem);
   void* pdata;
 
-  /* Jacobian times vector compuation
+  /* Jacobian times vector computation
      (a) jtimes function provided by the user:
          - jt_data == user_data
          - jtimesDQ == SUNFALSE
@@ -141,7 +144,7 @@ int idaLsSolve(IDAMem IDA_mem, N_Vector b, N_Vector weight, N_Vector ycur,
 int idaLsPerf(IDAMem IDA_mem, int perftask);
 int idaLsFree(IDAMem IDA_mem);
 
-/* Auxilliary functions */
+/* Auxiliary functions */
 int idaLsInitializeCounters(IDALsMem idals_mem);
 int idaLs_AccessLMem(void* ida_mem, const char* fname, IDAMem* IDA_mem,
                      IDALsMem* idals_mem);
@@ -150,16 +153,8 @@ int idaLs_AccessLMem(void* ida_mem, const char* fname, IDAMem* IDA_mem,
   Error and Warning Messages
   ---------------------------------------------------------------*/
 
-#if defined(SUNDIALS_EXTENDED_PRECISION)
-#define MSG_LS_TIME "at t = %Lg, "
-#define MSG_LS_FRMT "%Le."
-#elif defined(SUNDIALS_DOUBLE_PRECISION)
-#define MSG_LS_TIME "at t = %lg, "
-#define MSG_LS_FRMT "%le."
-#else
-#define MSG_LS_TIME "at t = %g, "
-#define MSG_LS_FRMT "%e."
-#endif
+#define MSG_LS_TIME "at t = " SUN_FORMAT_G ", "
+#define MSG_LS_FRMT SUN_FORMAT_G "."
 
 /* Error Messages */
 #define MSG_LS_IDAMEM_NULL "Integrator memory is NULL."

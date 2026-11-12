@@ -13,6 +13,10 @@
 
 #include "SuiteSparse_config.h"
 
+#if defined ( MATLAB_MEX_FILE )
+#include "mex.h"
+#endif
+
 /* -------------------------------------------------------------------------- */
 /* SuiteSparse_config : a static struct */
 /* -------------------------------------------------------------------------- */
@@ -742,35 +746,66 @@ int SuiteSparse_divcomplex
 const char *SuiteSparse_BLAS_library ( void )
 {
     #if defined ( BLAS_Intel10_64ilp )
-        return ("Intel MKL 64ilp BLAS (64-bit integers)") ;
+        return ("Intel MKL 64ilp BLAS (64-bit integers, threaded)") ;
+    #elif defined ( BLAS_Intel10_64ilp_seq )
+        return ("Intel MKL 64ilp_seq BLAS (64-bit integers, sequential)") ;
     #elif defined ( BLAS_Intel10_64lp )
-        return ("Intel MKL 64lp BLAS (32-bit integers)") ;
+        return ("Intel MKL 64lp BLAS (32-bit integers, threaded)") ;
+    #elif defined ( BLAS_Intel10_64lp_seq )
+        return ("Intel MKL 64lp_seq BLAS (32-bit integers, sequential)") ;
+    #elif defined ( BLAS_Intel10_64_dyn )
+        return ("Intel MKL 64_dyn BLAS (64-bit integers, dynamic)") ;
+
     #elif defined ( BLAS_Apple )
         return ("Apple Accelerate Framework BLAS (32-bit integers)") ;
+
     #elif defined ( BLAS_Arm_ilp64_mp )
-        return ("ARM MP BLAS (64-bit integers)") ;
+        return ("ARM BLAS (64-bit integers, threaded)") ;
+    #elif defined ( BLAS_Arm_ilp64 )
+        return ("ARM BLAS (64-bit integers, sequential)") ;
     #elif defined ( BLAS_Arm_mp )
-        return ("ARM MP BLAS (32-bit integers)") ;
+        return ("ARM BLAS (32-bit integers, threaded)") ;
+    #elif defined ( BLAS_Arm )
+        return ("ARM BLAS (32-bit integers, sequential)") ;
+
+    #elif defined ( BLAS_ACML_MP )
+        return ((sizeof (SUITESPARSE_BLAS_INT) == 8) ?
+            "AMD BLAS (64-bit integers, threaded)" :
+            "AMD BLAS (32-bit integers, threaded)") ;
+    #elif defined ( BLAS_ACML )
+        return ((sizeof (SUITESPARSE_BLAS_INT) == 8) ?
+            "AMD BLAS (64-bit integers, sequential)" :
+            "AMD BLAS (32-bit integers, sequential)") ;
+
     #elif defined ( BLAS_IBMESSL_SMP )
         return ((sizeof (SUITESPARSE_BLAS_INT) == 8) ?
-            "IBMESSL_SMP BLAS (64-bit integers)" :
-            "IBMESSL_SMP BLAS (32-bit integers)") ;
+            "IBMESSL BLAS (64-bit integers, threaded)" :
+            "IBMESSL BLAS (32-bit integers, threaded)") ;
+    #elif defined ( BLAS_IBMESSL )
+        return ((sizeof (SUITESPARSE_BLAS_INT) == 8) ?
+            "IBMESSL BLAS (64-bit integers, sequential)" :
+            "IBMESSL BLAS (32-bit integers, sequential)") ;
+
     #elif defined ( BLAS_OpenBLAS )
         return ((sizeof (SUITESPARSE_BLAS_INT) == 8) ?
             "OpenBLAS (64-bit integers)" :
             "OpenBLAS (32-bit integers)") ;
+
     #elif defined ( BLAS_FLAME )
         return ((sizeof (SUITESPARSE_BLAS_INT) == 8) ?
             "FLAME (64-bit integers)" :
             "FLAME (32-bit integers)") ;
+
     #elif defined ( BLAS_Generic )
         return ((sizeof (SUITESPARSE_BLAS_INT) == 8) ?
             "Reference BLAS (64-bit integers)" :
             "Reference BLAS (32-bit integers)") ;
+
     #else
         return ((sizeof (SUITESPARSE_BLAS_INT) == 8) ?
             "Other BLAS (64-bit integers)" :
             "Other BLAS (32-bit integers)") ;
+
     #endif
 }
 

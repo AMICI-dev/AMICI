@@ -61,7 +61,12 @@ endif ( )
 
 
 # Import target
-include ( ${CMAKE_CURRENT_LIST_DIR}/AMDTargets.cmake )
+if ( @BUILD_SHARED_LIBS@ )
+    include ( ${CMAKE_CURRENT_LIST_DIR}/AMDTargets.cmake )
+endif ( )
+if ( @BUILD_STATIC_LIBS@ )
+    include ( ${CMAKE_CURRENT_LIST_DIR}/AMDTargets_static.cmake OPTIONAL )
+endif ( )
 
 # The following is only for backward compatibility with FindAMD.
 

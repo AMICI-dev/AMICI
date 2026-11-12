@@ -7,6 +7,7 @@ using namespace amici;
 %}
 
 %ignore process_simulation_objects;
+%ignore amici::ReturnData::invalidate;
 // ModelContext is already ignored globally in amici.i
 
 // Process symbols in header

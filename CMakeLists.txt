@@ -99,6 +99,11 @@ endif()
 if($ENV{ENABLE_GCOV_COVERAGE})
   string(APPEND CMAKE_CXX_FLAGS_DEBUG " --coverage")
   string(APPEND CMAKE_EXE_LINKER_FLAGS_DEBUG " --coverage")
+  # run_simulations runs simulations in parallel threads. Without atomic
+  # updates, coverage counters are corrupted (lost updates, negative counts).
+  if(CMAKE_CXX_COMPILER_ID MATCHES "^(GNU|Clang|AppleClang)$")
+    string(APPEND CMAKE_CXX_FLAGS_DEBUG " -fprofile-update=atomic")
+  endif()
 endif()
 
 # Legacy environment variables from Python-sdist times
@@ -122,8 +127,7 @@ endif()
 include(GNUInstallDirs)
 
 include(AmiciFindBLAS)
-find_package(OpenMP COMPONENTS CXX)
-find_package(Boost COMPONENTS chrono)
+find_package(Threads REQUIRED)
 
 if(ENABLE_HDF5)
   find_package(
@@ -159,7 +163,7 @@ else()
   set(VENDORED_SUNDIALS_INSTALL_DIR ${VENDORED_SUNDIALS_BUILD_DIR})
 endif()
 set(SUNDIALS_ROOT "${VENDORED_SUNDIALS_INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}")
-find_package(SUNDIALS 7.1.1 REQUIRED CONFIG PATHS
+find_package(SUNDIALS 7.9.0 REQUIRED CONFIG PATHS
              "${SUNDIALS_ROOT}/cmake/sundials/")
 message(STATUS "Found SUNDIALS: ${SUNDIALS_DIR}")
 
@@ -278,9 +282,6 @@ if("$ENV{ENABLE_AMICI_DEBUGGING}"
   endforeach()
 endif()
 
-target_compile_definitions(
-  ${PROJECT_NAME} PUBLIC $<$<BOOL:${Boost_CHRONO_FOUND}>:HAS_BOOST_CHRONO>)
-
 target_link_libraries(
   ${PROJECT_NAME}
   PUBLIC SUNDIALS::nvecserial_static
@@ -293,8 +294,7 @@ target_link_libraries(
          SUNDIALS::sunlinsolsptfqmr_static
          SUNDIALS::cvodes_static
          SUNDIALS::idas_static
-         $<$<BOOL:${Boost_CHRONO_FOUND}>:Boost::chrono>
-         $<$<BOOL:${OpenMP_CXX_FOUND}>:OpenMP::OpenMP_CXX>
+         Threads::Threads
          ${CMAKE_DL_LIBS}
   PRIVATE
     BLAS::BLAS

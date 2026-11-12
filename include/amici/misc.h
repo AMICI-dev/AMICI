@@ -11,10 +11,6 @@
 #include <regex>
 #include <vector>
 
-#ifdef HAS_BOOST_CHRONO
-#include <boost/chrono/thread_clock.hpp>
-#endif
-
 #include <gsl/gsl-lite.hpp>
 
 namespace amici {
@@ -281,25 +277,25 @@ template <typename T> bool heaviside_differs(T a, T b) {
     return (a < T{0} && b >= T{0}) || (a >= T{0} && b < T{0});
 }
 
-#ifdef BOOST_CHRONO_HAS_THREAD_CLOCK
-/** Tracks elapsed CPU time using boost::chrono::thread_clock. */
+/**
+ * @brief Tracks elapsed CPU time of the calling thread.
+ *
+ * On platforms without a precise per-thread CPU clock, such as Windows,
+ * this uses std::clock instead, which tracks the CPU time of the whole
+ * process, or on Windows, the wall time (see CpuTimer::uses_thread_clock).
+ */
 class CpuTimer {
-    using clock = boost::chrono::thread_clock;
-    using time_point = clock::time_point;
-    using d_seconds = boost::chrono::duration<double>;
-    using d_milliseconds = boost::chrono::duration<double, boost::milli>;
-
   public:
     /**
      * @brief Constructor
      */
     CpuTimer()
-        : start_(clock::now()) {}
+        : start_(now_seconds()) {}
 
     /**
      * @brief Reset the timer
      */
-    void reset() { start_ = clock::now(); }
+    void reset() { start_ = now_seconds(); }
 
     /**
      * @brief Get elapsed CPU time in seconds since initialization or last reset
@@ -307,7 +303,7 @@ class CpuTimer {
      * @return CPU time in seconds
      */
     [[nodiscard]] double elapsed_seconds() const {
-        return d_seconds(clock::now() - start_).count();
+        return now_seconds() - start_;
     }
 
     /**
@@ -317,65 +313,27 @@ class CpuTimer {
      * @return CPU time in milliseconds
      */
     [[nodiscard]] double elapsed_milliseconds() const {
-        return d_milliseconds(clock::now() - start_).count();
+        return elapsed_seconds() * 1000.0;
     }
 
     /**
      * @brief Whether the timer uses a thread clock (i.e. provides proper,
      * thread-specific CPU time).
      */
-    static bool constexpr uses_thread_clock = true;
+    static bool const uses_thread_clock;
 
   private:
-    /** Start time */
-    time_point start_;
-};
-#else
-/** Tracks elapsed CPU time using std::clock. */
-class CpuTimer {
-  public:
     /**
-     * @brief Constructor
-     */
-    CpuTimer()
-        : start_(std::clock()) {}
-
-    /**
-     * @brief Reset the timer
-     */
-    void reset() { start_ = std::clock(); }
-
-    /**
-     * @brief Get elapsed CPU time in seconds since initialization or last reset
+     * @brief Get the current CPU time of the calling thread, or the value
+     * of std::clock if uses_thread_clock is false.
      *
      * @return CPU time in seconds
      */
-    double elapsed_seconds() const {
-        return static_cast<double>(std::clock() - start_) / CLOCKS_PER_SEC;
-    }
+    static double now_seconds();
 
-    /**
-     * @brief Get elapsed CPU time in milliseconds since initialization or last
-     * reset
-     *
-     * @return CPU time in milliseconds
-     */
-    double elapsed_milliseconds() const {
-        return static_cast<double>(std::clock() - start_) * 1000.0
-               / CLOCKS_PER_SEC;
-    }
-
-    /**
-     * @brief Whether the timer uses a thread clock (i.e. provides proper,
-     * thread-specific CPU time).
-     */
-    static bool const uses_thread_clock = false;
-
-  private:
-    /** Start time */
-    std::clock_t start_;
+    /** Start time in seconds */
+    double start_;
 };
-#endif
 
 } // namespace amici
 

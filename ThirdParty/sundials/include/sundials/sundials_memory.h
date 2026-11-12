@@ -2,8 +2,11 @@
  * Programmer(s): Cody J. Balos @ LLNL
  * -----------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2024, Lawrence Livermore National Security
+ * Copyright (c) 2025-2026, Lawrence Livermore National Security,
+ * University of Maryland Baltimore County, and the SUNDIALS contributors.
+ * Copyright (c) 2013-2025, Lawrence Livermore National Security
  * and Southern Methodist University.
+ * Copyright (c) 2002-2013, Lawrence Livermore National Security.
  * All rights reserved.
  *
  * See the top-level LICENSE and NOTICE files for details.
@@ -25,21 +28,24 @@
 extern "C" {
 #endif
 
-typedef enum
+enum SUNMemoryType
 {
   SUNMEMTYPE_HOST,   /* pageable memory accessible on the host     */
-  SUNMEMTYPE_PINNED, /* page-locked memory accesible on the host   */
+  SUNMEMTYPE_PINNED, /* page-locked memory accessible on the host   */
   SUNMEMTYPE_DEVICE, /* memory accessible from the device          */
   SUNMEMTYPE_UVM     /* memory accessible from the host or device  */
-} SUNMemoryType;
+};
 
+#ifndef SWIG
+typedef enum SUNMemoryType SUNMemoryType;
+#endif
 /*
  * SUNMemory is a simple abstraction of a pointer to some
- * contiguos memory, so that we can keep track of its type
+ * contiguous memory, so that we can keep track of its type
  * and its ownership.
  */
 
-typedef struct SUNMemory_* SUNMemory;
+typedef _SUNDIALS_STRUCT_ SUNMemory_* SUNMemory;
 
 struct SUNMemory_
 {
@@ -47,6 +53,7 @@ struct SUNMemory_
   SUNMemoryType type;
   sunbooleantype own;
   size_t bytes;
+  size_t stride;
 };
 
 /* Creates a new SUNMemory object with a NULL ptr */
@@ -57,12 +64,13 @@ SUNDIALS_EXPORT SUNMemory SUNMemoryNewEmpty(SUNContext sunctx);
  * and copy SUNMemory.
  */
 
-typedef struct SUNMemoryHelper_Ops_* SUNMemoryHelper_Ops;
-typedef struct SUNMemoryHelper_* SUNMemoryHelper;
+typedef _SUNDIALS_STRUCT_ SUNMemoryHelper_Ops_* SUNMemoryHelper_Ops;
+typedef _SUNDIALS_STRUCT_ SUNMemoryHelper_* SUNMemoryHelper;
 
 struct SUNMemoryHelper_
 {
   void* content;
+  void* queue;
   SUNMemoryHelper_Ops ops;
   SUNContext sunctx;
 };
@@ -77,6 +85,8 @@ struct SUNMemoryHelper_Ops_
                      size_t mem_size, void* queue);
 
   /* operations that provide default implementations */
+  SUNErrCode (*allocstrided)(SUNMemoryHelper, SUNMemory* memptr, size_t mem_size,
+                             size_t stride, SUNMemoryType mem_type, void* queue);
   SUNErrCode (*copyasync)(SUNMemoryHelper, SUNMemory dst, SUNMemory src,
                           size_t mem_size, void* queue);
   SUNErrCode (*getallocstats)(SUNMemoryHelper, SUNMemoryType mem_type,
@@ -116,6 +126,11 @@ SUNErrCode SUNMemoryHelper_Alloc(SUNMemoryHelper, SUNMemory* memptr,
                                  void* queue);
 
 SUNDIALS_EXPORT
+SUNErrCode SUNMemoryHelper_AllocStrided(SUNMemoryHelper, SUNMemory* memptr,
+                                        size_t mem_size, size_t stride,
+                                        SUNMemoryType mem_type, void* queue);
+
+SUNDIALS_EXPORT
 SUNErrCode SUNMemoryHelper_Dealloc(SUNMemoryHelper, SUNMemory mem, void* queue);
 
 SUNDIALS_EXPORT
@@ -144,6 +159,10 @@ SUNMemoryHelper SUNMemoryHelper_Clone(SUNMemoryHelper);
 /* Frees the SUNMemoryHelper */
 SUNDIALS_EXPORT
 SUNErrCode SUNMemoryHelper_Destroy(SUNMemoryHelper);
+
+/* Sets the default queue to use for memory helper operations */
+SUNDIALS_EXPORT
+SUNErrCode SUNMemoryHelper_SetDefaultQueue(SUNMemoryHelper, void* queue);
 
 /*
  * Utility SUNMemoryHelper functions.

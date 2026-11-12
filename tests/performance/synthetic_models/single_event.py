@@ -28,7 +28,7 @@ SIGMA = 0.05
 class SingleEvent(JAXModel):
     """Constant growth with one impulse — tests event detection / _handle_event."""
 
-    api_version = "0.0.4"
+    api_version = "0.0.5"
 
     def __init__(self):
         self.jax_py_file = Path(__file__).resolve()
@@ -89,7 +89,7 @@ class SingleEvent(JAXModel):
         )  # falls through 0 at t_event  → never fires (h[1]=1 from init)
         return jnp.array([eroot0, eroot1])
 
-    def _delta_x(self, y, p, tcl):
+    def _delta_x(self, t, y, p, tcl, h):
         # delta_x shape: (n_events * n_solver_states,) = (2*1,) = (2,)
         # Event 0 fires: x += delta
         # Event 1 never fires: 0

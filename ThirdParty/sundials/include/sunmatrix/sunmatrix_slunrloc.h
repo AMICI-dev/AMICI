@@ -3,8 +3,11 @@
  * Programmer(s): Cody Balos @ LLNL
  * ----------------------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2024, Lawrence Livermore National Security
+ * Copyright (c) 2025-2026, Lawrence Livermore National Security,
+ * University of Maryland Baltimore County, and the SUNDIALS contributors.
+ * Copyright (c) 2013-2025, Lawrence Livermore National Security
  * and Southern Methodist University.
+ * Copyright (c) 2002-2013, Lawrence Livermore National Security.
  * All rights reserved.
  *
  * See the top-level LICENSE and NOTICE files for details.
@@ -21,7 +24,16 @@
 
 #include <stdio.h>
 #include <sundials/sundials_matrix.h>
+
+#if defined(SUNDIALS_DOUBLE_PRECISION)
 #include <superlu_ddefs.h>
+#define pxgsmv_comm_t pdgsmv_comm_t
+#elif defined(SUNDIALS_SINGLE_PRECISION)
+#include <superlu_sdefs.h>
+#define pxgsmv_comm_t psgsmv_comm_t
+#else
+#error "Incompatible sunrealtype for SuperLU_DIST"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,7 +50,7 @@ struct _SUNMatrixContent_SLUNRloc
   sunbooleantype own_data;
   gridinfo_t* grid;
   sunindextype* row_to_proc;
-  pdgsmv_comm_t* gsmv_comm;
+  pxgsmv_comm_t* gsmv_comm;
   SuperMatrix* A_super;
   SuperMatrix* ACS_super;
 };
@@ -76,8 +88,9 @@ SUNDIALS_EXPORT SUNErrCode SUNMatScaleAddI_SLUNRloc(sunrealtype c, SUNMatrix A);
 SUNDIALS_EXPORT SUNErrCode SUNMatMatvecSetup_SLUNRloc(SUNMatrix A);
 SUNDIALS_EXPORT SUNErrCode SUNMatMatvec_SLUNRloc(SUNMatrix A, N_Vector x,
                                                  N_Vector y);
-SUNDIALS_EXPORT SUNErrCode SUNMatSpace_SLUNRloc(SUNMatrix A, long int* lenrw,
-                                                long int* leniw);
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+  "Work space functions will be removed in version 8.0.0")
+SUNErrCode SUNMatSpace_SLUNRloc(SUNMatrix A, long int* lenrw, long int* leniw);
 
 #ifdef __cplusplus
 }

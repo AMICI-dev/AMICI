@@ -2,8 +2,11 @@
  * Programmer(s): Cody J. Balos @ LLNL
  * -----------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2024, Lawrence Livermore National Security
+ * Copyright (c) 2025-2026, Lawrence Livermore National Security,
+ * University of Maryland Baltimore County, and the SUNDIALS contributors.
+ * Copyright (c) 2013-2025, Lawrence Livermore National Security
  * and Southern Methodist University.
+ * Copyright (c) 2002-2013, Lawrence Livermore National Security.
  * All rights reserved.
  *
  * See the top-level LICENSE and NOTICE files for details.
@@ -24,7 +27,7 @@
 #include "sundials/sundials_types.h"
 #include "sundials_debug.h"
 
-#if defined(SUNDIALS_BUILD_WITH_PROFILING)
+#if defined(SUNDIALS_ENABLE_PROFILING)
 static SUNProfiler getSUNProfiler(SUNMemoryHelper H)
 {
   return (H->sunctx->profiler);
@@ -40,7 +43,8 @@ SUNMemory SUNMemoryNewEmpty(SUNContext sunctx)
   mem = (SUNMemory)malloc(sizeof(struct SUNMemory_));
   SUNAssertNull(mem, SUN_ERR_MALLOC_FAIL);
 
-  mem->bytes = 0;
+  mem->bytes  = 0;
+  mem->stride = 1;
 
   return (mem);
 }
@@ -61,6 +65,7 @@ SUNMemoryHelper SUNMemoryHelper_NewEmpty(SUNContext sunctx)
   /* Set all ops to NULL */
   memset(helper->ops, 0, sizeof(struct SUNMemoryHelper_Ops_));
   helper->content = NULL;
+  helper->queue   = NULL;
   helper->sunctx  = sunctx;
 
   return helper;
@@ -142,6 +147,20 @@ SUNErrCode SUNMemoryHelper_Alloc(SUNMemoryHelper helper, SUNMemory* memptr,
   SUNAssert(helper->ops->alloc, SUN_ERR_NOT_IMPLEMENTED);
   SUNDIALS_MARK_FUNCTION_BEGIN(getSUNProfiler(helper));
   ier = helper->ops->alloc(helper, memptr, mem_size, mem_type, queue);
+  SUNDIALS_MARK_FUNCTION_END(getSUNProfiler(helper));
+  return ier;
+}
+
+SUNErrCode SUNMemoryHelper_AllocStrided(SUNMemoryHelper helper, SUNMemory* memptr,
+                                        size_t mem_size, size_t stride,
+                                        SUNMemoryType mem_type, void* queue)
+{
+  SUNErrCode ier = SUN_SUCCESS;
+  SUNFunctionBegin(helper->sunctx);
+  SUNAssert(helper->ops->allocstrided, SUN_ERR_NOT_IMPLEMENTED);
+  SUNDIALS_MARK_FUNCTION_BEGIN(getSUNProfiler(helper));
+  ier = helper->ops->allocstrided(helper, memptr, mem_size, stride, mem_type,
+                                  queue);
   SUNDIALS_MARK_FUNCTION_END(getSUNProfiler(helper));
   return ier;
 }
@@ -231,4 +250,13 @@ SUNMemoryHelper SUNMemoryHelper_Clone(SUNMemoryHelper helper)
     }
   }
   else { return (helper->ops->clone(helper)); }
+}
+
+SUNErrCode SUNMemoryHelper_SetDefaultQueue(SUNMemoryHelper helper, void* queue)
+{
+  SUNFunctionBegin(helper->sunctx);
+
+  helper->queue = queue;
+
+  return SUN_SUCCESS;
 }

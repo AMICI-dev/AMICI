@@ -1,10 +1,13 @@
 /* -----------------------------------------------------------------
- * Programmer(s): Daniel Reynolds, Ashley Crawford @ SMU
- * Based on sundials_pcg.c code, written by Daniel Reynolds @ SMU
+ * Programmer(s): Daniel Reynolds, Ashley Crawford @ UMBC
+ * Based on sundials_pcg.c code, written by Daniel Reynolds @ UMBC
  * -----------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2024, Lawrence Livermore National Security
+ * Copyright (c) 2025-2026, Lawrence Livermore National Security,
+ * University of Maryland Baltimore County, and the SUNDIALS contributors.
+ * Copyright (c) 2013-2025, Lawrence Livermore National Security
  * and Southern Methodist University.
+ * Copyright (c) 2002-2013, Lawrence Livermore National Security.
  * All rights reserved.
  *
  * See the top-level LICENSE and NOTICE files for details.
@@ -18,12 +21,14 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <sundials/priv/sundials_errors_impl.h>
 #include <sundials/sundials_math.h>
 #include <sunlinsol/sunlinsol_pcg.h>
-
 #include "sundials_logger_impl.h"
+
+#include "sundials_cli.h"
 #include "sundials_macros.h"
 
 #define ZERO SUN_RCONST(0.0)
@@ -38,6 +43,18 @@
 #define PCG_CONTENT(S) ((SUNLinearSolverContent_PCG)(S->content))
 #define PRETYPE(S)     (PCG_CONTENT(S)->pretype)
 #define LASTFLAG(S)    (PCG_CONTENT(S)->last_flag)
+
+/*
+ * -----------------------------------------------------------------
+ * unexported functions
+ * -----------------------------------------------------------------
+ */
+
+static SUNErrCode setFromCommandLine_PCG(SUNLinearSolver S, const char* LSid,
+                                         int argc, char* argv[]);
+
+SUNErrCode SUNLinSolSetOptions_PCG(SUNLinearSolver S, const char* LSid,
+                                   const char* file_name, int argc, char* argv[]);
 
 /*
  * -----------------------------------------------------------------
@@ -72,6 +89,7 @@ SUNLinearSolver SUNLinSol_PCG(N_Vector y, int pretype, int maxl, SUNContext sunc
   S->ops->gettype           = SUNLinSolGetType_PCG;
   S->ops->getid             = SUNLinSolGetID_PCG;
   S->ops->setatimes         = SUNLinSolSetATimes_PCG;
+  S->ops->setoptions        = SUNLinSolSetOptions_PCG;
   S->ops->setpreconditioner = SUNLinSolSetPreconditioner_PCG;
   S->ops->setscalingvectors = SUNLinSolSetScalingVectors_PCG;
   S->ops->setzeroguess      = SUNLinSolSetZeroGuess_PCG;
@@ -125,6 +143,85 @@ SUNLinearSolver SUNLinSol_PCG(N_Vector y, int pretype, int maxl, SUNContext sunc
   SUNCheckLastErrNull();
 
   return (S);
+}
+
+/* ----------------------------------------------------------------------------
+ * Function to control set routines via the command line or file
+ */
+
+SUNErrCode SUNLinSolSetOptions_PCG(SUNLinearSolver S, const char* LSid,
+                                   SUNDIALS_MAYBE_UNUSED const char* file_name,
+                                   int argc, char* argv[])
+{
+  SUNFunctionBegin(S->sunctx);
+
+  /* File-based option control is currently unimplemented */
+  SUNAssert((file_name == NULL || strlen(file_name) == 0),
+            SUN_ERR_ARG_INCOMPATIBLE);
+
+  if (argc > 0 && argv != NULL)
+  {
+    SUNCheckCall(setFromCommandLine_PCG(S, LSid, argc, argv));
+  }
+
+  return SUN_SUCCESS;
+}
+
+/* ----------------------------------------------------------------------------
+ * Function to control set routines via the command line
+ */
+
+static SUNErrCode setFromCommandLine_PCG(SUNLinearSolver S, const char* LSid,
+                                         int argc, char* argv[])
+{
+  SUNFunctionBegin(S->sunctx);
+
+  /* Prefix for options to set */
+  const char* default_id = "sunlinearsolver";
+  size_t offset          = strlen(default_id) + 1;
+  if (LSid != NULL && strlen(LSid) > 0) { offset = strlen(LSid) + 1; }
+  char* prefix = (char*)malloc(sizeof(char) * (offset + 1));
+  if (LSid != NULL && strlen(LSid) > 0) { strcpy(prefix, LSid); }
+  else { strcpy(prefix, default_id); }
+  strcat(prefix, ".");
+
+  for (int idx = 1; idx < argc; idx++)
+  {
+    int retval;
+
+    /* skip command-line arguments that do not begin with correct prefix */
+    if (strncmp(argv[idx], prefix, strlen(prefix)) != 0) { continue; }
+
+    /* control over PrecType function */
+    if (strcmp(argv[idx] + offset, "prec_type") == 0)
+    {
+      idx += 1;
+      int iarg = atoi(argv[idx]);
+      retval   = SUNLinSol_PCGSetPrecType(S, iarg);
+      if (retval != SUN_SUCCESS)
+      {
+        free(prefix);
+        return retval;
+      }
+      continue;
+    }
+
+    /* control over Maxl function */
+    if (strcmp(argv[idx] + offset, "maxl") == 0)
+    {
+      idx += 1;
+      int iarg = atoi(argv[idx]);
+      retval   = SUNLinSol_PCGSetMaxl(S, iarg);
+      if (retval != SUN_SUCCESS)
+      {
+        free(prefix);
+        return retval;
+      }
+      continue;
+    }
+  }
+  free(prefix);
+  return SUN_SUCCESS;
 }
 
 /* ----------------------------------------------------------------------------
@@ -280,7 +377,7 @@ int SUNLinSolSolve_PCG(SUNLinearSolver S, SUNDIALS_MAYBE_UNUSED SUNMatrix nul,
   int* nli;
   int status;
 
-  /* Make local shorcuts to solver variables. */
+  /* Make local shortcuts to solver variables. */
   l_max     = PCG_CONTENT(S)->maxl;
   r         = PCG_CONTENT(S)->r;
   p         = PCG_CONTENT(S)->p;
@@ -311,6 +408,10 @@ int SUNLinSolSolve_PCG(SUNLinearSolver S, SUNDIALS_MAYBE_UNUSED SUNMatrix nul,
   /* If preconditioning, check if psolve has been set */
   SUNAssert(!UsePrec || psolve, SUN_ERR_ARG_CORRUPT);
 
+  SUNLogInfo(S->sunctx->logger, "linear-solver", "solver = pcg");
+
+  SUNLogInfo(S->sunctx->logger, "begin-iterations-list", "");
+
   /* Set r to initial residual r_0 = b - A*x_0 */
   if (*zeroguess)
   {
@@ -325,6 +426,10 @@ int SUNLinSolSolve_PCG(SUNLinearSolver S, SUNDIALS_MAYBE_UNUSED SUNMatrix nul,
       *zeroguess  = SUNFALSE;
       LASTFLAG(S) = (status < 0) ? SUNLS_ATIMES_FAIL_UNREC
                                  : SUNLS_ATIMES_FAIL_REC;
+
+      SUNLogInfo(S->sunctx->logger, "end-iterations-list",
+                 "status = failed matvec");
+
       return (LASTFLAG(S));
     }
     N_VLinearSum(ONE, b, -ONE, r, r);
@@ -346,16 +451,16 @@ int SUNLinSolSolve_PCG(SUNLinearSolver S, SUNDIALS_MAYBE_UNUSED SUNMatrix nul,
   SUNCheckLastErr();
   *res_norm = r0_norm = rho = SUNRsqrt(rho);
 
-#if SUNDIALS_LOGGING_LEVEL >= SUNDIALS_LOGGING_INFO
-  SUNLogger_QueueMsg(S->sunctx->logger, SUN_LOGLEVEL_INFO, "SUNLinSolSolve_PCG",
-                     "initial-residual", "nli = %li, resnorm = %.16g",
-                     (long int)0, *res_norm);
-#endif
-
   if (rho <= delta)
   {
     *zeroguess  = SUNFALSE;
     LASTFLAG(S) = SUN_SUCCESS;
+
+    SUNLogInfo(S->sunctx->logger, "end-iterations-list",
+               "cur-iter = 0, total-iters = 0, res-norm = " SUN_FORMAT_G
+               ", status = success",
+               *res_norm);
+
     return (LASTFLAG(S));
   }
 
@@ -368,6 +473,12 @@ int SUNLinSolSolve_PCG(SUNLinearSolver S, SUNDIALS_MAYBE_UNUSED SUNMatrix nul,
       *zeroguess  = SUNFALSE;
       LASTFLAG(S) = (status < 0) ? SUNLS_PSOLVE_FAIL_UNREC
                                  : SUNLS_PSOLVE_FAIL_REC;
+
+      SUNLogInfo(S->sunctx->logger, "end-iterations-list",
+                 "cur-iter = 0, total-iters = 0, res-norm = " SUN_FORMAT_G
+                 ", status = failed preconditioner solve",
+                 *res_norm);
+
       return (LASTFLAG(S));
     }
   }
@@ -385,9 +496,16 @@ int SUNLinSolSolve_PCG(SUNLinearSolver S, SUNDIALS_MAYBE_UNUSED SUNMatrix nul,
   N_VScale(ONE, z, p);
   SUNCheckLastErr();
 
+  SUNLogInfo(S->sunctx->logger, "end-iterations-list",
+             "cur-iter = 0, total-iters = 0, res-norm = " SUN_FORMAT_G
+             ", status = continue",
+             *res_norm);
+
   /* Begin main iteration loop */
   for (l = 0; l < l_max; l++)
   {
+    SUNLogInfo(S->sunctx->logger, "begin-iterations-list", "");
+
     /* increment counter */
     (*nli)++;
 
@@ -398,6 +516,10 @@ int SUNLinSolSolve_PCG(SUNLinearSolver S, SUNDIALS_MAYBE_UNUSED SUNMatrix nul,
       *zeroguess  = SUNFALSE;
       LASTFLAG(S) = (status < 0) ? SUNLS_ATIMES_FAIL_UNREC
                                  : SUNLS_ATIMES_FAIL_REC;
+
+      SUNLogInfo(S->sunctx->logger, "end-iterations-list",
+                 "status = failed matvec");
+
       return (LASTFLAG(S));
     }
 
@@ -437,11 +559,8 @@ int SUNLinSolSolve_PCG(SUNLinearSolver S, SUNDIALS_MAYBE_UNUSED SUNMatrix nul,
     SUNCheckLastErr();
     *res_norm = rho = SUNRsqrt(rho);
 
-#if SUNDIALS_LOGGING_LEVEL >= SUNDIALS_LOGGING_INFO
-    SUNLogger_QueueMsg(S->sunctx->logger, SUN_LOGLEVEL_INFO,
-                       "SUNLinSolSolve_PCG", "iterate-residual",
-                       "nli = %li, resnorm = %.16g", (long int)0, *res_norm);
-#endif
+    SUNLogInfo(S->sunctx->logger, "linear-iterate",
+               "cur-iter = %i, res-norm = " SUN_FORMAT_G, *nli, *res_norm);
 
     if (rho <= delta)
     {
@@ -461,6 +580,10 @@ int SUNLinSolSolve_PCG(SUNLinearSolver S, SUNDIALS_MAYBE_UNUSED SUNMatrix nul,
         *zeroguess  = SUNFALSE;
         LASTFLAG(S) = (status < 0) ? SUNLS_PSOLVE_FAIL_UNREC
                                    : SUNLS_PSOLVE_FAIL_REC;
+
+        SUNLogInfo(S->sunctx->logger, "end-iterations-list",
+                   "status = failed preconditioner solve");
+
         return (LASTFLAG(S));
       }
     }
@@ -481,13 +604,32 @@ int SUNLinSolSolve_PCG(SUNLinearSolver S, SUNDIALS_MAYBE_UNUSED SUNMatrix nul,
     /* Update p = z + beta*p */
     N_VLinearSum(ONE, z, beta, p, p);
     SUNCheckLastErr();
+
+    SUNLogInfo(S->sunctx->logger, "end-iterations-list", "status = continue");
   }
 
   /* Main loop finished, return with result */
   *zeroguess = SUNFALSE;
-  if (converged == SUNTRUE) { LASTFLAG(S) = SUN_SUCCESS; }
-  else if (rho < r0_norm) { LASTFLAG(S) = SUNLS_RES_REDUCED; }
-  else { LASTFLAG(S) = SUNLS_CONV_FAIL; }
+  if (converged == SUNTRUE)
+  {
+    SUNLogInfo(S->sunctx->logger, "end-iterations-list", "status = success");
+
+    LASTFLAG(S) = SUN_SUCCESS;
+  }
+  else if (rho < r0_norm)
+  {
+    SUNLogInfo(S->sunctx->logger, "end-iterations-list",
+               "status = failed residual reduced");
+
+    LASTFLAG(S) = SUNLS_RES_REDUCED;
+  }
+  else
+  {
+    SUNLogInfo(S->sunctx->logger, "end-iterations-list",
+               "status = failed max iterations");
+
+    LASTFLAG(S) = SUNLS_CONV_FAIL;
+  }
   return (LASTFLAG(S));
 }
 

@@ -31,7 +31,17 @@ dependencies = [
     "swig",
     "xarray>=2025.01.0",
 ]
-license = "BSD-3-Clause"
+# AMICI itself is BSD-3-Clause. The distributions also contain KLU and BTF
+#  (SuiteSparse), which are LGPL-2.1-or-later.
+license = "BSD-3-Clause AND LGPL-2.1-or-later"
+license-files = [
+    "LICENSE.md",
+    # vendored libraries that are linked into the AMICI extension
+    "amici/_installation/ThirdParty/sundials/LICENSE",
+    "amici/_installation/ThirdParty/sundials/NOTICE",
+    "amici/_installation/ThirdParty/SuiteSparse/LICENSE.txt",
+    "amici/_installation/ThirdParty/SuiteSparse/*/Doc/License.txt",
+]
 authors = [
     {name = "Fabian Froehlich", email = "froehlichfab@gmail.com"},
     {name = "Daniel Weindl", email = "sci@danielweindl.de"},
@@ -59,7 +69,7 @@ classifiers = [
 # Don't include any URLs here - they are not supported by PyPI:
 #  HTTPError: 400 Bad Request from https://upload.pypi.org/legacy/
 #  Invalid value for requires_dist. Error: Can't have direct dependency: ...
-petab = ["petab>=0.7.0"]
+petab = ["petab>=0.10.0"]
 pysb = ["pysb>=1.17.0"]
 vis = [
     "matplotlib",
@@ -93,7 +103,7 @@ build = [
 ]
 
 benchmark-models-petab = [
-    "benchmark_models_petab @ git+https://github.com/Benchmarking-Initiative/Benchmark-Models-PEtab.git@master#subdirectory=src/python",
+    "benchmark_models_petab @ git+https://github.com/PEtab-dev/petab-benchmark-problems.git@main#subdirectory=src/python",
 ]
 diffrax-dev = [
     # for events with direction; see https://github.com/patrick-kidger/diffrax/issues/654
@@ -106,18 +116,19 @@ fiddy = [
 libpetab = [
     "petab @ git+https://github.com/petab-dev/libpetab-python.git@main",
 ]
-# pinned: c84ce473133cd3979b55a725891fee45f248ddde (merge of PR #84,
-# "update_api_page") dropped Layer/Node from petab_sciml's top-level
-# exports, breaking amici/exporters/jax/nn.py's `from petab_sciml
-# import Layer`. 3a712be6 is the last commit before that merge.
+# pinned: petab_sciml is still pre-release. Since PR #84 ("update_api_page"),
+# Layer/Node are no longer top-level exports (amici imports them from
+# petab_sciml.standard.nn_model), and petab_sciml must include the fix
+# restoring `from __future__ import annotations` in nn_model.py - otherwise
+# importing petab.v2 fails with NameError wherever torch is not installed.
 petab-sciml = [
-    "petab_sciml @ git+https://github.com/petab-dev/petab_sciml.git@3a712be62accdda9506c1c1c088c3f8620a3e8a5",
+    "petab_sciml @ git+https://github.com/petab-dev/petab_sciml.git@76a2006134621ceb1b116eaf2dc23cabc66e6870",
 ]
 petab-sciml-torch = [
     # torch pulls in its own bundled OpenMP, which can crash/deadlock
     # when loaded alongside AMICI's own OpenMP-linked native extension
     # (observed on macOS) - only install it where actually needed.
-    "petab_sciml[torch] @ git+https://github.com/petab-dev/petab_sciml.git@3a712be62accdda9506c1c1c088c3f8620a3e8a5",
+    "petab_sciml[torch] @ git+https://github.com/petab-dev/petab_sciml.git@76a2006134621ceb1b116eaf2dc23cabc66e6870",
 ]
 # TODO: PEtab test suite: v1 is intentionally pinned to a pre-v2 commit until
 # proper PEtab v2 import support lands (https://github.com/AMICI-dev/AMICI/issues/2662).
@@ -135,7 +146,9 @@ pysb-dev = [
 test = [
     "fiddy>=0.0.3",
     "h5py!=3.15",
-    "pytest",
+    # pytest 9.2 breaks `--dist=loadgroup` of pytest-xdist<=3.8.0
+    # (https://github.com/pytest-dev/pytest-xdist/issues/1386)
+    "pytest<9.2",
     "pytest-cov",
     "pytest-rerunfailures!=16.0",
     "pytest-xdist",

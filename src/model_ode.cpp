@@ -83,6 +83,8 @@ void Model_ODE::froot(
 void Model_ODE::froot(
     realtype const t, const_N_Vector x, gsl::span<realtype> root
 ) {
+    // the generated function writes all `ne` root function values
+    Expects(root.size() == gsl::narrow<std::size_t>(ne));
     auto const x_pos = compute_x_pos(x);
     // TODO(performance) only dynamic expressions? consider storing a flag
     //  for whether froot actually depends on `w`.

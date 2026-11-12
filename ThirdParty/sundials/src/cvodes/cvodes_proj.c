@@ -4,8 +4,11 @@
  * Based on CPODES by Radu Serban @ LLNL
  * ---------------------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2024, Lawrence Livermore National Security
+ * Copyright (c) 2025-2026, Lawrence Livermore National Security,
+ * University of Maryland Baltimore County, and the SUNDIALS contributors.
+ * Copyright (c) 2013-2025, Lawrence Livermore National Security
  * and Southern Methodist University.
+ * Copyright (c) 2002-2013, Lawrence Livermore National Security.
  * All rights reserved.
  *
  * See the top-level LICENSE and NOTICE files for details.
@@ -212,13 +215,13 @@ int CVodeSetProjFailEta(void* cvode_mem, sunrealtype eta)
   /* Set the step size reduction factor for a projection failure */
   if ((eta <= ZERO) || (eta > ONE))
   {
-    /* Restore detault */
+    /* Restore default */
     proj_mem->eta_pfail = PROJ_FAIL_ETA;
   }
   else
   {
-    /* Udpate the eta value */
-    proj_mem->eta_pfail = PROJ_FAIL_ETA;
+    /* Update the eta value */
+    proj_mem->eta_pfail = eta;
   }
 
   return (CV_SUCCESS);
@@ -269,7 +272,7 @@ int CVodeGetNumProjFails(void* cvode_mem, long int* npfails)
  *
  * For user supplied projection function, use ftemp as temporary storage
  * for the current error estimate (acor) and use tempv to store the
- * accumulated corection due to projection, acorP (tempv is not touched
+ * accumulated correction due to projection, acorP (tempv is not touched
  * until it is potentially used in cvCompleteStep).
  */
 

@@ -2,7 +2,7 @@
 # SuiteSparse/SuiteSparse_config/CMakeLists.txt:  cmake for SuiteSparse_config
 #-------------------------------------------------------------------------------
 
-# SuiteSparse_config, Copyright (c) 2012-2023, Timothy A. Davis.
+# SuiteSparse_config, Copyright (c) 2012-2025, Timothy A. Davis.
 # All Rights Reserved.
 # SPDX-License-Identifier: BSD-3-clause
 
@@ -10,15 +10,13 @@
 # get the version
 #-------------------------------------------------------------------------------
 
-# cmake 3.22 is required to find BLAS/LAPACK for UMFPACK, CHOLMOD, SPQR,
-# and ParU:
-cmake_minimum_required ( VERSION 3.22 )
+cmake_minimum_required ( VERSION 3.23 )
 
 # version of both SuiteSparse and SuiteSparse_config
-set ( SUITESPARSE_DATE "Aug 20, 2024" )
+set ( SUITESPARSE_DATE "Sept 12, 2026" )
 set ( SUITESPARSE_VERSION_MAJOR 7 )
-set ( SUITESPARSE_VERSION_MINOR 8 )
-set ( SUITESPARSE_VERSION_SUB   2 )
+set ( SUITESPARSE_VERSION_MINOR 14 )
+set ( SUITESPARSE_VERSION_SUB   1 )
 set ( SUITESPARSE_CONFIG_VERSION_MAJOR ${SUITESPARSE_VERSION_MAJOR} CACHE STRING "" FORCE )
 set ( SUITESPARSE_CONFIG_VERSION_MINOR ${SUITESPARSE_VERSION_MINOR} CACHE STRING "" FORCE )
 set ( SUITESPARSE_CONFIG_VERSION_PATCH ${SUITESPARSE_VERSION_SUB} CACHE STRING "" FORCE )
@@ -45,27 +43,6 @@ set ( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
 
 include ( SuiteSparsePolicy )
 
-if ( SUITESPARSE_HAS_FORTRAN )
-    include ( FortranCInterface )
-else ( )
-    # No Fortran compiler available or enabled, configuration is not automatic.
-    set ( FortranCInterface_GLOBAL_MACRO  ${SUITESPARSE_C_TO_FORTRAN} )
-    set ( FortranCInterface_GLOBAL__MACRO ${SUITESPARSE_C_TO_FORTRAN} )
-endif ( )
-
-message ( STATUS "C to Fortran calling protocol: ")
-message ( STATUS "    SUITESPARSE_HAS_FORTRAN  : ${SUITESPARSE_HAS_FORTRAN}" )
-message ( STATUS "    FortranCInterface_GLOBAL_MACRO  : ${FortranCInterface_GLOBAL_MACRO}" )
-message ( STATUS "    FortranCInterface_GLOBAL__MACRO : ${FortranCInterface_GLOBAL__MACRO}" )
-
-#-------------------------------------------------------------------------------
-# CUDA warning on Windows with MSVC
-#-------------------------------------------------------------------------------
-
-if ( SUITESPARSE_HAS_CUDA AND MSVC )
-    message ( WARNING "NOTE: CUDA on MSVC has only recently been revised.  It appears to be functional but has not been as rigorously tested as I would like (I have limited resources for testing CUDA on Windows).  If you encounter issues, set the cmake option SUITESPARSE_USE_CUDA to OFF and post an issue on GitHub." )
-endif ( )
-
 #-------------------------------------------------------------------------------
 # find OpenMP
 #-------------------------------------------------------------------------------
@@ -77,9 +54,18 @@ if ( SUITESPARSE_CONFIG_USE_OPENMP )
     else ( )
         find_package ( OpenMP COMPONENTS C GLOBAL )
     endif ( )
+    message ( STATUS "OpenMP C libraries: ${OpenMP_C_LIBRARIES} " )
 else ( )
     # OpenMP has been disabled
     set ( OpenMP_C_FOUND OFF )
+endif ( )
+
+#-------------------------------------------------------------------------------
+# CUDA warning on Windows with MSVC
+#-------------------------------------------------------------------------------
+
+if ( SUITESPARSE_HAS_CUDA AND MSVC )
+    message ( WARNING "NOTE: CUDA on MSVC has only recently been revised.  It appears to be functional but has not been as rigorously tested as I would like (I have limited resources for testing CUDA on Windows).  If you encounter issues, set the cmake option SUITESPARSE_USE_CUDA to OFF and post an issue on GitHub." )
 endif ( )
 
 if ( SUITESPARSE_CONFIG_USE_OPENMP AND OpenMP_C_FOUND )
@@ -127,7 +113,46 @@ endif ( )
 # find the BLAS
 #-------------------------------------------------------------------------------
 
-include ( SuiteSparseBLAS )
+option ( SUITESPARSE_REQUIRE_BLAS "Must not be set to OFF if any SuiteSparse project requires BLAS functions" ON )
+
+if ( SUITESPARSE_REQUIRE_BLAS )
+    include ( SuiteSparseBLAS )
+else ( )
+    # It doesn't actually matter which Fortran integer size is selected here.
+    # But we might as well respect any user flags.
+    if ( SUITESPARSE_USE_64BIT_BLAS )
+        include ( SuiteSparseBLAS64 )
+    else ( )
+        include ( SuiteSparseBLAS32 )
+    endif ( )
+endif ( )
+
+# BLAS:
+if ( BLAS_FOUND )
+    # SuiteSparse_config does not itself require the BLAS.  It just needs to
+    # know which BLAS is going to be used by the rest of SuiteSparse so it
+    # can configure SuiteSparse_config.h properly.
+    message ( STATUS "BLAS libraries:      ${BLAS_LIBRARIES} ")
+    message ( STATUS "BLAS linker flags:   ${BLAS_LINKER_FLAGS} ")
+    message ( STATUS "BLAS include:        ${BLAS_INCLUDE_DIRS} ")
+endif ( )
+
+#-------------------------------------------------------------------------------
+# Fortran interface
+#-------------------------------------------------------------------------------
+
+if ( SUITESPARSE_HAS_FORTRAN )
+    include ( FortranCInterface )
+else ( )
+    # No Fortran compiler available or enabled, configuration is not automatic.
+    set ( FortranCInterface_GLOBAL_MACRO  ${SUITESPARSE_C_TO_FORTRAN} )
+    set ( FortranCInterface_GLOBAL__MACRO ${SUITESPARSE_C_TO_FORTRAN} )
+endif ( )
+
+message ( STATUS "C to Fortran calling protocol: ")
+message ( STATUS "    SUITESPARSE_HAS_FORTRAN  : ${SUITESPARSE_HAS_FORTRAN}" )
+message ( STATUS "    FortranCInterface_GLOBAL_MACRO  : ${FortranCInterface_GLOBAL_MACRO}" )
+message ( STATUS "    FortranCInterface_GLOBAL__MACRO : ${FortranCInterface_GLOBAL__MACRO}" )
 
 #-------------------------------------------------------------------------------
 # configure files
@@ -241,16 +266,6 @@ else ( )
     endif ( )
 endif ( )
 
-# BLAS:
-if ( BLAS_FOUND )
-    # SuiteSparse_config does not itself require the BLAS.  It just needs to
-    # know which BLAS is going to be used by the rest of SuiteSparse so it
-    # can configure SuiteSparse_config.h properly.
-    message ( STATUS "BLAS libraries:      ${BLAS_LIBRARIES} ")
-    message ( STATUS "BLAS linker flags:   ${BLAS_LINKER_FLAGS} ")
-    message ( STATUS "BLAS include:        ${BLAS_INCLUDE_DIRS} ")
-endif ( )
-
 #-------------------------------------------------------------------------------
 # SuiteSparseConfig installation location
 #-------------------------------------------------------------------------------
@@ -266,27 +281,38 @@ if ( BUILD_SHARED_LIBS )
         ARCHIVE DESTINATION ${SUITESPARSE_LIBDIR}
         RUNTIME DESTINATION ${SUITESPARSE_BINDIR}
         PUBLIC_HEADER DESTINATION ${SUITESPARSE_INCLUDEDIR} )
+
+    # create (temporary) export target file during build
+    export ( EXPORT SuiteSparse_configTargets
+        NAMESPACE SuiteSparse::
+        FILE ${CMAKE_CURRENT_BINARY_DIR}/SuiteSparse_configTargets.cmake )
+
+    # install export target and config for find_package
+    install ( EXPORT SuiteSparse_configTargets
+        NAMESPACE SuiteSparse::
+        DESTINATION ${SUITESPARSE_PKGFILEDIR}/cmake/SuiteSparse_config )
 endif ( )
 if ( BUILD_STATIC_LIBS )
     install ( TARGETS SuiteSparseConfig_static
-        EXPORT SuiteSparse_configTargets
+        EXPORT SuiteSparse_configTargets_static
         ARCHIVE DESTINATION ${SUITESPARSE_LIBDIR}
         PUBLIC_HEADER DESTINATION ${SUITESPARSE_INCLUDEDIR} )
+
+    # create (temporary) export target file during build
+    export ( EXPORT SuiteSparse_configTargets_static
+        NAMESPACE SuiteSparse::
+        FILE ${CMAKE_CURRENT_BINARY_DIR}/SuiteSparse_configTargets_static.cmake )
+
+    # install export target and config for find_package
+    install ( EXPORT SuiteSparse_configTargets_static
+        NAMESPACE SuiteSparse::
+        DESTINATION ${SUITESPARSE_PKGFILEDIR}/cmake/SuiteSparse_config )
 endif ( )
+
 install ( FILES
     ${SUITESPARSE_CMAKE_MODULES}
     DESTINATION ${SUITESPARSE_PKGFILEDIR}/cmake/SuiteSparse
     COMPONENT Development )
-
-# create (temporary) export target file during build
-export ( EXPORT SuiteSparse_configTargets
-    NAMESPACE SuiteSparse::
-    FILE ${CMAKE_CURRENT_BINARY_DIR}/SuiteSparse_configTargets.cmake )
-
-# install export target and config for find_package
-install ( EXPORT SuiteSparse_configTargets
-    NAMESPACE SuiteSparse::
-    DESTINATION ${SUITESPARSE_PKGFILEDIR}/cmake/SuiteSparse_config )
 
 configure_package_config_file (
     Config/SuiteSparse_configConfig.cmake.in
@@ -372,3 +398,4 @@ endif ( )
 #-------------------------------------------------------------------------------
 
 include ( SuiteSparseReport )
+message ( STATUS "CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR}" )

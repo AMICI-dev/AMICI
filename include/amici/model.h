@@ -274,6 +274,32 @@ class Model : public AbstractModel, public ModelDimensions {
     ) const;
 
     /**
+     * @brief Apply the adjoint of `reinitialize` to the adjoint state.
+     *
+     * `reinitialize` sets the reinitialized states to `x0(p, k)`, i.e.,
+     * `sx <- P sx + dx0/dp`, where `P` zeroes the reinitialized states.
+     * Accordingly, this computes `xQB += (dx0/dp)^T xB` and `xB <- P xB`.
+     * Must be called with the fixed parameters that were used in
+     * `reinitialize`. Requires `check_reinitialize_b_supported`.
+     *
+     * @param t Timepoint of the reinitialization
+     * @param x State variables at the start of the main simulation
+     * @param xB Adjoint state variables
+     * @param xQB Adjoint quadratures
+     */
+    void reinitialize_b(
+        realtype t, AmiVector const& x, AmiVector& xB, AmiVector& xQB
+    );
+
+    /**
+     * @brief Check whether `reinitialize_b` is supported.
+     *
+     * Throws if non-constant states are reinitialized for a model with
+     * conservation laws, a DAE model, or `nJ != 1`.
+     */
+    void check_reinitialize_b_supported() const;
+
+    /**
      * @brief Initialize model state.
      *
      * @param t Initial timepoint
@@ -836,15 +862,20 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Get the initial time to use for pre-equilibration.
      *
-     * @return Initial time, or NAN to use the model's t0.
+     * @deprecated Use ExpData::t_start_preeq.
+     *
+     * @return Initial time, or NAN if not set.
      */
     double t0_preeq() const;
 
     /**
      * @brief Set the initial time to use for pre-equilibration.
      *
-     * @param t0_preeq The initial time for pre-equilibration or NAN to use the
-     * model's t0.
+     * Only used if ExpData::t_start_preeq is NAN.
+     *
+     * @deprecated Use ExpData::t_start_preeq.
+     *
+     * @param t0_preeq The initial time for pre-equilibration or NAN to unset.
      */
     void set_t0_preeq(double t0_preeq);
 
@@ -893,7 +924,12 @@ class Model : public AbstractModel, public ModelDimensions {
             throw AmiException("Mismatch in conservation law size");
         if (gsl::narrow<int>(state.stotal_cl.size()) != ncl() * np())
             throw AmiException("Mismatch in conservation law sensitivity size");
+        bool const parameters_changed
+            = state.fixed_parameters != state_.fixed_parameters
+              || state.unscaled_parameters != state_.unscaled_parameters;
         state_ = state;
+        if (parameters_changed)
+            update_splines();
     }
 
     /**
@@ -1433,7 +1469,7 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * Partial derivative (to be used with adjoint sensitivities).
      *
-     * @param dJzdx Output buffer (shape `nJ` x `nx_solver`, row-major)
+     * @param dJzdx Output buffer (shape `nJ` x `nx_solver`, column-major)
      * @param ie Event index
      * @param nroots Event occurrence
      * @param t Timepoint
@@ -1514,12 +1550,15 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param sx_eval State sensitivity at `x_eval`
      * @param stau Timepoint sensitivity, to be computed with
      * `Model::getEventTimeSensitivity`
+     * @param h_assign Heaviside variables with which the event assignments
+     * are evaluated
      */
     void add_state_sensitivity_event_update(
         AmiVectorArray& sx, int ie, realtype t, AmiVector const& x,
         AmiVector const& x_eval, AmiVector const& xdot,
         AmiVector const& xdot_eval, AmiVector const& xdot_pre,
-        AmiVectorArray const& sx_eval, std::vector<realtype> const& stau
+        AmiVectorArray const& sx_eval, std::vector<realtype> const& stau,
+        std::vector<realtype> const& h_assign
     );
 
     /**
@@ -1546,6 +1585,8 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param xdot_eval Time derivative of the state at `x_eval`
      * @param xdot_pre Time derivative of the state right before the event
      * @param x_eval State at which the event assignments are evaluated
+     * @param h_assign Heaviside variables with which the event assignments
+     * are evaluated
      * @param dx Derivative of the state after the event (DAE only)
      * @param h_eval Heaviside variables at which the algebraic states at
      * `x_eval` are determined (DAE only)
@@ -1554,7 +1595,8 @@ class Model : public AbstractModel, public ModelDimensions {
         AmiVector& xB, AmiVector& xQB, AmiVector& xB_at_trigger,
         std::vector<realtype>& stauB, int ie, realtype t, AmiVector const& x,
         AmiVector const& xdot, AmiVector const& xdot_eval,
-        AmiVector const& xdot_pre, AmiVector const& x_eval, AmiVector const& dx,
+        AmiVector const& xdot_pre, AmiVector const& x_eval,
+        std::vector<realtype> const& h_assign, AmiVector const& dx,
         std::vector<realtype> const& h_eval
     );
 
@@ -1590,6 +1632,18 @@ class Model : public AbstractModel, public ModelDimensions {
      * was found)
      */
     void update_heaviside(std::vector<int> const& rootsfound);
+
+    /**
+     * @brief Restore the trajectory-dependent parts of a simulation state.
+     *
+     * Restores the parts of the model state that evolve during a simulation,
+     * i.e., the Heaviside variables and the conservation law totals and their
+     * sensitivities, and keeps the current parameters and fixed parameters.
+     * Re-evaluates the static expressions, which may depend on both.
+     *
+     * @param state Simulation state to restore from
+     */
+    void restore_trajectory_state(SimulationState const& state);
 
     /**
      * @brief Check if the given array has only finite elements.
@@ -1861,6 +1915,16 @@ class Model : public AbstractModel, public ModelDimensions {
     }
 
   protected:
+    /**
+     * @brief Recompute the splines for the current parameters.
+     *
+     * Spline nodes and values may depend on the fixed parameters, which
+     * change, e.g., between pre-equilibration and the main simulation.
+     * This is called when the fixed parameters or the model state are set.
+     * Spline sensitivities are only recomputed if they were computed before.
+     */
+    void update_splines();
+
     /**
      * @brief Map the algebraic components of an adjoint event update to the
      * differential states and parameters.
@@ -2410,6 +2474,9 @@ class Model : public AbstractModel, public ModelDimensions {
 
     /** Storage for splines of the model */
     std::vector<HermiteSpline> splines_;
+
+    /** Whether the sensitivities of `splines_` were computed */
+    bool spline_sensitivities_initialized_{false};
 
     /** index indicating to which event an event output belongs (size nz) */
     std::vector<int> z2event_;

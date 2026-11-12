@@ -116,8 +116,7 @@ def simulate_petab(
     :param log_level:
         Log level, see :mod:`logging` module.
     :param num_threads:
-        Number of threads to use for simulating multiple conditions
-        (only used if compiled with OpenMP).
+        Number of threads to use for simulating multiple conditions.
     :param failfast:
         Returns as soon as an integration failure is encountered, skipping
         any remaining simulations.

@@ -775,6 +775,10 @@ void IDASolver::reinit(
 void IDASolver::sens_reinit(
     AmiVectorArray const& yyS0, AmiVectorArray const& ypS0
 ) const {
+    if (!sens_initialized_) {
+        return;
+    }
+
     auto ida_mem = static_cast<IDAMem>(solver_memory_.get());
     /* Initialize znS[0] in the history array */
     for (int is = 0; is < nplist(); is++)
@@ -804,6 +808,10 @@ void IDASolver::sens_toggle_off() const {
     IDASensFree(solver_memory_.get());
     /* need to deallocate sensi memory, otherwise can't reenable */
     sens_initialized_ = false;
+    // Unlike CVODES, IDASolve checks the sensitivity error control flag
+    // without checking whether sensitivities are enabled, and would access
+    // the freed sensitivity vectors.
+    set_sens_err_con(false);
 }
 
 void IDASolver::reinit_b(
@@ -1486,9 +1494,20 @@ int froot(
     auto model = dynamic_cast<Model_DAE*>(typed_udata->first);
     Expects(model);
 
-    model->froot(t, x, dx, gsl::make_span<realtype>(root, model->ne));
+    if (model->ne != model->ne_solver) {
+        // temporary buffer to store all root function values, not only the ones
+        // tracked by the solver
+        thread_local static std::vector<realtype> root_buffer(model->ne, 0.0);
+        root_buffer.resize(model->ne);
+        model->froot(t, x, dx, root_buffer);
+        std::copy_n(root_buffer.begin(), model->ne_solver, root);
+    } else {
+        model->froot(
+            t, x, dx, gsl::make_span<realtype>(root, model->ne_solver)
+        );
+    }
     return model->check_finite(
-        gsl::make_span<realtype>(root, model->ne), ModelQuantity::root, t
+        gsl::make_span<realtype>(root, model->ne_solver), ModelQuantity::root, t
     );
 }
 

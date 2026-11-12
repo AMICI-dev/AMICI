@@ -222,35 +222,19 @@ variables control various behaviours during model import and compilation:
 Miscellaneous
 =============
 
-.. _amici_python_openmp:
+.. _amici_python_parallel:
 
-OpenMP support for parallelized simulation for multiple experimental conditions
--------------------------------------------------------------------------------
+Parallel simulation for multiple experimental conditions
+--------------------------------------------------------
 
-AMICI can be built with OpenMP support, which allows to parallelize model
-simulations for multiple experimental conditions.
-
-On Linux and OSX this is enabled by default. This can be verified using:
-
-.. code-block:: python
-
-   import amici
-   amici.compiled_with_openmp()
-
-If not already enabled by default, you can enable OpenMP support by setting
-the environment variables ``AMICI_CXXFLAGS`` and ``AMICI_LDFLAGS`` to the
-correct OpenMP flags of your compiler and linker, respectively. This has to be
-done for both AMICI package installation *and* model compilation. When using
-``gcc`` on Linux, this would be:
-
-.. code-block:: bash
-
-   # on your shell:
-   AMICI_CXXFLAGS=-fopenmp AMICI_LDFLAGS=-fopenmp pip3 install amici
+:func:`amici.sim.sundials.run_simulations` and
+:meth:`amici.sim.sundials.Model.simulate` can simulate multiple experimental
+conditions in parallel threads. Pass the number of threads via
+``num_threads``:
 
 .. code-block:: python
 
-   # in python, before model compilation:
    import os
-   os.environ['AMICI_CXXFLAGS'] = '-fopenmp'
-   os.environ['AMICI_LDFLAGS'] = '-fopenmp'
+   from amici.sim.sundials import run_simulations
+
+   rdatas = run_simulations(model, solver, edatas, num_threads=os.cpu_count())

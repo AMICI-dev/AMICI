@@ -12,10 +12,10 @@
 
 cmake_minimum_required ( VERSION 3.22 )
 
-set ( KLU_DATE "June 20, 2024" )
+set ( KLU_DATE "July 25, 2025" )
 set ( KLU_VERSION_MAJOR 2 CACHE STRING "" FORCE )
 set ( KLU_VERSION_MINOR 3 CACHE STRING "" FORCE )
-set ( KLU_VERSION_SUB   4 CACHE STRING "" FORCE )
+set ( KLU_VERSION_SUB   6 CACHE STRING "" FORCE )
 
 message ( STATUS "Building KLU version: v"
     ${KLU_VERSION_MAJOR}.
@@ -43,28 +43,28 @@ include ( SuiteSparsePolicy )
 #-------------------------------------------------------------------------------
 
 if ( NOT SUITESPARSE_ROOT_CMAKELISTS )
-    find_package ( SuiteSparse_config 7.8.0
+    find_package ( SuiteSparse_config 7.11.0
         PATHS ${CMAKE_SOURCE_DIR}/../SuiteSparse_config/build NO_DEFAULT_PATH )
     if ( NOT TARGET SuiteSparse::SuiteSparseConfig )
-        find_package ( SuiteSparse_config 7.8.0 REQUIRED )
+        find_package ( SuiteSparse_config 7.11.0 REQUIRED )
     endif ( )
 
-    find_package ( AMD 3.3.2
+    find_package ( AMD 3.3.4
         PATHS ${CMAKE_SOURCE_DIR}/../AMD/build NO_DEFAULT_PATH )
     if ( NOT TARGET SuiteSparse::AMD )
-        find_package ( AMD 3.3.2 REQUIRED )
+        find_package ( AMD 3.3.4 REQUIRED )
     endif ( )
 
-    find_package ( COLAMD 3.3.3
+    find_package ( COLAMD 3.3.5
         PATHS ${CMAKE_SOURCE_DIR}/../COLAMD/build NO_DEFAULT_PATH )
     if ( NOT TARGET SuiteSparse::COLAMD )
-        find_package ( COLAMD 3.3.3 REQUIRED )
+        find_package ( COLAMD 3.3.5 REQUIRED )
     endif ( )
 
-    find_package ( BTF 2.3.2
+    find_package ( BTF 2.3.3
         PATHS ${CMAKE_SOURCE_DIR}/../BTF/build NO_DEFAULT_PATH )
     if ( NOT TARGET SuiteSparse::BTF )
-        find_package ( BTF 2.3.2 REQUIRED )
+        find_package ( BTF 2.3.3 REQUIRED )
     endif ( )
 endif ( )
 
@@ -77,10 +77,10 @@ if ( SUITESPARSE_ROOT_CMAKELISTS )
 else ( )
     if ( KLU_USE_CHOLMOD )
         # look for CHOLMOD (optional fill-reducing orderings)
-        find_package ( CHOLMOD 5.2.1
+        find_package ( CHOLMOD 5.3.4
             PATHS ${CMAKE_SOURCE_DIR}/../CHOLMOD/build NO_DEFAULT_PATH )
         if ( NOT TARGET SuiteSparse::CHOLMOD )
-            find_package ( CHOLMOD 5.2.1 )
+            find_package ( CHOLMOD 5.3.4 )
         endif ( )
         if ( NOT CHOLMOD_FOUND )
             # CHOLMOD not found so disable it
@@ -343,24 +343,34 @@ if ( BUILD_SHARED_LIBS )
         ARCHIVE DESTINATION ${SUITESPARSE_LIBDIR}
         RUNTIME DESTINATION ${SUITESPARSE_BINDIR}
         PUBLIC_HEADER DESTINATION ${SUITESPARSE_INCLUDEDIR} )
+
+    # create (temporary) export target file during build
+    export ( EXPORT KLUTargets
+        NAMESPACE SuiteSparse::
+        FILE ${CMAKE_CURRENT_BINARY_DIR}/KLUTargets.cmake )
+
+    # install export target, config and version files for find_package
+    install ( EXPORT KLUTargets
+        NAMESPACE SuiteSparse::
+        DESTINATION ${SUITESPARSE_PKGFILEDIR}/cmake/KLU )
 endif ( )
 
 if ( BUILD_STATIC_LIBS )
     install ( TARGETS KLU_static
-        EXPORT KLUTargets
+        EXPORT KLUTargets_static
         ARCHIVE DESTINATION ${SUITESPARSE_LIBDIR}
         PUBLIC_HEADER DESTINATION ${SUITESPARSE_INCLUDEDIR} )
+
+    # create (temporary) export target file during build
+    export ( EXPORT KLUTargets_static
+        NAMESPACE SuiteSparse::
+        FILE ${CMAKE_CURRENT_BINARY_DIR}/KLUTargets_static.cmake )
+
+    # install export target, config and version files for find_package
+    install ( EXPORT KLUTargets_static
+        NAMESPACE SuiteSparse::
+        DESTINATION ${SUITESPARSE_PKGFILEDIR}/cmake/KLU )
 endif ( )
-
-# create (temporary) export target file during build
-export ( EXPORT KLUTargets
-    NAMESPACE SuiteSparse::
-    FILE ${CMAKE_CURRENT_BINARY_DIR}/KLUTargets.cmake )
-
-# install export target, config and version files for find_package
-install ( EXPORT KLUTargets
-    NAMESPACE SuiteSparse::
-    DESTINATION ${SUITESPARSE_PKGFILEDIR}/cmake/KLU )
 
 # generate config file to be used in common build tree
 set ( SUITESPARSE_IN_BUILD_TREE ON )
@@ -435,23 +445,33 @@ if ( KLU_HAS_CHOLMOD )
             ARCHIVE DESTINATION ${SUITESPARSE_LIBDIR}
             RUNTIME DESTINATION ${SUITESPARSE_BINDIR}
             PUBLIC_HEADER DESTINATION ${SUITESPARSE_INCLUDEDIR} )
+
+        # create (temporary) export target file during build
+        export ( EXPORT KLU_CHOLMODTargets
+            NAMESPACE SuiteSparse::
+            FILE ${CMAKE_CURRENT_BINARY_DIR}/KLU_CHOLMODTargets.cmake )
+
+        # install export target, config and version files for find_package
+        install ( EXPORT KLU_CHOLMODTargets
+            NAMESPACE SuiteSparse::
+            DESTINATION ${SUITESPARSE_PKGFILEDIR}/cmake/KLU_CHOLMOD )
     endif ( )
     if ( BUILD_STATIC_LIBS )
         install ( TARGETS KLU_CHOLMOD_static
-            EXPORT KLU_CHOLMODTargets
+            EXPORT KLU_CHOLMODTargets_static
             ARCHIVE DESTINATION ${SUITESPARSE_LIBDIR}
             PUBLIC_HEADER DESTINATION ${SUITESPARSE_INCLUDEDIR} )
+
+        # create (temporary) export target file during build
+        export ( EXPORT KLU_CHOLMODTargets_static
+            NAMESPACE SuiteSparse::
+            FILE ${CMAKE_CURRENT_BINARY_DIR}/KLU_CHOLMODTargets_static.cmake )
+
+        # install export target, config and version files for find_package
+        install ( EXPORT KLU_CHOLMODTargets_static
+            NAMESPACE SuiteSparse::
+            DESTINATION ${SUITESPARSE_PKGFILEDIR}/cmake/KLU_CHOLMOD )
     endif ( )
-
-    # create (temporary) export target file during build
-    export ( EXPORT KLU_CHOLMODTargets
-        NAMESPACE SuiteSparse::
-        FILE ${CMAKE_CURRENT_BINARY_DIR}/KLU_CHOLMODTargets.cmake )
-
-    # install export target, config and version files for find_package
-    install ( EXPORT KLU_CHOLMODTargets
-        NAMESPACE SuiteSparse::
-        DESTINATION ${SUITESPARSE_PKGFILEDIR}/cmake/KLU_CHOLMOD )
 
     # generate config file to be used in common build tree
     set ( SUITESPARSE_IN_BUILD_TREE ON )

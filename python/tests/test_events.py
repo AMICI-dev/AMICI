@@ -1220,6 +1220,141 @@ def test_switches_triggered_by_event_assignments(tempdir):
 
 
 @skip_on_valgrind
+@pytest.mark.parametrize("from_trigger", [True, False])
+def test_event_assignment_switch_flipped_before_execution(
+    tempdir, from_trigger
+):
+    """Sensitivities of event assignments depending on a switch that is
+    flipped by a simultaneous event executed before.
+
+    For `fromTrigger=true`, the assignment of `E2` uses the switch value from
+    the trigger time, otherwise the one after `E1`.
+    """
+    ft = str(from_trigger).lower()
+    model_name = f"test_switch_flipped_before_execution_{ft}"
+    antimony2amici(
+        f"""
+        k = 1.5
+        x = 0; x' = k
+        s = 0; v = 0
+        r := piecewise(2, s >= 1, 1)
+        E1: at x >= 1, priority=2: s = 1
+        E2: at x >= 1, priority=1, fromTrigger={ft}: v = v + r * time
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[MC("obs_v", formula="v")],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints([2.0])
+    k = model.get_free_parameters()[0]
+
+    # both events fire at t1 = 1 / k
+    r = 1 if from_trigger else 2
+    v = r / k
+    dv_dk = -r / k**2
+    expected_sllh = -v * dv_dk
+
+    edata = ExpData(model)
+    edata.set_measurements([0.0])
+    edata.set_noise_scales([1.0])
+    for sens_method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver = model.create_solver()
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(sens_method)
+        solver.set_relative_tolerance(1e-12)
+        solver.set_absolute_tolerance(1e-12)
+        rdata = run_simulation(model, solver, edata=edata)
+        assert rdata.status == AMICI_SUCCESS
+        assert_allclose(rdata.y[-1], [v], rtol=1e-8)
+        if sens_method == SensitivityMethod.forward:
+            assert_allclose(rdata.sy[-1, 0], [dv_dk], rtol=1e-6)
+        assert_allclose(
+            rdata.sllh[0], expected_sllh, rtol=1e-6, err_msg=str(sens_method)
+        )
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize("dae", [False, True], ids=["ode", "dae"])
+def test_switch_crossed_back_by_event_assignment(tempdir, dae):
+    """Sensitivities of a switch turned off by an event assignment.
+
+    The assignment to `s` crosses the `piecewise` condition in the negative
+    direction, which doesn't trigger any further event. The jump in the
+    right-hand side still contributes to the sensitivities via the event
+    time.
+
+    The ODE model covers `>=` and `<` conditions (`z_geq`, `z_lt`), and an
+    assignment by a secondary event at a later time (`z_sec`). The DAE model
+    switches the equation of an algebraic state.
+    """
+    if dae:
+        equations = """
+            a = 0.8
+            z = 0; z' = a
+            0 = a - piecewise(c, s >= 1, 0)
+            E1: at x >= 1: s = 0
+        """
+        # observable -> number of time units 1 / k until the switch flips
+        n_switch = {"z": 1}
+    else:
+        equations = """
+            s2 = 1; s2' = 0
+            v = 0
+            z_geq = 0; z_geq' = piecewise(c, s >= 1, 0)
+            z_lt = 0; z_lt' = piecewise(0, s < 1, c)
+            z_sec = 0; z_sec' = piecewise(c, s2 >= 1, 0)
+            E1: at x >= 1: s = 0
+            E2: at x >= 2, priority=2: v = 1
+            E3: at v > 0.5, priority=1: s2 = 0
+        """
+        n_switch = {"z_geq": 1, "z_lt": 1, "z_sec": 2}
+    model_name = f"test_switch_crossed_back_{'dae' if dae else 'ode'}"
+    antimony2amici(
+        f"""
+        const k = 1.5, c = 0.8
+        x = 0; x' = k
+        s = 1; s' = 0
+        {equations}
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[MC(f"obs_{id_}", formula=id_) for id_ in n_switch],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    t_end = 3.0
+    model.set_timepoints([t_end])
+    assert model.get_free_parameter_ids() == ("k", "c")
+    k, c = model.get_free_parameters()
+
+    # z' = c until the switch flips at t = n / k, then z' = 0
+    n = np.array(list(n_switch.values()))
+    y = n * c / k
+    dy_dp = np.array([-n * c / k**2, n / k])
+    measurements = np.zeros_like(y)
+    expected_sllh = -np.sum((y - measurements) * dy_dp, axis=1)
+    assert np.all(np.abs(expected_sllh) > 0.1)
+
+    edata = ExpData(model)
+    edata.set_measurements(measurements)
+    edata.set_noise_scales(np.ones_like(measurements))
+    for sens_method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver = model.create_solver()
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(sens_method)
+        solver.set_relative_tolerance(1e-12)
+        solver.set_absolute_tolerance(1e-12)
+        rdata = run_simulation(model, solver, edata=edata)
+        assert rdata.status == AMICI_SUCCESS, sens_method
+        assert_allclose(rdata.y[-1], y, rtol=1e-8)
+        if sens_method == SensitivityMethod.forward:
+            assert_allclose(rdata.sy[-1], dy_dp, rtol=1e-6)
+        assert_allclose(
+            rdata.sllh, expected_sllh, rtol=1e-6, err_msg=str(sens_method)
+        )
+
+
+@skip_on_valgrind
 def test_event_output_parameter_derivatives(tempdir):
     """Test forward sensitivities of event outputs that depend explicitly on
     the parameters, and of the root function value of an event that does
@@ -1556,6 +1691,146 @@ def test_posteq_events_are_handled(tempdir):
             rtol=1e-7,
             epsilon=1e-8,
         )
+
+
+@skip_on_valgrind
+def test_posteq_event_outputs(tempdir):
+    """Event outputs with post-equilibration.
+
+    Event outputs are recorded until the last finite output timepoint. The
+    outputs of events that did not occur until then are not filled in.
+    """
+    model_name = "test_posteq_event_outputs"
+    antimony2amici(
+        r"""
+        k = 0.3
+        x = 1
+        x' = -k * x
+        E1: at time > 1: x = x + 1
+        """,
+        observation_model=[
+            MC("obs_x", formula="x"),
+            MC("z1", formula="x", event_id="E1"),
+        ],
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_steady_state_computation_mode(
+        SteadyStateComputationMode.integrationOnly
+    )
+    model.set_steady_state_sensitivity_mode(
+        SteadyStateSensitivityMode.integrationOnly
+    )
+    model.set_timepoints([0.5, 2.0, np.inf])
+    solver = model.create_solver()
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-12)
+
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+    # E1 occurs once, before the last finite timepoint
+    assert_allclose(rdata.z[0, 0], np.exp(-0.3), rtol=1e-8)
+    # the outputs of events that did not occur are not filled in
+    assert np.all(rdata.z[1:, 0] == 0.0)
+    assert np.all(rdata.rz == 0.0)
+
+    edata = ExpData(rdata, 1.0, 1.0, 0)
+    # only the first occurrence of E1 is measured
+    z_meas = np.full(model.nztrue * model.n_max_event(), np.nan)
+    z_meas[0] = 0.5
+    edata.set_event_measurements(z_meas)
+    edata.set_measurements(np.asarray(edata.get_measurements()) + 0.1)
+
+    function, _ = run_simulation_to_function_and_derivative(
+        amici_model=model,
+        amici_solver=solver,
+        amici_edata=edata,
+        derivative_variables=["llh"],
+    )
+    point = np.asarray(model.get_free_parameters())
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    for sensi_method in (
+        SensitivityMethod.forward,
+        SensitivityMethod.adjoint,
+    ):
+        solver.set_sensitivity_method(sensi_method)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS, sensi_method
+        assert np.all(np.abs(rdata.sllh) > 0.1), sensi_method
+        check_gradient(function, point, rdata.sllh).assert_success(
+            always_print=True
+        )
+
+
+@skip_on_valgrind
+def test_presim_event_outputs(tempdir):
+    """Event outputs with presimulation.
+
+    The outputs of events that did not occur are only filled in at the last
+    output timepoint of the main simulation, not at the end of the
+    presimulation, also if the last output timepoint is the initial time of
+    the main simulation.
+    """
+    model_name = "test_presim_event_outputs"
+    antimony2amici(
+        r"""
+        k = 0.3
+        q = 0.5
+        x = 1
+        x' = -k * x + q
+        # never occurs (x -> q / k < 3)
+        E1: at x > 3: x = x + 1
+        E2: at time > 1: x = x + 1
+        """,
+        observation_model=[
+            MC("obs_x", formula="x"),
+            MC("z1", formula="x", event_id="E1"),
+            MC("z2", formula="x", event_id="E2"),
+        ],
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    solver = model.create_solver()
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-12)
+    point = np.asarray(model.get_free_parameters())
+
+    # E2 occurs during the main simulation, or not at all
+    for timepoints in ([0.2, 2.2], [0.0]):
+        model.set_timepoints(timepoints)
+        solver.set_sensitivity_order(SensitivityOrder.none)
+        rdata = run_simulation(model, solver)
+        assert rdata.status == AMICI_SUCCESS
+        edata = ExpData(rdata, 1.0, 1.0, 0)
+        edata.t_presim = 0.5
+        # first occurrences of E1 and E2
+        z_meas = np.full(model.nztrue * model.n_max_event(), np.nan)
+        z_meas[:2] = [0.5, 2.0]
+        edata.set_event_measurements(z_meas)
+
+        function, _ = run_simulation_to_function_and_derivative(
+            amici_model=model,
+            amici_solver=solver,
+            amici_edata=edata,
+            derivative_variables=["llh"],
+        )
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        for sensi_method in (
+            SensitivityMethod.forward,
+            SensitivityMethod.adjoint,
+        ):
+            solver.set_sensitivity_method(sensi_method)
+            rdata = run_simulation(model, solver, edata)
+            assert rdata.status == AMICI_SUCCESS, (timepoints, sensi_method)
+            assert np.all(np.abs(rdata.sllh) > 1e-3), (
+                timepoints,
+                sensi_method,
+            )
+            check_gradient(function, point, rdata.sllh).assert_success(
+                always_print=True
+            )
 
 
 @skip_on_valgrind
@@ -2414,9 +2689,9 @@ def test_explicit_trigger_time_changed_by_events(tempdir):
     )
     model = import_model_module(model_name, tempdir).get_model()
     # E0, E1, and two root functions for each of the piecewise switches,
-    #  of which only the trigger of E0 requires root-finding
+    #  none of which requires root-finding
     assert model.ne == 6
-    assert model.ne_solver == 1
+    assert model.ne_solver == 0
 
     def create_edatas():
         """Create ExpData objects without and with pre-equilibration."""
@@ -2512,9 +2787,9 @@ def test_explicit_trigger_time_preequilibration(tempdir):
     )
     model = import_model_module(model_name, tempdir).get_model()
     # E_rate, E_late, and two root functions for the piecewise switch of
-    #  `u`, of which only the trigger of E_rate requires root-finding
+    #  `u`, none of which requires root-finding
     assert model.ne == 4
-    assert model.ne_solver == 1
+    assert model.ne_solver == 0
     model.set_steady_state_computation_mode(
         SteadyStateComputationMode.integrationOnly
     )
@@ -2550,6 +2825,227 @@ def test_explicit_trigger_time_preequilibration(tempdir):
     solver.set_sensitivity_order(SensitivityOrder.first)
     solver.set_sensitivity_method(SensitivityMethod.forward)
     check_derivatives(model, solver=solver, edata=edata)
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize("order", ["first", "second", "tie"])
+def test_explicit_trigger_time_and_or(tempdir, order):
+    """Sensitivities of ``And``/``Or``-combined trigger times.
+
+    The triggers are handled at their explicit trigger times
+    ``max(T1, T2)``, ``min(T3, T4)``, and ``T5`` (gated by ``g``). For equal
+    times, the root function's derivative gives the trigger time
+    sensitivity ``1/2`` with respect to each of them.
+    """
+    model_name = "test_explicit_trigger_time_and_or"
+    antimony2amici(
+        r"""
+        T1 = 2; T2 = 3; T3 = 4; T4 = 5; T5 = 1.5; g = 1; k = 0.5
+        xa = 0; xo = 0; xg = 0
+        xa' = -k * xa
+        xo' = -k * xo
+        xg' = -k * xg
+        Ea: at (time >= T1 && time >= T2): xa = xa + 1;
+        Eo: at (time >= T3 || time >= T4): xo = xo + 1;
+        Eg: at (time >= T5 && g > 0.5): xg = xg + 1;
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[
+            MC("obs_xa", formula="xa"),
+            MC("obs_xo", formula="xo"),
+            MC("obs_xg", formula="xg"),
+        ],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    assert model.ne_solver == 0
+
+    T = {"first": (2, 3, 4, 5), "second": (3, 2, 5, 4), "tie": (2, 2, 4, 4)}[
+        order
+    ]
+    for pid, val in zip(("T1", "T2", "T3", "T4"), T, strict=True):
+        model.set_free_parameter_by_id(pid, val)
+    k = model.get_free_parameter_by_id("k")
+    T5 = model.get_free_parameter_by_id("T5")
+    timepoints = np.array([1.0, 6.0, 10.0])
+    model.set_timepoints(timepoints)
+
+    # trigger times and their derivatives w.r.t. T1, ..., T5
+    weights = {"first": (0, 1), "second": (1, 0), "tie": (0.5, 0.5)}[order]
+    tau_a, dtau_a = max(T[:2]), [*weights, 0, 0, 0]
+    tau_o, dtau_o = min(T[2:]), [0, 0, *weights[::-1], 0]
+    tau_g, dtau_g = T5, [0, 0, 0, 0, 1]
+    par_ids = list(model.get_free_parameter_ids())
+    x_expected = []
+    sx_expected = []
+    trigger_times = {
+        "xa": (tau_a, dtau_a),
+        "xo": (tau_o, dtau_o),
+        "xg": (tau_g, dtau_g),
+    }
+    for state_id in model.get_state_ids():
+        tau, dtau = trigger_times[state_id]
+        x = np.where(timepoints > tau, np.exp(-k * (timepoints - tau)), 0)
+        sx = np.zeros((len(timepoints), len(par_ids)))
+        for pid, d in zip(("T1", "T2", "T3", "T4", "T5"), dtau, strict=True):
+            sx[:, par_ids.index(pid)] = d * k * x
+        sx[:, par_ids.index("k")] = -(timepoints - tau) * x
+        x_expected.append(x)
+        sx_expected.append(sx)
+    x_expected = np.stack(x_expected, axis=-1)
+    sx_expected = np.stack(sx_expected, axis=-1)
+    # the trigger time sensitivities of the active leaves are non-zero
+    for pid, *d in zip(
+        ("T1", "T2", "T3", "T4", "T5"), dtau_a, dtau_o, dtau_g, strict=True
+    ):
+        assert np.any(sx_expected[:, par_ids.index(pid), :] != 0) == any(d)
+
+    solver = model.create_solver()
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-12)
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.x, x_expected, rtol=1e-8, atol=1e-12)
+    assert_allclose(rdata.sx, sx_expected, rtol=1e-6, atol=1e-10)
+
+    # adjoint: offset measurements, sllh = 0.5 * sum(sy)
+    edata = ExpData(rdata, 1.0, 0.0)
+    edata.set_measurements((np.asarray(rdata.y) + 0.5).flatten())
+    sllh_expected = 0.5 * sx_expected.sum(axis=(0, 2))
+    for sensi_meth in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver.set_sensitivity_method(sensi_meth)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS, sensi_meth
+        assert_allclose(
+            rdata.sllh,
+            sllh_expected,
+            rtol=1e-6,
+            atol=1e-10,
+            err_msg=sensi_meth,
+        )
+
+
+@skip_on_valgrind
+def test_adjoint_sensitivities_outputs_of_multiple_events(tempdir):
+    """Test adjoint sensitivities for measurements of the outputs of
+    different events with the same occurrence index."""
+    from amici.sim.sundials import ParameterScaling
+
+    model_name = "test_adjoint_sensitivities_outputs_of_multiple_events"
+    model = antimony2amici(
+        """
+        k = 0.5; x0 = 1
+        x = x0; y = 0
+        x' = -k * x
+        y' = 0
+        E1: at time > 1.3: y = y + 1
+        E2: at x < 0.1: x = x + 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[
+            MC("obs_x", formula="x"),
+            MC("z1", formula="x", event_id="E1"),
+            MC("z2", formula="time", event_id="E2"),
+        ],
+    )
+    model.set_parameter_scale(ParameterScaling.none)
+    t = np.linspace(0.5, 2, 4)
+    model.set_timepoints(t)
+    assert model.get_free_parameter_ids() == ("k", "x0")
+
+    # E1 triggers at t1, E2 does not trigger until the last output time T
+    k, x0, t1, T = 0.5, 1.0, 1.3, t[-1]
+    x1, xT = x0 * np.exp(-k * t1), x0 * np.exp(-k * T)
+    dx1 = np.array([-t1 * x1, x1 / x0])
+    dxT = np.array([-T * xT, xT / x0])
+
+    # measurements of z1 only, of rz2 only, and of both
+    for mz_set in ([1.0, np.nan], [np.nan, 3.0], [1.0, 3.0]):
+        edata = ExpData(model)
+        edata.set_measurements(np.full(len(t), np.nan))
+        edata.set_noise_scales(np.ones(len(t)))
+        mz = np.full(model.n_max_event() * model.nztrue, np.nan)
+        mz[:2] = mz_set
+        edata.set_event_measurements(mz)
+        edata.set_event_noise_scales(np.ones_like(mz))
+
+        # Jz(z2) does not depend on the parameters (z2 = T),
+        # the root function value of E2 is +-(x - 0.1)
+        sllh_expected = np.zeros(2)
+        if not np.isnan(mz_set[0]):
+            sllh_expected -= (x1 - mz_set[0]) * dx1
+        if not np.isnan(mz_set[1]):
+            sllh_expected -= (xT - 0.1) * dxT
+        assert np.all(np.abs(sllh_expected) > 0.05)
+
+        for method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+            solver = model.create_solver()
+            solver.set_relative_tolerance(1e-12)
+            solver.set_absolute_tolerance(1e-12)
+            solver.set_sensitivity_order(SensitivityOrder.first)
+            solver.set_sensitivity_method(method)
+            rdata = run_simulation(model, solver, edata)
+            assert rdata.status == AMICI_SUCCESS
+            assert_allclose(
+                rdata.sllh,
+                sllh_expected,
+                rtol=1e-6,
+                err_msg=f"{method.name}, {mz_set=}",
+            )
+
+
+@skip_on_valgrind
+def test_adjoint_sensitivities_outputs_of_repeated_events(tempdir):
+    """Test adjoint sensitivities for measurements of several outputs of
+    several events that occur more often than `n_max_event`."""
+    model_name = "test_adjoint_sensitivities_outputs_of_repeated_events"
+    antimony2amici(
+        """
+        k = 0.1; q = 0.2
+        x = 1; y = 0; c1 = 0; c2 = 0.5
+        x' = -k * x
+        y' = q * x
+        c1' = 1
+        c2' = 1
+        E1: at c1 > 1: c1 = 0, x = x + 1
+        E2: at c2 > 1: c2 = 0, y = y / 2
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[
+            MC("obs_x", formula="x"),
+            MC("z1a", formula="y", event_id="E1"),
+            MC("z1b", formula="x * y", event_id="E1"),
+            MC("z2", formula="y", event_id="E2"),
+        ],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    # E1 occurs at t = 1, 2, 3, 4, E2 at t = 0.5, 1.5, 2.5, 3.5
+    model.set_timepoints(np.linspace(0.2, 4.2, 10))
+    model.set_n_max_event(3)
+    edata = _event_output_problem(
+        model, np.arange(model.n_max_event() * model.nztrue) / 10
+    )
+
+    solver = model.create_solver()
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-12)
+    solver.set_sensitivity_order(SensitivityOrder.first)
+
+    rdatas = {}
+    for sensi_meth in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver.set_sensitivity_method(sensi_meth)
+        rdatas[sensi_meth] = run_simulation(model, solver, edata)
+        assert rdatas[sensi_meth].status == AMICI_SUCCESS
+
+    rdata = rdatas[SensitivityMethod.forward]
+    assert np.all(np.abs(rdata.sllh) > 1)
+    assert_allclose(
+        rdatas[SensitivityMethod.adjoint].sllh, rdata.sllh, rtol=1e-6
+    )
 
 
 @skip_on_valgrind
@@ -2774,6 +3270,60 @@ def test_dae_algebraic_rule_piecewise(tempdir):
         axis=1,
     )
     assert_allclose(rdata.sx, sx_expected, rtol=1e-6, atol=1e-8)
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize(
+    "previous_period",
+    ["preequilibration", "presim", "preequilibration_presim"],
+)
+def test_dae_algebraic_rule_piecewise_switch_at_period_start(
+    tempdir, previous_period
+):
+    """The algebraic states at the start of the main simulation are
+    consistent with the Heaviside variables of the main simulation.
+
+    The previous period ends exactly at the switching point, so that both
+    root functions of the `piecewise` condition are zero, and, for the main
+    simulation, only one Heaviside variable flips from 1 to 0, without any
+    root function triggering.
+    """
+    ant_model = """
+    model dae_piecewise_period_start
+        const k = 1, p = 1
+        x = 1; y = 3
+        x' = p - x
+        0 = y - piecewise(1, x > k, 3)
+    end
+    """
+    module_name = "dae_piecewise_period_start"
+    antimony2amici(
+        ant_model,
+        model_name=module_name,
+        output_dir=tempdir,
+        fixed_parameters=["k"],
+    )
+    model = import_model_module(module_name, tempdir).get_model()
+    model.set_timepoints([0.0, 1.0])
+    model.set_steady_state_computation_mode(
+        SteadyStateComputationMode.integrationOnly
+    )
+    solver = model.create_solver()
+
+    edata = ExpData(model)
+    edata.fixed_parameters = [0.5]
+    if previous_period.startswith("preequilibration"):
+        edata.fixed_parameters_pre_equilibration = [1.0]
+    if previous_period.endswith("presim"):
+        edata.fixed_parameters_presimulation = (
+            [0.5] if previous_period == "preequilibration_presim" else [1.0]
+        )
+        edata.t_presim = 1.0
+    rdata = run_simulation(model, solver, edata)
+    assert rdata.status == AMICI_SUCCESS
+    # x = 1 > k = 0.5 -> y = 1
+    assert_allclose(rdata.x0, [1.0, 1.0], rtol=1e-12)
+    assert_allclose(rdata.x, [[1.0, 1.0], [1.0, 1.0]], rtol=1e-12)
 
 
 @skip_on_valgrind
@@ -3156,3 +3706,60 @@ def test_secondary_event_heaviside_at_trigger(tempdir):
     assert_allclose(rdata.by_id("s"), [0.0, 1.0], rtol=0, atol=0)
     assert_allclose(rdata.by_id("z1"), [0.0, 1.0], rtol=0, atol=0)
     assert_allclose(rdata.by_id("z2"), [0.0, 1.0], rtol=0, atol=0)
+
+
+def test_dae_explicit_and_solver_tracked_events(tempdir):
+    """Check DAE models with explicitly timed and solver-tracked events.
+
+    Events with explicit trigger times are not tracked by the solver
+    (gh-3449).
+    """
+    events = """
+        E1: at time >= 1: x = x + 1
+        E2: at time >= 2: x = x + 1
+        E3: at time >= 3: x = x + 1
+        E4: at x < 0.6: x = 1
+    """
+    k = 0.5
+    t = np.linspace(0, 8, 17)
+    # analytical solution: after E3, x decays to 0.6, then E4 resets it to 1
+    x3 = ((np.exp(-k) + 1) * np.exp(-k) + 1) * np.exp(-k) + 1
+    t4 = 3 + np.log(x3 / 0.6) / k
+    period = np.log(1 / 0.6) / k
+    x_expected = np.where(
+        t < t4,
+        x3 * np.exp(-k * (t - 3)),
+        np.exp(-k * ((t - t4) % period)),
+    )
+    assert t4 < t[-1] - period
+
+    rdatas = {}
+    for dae in (False, True):
+        model_name = f"test_dae_explicit_and_solver_tracked_events_{dae}"
+        algebraic = "y = 0; 0 = y - 2 * x" if dae else "y := 2 * x"
+        antimony2amici(
+            f"""
+            k = 0.5
+            x = 1; x' = -k * x
+            {algebraic}
+            {events}
+            """,
+            model_name=model_name,
+            output_dir=tempdir,
+        )
+        model = import_model_module(model_name, tempdir).get_model()
+        assert model.ne - model.ne_solver == 3
+        model.set_timepoints(t)
+        solver = model.create_solver()
+        solver.set_relative_tolerance(1e-12)
+        solver.set_absolute_tolerance(1e-12)
+        rdatas[dae] = run_simulation(model, solver)
+        assert rdatas[dae].status == AMICI_SUCCESS
+
+    for dae in (False, True):
+        assert_allclose(
+            rdatas[dae].by_id("x")[t > 3], x_expected[t > 3], rtol=1e-6
+        )
+        assert_allclose(
+            rdatas[dae].by_id("y"), 2 * rdatas[dae].by_id("x"), rtol=1e-8
+        )

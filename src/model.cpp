@@ -322,6 +322,58 @@ void Model::initialize_b(
         xQB.zero();
 }
 
+void Model::reinitialize_b(
+    realtype const t, AmiVector const& x, AmiVector& xB, AmiVector& xQB
+) {
+    if (!get_reinitialize_fixed_parameter_initial_states() || nx_reinit() == 0)
+        return;
+
+    auto const& idxs = simulation_parameters_.reinitialization_state_idxs_sim;
+    auto const* p = state_.unscaled_parameters.data();
+    auto const* k = state_.fixed_parameters.data();
+    auto const* x_pos = compute_x_pos(x);
+
+    // xQB += (dx0/dp)^T xB for the reinitialized states
+    std::vector<realtype> sx0(nx_rdata);
+    for (int ip = 0; ip < nplist(); ++ip) {
+        std::ranges::fill(sx0, 0.0);
+        fsx0_fixedParameters(sx0.data(), t, x_pos, p, k, plist(ip), idxs);
+        xQB.at(ip) += std::inner_product(
+            sx0.cbegin(), sx0.cend(), xB.get_vector().cbegin(), 0.0
+        );
+    }
+
+    // xB <- P xB, the reinitialized states don't depend on the previous ones.
+    // fx0_fixedParameters only writes the reinitialized states.
+    std::vector<realtype> x0(nx_rdata, NAN);
+    fx0_fixedParameters(x0.data(), t, p, k, idxs);
+    for (int ix = 0; ix < nx_solver; ++ix) {
+        if (!std::isnan(x0[ix]))
+            xB.at(ix) = 0.0;
+    }
+}
+
+void Model::check_reinitialize_b_supported() const {
+    if (!get_reinitialize_fixed_parameter_initial_states() || nx_reinit() == 0)
+        return;
+
+    if (ncl() > 0)
+        throw AmiException(
+            "Adjoint pre-equilibration with reinitialization of non-constant "
+            "states is not supported for models with conservation laws."
+        );
+    if (has_algebraic_states())
+        throw AmiException(
+            "Adjoint pre-equilibration with reinitialization of non-constant "
+            "states is not supported for DAE models."
+        );
+    if (nJ != 1)
+        throw AmiException(
+            "Adjoint pre-equilibration with reinitialization of non-constant "
+            "states is not supported for nJ != 1."
+        );
+}
+
 void Model::initialize_state(realtype t, AmiVector& x) {
     if (x0data_.empty()) {
         fx0(t, x);
@@ -346,6 +398,17 @@ void Model::initialize_splines() {
     for (auto& spline : splines_) {
         spline.compute_coefficients();
     }
+    spline_sensitivities_initialized_ = false;
+}
+
+void Model::update_splines() {
+    if (splines_.empty())
+        return;
+
+    auto const sensitivities = spline_sensitivities_initialized_;
+    initialize_splines();
+    if (sensitivities)
+        initialize_spline_sensitivities();
 }
 
 void Model::initialize_spline_sensitivities() {
@@ -396,6 +459,7 @@ void Model::initialize_spline_sensitivities() {
         );
         spline_offset += spline.n_nodes() * nplist();
     }
+    spline_sensitivities_initialized_ = true;
 }
 
 void Model::initialize_state_sensitivities(
@@ -758,7 +822,10 @@ void Model::set_fixed_parameters(std::vector<realtype> const& k) {
             "Dimension mismatch. Size of fixedParameters does "
             "not match number of fixed model parameters."
         );
+    if (k == state_.fixed_parameters)
+        return;
     state_.fixed_parameters = k;
+    update_splines();
 }
 
 void Model::set_fixed_parameter_by_id(
@@ -773,6 +840,7 @@ void Model::set_fixed_parameter_by_id(
         get_fixed_parameter_ids(), state_.fixed_parameters, value, par_id,
         "fixedParameters", "id"
     );
+    update_splines();
 }
 
 int Model::set_fixed_parameters_by_id_regex(
@@ -783,10 +851,12 @@ int Model::set_fixed_parameters_by_id_regex(
             "Could not access fixed parameters by id as they are not set"
         );
 
-    return set_value_by_id_regex(
+    auto const n_changed = set_value_by_id_regex(
         get_fixed_parameter_ids(), state_.fixed_parameters, value, par_id_regex,
         "fixedParameters", "id"
     );
+    update_splines();
+    return n_changed;
 }
 
 void Model::set_fixed_parameter_by_name(
@@ -801,6 +871,7 @@ void Model::set_fixed_parameter_by_name(
         get_fixed_parameter_names(), state_.fixed_parameters, value, par_name,
         "fixedParameters", "name"
     );
+    update_splines();
 }
 
 int Model::set_fixed_parameters_by_name_regex(
@@ -811,10 +882,12 @@ int Model::set_fixed_parameters_by_name_regex(
             "Could not access fixed parameters by name as they are not set"
         );
 
-    return set_value_by_id_regex(
+    auto const n_changed = set_value_by_id_regex(
         get_fixed_parameter_ids(), state_.fixed_parameters, value,
         par_name_regex, "fixedParameters", "name"
     );
+    update_splines();
+    return n_changed;
 }
 
 std::string Model::get_name() const { return ""; }
@@ -1485,12 +1558,10 @@ void Model::add_event_objective_sensitivity(
 
     // sJz           nJ x nplist()
     // dJzdp         nJ x nplist()
-    // dJzdx         nmaxevent x nJ        x nx_solver
-    // sx            rdata->nt x nx_solver x nplist()
+    // dJzdx         nJ x nx_solver
+    // sx            nx_solver x nplist()
 
     // Compute dJzdx*sx for current 'ie'
-    // dJzdx        rdata->nt x nJ        x nx_solver
-    // sx           rdata->nt x nx_solver x nplist()
     sx.flatten_to_vector(derived_state_.sx_);
 
     // C := alpha*op(A)*op(B) + beta*C,
@@ -1578,9 +1649,16 @@ void Model::add_state_sensitivity_event_update(
     AmiVectorArray& sx, int const ie, realtype const t, AmiVector const& x,
     AmiVector const& x_eval, AmiVector const& xdot, AmiVector const& xdot_eval,
     AmiVector const& xdot_pre, AmiVectorArray const& sx_eval,
-    std::vector<realtype> const& stau
+    std::vector<realtype> const& stau, std::vector<realtype> const& h_assign
 ) {
-    fw(t, x_eval.data(), false);
+    fspl(t);
+    fw(derived_state_.w_.data(), t, x_eval.data(),
+       state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
+       h_assign.data(), state_.total_cl.data(), derived_state_.spl_.data(),
+       false);
+    if (always_check_finite_) {
+        check_finite(derived_state_.w_, ModelQuantity::w, t);
+    }
 
     for (int ip = 0; ip < nplist(); ip++) {
 
@@ -1590,7 +1668,7 @@ void Model::add_state_sensitivity_event_update(
         fdeltasx(
             derived_state_.deltasx_.data(), t, x.data(),
             state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-            state_.h.data(), derived_state_.w_.data(), plist(ip), ie,
+            h_assign.data(), derived_state_.w_.data(), plist(ip), ie,
             xdot.data(), xdot_eval.data(), xdot_pre.data(), sx.data(ip),
             sx_eval.data(ip), &stau.at(ip), state_.total_cl.data(),
             x_eval.data()
@@ -1611,18 +1689,20 @@ void Model::add_adjoint_event_update(
     AmiVector& xB, AmiVector& xQB, AmiVector& xB_at_trigger,
     std::vector<realtype>& stauB, int const ie, realtype const t,
     AmiVector const& x, AmiVector const& xdot, AmiVector const& xdot_eval,
-    AmiVector const& xdot_pre, AmiVector const& x_eval, AmiVector const& dx,
+    AmiVector const& xdot_pre, AmiVector const& x_eval,
+    std::vector<realtype> const& h_assign, AmiVector const& dx,
     std::vector<realtype> const& h_eval
 ) {
     auto const* x_pos = compute_x_pos(x);
 
-    // all updates use the adjoint state after the event
+    // all updates use the adjoint state after the event, and the Heaviside
+    // variables with which the event assignments were evaluated
     for (int ip = 0; ip < nplist(); ip++) {
         derived_state_.deltaqB_.assign(nJ, 0.0);
         fdeltaqB(
             derived_state_.deltaqB_.data(), t, x_pos,
             state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-            state_.h.data(), dx.data(), plist(ip), ie, x_eval.data(), xB.data()
+            h_assign.data(), dx.data(), plist(ip), ie, x_eval.data(), xB.data()
         );
         if (always_check_finite_) {
             check_finite(derived_state_.deltaqB_, ModelQuantity::deltaqB, t);
@@ -1634,7 +1714,7 @@ void Model::add_adjoint_event_update(
     std::vector<realtype> stauB_ie(nJ, 0.0);
     fstauB(
         stauB_ie.data(), t, x_pos, state_.unscaled_parameters.data(),
-        state_.fixed_parameters.data(), state_.h.data(), dx.data(), ie,
+        state_.fixed_parameters.data(), h_assign.data(), dx.data(), ie,
         xdot.data(), xdot_eval.data(), xdot_pre.data(), x_eval.data(),
         xB.data(), state_.total_cl.data()
     );
@@ -1650,7 +1730,7 @@ void Model::add_adjoint_event_update(
         fdeltaxB_at_trigger(
             derived_state_.deltaxB_.data(), t, x_pos,
             state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-            state_.h.data(), dx.data(), ie, x_eval.data(), xB.data(),
+            h_assign.data(), dx.data(), ie, x_eval.data(), xB.data(),
             state_.total_cl.data()
         );
         if (always_check_finite_) {
@@ -1669,7 +1749,7 @@ void Model::add_adjoint_event_update(
     fdeltaxB(
         derived_state_.deltaxB_.data(), t, x_pos,
         state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
-        state_.h.data(), dx.data(), ie, x_eval.data(), xB.data(),
+        h_assign.data(), dx.data(), ie, x_eval.data(), xB.data(),
         state_.total_cl.data()
     );
     if (always_check_finite_) {
@@ -1762,6 +1842,28 @@ void Model::project_algebraic_adjoint_event_update(
             deltaxB[ix + iJ * nxtrue_solver] = dJdx[iJ + ix * nJ];
     for (int i = 0; i < nplist() * nJ; ++i)
         xQB[i] += dJdp[i];
+}
+
+void Model::restore_trajectory_state(SimulationState const& sim_state) {
+    auto const& state = sim_state.mod;
+    if (gsl::narrow<int>(state.h.size()) != ne)
+        throw AmiException("Mismatch in Heaviside size");
+    if (gsl::narrow<int>(state.total_cl.size()) != ncl())
+        throw AmiException("Mismatch in conservation law size");
+    if (state.stotal_cl.size() != state_.stotal_cl.size())
+        throw AmiException("Mismatch in conservation law sensitivity size");
+    state_.h = state.h;
+    state_.total_cl = state.total_cl;
+    state_.stotal_cl = state.stotal_cl;
+
+    // re-evaluate static expressions
+    auto const t = sim_state.sol.t;
+    auto x_pos = compute_x_pos(sim_state.sol.x);
+    fw(t, x_pos, true);
+    fdwdw(t, x_pos, true);
+    fdwdx(t, x_pos, true);
+    if (nplist() > 0)
+        fdwdp(t, x_pos, true);
 }
 
 void Model::update_heaviside(std::vector<int> const& rootsfound) {
@@ -2901,7 +3003,7 @@ void Model::fdJzdx(
 ) {
     // dJzdz         nJ x nz        x nztrue
     // dzdx          nz x nx_solver
-    // dJzdx         nJ x nx_solver x nmaxevent
+    // dJzdx         nJ x nx_solver
     if (!nz)
         return;
 

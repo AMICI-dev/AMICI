@@ -4,8 +4,11 @@ Test getters, setters, etc.
 """
 
 import copy
+import gc
 import numbers
 import pickle
+import sys
+import weakref
 from math import nan
 
 import amici
@@ -14,11 +17,14 @@ import pytest
 import xarray
 from amici.sim.sundials import (
     AMICI_FIRST_RHSFUNC_ERR,
+    AMICI_NOT_RUN,
     CVodeSolver,
+    DoubleVector,
     ExpData,
     ExpDataPtr,
     ExpDataView,
     IDASolver,
+    IntVector,
     ModelPtr,
     ParameterScaling,
     RDataReporting,
@@ -29,12 +35,15 @@ from amici.sim.sundials import (
     SteadyStateComputationMode,
     SteadyStateSensitivityMode,
     get_model_settings,
+    get_solver_settings,
     parameter_scaling_from_int_vector,
     run_simulation,
     run_simulations,
     set_model_settings,
+    set_solver_settings,
 )
 from amici.testing import skip_on_valgrind
+from util import modify_solver_attrs
 
 
 def test_version_number(pysb_example_presimulation_module):
@@ -160,6 +169,9 @@ def same_or_nan(a, b):
     return a == b or (isinstance(a, float) and np.isnan(a) and np.isnan(b))
 
 
+@pytest.mark.filterwarnings(
+    "ignore:`Model.set_t0_preeq` is deprecated:DeprecationWarning"
+)
 def test_model_instance_settings(pysb_example_presimulation_module):
     model0 = pysb_example_presimulation_module.get_model()
 
@@ -475,6 +487,39 @@ def test_model_instance_settings_custom_x0(pysb_example_presimulation_module):
     assert_same(settings, get_model_settings(model2))
 
 
+def test_expdata_initial_state_restored(sbml_example_presimulation_module):
+    """Check that `ExpData` initial states don't remain set in the model.
+
+    See gh-3452.
+    """
+    model = sbml_example_presimulation_module.get_model()
+    model.set_timepoints([0.0, 1.0])
+    solver = model.create_solver()
+    x0_default = np.asarray(model.get_initial_state())
+    assert not model.has_custom_initial_state()
+    assert not model.has_custom_initial_state_sensitivities()
+
+    edata = ExpData(model)
+    edata.x0 = 2 * x0_default + 1
+    edata.sx0 = np.ones(model.nx_rdata * model.nplist())
+    rdata = run_simulation(model, solver, edata)
+    assert np.asarray(rdata.x0) == pytest.approx(2 * x0_default + 1)
+
+    assert not model.has_custom_initial_state()
+    assert not model.has_custom_initial_state_sensitivities()
+    assert np.asarray(model.get_initial_state()) == pytest.approx(x0_default)
+    rdata = run_simulation(model, solver)
+    assert np.asarray(rdata.x0) == pytest.approx(x0_default)
+
+    # a custom initial state of the model is restored
+    x0_custom = x0_default + 3
+    model.set_initial_state(x0_custom)
+    rdata = run_simulation(model, solver, edata)
+    assert np.asarray(rdata.x0) == pytest.approx(2 * x0_default + 1)
+    assert model.has_custom_initial_state()
+    assert np.asarray(model.get_initial_state()) == pytest.approx(x0_custom)
+
+
 def test_solver_repr():
     for solver in (CVodeSolver(), IDASolver()):
         solver_ptr = SolverPtr(solver.this)
@@ -585,6 +630,7 @@ def test_rdataview(sbml_example_presimulation_module):
 
     # field names are included by dir()
     assert "x" in dir(rdata)
+    assert "xr" in dir(rdata)
 
     # Test xarray conversion
     xr_x = rdata.xr.x
@@ -604,6 +650,57 @@ def test_rdataview(sbml_example_presimulation_module):
                 print(str(e))
 
 
+def test_vector_to_ndarray(monkeypatch, sbml_example_presimulation_module):
+    """DoubleVector and IntVector are converted to numpy arrays in C++,
+    not element by element via their Python iterators."""
+
+    def no_iter(self):
+        raise AssertionError("converted via the Python iterator")
+
+    for vector_type, values, dtype in (
+        (DoubleVector, [1.5, -2.0, 3.25], np.float64),
+        (IntVector, [1, -2, 3], np.int64),
+    ):
+        vec = vector_type(values)
+        monkeypatch.setattr(vector_type, "__iter__", no_iter)
+
+        for convert in (np.array, np.asarray):
+            arr = convert(vec)
+            assert isinstance(arr, np.ndarray)
+            assert arr.dtype == dtype
+            assert arr.shape == (len(values),)
+            assert arr.tolist() == values
+
+        # the array is a copy
+        arr = np.asarray(vec)
+        arr[0] = 0
+        assert np.asarray(vec).tolist() == values
+        with pytest.raises(ValueError, match="always copied"):
+            np.asarray(vec, copy=False)
+
+        assert np.asarray(vec, dtype=np.float32).dtype == np.float32
+        assert np.asarray(vector_type()).shape == (0,)
+        assert repr(np.asarray(vec)) in repr(vec)
+
+    # ReturnDataView fields
+    monkeypatch.undo()
+    model = sbml_example_presimulation_module.get_model()
+    model.set_timepoints([1, 2, 3])
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    rdata = run_simulation(model, solver)
+    fields = ("x", "sx", "y", "numsteps")
+    expected = {field: list(getattr(rdata.ptr, field)) for field in fields}
+    monkeypatch.setattr(DoubleVector, "__iter__", no_iter)
+    monkeypatch.setattr(IntVector, "__iter__", no_iter)
+    assert rdata.x.shape == (rdata.nt, rdata.nx_rdata)
+    assert rdata.sx.shape == (rdata.nt, rdata.nplist, rdata.nx_rdata)
+    assert rdata.numsteps.dtype == np.int64
+    for field in fields:
+        assert expected[field]
+        assert getattr(rdata, field).flatten().tolist() == expected[field]
+
+
 def test_rdata_ids(sbml_example_presimulation_module):
     """Test that rdata IDs are correctly set."""
     model_module = sbml_example_presimulation_module
@@ -619,6 +716,28 @@ def test_rdata_ids(sbml_example_presimulation_module):
     assert rdata.state_ids_solver == model.get_state_ids_solver()
     assert rdata.observable_ids == model.get_observable_ids()
     assert rdata.expression_ids == model.get_expression_ids()
+
+
+def test_rdataview_freed_without_gc(sbml_example_presimulation_module):
+    """A ReturnDataView and its ReturnData are freed by reference counting,
+    without waiting for the cyclic garbage collector."""
+    model = sbml_example_presimulation_module.get_model()
+    model.set_timepoints([1, 2, 3])
+    solver = model.create_solver()
+
+    gc_was_enabled = gc.isenabled()
+    gc.disable()
+    try:
+        rdata = run_simulation(model, solver)
+        _ = rdata.xr.x
+        rdata_ref = weakref.ref(rdata)
+        swigptr_ref = weakref.ref(rdata._swigptr)
+        del rdata
+        assert rdata_ref() is None
+        assert swigptr_ref() is None
+    finally:
+        if gc_was_enabled:
+            gc.enable()
 
 
 def test_python_exceptions(sbml_example_presimulation_module):
@@ -672,6 +791,118 @@ def test_python_exceptions(sbml_example_presimulation_module):
         amici._installation._amici.run_simulation(
             solver, None, model.get(), True
         )
+
+
+@pytest.mark.parametrize("num_threads", [0, 1, 3, 100])
+def test_run_simulations_parallel(
+    sbml_example_presimulation_module, num_threads
+):
+    """Parallel simulation matches serial simulation, also with failfast."""
+    from amici.sim.sundials import AMICI_NOT_RUN, AMICI_SUCCESS
+
+    model = sbml_example_presimulation_module.get_model()
+    model.set_timepoints(np.linspace(0, 10, 11))
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+
+    p = np.asarray(model.get_free_parameters())
+    edatas = []
+    for i in range(8):
+        edata = ExpData(model)
+        edata.free_parameters = p + 0.05 * i
+        edatas.append(edata)
+
+    expected = run_simulations(model, solver, edatas, num_threads=1)
+    actual = run_simulations(model, solver, edatas, num_threads=num_threads)
+    assert len(actual) == len(edatas)
+    for rdata_expected, rdata_actual in zip(expected, actual, strict=True):
+        assert rdata_actual.status == AMICI_SUCCESS
+        np.testing.assert_array_equal(rdata_actual.x, rdata_expected.x)
+        np.testing.assert_array_equal(rdata_actual.sx, rdata_expected.sx)
+
+    # one failing condition
+    failing = 2
+    edatas[failing].free_parameters = [nan] * model.np()
+    rdatas = run_simulations(
+        model, solver, edatas, failfast=False, num_threads=num_threads
+    )
+    assert rdatas[failing].status < 0
+    assert all(
+        rdata.status == AMICI_SUCCESS
+        for i, rdata in enumerate(rdatas)
+        if i != failing
+    )
+
+    rdatas = run_simulations(
+        model, solver, edatas, failfast=True, num_threads=num_threads
+    )
+    assert rdatas[failing].status < 0
+    assert rdatas[failing].status != AMICI_NOT_RUN
+    # with failfast, conditions that start after the failure are skipped
+    assert all(
+        rdata.status in (AMICI_SUCCESS, AMICI_NOT_RUN)
+        for i, rdata in enumerate(rdatas)
+        if i != failing
+    )
+    if num_threads <= 1:
+        assert all(rdata.status == AMICI_SUCCESS for rdata in rdatas[:failing])
+        assert all(
+            rdata.status == AMICI_NOT_RUN for rdata in rdatas[failing + 1 :]
+        )
+
+
+def test_compiled_with_openmp_deprecated():
+    from amici.sim.sundials import compiled_with_openmp
+
+    with pytest.deprecated_call():
+        assert compiled_with_openmp() is False
+
+
+def test_cpu_timer_uses_thread_clock():
+    from amici.sim.sundials import CpuTimer
+
+    # Windows' per-thread CPU clock is too coarse, so std::clock is used
+    assert CpuTimer.uses_thread_clock is (sys.platform != "win32")
+    timer = CpuTimer()
+    assert 0.0 <= timer.elapsed_seconds() < 1.0
+
+
+def test_run_simulations_failfast_skipped(sbml_example_presimulation_module):
+    """Skipped simulations return invalid results matching their ExpData."""
+    model = sbml_example_presimulation_module.get_model()
+    model.set_timepoints([0.0, 1.0])
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    solver.set_return_data_reporting_mode(RDataReporting.full)
+    solver.set_max_steps(10)
+
+    edata_fail = ExpData(model)
+    edata_fail.set_timepoints([1e8])
+    edata_fail.id = "fail"
+    edata_skip = ExpData(model)
+    edata_skip.set_timepoints([0.0, 1.0, 2.0])
+    edata_skip.plist = [1]
+    edata_skip.id = "skip"
+
+    rdatas = run_simulations(
+        model, solver, [edata_fail, edata_skip], failfast=True
+    )
+    assert rdatas[0].status < 0
+    assert rdatas[1].status == AMICI_NOT_RUN
+    assert rdatas[1].id == "skip"
+    assert np.array_equal(rdatas[1].ts, edata_skip.get_timepoints())
+    assert rdatas[1].sx.shape[1] == 1
+    # skipped results must not look like valid outputs or a perfect fit
+    assert np.isnan(rdatas[1].llh)
+    assert np.isnan(rdatas[1].chi2)
+    for field in ("x", "y", "sx", "sy", "res", "sres", "sllh"):
+        values = np.asarray(rdatas[1][field])
+        assert values.size > 0, field
+        assert np.isnan(values).all(), field
+    # the model is unchanged
+    assert np.array_equal(model.get_timepoints(), [0.0, 1.0])
 
 
 def test_reporting_mode_obs_llh(sbml_example_presimulation_module):
@@ -746,6 +977,48 @@ def test_pickle_model(sbml_example_presimulation_module):
     pickle.loads(pickle.dumps(model_clone))
 
 
+def test_pickle_model_reinitialization(
+    sbml_example_presimulation_module, tempdir
+):
+    """Pickling preserves the reinitialization settings."""
+    from amici.importers.antimony import antimony2amici
+
+    model = sbml_example_presimulation_module.get_model()
+    model.set_reinitialization_state_idxs([1])
+    model_pickled = pickle.loads(pickle.dumps(model))
+    assert tuple(model_pickled.get_reinitialization_state_idxs()) == (1,)
+    assert model_pickled.get_reinitialize_fixed_parameter_initial_states()
+
+    # reinitialization of all states
+    model.set_reinitialize_fixed_parameter_initial_states(True)
+    model_pickled = pickle.loads(pickle.dumps(model))
+    assert tuple(model_pickled.get_reinitialization_state_idxs()) == tuple(
+        range(model.nx_rdata)
+    )
+    assert model_pickled.get_reinitialize_fixed_parameter_initial_states()
+
+    # no reinitialization
+    model.set_reinitialize_fixed_parameter_initial_states(False)
+    model_pickled = pickle.loads(pickle.dumps(model))
+    assert tuple(model_pickled.get_reinitialization_state_idxs()) == ()
+    assert not model_pickled.get_reinitialize_fixed_parameter_initial_states()
+
+    # reinitialization of all states disabled at import
+    model_name = "test_pickle_no_reinit"
+    antimony2amici(
+        "k1 = 1; x1 = k1; x1' = 0; x2 = 0; x2' = 0",
+        model_name=model_name,
+        output_dir=tempdir,
+        fixed_parameters=["k1"],
+        allow_reinit_fixpar_initcond=False,
+    )
+    model = amici.import_model_module(model_name, tempdir).get_model()
+    model.set_reinitialization_state_idxs([0])
+    model_pickled = pickle.loads(pickle.dumps(model))
+    assert tuple(model_pickled.get_reinitialization_state_idxs()) == (0,)
+    assert model_pickled.get_reinitialize_fixed_parameter_initial_states()
+
+
 def test_pickle_edata():
     ny = 2
     nz = 3
@@ -782,10 +1055,55 @@ def test_pickle_edata_after_expdataview():
     assert edata == edata_pickled
 
 
-@pytest.mark.skipif(
-    not amici.sim.sundials.hdf5_enabled,
-    reason="AMICI build without HDF5 support",
-)
+def test_expdataview_shape_at_first_access():
+    """Field shapes are read from the `ExpData` when a field is first
+    accessed, not when the view is created."""
+    edata = ExpData(2, 0, 0, [1.0, 2.0])
+    view = ExpDataView(edata)
+    edata.set_timepoints([1.0, 2.0, 3.0])
+
+    assert view.measurements.shape == (3, 2)
+    assert view.ts.shape == (3,)
+
+
+def _solver_getters(solver):
+    """Names of all settings with a getter and setter on `solver`."""
+    return sorted(
+        name[4:]
+        for name in dir(solver)
+        if name.startswith("set_") and hasattr(solver, f"get_{name[4:]}")
+    )
+
+
+def test_solver_settings_complete():
+    """`get_solver_settings` covers every setting of a solver."""
+    from amici.sim.sundials._swig_wrappers import solver_instance_settings
+
+    for solver in (CVodeSolver(), IDASolver()):
+        assert sorted(solver_instance_settings) == _solver_getters(solver)
+
+
+def test_get_set_solver_settings():
+    for solver_cls in (CVodeSolver, IDASolver):
+        solver = solver_cls()
+        modify_solver_attrs(solver)
+        settings = get_solver_settings(solver)
+
+        new_solver = solver_cls()
+        for name in _solver_getters(solver):
+            assert settings[name] != getattr(new_solver, f"get_{name}")(), name
+
+        set_solver_settings(new_solver, settings)
+        assert get_solver_settings(new_solver) == settings
+
+        # a subset of the settings can be set
+        set_solver_settings(new_solver, {"max_steps": 1234})
+        assert new_solver.get_max_steps() == 1234
+
+        with pytest.raises(ValueError, match="Unknown solver settings"):
+            set_solver_settings(new_solver, {"no_such_setting": 1})
+
+
 def test_pickle_solver():
     for solver in (
         CVodeSolver(),
@@ -793,14 +1111,12 @@ def test_pickle_solver():
         SolverPtr(CVodeSolver()),
         SolverPtr(IDASolver()),
     ):
-        solver.set_max_steps(1234)
-        solver.set_sensitivity_order(SensitivityOrder.first)
+        modify_solver_attrs(solver)
         solver_pickled = pickle.loads(pickle.dumps(solver))
         assert type(solver) is type(solver_pickled)
-        assert solver.get_max_steps() == solver_pickled.get_max_steps()
-        assert (
-            solver.get_sensitivity_order()
-            == solver_pickled.get_sensitivity_order()
+        assert solver.get_class_name() == solver_pickled.get_class_name()
+        assert get_solver_settings(solver_pickled) == get_solver_settings(
+            solver
         )
 
 

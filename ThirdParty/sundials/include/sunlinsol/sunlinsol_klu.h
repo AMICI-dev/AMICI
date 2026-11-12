@@ -1,12 +1,15 @@
 /*
  * -----------------------------------------------------------------
- * Programmer(s): Daniel Reynolds @ SMU
+ * Programmer(s): Daniel Reynolds @ UMBC
  * Based on sundials_klu_impl.h and arkode_klu.h/cvode_klu.h/...
  *     code, written by Carol S. Woodward @ LLNL
  * -----------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2024, Lawrence Livermore National Security
+ * Copyright (c) 2025-2026, Lawrence Livermore National Security,
+ * University of Maryland Baltimore County, and the SUNDIALS contributors.
+ * Copyright (c) 2013-2025, Lawrence Livermore National Security
  * and Southern Methodist University.
+ * Copyright (c) 2002-2013, Lawrence Livermore National Security.
  * All rights reserved.
  *
  * See the top-level LICENSE and NOTICE files for details.
@@ -84,9 +87,14 @@ extern "C" {
 /* Create a typedef for the KLU solver function pointer to suppress compiler
  * warning messages about sunindextype vs internal KLU index types. */
 
+#if SUITESPARSE_MAIN_VERSION >= 6
+typedef int (*KLUSolveFn)(sun_klu_symbolic*, sun_klu_numeric*, sunindextype,
+                          sunindextype, double*, sun_klu_common*);
+#else
 typedef sunindextype (*KLUSolveFn)(sun_klu_symbolic*, sun_klu_numeric*,
                                    sunindextype, sunindextype, double*,
                                    sun_klu_common*);
+#endif
 
 struct _SUNLinearSolverContent_KLU
 {
@@ -130,9 +138,10 @@ SUNDIALS_EXPORT int SUNLinSolSetup_KLU(SUNLinearSolver S, SUNMatrix A);
 SUNDIALS_EXPORT int SUNLinSolSolve_KLU(SUNLinearSolver S, SUNMatrix A,
                                        N_Vector x, N_Vector b, sunrealtype tol);
 SUNDIALS_EXPORT sunindextype SUNLinSolLastFlag_KLU(SUNLinearSolver S);
-SUNDIALS_EXPORT SUNErrCode SUNLinSolSpace_KLU(SUNLinearSolver S,
-                                              long int* lenrwLS,
-                                              long int* leniwLS);
+SUNDIALS_DEPRECATED_EXPORT_MSG(
+  "Work space functions will be removed in version 8.0.0")
+SUNErrCode SUNLinSolSpace_KLU(SUNLinearSolver S, long int* lenrwLS,
+                              long int* leniwLS);
 SUNDIALS_EXPORT SUNErrCode SUNLinSolFree_KLU(SUNLinearSolver S);
 
 #ifdef __cplusplus

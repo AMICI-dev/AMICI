@@ -26,7 +26,7 @@ SIGMA = 0.05
 class Robertson(JAXModel):
     """Stiff Robertson chemistry — stresses diffrax adaptive step control."""
 
-    api_version = "0.0.4"
+    api_version = "0.0.5"
 
     def __init__(self):
         self.jax_py_file = Path(__file__).resolve()
@@ -81,7 +81,7 @@ class Robertson(JAXModel):
     def _root_cond_fn(self, t, y, args, **_):
         return jnp.array([])
 
-    def _delta_x(self, y, p, tcl):
+    def _delta_x(self, t, y, p, tcl, h):
         return jnp.array([])
 
     @property

@@ -61,7 +61,12 @@ endif ( )
 
 
 # Import target
-include ( ${CMAKE_CURRENT_LIST_DIR}/BTFTargets.cmake )
+if ( @BUILD_SHARED_LIBS@ )
+    include ( ${CMAKE_CURRENT_LIST_DIR}/BTFTargets.cmake )
+endif ( )
+if ( @BUILD_STATIC_LIBS@ )
+    include ( ${CMAKE_CURRENT_LIST_DIR}/BTFTargets_static.cmake )
+endif ( )
 
 # The following is only for backward compatibility with FindBTF.
 

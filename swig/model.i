@@ -6,6 +6,18 @@
 using namespace amici;
 %}
 
+%feature("pythonprepend") amici::Model::set_t0_preeq %{
+    if not np.isnan(t0_preeq):
+        import warnings
+
+        warnings.warn(
+            "`Model.set_t0_preeq` is deprecated, set "
+            "`ExpData.t_start_preeq` instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+%}
+
 // remove functions that use AmiVector(Array) since that class anyways cannot
 // be exposed in swig
 %ignore add_adjoint_event_time_update;
@@ -40,6 +52,8 @@ using namespace amici;
 %ignore initialize_state_sensitivities;
 %ignore initialize_state;
 %ignore reinitialize;
+%ignore reinitialize_b;
+%ignore check_reinitialize_b_supported;
 %ignore get_model_state;
 %ignore set_model_state;
 // fx0, fJrz, fdydx, etc. are declared on AbstractModel and already ignored
@@ -47,6 +61,7 @@ using namespace amici;
 %ignore get_dxdotdp_full;
 %ignore fsdx0;
 %ignore update_heaviside;
+%ignore restore_trajectory_state;
 %ignore get_event_sigma;
 %ignore get_event_sigma_sensitivity;
 %ignore get_observable_sigma;
@@ -184,8 +199,7 @@ def simulate(
         Only relevant if `edata` is a sequence of :class:`ExpData` instances.
     :param num_threads:
         Number of threads to use for simulation.
-        Only relevant if AMICI was compiled with OpenMP support and if `edata`
-        is a sequence of :class:`ExpData` instances.
+        Only relevant if `edata` is a sequence of :class:`ExpData` instances.
     :return:
         A single :class:`ReturnDataView` instance containing the simulation
         results if `edata` is a single :class:`ExpData` instance or `None`.
@@ -271,8 +285,7 @@ def simulate(
         Only relevant if `edata` is a sequence of :class:`ExpData` instances.
     :param num_threads:
         Number of threads to use for simulation.
-        Only relevant if AMICI was compiled with OpenMP support and if `edata`
-        is a sequence of :class:`ExpData` instances.
+        Only relevant if `edata` is a sequence of :class:`ExpData` instances.
     :return:
         A single :class:`ReturnDataView` instance containing the simulation
         results if `edata` is a single :class:`ExpData` instance or `None`.

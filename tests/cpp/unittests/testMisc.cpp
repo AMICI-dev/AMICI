@@ -10,6 +10,7 @@
 
 #include <cmath>
 #include <cstring>
+#include <thread>
 #include <vector>
 
 #include <gtest/gtest.h>
@@ -520,6 +521,14 @@ TEST_F(AmiVectorTest, Vector) {
     ASSERT_EQ(ss.str(), "[1, 2, 4, 3]");
 }
 
+TEST_F(AmiVectorTest, AssignEmpty) {
+    sundials::Context sunctx;
+    AmiVector av(vec1, sunctx);
+    av = AmiVector();
+    ASSERT_EQ(av.size(), 0);
+    ASSERT_EQ(av.get_nvector(), nullptr);
+}
+
 TEST_F(AmiVectorTest, VectorArray) {
     sundials::Context sunctx;
     AmiVectorArray ava(4, 3, sunctx);
@@ -766,6 +775,23 @@ TEST(CpuTimer, CpuTimer) {
     elapsed = timer.elapsed_milliseconds();
     EXPECT_LT(0.0, elapsed);
     EXPECT_GT(1000.0, elapsed);
+}
+
+TEST(CpuTimer, IgnoresOtherThreads) {
+    if (!amici::CpuTimer::uses_thread_clock)
+        GTEST_SKIP() << "No precise per-thread CPU clock on this platform";
+
+    amici::CpuTimer timer;
+    // Burn CPU time in another thread while this thread sleeps.
+    std::thread busy([]() {
+        amici::CpuTimer busy_timer;
+        volatile double x = 0.0;
+        while (busy_timer.elapsed_seconds() < 0.2)
+            x = x + 1.0;
+    });
+    busy.join();
+
+    EXPECT_GT(0.1, timer.elapsed_seconds());
 }
 
 } // namespace

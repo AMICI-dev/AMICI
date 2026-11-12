@@ -18,6 +18,8 @@ BackwardProblem::BackwardProblem(ForwardProblem& fwd)
     , edata_(fwd.edata)
     , t_(fwd.get_final_time())
     , discs_main_(fwd.get_discontinuities())
+    , main_final_state_(fwd.get_final_simulation_state())
+    , x_main_initial_(fwd.get_initial_simulation_state().sol.x)
     , dJydx_(fwd.get_adjoint_updates(*model_, *edata_))
     , dJzdx_(fwd.get_dJzdx())
     , preeq_problem_(fwd.get_preeq_problem())
@@ -45,17 +47,32 @@ void BackwardProblem::workBackwardProblem() {
         --it;
     }
 
+    model_->restore_trajectory_state(main_final_state_);
     ws_.discs_ = discs_main_;
     ws_.nroots_ = compute_nroots(discs_main_, model_->ne);
     simulator_.run(
         t_, model_->t0(), it, model_->get_timepoints(), &dJydx_, &dJzdx_
     );
 
+    bool const asa_preeq = preeq_problem_
+                           && preeq_problem_->get_solver()
+                                      ->get_sensitivity_method_pre_equilibration()
+                                  == SensitivityMethod::adjoint;
+    if (asa_preeq) {
+        // Reinitialization at the start of the main simulation. With forward
+        // pre-equilibration, this is part of the state sensitivities instead.
+        // ASA presimulation with reinitialization is not supported.
+        model_->reinitialize_b(
+            model_->t0(), x_main_initial_, ws_.xB_, ws_.xQB_
+        );
+    }
+
     // handle presimulation
     if (edata_ && edata_->t_presim > 0) {
         ConditionContext cc(
             model_, edata_, FixedParameterContext::presimulation
         );
+        model_->restore_trajectory_state(presim_result.final_state_);
         ws_.discs_ = presim_result.discs;
         ws_.nroots_ = compute_nroots(ws_.discs_, model_->ne);
         simulator_.run(
@@ -70,23 +87,8 @@ void BackwardProblem::workBackwardProblem() {
     xQB_pre_preeq_ = ws_.xQB_;
 
     // handle pre-equilibration
-    if (preeq_problem_
-        && preeq_problem_->get_solver()
-                   ->get_sensitivity_method_pre_equilibration()
-               == SensitivityMethod::adjoint) {
+    if (asa_preeq) {
         auto preeq_solver = preeq_problem_->get_solver();
-
-        // Reinitialization of non-constant states is not yet supported here
-        // (gh-1156). Reinitialization settings for the main simulation are
-        // only applied to the model in the simulation context, so check
-        // before switching to the preequilibration context.
-        if (model_->get_reinitialize_fixed_parameter_initial_states()
-            && model_->nx_reinit() > 0)
-            throw NewtonFailure(
-                AMICI_NOT_IMPLEMENTED,
-                "Adjoint preequilibration with reinitialization of "
-                "non-constant states is not yet implemented. Stopping."
-            );
 
         ConditionContext cc2(
             model_, edata_, FixedParameterContext::preequilibration
@@ -96,6 +98,7 @@ void BackwardProblem::workBackwardProblem() {
                                                        : model_->t0_preeq();
 
         auto const& preeq_result = preeq_problem_->get_result();
+        model_->restore_trajectory_state(preeq_result.final_state_);
 
         // If there were no discontinuities or no simulation was performed,
         // we can use the steady-state shortcuts.
@@ -131,6 +134,10 @@ void BackwardProblem::workBackwardProblem() {
             );
         }
     }
+
+    // Leave the model in its state at the end of the main simulation, which
+    // is used for computing the outputs in ReturnData.
+    model_->restore_trajectory_state(main_final_state_);
 }
 
 void BackwardProblem::handle_postequilibration() {
@@ -147,6 +154,7 @@ void BackwardProblem::handle_postequilibration() {
     }
 
     auto const& posteq_result = posteq_problem_->get_result();
+    model_->restore_trajectory_state(posteq_result.final_state_);
 
     // If there were no discontinuities or no simulation was performed,
     // we can use the steady-state shortcuts.
@@ -199,6 +207,15 @@ void EventHandlingBwdSimulator::handle_event_b(
         stauB = std::move(stauB_secondary_);
         stauB_secondary_.clear();
     }
+    // Jump in the right-hand side due to a Heaviside update not followed by
+    // any event application (adjoint of the corresponding `sx` update).
+    if (disc.xdot_jump.size() > 0) {
+        Expects(disc.event_applications.empty());
+        for (int iJ = 0; iJ < model_->nJ; ++iJ)
+            for (int ix = 0; ix < model_->nxtrue_solver; ++ix)
+                stauB.at(iJ) += ws_->xB_[ix + iJ * model_->nxtrue_solver]
+                                * disc.xdot_jump[ix];
+    }
     AmiVector xB_at_trigger(ws_->xB_.size(), solver_->get_sun_context());
     xB_at_trigger.zero();
     // Events of later discontinuities may use the state at which this one
@@ -229,7 +246,8 @@ void EventHandlingBwdSimulator::handle_event_b(
             offset == 0 ? xB_at_trigger : xB_at_trigger_earlier_.at(offset - 1),
             stauB, application.ie, t_, application.x_post,
             application.xdot_post, application.xdot_eval, application.xdot_pre,
-            application.x_eval, application.dx_post, h_eval
+            application.x_eval, application.h_assign, application.dx_post,
+            h_eval
         );
     }
     for (int i = 0; i < ws_->xB_.size(); ++i)
@@ -249,10 +267,12 @@ void EventHandlingBwdSimulator::handle_event_b(
         if (model_->nz == 0 || iroot >= model_->n_max_event())
             continue;
 
+        auto const offset = (ie * model_->n_max_event() + iroot)
+                            * model_->nx_solver * model_->nJ;
         for (int ix = 0; ix < model_->nxtrue_solver; ++ix) {
             for (int iJ = 0; iJ < model_->nJ; ++iJ) {
-                ws_->xB_[ix + iJ * model_->nxtrue_solver] += (*dJzdx)
-                    [iJ + (ix + iroot * model_->nx_solver) * model_->nJ];
+                ws_->xB_[ix + iJ * model_->nxtrue_solver]
+                    += (*dJzdx)[offset + iJ + ix * model_->nJ];
             }
         }
     }

@@ -2,8 +2,11 @@
  * Programmer(s): Cody J. Balos @ LLNL
  * -----------------------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2024, Lawrence Livermore National Security
+ * Copyright (c) 2025-2026, Lawrence Livermore National Security,
+ * University of Maryland Baltimore County, and the SUNDIALS contributors.
+ * Copyright (c) 2013-2025, Lawrence Livermore National Security
  * and Southern Methodist University.
+ * Copyright (c) 2002-2013, Lawrence Livermore National Security.
  * All rights reserved.
  *
  * See the top-level LICENSE and NOTICE files for details.
@@ -18,8 +21,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <superlu_ddefs.h>
-
 #include <sundials/sundials_math.h>
 #include <sunlinsol/sunlinsol_superludist.h>
 #include <sunmatrix/sunmatrix_slunrloc.h>
@@ -28,7 +29,18 @@
 
 #define ZERO SUN_RCONST(0.0)
 #define ONE  SUN_RCONST(1.0)
-#define TWO  SUN_RCONST(2.0)
+
+#if defined(SUNDIALS_DOUBLE_PRECISION)
+#include <superlu_ddefs.h>
+#define xSolveFinalize dSolveFinalize
+#define pxgssvx        pdgssvx
+#elif defined(SUNDIALS_SINGLE_PRECISION)
+#include <superlu_sdefs.h>
+#define xSolveFinalize sSolveFinalize
+#define pxgssvx        psgssvx
+#else
+#error "Incompatible sunrealtype for LAPACK; disable LAPACK and rebuild"
+#endif
 
 /*
  * -----------------------------------------------------------------
@@ -202,7 +214,7 @@ int SUNLinSolSetup_SuperLUDIST(SUNLinearSolver S,
     if (SLU_OPTIONS(S)->SolveInitialized == YES)
     {
       xDestroy_LU(SLU_SIZE(S), SLU_GRID(S), SLU_LU(S));
-      dSolveFinalize(SLU_OPTIONS(S), SLU_SOLVESTRUCT(S));
+      xSolveFinalize(SLU_OPTIONS(S), SLU_SOLVESTRUCT(S));
     }
   }
   else
@@ -242,14 +254,14 @@ int SUNLinSolSolve_SuperLUDIST(SUNLinearSolver S, SUNMatrix A, N_Vector x,
   }
 
   /* Call SuperLU-DIST to solve the linear system */
-  pdgssvx(SLU_OPTIONS(S), Asuper, SLU_SCALEPERM(S), xdata, Astore->m_loc, 1,
+  pxgssvx(SLU_OPTIONS(S), Asuper, SLU_SCALEPERM(S), xdata, Astore->m_loc, 1,
           SLU_GRID(S), SLU_LU(S), SLU_SOLVESTRUCT(S), &SLU_BERR(S), SLU_STAT(S),
           &retval);
 
   if (retval != 0)
   {
     /* retval should never be < 0, and if it is > than ncol it means a memory
-       allocation error occured. If 0 < retval <= ncol, then U is singular and
+       allocation error occurred. If 0 < retval <= ncol, then U is singular and
        the solve couldn't be completed. */
     if (retval < 0 || retval > Asuper->ncol)
     {
@@ -277,9 +289,9 @@ SUNErrCode SUNLinSolFree_SuperLUDIST(SUNLinearSolver S)
   if (S == NULL) { return SUN_SUCCESS; }
 
   /* Call SuperLU DIST destroy/finalize routines,
-     but don't free the sturctures themselves - that is the user's job */
+     but don't free the structures themselves - that is the user's job */
   xDestroy_LU(SLU_SIZE(S), SLU_GRID(S), SLU_LU(S));
-  dSolveFinalize(SLU_OPTIONS(S), SLU_SOLVESTRUCT(S));
+  xSolveFinalize(SLU_OPTIONS(S), SLU_SOLVESTRUCT(S));
 
   /* free content structure */
   if (S->content)
