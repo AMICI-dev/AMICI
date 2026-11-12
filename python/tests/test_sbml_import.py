@@ -86,6 +86,72 @@ def test_event_trigger_to_root_function():
     assert to_trig(a <= b) == b - a
 
 
+_boolean_triggers = [
+    sp.ITE(sp.Symbol("a") > 0, sp.Symbol("b") > 1, sp.Symbol("c") <= 0),
+    sp.Not(sp.And(sp.Symbol("a") > 0, sp.Symbol("b") >= 1)),
+    sp.ITE(
+        sp.Or(sp.Symbol("a") > 0, sp.Symbol("c") > 0),
+        sp.Not(sp.And(sp.Symbol("b") > 1, sp.Symbol("c") < 0)),
+        sp.Symbol("a") < -1,
+    ),
+]
+
+
+@pytest.mark.parametrize("trigger", _boolean_triggers)
+def test_ite_and_not_event_trigger_to_root_function(trigger):
+    """Test root functions for ITE and Not triggers."""
+    from amici.importers.sbml import _parse_event_trigger
+
+    root = _parse_event_trigger(trigger)
+    assert not root.has(sp.ITE, sp.Not)
+
+    a, b, c = sp.symbols("a b c")
+    # values off the boundaries of all relations
+    values = [-2.5, -0.5, 0.5, 1.5]
+    for point in np.array(np.meshgrid(values, values, values)).T.reshape(
+        -1, 3
+    ):
+        subs = dict(zip((a, b, c), point, strict=True))
+        assert (root.subs(subs) > 0) == bool(trigger.subs(subs)), subs
+
+
+@pytest.mark.parametrize("trigger", _boolean_triggers)
+def test_ite_and_not_piecewise_to_heaviside(trigger):
+    """Test conversion of piecewise functions with ITE and Not conditions."""
+    from amici.importers.utils import _parse_piecewise_to_heaviside
+
+    a, b, c = sp.symbols("a b c")
+    pw = sp.Piecewise((2, trigger), (3, True))
+    heavisides = _parse_piecewise_to_heaviside(pw.args)
+    assert not heavisides.has(sp.ITE, sp.Not, sp.Piecewise)
+    assert heavisides.has(sp.Heaviside)
+
+    # including values on the boundaries of all relations
+    values = [-2, -1, -0.5, 0, 0.5, 1, 2]
+    for point in np.array(np.meshgrid(values, values, values)).T.reshape(
+        -1, 3
+    ):
+        subs = dict(zip((a, b, c), point, strict=True))
+        assert heavisides.subs(subs) == pw.subs(subs), subs
+
+
+def test_boolean_piecewise_to_ite():
+    """Test conversion of Boolean-valued piecewise functions to ITE."""
+    from amici.importers.utils import _boolean_piecewise_to_ite
+
+    a, b = sp.symbols("a b")
+    pw = sp.Piecewise((a > 1, b > 0), (a < 0, b > -1))
+    assert _boolean_piecewise_to_ite(*pw.args) == sp.ITE(
+        b > 0, a > 1, sp.ITE(b > -1, a < 0, sp.false)
+    )
+    # numeric piecewise functions are left unchanged
+    pw = sp.Piecewise((a, b > 0), (2, True))
+    assert _boolean_piecewise_to_ite(*pw.args) == pw
+    # symbols are sympy Booleans, but here they are numeric
+    pw = sp.Piecewise((a, b > 0), (b, True))
+    assert _boolean_piecewise_to_ite(*pw.args) == pw
+
+
 def test_sbml2amici_no_observables(tempdir):
     """Test model generation works for model without observables"""
     sbml_doc, sbml_model = simple_sbml_model()

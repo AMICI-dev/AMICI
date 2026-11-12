@@ -55,6 +55,7 @@ from amici.importers.sbml.splines import AbstractSpline
 from amici.importers.sbml.utils import SBMLException
 from amici.importers.utils import (
     MeasurementChannel,
+    _boolean_piecewise_to_ite,
     _check_unsupported_functions,
     _default_simplify,
     _eq_to_and,
@@ -3069,6 +3070,10 @@ class SbmlImporter:
             expr = expr.simplify().evalf()
             _check_unsupported_functions_sbml(expr, expression_type=ele_name)
 
+        # boolean-valued piecewise to ITE
+        #  (must happen before bool2num and piecewise_to_heaviside)
+        expr = expr.replace(sp.Piecewise, _boolean_piecewise_to_ite)
+
         # boolean to numeric piecewise
         #  (this may introduce piecewise functions and must happen before
         #   piecewise_to_heaviside)
@@ -3439,6 +3444,18 @@ def _parse_event_trigger(trigger: sp.Expr) -> sp.Expr:
     # and(x,y): all out of {x,y} are > 0: sp.Min(x, y)
     if isinstance(trigger, sp.And):
         return sp.Min(*[_parse_event_trigger(arg) for arg in trigger.args])
+    # ite(c, a, b) = (c & a) | (~c & b) | (a & b)
+    #  The redundant consensus term (a & b) avoids a root function that
+    #  touches zero without changing sign when c changes while a == b.
+    if isinstance(trigger, sp.ITE):
+        cond, if_true, if_false = map(_parse_event_trigger, trigger.args)
+        return sp.Max(
+            sp.Min(cond, if_true),
+            sp.Min(-cond, if_false),
+            sp.Min(if_true, if_false),
+        )
+    if isinstance(trigger, sp.Not):
+        return -_parse_event_trigger(trigger.args[0])
 
     raise SBMLException(
         "AMICI can not parse piecewise/event trigger functions with argument "

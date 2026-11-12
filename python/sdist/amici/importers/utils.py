@@ -9,7 +9,7 @@ from typing import SupportsFloat
 
 import sympy as sp
 from sympy.functions.elementary.piecewise import ExprCondPair
-from sympy.logic.boolalg import BooleanAtom
+from sympy.logic.boolalg import Boolean, BooleanAtom
 from toposort import toposort
 
 __all__ = [
@@ -808,6 +808,8 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
         return fun_mappings[sym.__class__.__name__](*args)
 
     elif isinstance(sym, sp.Piecewise):
+        if _is_boolean_piecewise(args):
+            return _boolean_piecewise_to_ite(*args)
         return _parse_piecewise_to_heaviside(args)
 
     if sym.__class__.__name__ == "plus" and not sym.args:
@@ -823,6 +825,36 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
         sym = sp.Float(int(bool(sym)))
 
     return sym
+
+
+def _is_boolean_piecewise(expr_cond_pairs: Iterable[ExprCondPair]) -> bool:
+    """Check whether all values of a piecewise function are Boolean."""
+    # sp.Symbol is a Boolean, but also an Expr
+    return all(
+        isinstance(expr, Boolean) and not isinstance(expr, sp.Expr)
+        for expr, _ in expr_cond_pairs
+    )
+
+
+def _boolean_piecewise_to_ite(*expr_cond_pairs: ExprCondPair) -> sp.Basic:
+    """
+    Replace a Boolean-valued Piecewise by nested ITEs.
+
+    Boolean-valued piecewise functions can not be converted to Heaviside
+    functions. ITEs can be handled wherever Boolean expressions are expected.
+    If no condition holds, the result is ``False``.
+    Non-Boolean piecewise functions are returned unchanged.
+
+    To be used in
+    ``expr = expr.replace(sp.Piecewise, _boolean_piecewise_to_ite)``.
+    """
+    if not _is_boolean_piecewise(expr_cond_pairs):
+        return sp.Piecewise(*expr_cond_pairs)
+
+    result = sp.false
+    for expr, cond in reversed(expr_cond_pairs):
+        result = sp.ITE(cond, expr, result)
+    return result
 
 
 def _parse_piecewise_to_heaviside(args: Iterable[ExprCondPair]) -> sp.Expr:
@@ -900,6 +932,14 @@ def _parse_heaviside_trigger(trigger: sp.Expr) -> sp.Expr:
 
     if isinstance(trigger, sp.And):
         return sp.Mul(*[_parse_heaviside_trigger(arg) for arg in trigger.args])
+
+    # ite(c, a, b) = c * a + (1 - c) * b
+    if isinstance(trigger, sp.ITE):
+        cond, if_true, if_false = map(_parse_heaviside_trigger, trigger.args)
+        return cond * if_true + (sp.Integer(1) - cond) * if_false
+
+    if isinstance(trigger, sp.Not):
+        return sp.Integer(1) - _parse_heaviside_trigger(trigger.args[0])
 
     raise RuntimeError(
         "AMICI can not parse piecewise/event trigger functions with argument "
