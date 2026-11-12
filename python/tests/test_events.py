@@ -4472,3 +4472,48 @@ def test_condition_at_threshold_at_t0(tempdir, condition, expected):
     rdata = run_simulation(model, model.create_solver())
     assert rdata.status == AMICI_SUCCESS
     assert_allclose(rdata.by_id("y"), expected, rtol=0, atol=1e-8)
+
+
+@skip_on_valgrind
+def test_event_cascade_assigns_trigger_onto_threshold_twice(tempdir):
+    """An event cascade that moves a trigger exactly onto its threshold
+    twice at the same time, after it was reset in between.
+
+    `E1` triggers twice at `t1 = 1 / k`, so `acc(T) = 2 / k`.
+    """
+    model_name = "test_event_cascade_assigns_trigger_onto_threshold_twice"
+    antimony2amici(
+        r"""
+        k = 1.5
+        x = 0; x' = k
+        c1 = 0; c2 = 0; c3 = 0
+        round = 0; acc = 0
+        E0: at x >= 1: c1 = 1
+        E1: at c1 >= 1: c1 = 0, c2 = 1, acc = acc + time
+        E2: at c2 >= 1: c2 = 0, c3 = 1
+        E3: at c3 >= 1: c3 = 0, c1 = piecewise(1, round < 1, 0),
+            round = round + 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[MC("obs_acc", formula="acc")],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints([2.0])
+    k = model.get_free_parameter_by_id("k")
+    rdata = run_simulation(model, model.create_solver())
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.by_id("round"), [2], rtol=0, atol=0)
+    assert_allclose(rdata.by_id("acc"), [2 / k], rtol=1e-8)
+
+    # llh = -0.5 (acc + 1 - acc)^2, so dllh/dk = dacc/dk
+    edata = ExpData(rdata, 1.0, 0.0)
+    edata.set_measurements([rdata.by_id("acc")[0] + 1.0])
+    for method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver = model.create_solver()
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(method)
+        rdata = run_simulation(model, solver, edata=edata)
+        assert rdata.status == AMICI_SUCCESS
+        ik = list(model.get_free_parameter_ids()).index("k")
+        assert_allclose(rdata.sllh[ik], -2 / k**2, rtol=1e-6)

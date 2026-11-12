@@ -1114,21 +1114,21 @@ int EventHandlingSimulator::detect_secondary_events() {
                 // times are reached.
                 if (crossed)
                     continue;
-            } else if (crossed || !changed) {
+            } else if ((crossed || !changed)
+                       && (root_slope[ie] > 0.0 || root_slope[ie] < 0.0)) {
                 by_slope = true;
                 // The sign of a root function close to zero may be due to
                 // roundoff or, for DAEs, the re-computation of the algebraic
                 // states. The direction in which it moves decides.
-                if (root_slope[ie] > 0.0)
-                    above = true;
-                else if (root_slope[ie] < 0.0)
-                    above = false;
-                else
-                    continue;
+                above = root_slope[ie] > 0.0;
+            } else if (!changed) {
+                // no direction, e.g., a constant root function
+                continue;
             } else {
-                // Moved to its threshold by an event assignment. The sign
-                // decides whether the event triggers, the next check decides
-                // by the direction in which it moves.
+                // Moved to its threshold by an event assignment, or changed by
+                // it without a direction. The sign decides whether the event
+                // triggers, the next check decides by the direction in which
+                // it moves.
                 ws_->t_root_crossed.at(ie) = ws_->sol.t;
             }
         }
