@@ -17,7 +17,8 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [ "3.15" ]
+        # petab_sciml dependencies are not yet available for 3.15
+        python-version: [ "3.14" ]
 
     steps:
     - uses: dweindl/gha-runner-diagnostics@v1
@@ -56,6 +57,12 @@ jobs:
       env:
           CMAKE_EXPORT_COMPILE_COMMANDS: "ON"
       run: scripts/installAmiciSource.sh
+
+    - name: Install petab_sciml
+      # only needed for test_sciml.py, which is skipped otherwise
+      run: |
+        source venv/bin/activate \
+          && python -m pip install --group python/sdist/pyproject.toml:petab-sciml
 
     - name: Check that test models are up to date
       # Regenerating all test models is slow, so only run this as part of
@@ -343,6 +350,12 @@ jobs:
       run: |
         pip show numpy > /dev/null || python3 -m pip install numpy
         scripts/installAmiciSource.sh
+
+    - name: Install petab_sciml
+      # only needed for test_sciml.py, which is skipped otherwise
+      run: |
+        source venv/bin/activate \
+          && python -m pip install --group python/sdist/pyproject.toml:petab-sciml
 
     - name: Get BioNetGen
       run: scripts/buildBNGL.sh
