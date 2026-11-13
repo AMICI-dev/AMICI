@@ -85,6 +85,43 @@ def test_event_trigger_to_root_function():
     assert to_trig(a < b) == b - a
     assert to_trig(a <= b) == b - a
 
+    # negations (unevaluated, as with SBMLMathMLParser(evaluate=False))
+    assert to_trig(sp.Not(a <= b, evaluate=False)) == a - b
+    assert to_trig(sp.Not(sp.And(a <= b, a < 1))) == sp.Max(a - b, a - 1)
+    assert to_trig(sp.Not(sp.Or(a <= b, a > 1))) == sp.Min(a - b, 1 - a)
+
+
+@pytest.mark.parametrize(
+    "trigger, expected",
+    [
+        ("!(a <= 3)", "a - 3"),
+        ("!(a < 3)", "a - 3"),
+        ("!!(a > 3)", "a - 3"),
+        ("!(a <= 3 || a > 10)", "Min(a - 3, 10 - a)"),
+    ],
+)
+def test_negated_event_trigger(trigger, expected):
+    """Test that negated event triggers and piecewise conditions are handled."""
+    from amici.importers.sbml import _parse_event_trigger
+
+    ant_model = f"""
+    a = 0
+    b := piecewise(1, {trigger}, 0)
+    E: at {trigger}: a = 0
+    """
+    importer = SbmlImporter(antimony2sbml(ant_model), from_file=False)
+    model = importer.sbml_model
+    a = sp.Symbol("a", real=True)
+
+    trigger_sym = importer._sympify(
+        model.getEvent(0).getTrigger(), bool2num=False
+    )
+    assert _parse_event_trigger(trigger_sym) == sp.sympify(
+        expected, locals={"a": a}
+    )
+    # must not raise
+    importer._sympify(model.getAssignmentRuleByVariable("b"))
+
 
 def test_sbml2amici_no_observables(tempdir):
     """Test model generation works for model without observables"""

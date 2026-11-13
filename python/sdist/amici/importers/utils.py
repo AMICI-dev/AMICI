@@ -883,6 +883,11 @@ def _parse_heaviside_trigger(trigger: sp.Expr) -> sp.Expr:
             # y >= x => not(x < y) => not(x - y < 0) => not r < 0
             return sp.Heaviside(root, 1)
 
+    if isinstance(trigger, sp.Not) and not isinstance(
+        nnf := _not_to_nnf(trigger), sp.Not
+    ):
+        return _parse_heaviside_trigger(nnf)
+
     # rewrite n-ary XOR to OR to be handled below:
     trigger = trigger.replace(sp.Xor, _xor_to_or)
     # rewrite ==, !==
@@ -904,6 +909,24 @@ def _parse_heaviside_trigger(trigger: sp.Expr) -> sp.Expr:
     raise RuntimeError(
         "AMICI can not parse piecewise/event trigger functions with argument "
         f"{trigger}."
+    )
+
+
+def _not_to_nnf(expr: sp.Basic) -> sp.Basic:
+    """
+    Push negations down to the relational atoms.
+
+    E.g., ``~((x < y) & (x > z)) = (x >= y) | (x <= z)``.
+    Returns `expr` unchanged if it cannot be converted.
+    """
+    try:
+        expr = expr.to_nnf(simplify=False)
+    except (ValueError, AttributeError):
+        return expr
+    # `to_nnf` keeps unevaluated `Not(relational)`
+    return expr.replace(
+        lambda e: isinstance(e, sp.Not) and e.args[0].is_Relational,
+        lambda e: e.args[0].negated,
     )
 
 
