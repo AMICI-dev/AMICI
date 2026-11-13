@@ -80,6 +80,7 @@ from amici.importers.utils import (
     smart_subs_dict,
     substitute_local_symbols,
     symbol_with_assumptions,
+    sympify_str,
     toposort_symbols,
 )
 from amici.logging import get_logger, log_execution_time, set_log_level
@@ -2103,6 +2104,135 @@ class SbmlImporter:
             make_derived_name_unique=self._make_derived_name_unique,
         )
 
+        if observation_model:
+            self._check_undeclared_observation_model_symbols(observation_model)
+
+    def _check_undeclared_observation_model_symbols(
+        self, observation_model: list[MeasurementChannel]
+    ) -> None:
+        """Check that measurement channels only use available symbols.
+
+        Observable and sigma formulas may use model entities and time.
+        Observables can't be used in observable formulas (for observables of
+        the same kind, this is checked in :func:`add_observables`), and
+        sigmas may only use the channel's own observable (checked in
+        :func:`add_log_likelihoods` and :class:`DEModel`). Observable
+        placeholders may only be used in the observable formula and noise
+        placeholders only in the sigma formula of the channel that declares
+        them. Custom noise distributions may only use (non-hardcoded) model
+        parameters, the channel's own observable,
+        measurement, and sigma, and, for time-resolved channels, other
+        time-resolved observables, as only these are available when
+        evaluating the log-likelihood. Other symbols would end up undeclared
+        in the generated model code.
+
+        Checks the processed observables, sigmas, and log-likelihoods, so
+        it must be called after :func:`add_log_likelihoods`.
+
+        :raises ValueError:
+            If any formula contains unknown symbols.
+        """
+        channels = {channel.id: channel for channel in observation_model}
+        placeholders = {
+            symbol_with_assumptions(name)
+            for name in itt.chain(*get_placeholders(observation_model))
+        }
+        known = {
+            sym
+            for value in self._local_symbols.values()
+            if isinstance(value, sp.Basic)
+            for sym in value.free_symbols
+        } - placeholders | {sbml_time_symbol, amici_time_symbol}
+        parameters = {
+            *self._symbols[SymbolId.FREE_PARAMETER],
+            *self._symbols[SymbolId.FIXED_PARAMETER],
+        }
+
+        for obs_type, other_obs_type, sigma_type, llh_type in (
+            (
+                SymbolId.OBSERVABLE,
+                SymbolId.EVENT_OBSERVABLE,
+                SymbolId.SIGMAY,
+                SymbolId.LLHY,
+            ),
+            (
+                SymbolId.EVENT_OBSERVABLE,
+                SymbolId.OBSERVABLE,
+                SymbolId.SIGMAZ,
+                SymbolId.LLHZ,
+            ),
+        ):
+            observables = self._symbols[obs_type]
+            # sigmas depending on observables of the other kind are rejected
+            #  in `DEModel`, for all importers
+            known_in_formula = known - set(self._symbols[other_obs_type])
+            for (obs_id, obs), (sigma_id, sigma), llh in zip(
+                observables.items(),
+                self._symbols[sigma_type].items(),
+                self._symbols[llh_type].values(),
+                strict=True,
+            ):
+                channel = channels[str(obs_id)]
+                for attr, expr, known_symbols, allowed in (
+                    (
+                        "formula",
+                        obs["value"],
+                        known_in_formula,
+                        channel.observable_placeholders,
+                    ),
+                    (
+                        "sigma",
+                        sigma["value"],
+                        known,
+                        channel.noise_placeholders,
+                    ),
+                ):
+                    if not isinstance(expr, sp.Basic):
+                        continue
+                    allowed = {
+                        symbol_with_assumptions(name) for name in allowed
+                    }
+                    if unknown := expr.free_symbols - known_symbols - allowed:
+                        raise ValueError(
+                            f"The {attr} of measurement channel "
+                            f"`{channel.id}` (`{expr}`) contains unknown "
+                            f"symbols: {', '.join(sorted(map(str, unknown)))}"
+                            ". Only model entities, the model time `time`, "
+                            "and the channel's observable placeholders (in "
+                            "the formula) or its own observable and noise "
+                            "placeholders (in the sigma) can be used. "
+                            "Constants such as `pi` are not predefined."
+                        )
+
+                if not callable(channel.noise_distribution):
+                    continue
+                # event-resolved log-likelihoods are also evaluated for the
+                #  regularization, where only the channel's own observable
+                #  is replaced
+                available = (
+                    parameters
+                    | (
+                        set(observables)
+                        if obs_type == SymbolId.OBSERVABLE
+                        else {obs_id}
+                    )
+                    | {obs["measurement_symbol"], sigma_id}
+                )
+                if unknown := llh["value"].free_symbols - available:
+                    raise ValueError(
+                        "The noise distribution of measurement channel "
+                        f"`{channel.id}` (`{llh['value']}`) contains "
+                        "unavailable symbols: "
+                        f"{', '.join(sorted(map(str, unknown)))}. "
+                        "Only (non-hardcoded) model parameters, the "
+                        "channel's own "
+                        "observable, measurement, and sigma, and, for "
+                        "time-resolved channels, other time-resolved "
+                        "observables are available when evaluating the "
+                        "log-likelihood. Constants such as `pi` are not "
+                        "predefined."
+                    )
+
     def _generate_default_observables(self):
         """
         Generate default observables from species, compartments and
@@ -2779,7 +2909,7 @@ class SbmlImporter:
         :param var_or_math:
             A math expression to sympify:
 
-            * a string (see :func:`sympy.core.sympify.sympify`)
+            * a string (see :func:`amici.importers.utils.sympify_str`)
             * a number
             * a libSBML ASTNode
             * a libSBML object that has a ``getMath()`` function
@@ -2809,7 +2939,15 @@ class SbmlImporter:
         # already a sympy object
         if isinstance(var_or_math, sp.Basic):
             ele_name = "SymPy expression"
-            expr = substitute_local_symbols(var_or_math, self._local_symbols)
+            expr = var_or_math.replace(
+                TimeSymbol, lambda *args: sbml_time_symbol
+            )
+            expr = expr.subs(avogadro, avogadro.evalf())
+            if "t" not in self._local_symbols:
+                # without a model entity `t`, a plain `t` is the model time,
+                #  as it is for `amici_time_symbol` or the string "t"
+                expr = expr.subs(sp.Symbol("t"), amici_time_symbol)
+            expr = substitute_local_symbols(expr, self._local_symbols)
 
         # an expression string
         elif isinstance(var_or_math, str):
@@ -2818,20 +2956,13 @@ class SbmlImporter:
 
             ele_name = "Expression string"
             try:
-                expr = sp.sympify(
-                    var_or_math,
-                    locals={
-                        "true": sp.Float(1.0),
-                        "false": sp.Float(0.0),
-                        **self._local_symbols,
-                    },
-                )
-            except (sp.SympifyError, TypeError, ZeroDivisionError) as err:
+                expr = sympify_str(var_or_math, self._local_symbols)
+            except ValueError as err:
                 raise SBMLException(
                     f'{ele_name} "{var_or_math}" '
                     "contains an unsupported expression: "
                     f"{err}."
-                )
+                ) from err
 
         # actual libSBML objects
         elif isinstance(var_or_math, libsbml.ASTNode | libsbml.SBase):

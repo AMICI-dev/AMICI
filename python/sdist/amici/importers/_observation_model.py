@@ -7,7 +7,6 @@ observables, sigmas, and log-likelihood contributions, stored in the
 
 from __future__ import annotations
 
-import warnings
 from collections.abc import Callable, Iterable
 from typing import Any
 
@@ -16,7 +15,6 @@ import sympy as sp
 from amici.constants import SymbolId
 from amici.importers.utils import (
     MeasurementChannel,
-    _get_str_symbol_identifiers,
     noise_distribution_to_cost_function,
     noise_distribution_to_observable_transformation,
     symbol_with_assumptions,
@@ -145,16 +143,6 @@ def add_observables(
             filter(lambda c: c.is_event_resolved, observation_model)
         )
     }
-    wrong_t = sp.Symbol("t")
-    for eo in symbols[SymbolId.EVENT_OBSERVABLE].values():
-        if eo["value"].has(wrong_t):
-            warnings.warn(
-                f"Event observable {eo['name']} uses `t` in "
-                "it's formula which is not the time variable. "
-                "For the time variable, please use `time` "
-                "instead!",
-                stacklevel=1,
-            )
     # check for nesting of observables (unsupported)
     _check_symbol_nesting(
         symbols[SymbolId.EVENT_OBSERVABLE], "eventObservable"
@@ -331,18 +319,8 @@ def _process_log_likelihood(
             make_derived_name_unique(f"J{obs_id}")
         )
         dist = noise_distributions.get(str(obs_id), "normal")
-        cost_fun = noise_distribution_to_cost_function(dist)(obs_id)
-        # TODO: clarify expected grammar for cost_fun
-        #   python vs SBML L3 vs PEtab
-        value = sp.sympify(
-            cost_fun,
-            locals=dict(
-                zip(
-                    _get_str_symbol_identifiers(obs_id),
-                    (obs_id, obs["measurement_symbol"], sigma_id),
-                    strict=True,
-                )
-            ),
+        value = noise_distribution_to_cost_function(dist)(
+            obs_id, obs["measurement_symbol"], sigma_id
         )
         if event_reg:
             value = value.subs(obs["measurement_symbol"], 0.0)
