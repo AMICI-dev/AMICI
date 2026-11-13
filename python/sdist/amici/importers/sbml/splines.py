@@ -33,7 +33,6 @@ from numbers import Integral, Real
 import libsbml
 import numpy as np
 import sympy as sp
-from sympy.abc import _clash
 from sympy.core.parameters import evaluate
 
 from amici.constants import SymbolId
@@ -45,6 +44,7 @@ from ..utils import (
     sbml_time_symbol,
     substitute_local_symbols,
     symbol_with_assumptions,
+    sympify_str,
 )
 from .utils import (
     SbmlAnnotationError,
@@ -67,32 +67,14 @@ logger = get_logger(__name__, logging.WARNING)
 def _sympify_noeval(x):
     """Sympify without evaluating the expression.
 
-    For string input, unlike a bare ``sp.sympify(x)``, this avoids silently
-    reinterpreting single-letter symbol names (e.g. ``I``, ``E``, ``S``) as
-    sympy builtins, and canonicalizes resulting free symbols via
-    :func:`symbol_with_assumptions`, so that e.g. a node or value string
-    referencing a model parameter or species by name compares equal to the
-    symbol used for that entity elsewhere in AMICI. Non-string input (e.g.
-    an already-constructed sympy expression) is left untouched, preserving
-    whatever symbols/assumptions the caller used.
+    Strings are parsed by :func:`amici.importers.utils.sympify_str`.
+    Non-string input (e.g. an already-constructed sympy expression) is left
+    untouched, preserving whatever symbols/assumptions the caller used.
     """
     with evaluate(False):
-        if not isinstance(x, str):
-            return sp.sympify(x)
-
-        try:
-            expr = sp.sympify(x, locals=_clash)
-        except (sp.SympifyError, TypeError, SyntaxError) as err:
-            raise ValueError(f"Could not sympify {x!r}: {err}.") from err
-        if isinstance(expr, sp.Basic) and expr.free_symbols:
-            expr = expr.subs(
-                {
-                    sym: canonical
-                    for sym in expr.free_symbols
-                    if (canonical := symbol_with_assumptions(sym.name)) != sym
-                }
-            )
-        return expr
+        if isinstance(x, str):
+            return sympify_str(x)
+        return sp.sympify(x)
 
 
 ###############################################################################

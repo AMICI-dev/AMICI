@@ -39,7 +39,6 @@ from ..utils import (
     MeasurementChannel,
     _default_simplify,
     _expr_to_amici,
-    _get_str_symbol_identifiers,
     _parse_special_functions,
     generate_measurement_symbol,
     make_name_unique,
@@ -812,16 +811,8 @@ def _add_expression(
                 SigmaY(sigma, f"sigma_{name}", sp.Float(1.0))
             )
 
-        cost_fun_str = noise_distribution_to_cost_function(noise_dist)(name)
-        cost_fun_expr = sp.sympify(
-            cost_fun_str,
-            locals=dict(
-                zip(
-                    _get_str_symbol_identifiers(name),
-                    (y, my, sigma),
-                    strict=True,
-                )
-            ),
+        cost_fun_expr = noise_distribution_to_cost_function(noise_dist)(
+            y, my, sigma, str_symbol=name
         )
         cost_fun_expr = _expr_to_amici(cost_fun_expr, renames)
         llh_symbol_name = f"llh_{name}"
