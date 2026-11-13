@@ -976,6 +976,11 @@ class SbmlImporter:
         :param value:
             local symbol value
         """
+        if key == "time" and key in self._local_symbols:
+            raise SBMLException(
+                "AMICI does not support SBML elements with SId `time`. "
+                "This can be fixed by renaming the element."
+            )
         if key in self._local_symbols.keys():
             raise SBMLException(
                 f"AMICI tried to add a local symbol {key} with value {value}, "

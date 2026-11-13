@@ -2410,3 +2410,20 @@ def test_sbml_ids_shadowing_special_names(tempdir):
     assert_allclose(
         rdata.y[:, 0], model.get_free_parameter_by_id("pi"), rtol=0
     )
+
+
+def test_sbml_id_time_rejected():
+    """SBML entities with ID `time` are not supported."""
+    sbml_doc = libsbml.readSBMLFromString(
+        antimony2sbml("x1' = -k * x1; x1 = 1; k = 1")
+    )
+    sbml_doc.getModel().getParameter("k").setId("time")
+    for element in sbml_doc.getListOfAllElements():
+        element.renameSIdRefs("k", "time")
+
+    with pytest.raises(SBMLException, match="SId `time`"):
+        SbmlImporter(sbml_doc.getModel(), from_file=False).sbml2amici(
+            model_name="test_sbml_id_time_rejected",
+            output_dir="test_sbml_id_time_rejected",
+            compile=False,
+        )
