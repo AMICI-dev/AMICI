@@ -2358,3 +2358,89 @@ def test_failure_before_main_simulation(tempdir):
     assert np.all(np.isnan(rdata.sllh))
     assert np.all(np.isnan(rdata.x))
     assert np.all(np.isnan(rdata.y))
+
+
+def _custom_nllh(str_symbol, extra=""):
+    return f"(m{str_symbol} - {str_symbol})**2 / sigma{str_symbol}{extra}"
+
+
+@pytest.mark.parametrize(
+    "channel",
+    [
+        MC("obs1", formula="2 * pi * x1"),
+        MC("obs1", formula="x1", sigma="E * x1"),
+        MC("obs1", formula="x1 + undeclared"),
+        MC("obs1", formula="t * x1"),
+        MC(
+            "obs1",
+            formula="x1",
+            noise_distribution=lambda s: _custom_nllh(s, " + pi"),
+        ),
+    ],
+)
+def test_observation_model_undeclared_symbols(tempdir, channel):
+    """Unknown symbols in measurement channels are rejected."""
+    sbml_importer = SbmlImporter(
+        antimony2sbml("x1' = -k * x1; x1 = 1; k = 1"), from_file=False
+    )
+    with pytest.raises(ValueError, match="contains unknown symbols"):
+        sbml_importer.sbml2amici(
+            model_name="test_observation_model_undeclared_symbols",
+            output_dir=tempdir,
+            observation_model=[channel],
+            compile=False,
+        )
+
+
+def test_observation_model_declared_symbols(tempdir):
+    """Measurement channels may use model entities, observables, time, and
+    placeholders."""
+    from amici.importers.utils import amici_time_symbol
+
+    sbml_importer = SbmlImporter(
+        antimony2sbml("x1' = -k * x1; x1 = 1; k = 1"), from_file=False
+    )
+    sbml_importer.sbml2amici(
+        model_name="test_observation_model_declared_symbols",
+        output_dir=tempdir,
+        observation_model=[
+            # placeholder in a channel without sigma
+            MC("obs1", formula="observableParameter1 * x1 + time"),
+            MC("obs2", formula="x1", sigma="noiseParameter1 * obs2"),
+            MC(
+                "obs3",
+                formula="x1",
+                noise_distribution=lambda s: _custom_nllh(s, " + k"),
+            ),
+        ],
+        compile=False,
+    )
+    symbols = sbml_importer._symbols
+    x1, k, obs2, obs3 = (
+        symbol_with_assumptions(name) for name in ("x1", "k", "obs2", "obs3")
+    )
+    observable_parameter1 = symbol_with_assumptions("observableParameter1")
+    noise_parameter1 = symbol_with_assumptions("noiseParameter1")
+    assert set(symbols[SymbolId.OBSERVABLE_PARAMETER]) == {
+        observable_parameter1
+    }
+    assert set(symbols[SymbolId.NOISE_PARAMETER]) == {noise_parameter1}
+    observables = {
+        str(obs_id): obs["value"]
+        for obs_id, obs in symbols[SymbolId.OBSERVABLE].items()
+    }
+    assert (
+        observables["obs1"] == observable_parameter1 * x1 + amici_time_symbol
+    )
+    sigmas = {
+        str(sigma_id): sigma["value"]
+        for sigma_id, sigma in symbols[SymbolId.SIGMAY].items()
+    }
+    assert sigmas["sigma_obs2"] == noise_parameter1 * obs2
+    nllh_obs3 = next(
+        llh["value"]
+        for llh_id, llh in symbols[SymbolId.LLHY].items()
+        if str(llh_id) == "Jobs3"
+    )
+    assert k in nllh_obs3.free_symbols
+    assert obs3 in nllh_obs3.free_symbols
