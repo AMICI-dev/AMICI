@@ -2358,3 +2358,55 @@ def test_failure_before_main_simulation(tempdir):
     assert np.all(np.isnan(rdata.sllh))
     assert np.all(np.isnan(rdata.x))
     assert np.all(np.isnan(rdata.y))
+
+
+@skip_on_valgrind
+def test_sbml_ids_shadowing_special_names(tempdir):
+    """SBML entities may use IDs that have special meanings elsewhere."""
+    special_ids = [
+        "INF",
+        "NaN",
+        "rem",
+        "avogadro",
+        "exponentiale",
+        "log10",
+        "pi",
+        "true",
+        "False",
+    ]
+    # x1' = -(p0 + p1 + ...) * x1, with p_i = 0.1 * (i + 1)
+    ant_model = "\n".join(
+        [
+            "x1 = 1",
+            "x1' = -("
+            + " + ".join(f"p{i}" for i in range(len(special_ids)))
+            + ") * x1",
+            *(f"p{i} = {0.1 * (i + 1)}" for i in range(len(special_ids))),
+        ]
+    )
+    sbml_doc = libsbml.readSBMLFromString(antimony2sbml(ant_model))
+    sbml_model = sbml_doc.getModel()
+    for i, new_id in enumerate(special_ids):
+        sbml_model.getParameter(f"p{i}").setId(new_id)
+        for element in sbml_doc.getListOfAllElements():
+            element.renameSIdRefs(f"p{i}", new_id)
+
+    model_name = "test_sbml_ids_shadowing_special_names"
+    SbmlImporter(sbml_model, from_file=False).sbml2amici(
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[MC("obs_pi", formula="pi")],
+        generate_sensitivity_code=False,
+    )
+    model = amici.import_model_module(model_name, tempdir).get_model()
+
+    assert set(model.get_free_parameter_ids()) == set(special_ids)
+    t = np.linspace(0, 1, 5)
+    model.set_timepoints(t)
+    rdata = model.simulate()
+    assert rdata.status == AMICI_SUCCESS
+    k = sum(0.1 * (i + 1) for i in range(len(special_ids)))
+    assert_allclose(rdata.x[:, 0], np.exp(-k * t), rtol=1e-6)
+    assert_allclose(
+        rdata.y[:, 0], model.get_free_parameter_by_id("pi"), rtol=0
+    )
