@@ -117,6 +117,10 @@ set_target_properties(
 # only used for compiling the swig-generated source file. Any definition that
 # are relevant for swig-code generation, need to be forwarded manually.
 target_link_libraries(_amici amici Python3::Module)
+# Use a SWIG runtime type table separate from other SWIG modules (e.g.,
+# libsbml), which may register conflicting types such as std::vector<double>.
+# Model extensions must use the same table.
+target_compile_definitions(_amici PRIVATE SWIG_TYPE_TABLE=amici)
 if(WIN32)
   add_custom_command(
     TARGET _amici

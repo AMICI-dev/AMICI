@@ -57,6 +57,8 @@ endif()
 target_link_libraries(${SWIG_LIBRARY_NAME}
     Python3::Module
     model)
+# must match the SWIG runtime type table of the amici extension
+target_compile_definitions(${SWIG_LIBRARY_NAME} PRIVATE SWIG_TYPE_TABLE=amici)
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.py
               $<TARGET_FILE:${SWIG_LIBRARY_NAME}> DESTINATION .)

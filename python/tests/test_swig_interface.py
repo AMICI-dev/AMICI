@@ -7,6 +7,7 @@ import copy
 import gc
 import numbers
 import pickle
+import subprocess
 import sys
 import weakref
 from math import nan
@@ -699,6 +700,33 @@ def test_vector_to_ndarray(monkeypatch, sbml_example_presimulation_module):
     for field in fields:
         assert expected[field]
         assert getattr(rdata, field).flatten().tolist() == expected[field]
+
+
+def test_vector_indexing():
+    """DoubleVector and IntVector can be indexed after libsbml was loaded.
+
+    libsbml registers its own SWIG types for std::vector<double/int>
+    (https://github.com/AMICI-dev/AMICI/issues/3511).
+    """
+    # fresh process to ensure libsbml is loaded before the amici extension
+    code = """
+import sys
+import libsbml
+assert "amici._installation._amici" not in sys.modules
+from amici.sim.sundials import DoubleVector, IntVector
+
+for vector_type, values in (
+    (DoubleVector, [1.5, -2.0, 3.25]),
+    (IntVector, [1, -2, 3]),
+):
+    vec = vector_type(values)
+    assert vec[1] == values[1]
+    assert vec[-1] == values[-1]
+    assert list(vec[0:2]) == values[0:2]
+    vec[1] = values[0]
+    assert vec[1] == values[0]
+"""
+    subprocess.run([sys.executable, "-c", code], check=True)
 
 
 def test_rdata_ids(sbml_example_presimulation_module):
