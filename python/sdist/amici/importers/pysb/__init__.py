@@ -764,7 +764,10 @@ def _add_expression(
     # as the human-readable label); only the identifier is renamed
     sym_name = renames.get(name, name)
     if not pysb_model_has_obs_and_noise or name not in observation_model:
-        if any(
+        # Without `pysb_model_has_obs_and_noise`, sigma expressions stay
+        # regular expressions (they may be used elsewhere in the model), and
+        # each observable gets its own `SigmaY`, see below.
+        if pysb_model_has_obs_and_noise and any(
             name == str(channel.sigma)
             for channel in observation_model.values()
         ):
@@ -806,10 +809,24 @@ def _add_expression(
         if isinstance(sigma_name, sp.Symbol):
             sigma_name = sigma_name.name
 
-        sigma = _get_sigma(pysb_model, name, sigma_name, renames, all_names)
-        if not pysb_model_has_obs_and_noise:
+        if pysb_model_has_obs_and_noise:
+            # the sigma expression itself was added as `SigmaY` above
+            sigma = _get_sigma(
+                pysb_model, name, sigma_name, renames, all_names
+            )
+        else:
+            # add the `SigmaY` here, so that sigmas are in the same order as
+            # observables
+            sigma = _get_sigma(pysb_model, name, None, renames, all_names)
+            sigma_value = (
+                sp.Float(1.0)
+                if sigma_name is None
+                else _get_sigma(
+                    pysb_model, name, sigma_name, renames, all_names
+                )
+            )
             ode_model.add_component(
-                SigmaY(sigma, f"sigma_{name}", sp.Float(1.0))
+                SigmaY(sigma, f"sigma_{name}", sigma_value)
             )
 
         cost_fun_str = noise_distribution_to_cost_function(noise_dist)(name)

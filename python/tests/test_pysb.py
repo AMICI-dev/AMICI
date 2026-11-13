@@ -559,3 +559,56 @@ def test_pysb_derived_name_collisions(tempdir):
     rdata = run_simulation(amici_model, solver)
     assert rdata.status == amici.sim.sundials.AMICI_SUCCESS
     assert np.all(np.isfinite(rdata.x))
+
+
+def test_pysb_named_sigma():
+    """Observables with a sigma given as the name of a `pysb.Expression`,
+    mixed with observables using the default sigma.
+
+    Sigmas must be ordered like the observables, and the sigma expression
+    must remain a regular expression, since it may be used elsewhere in the
+    model. See https://github.com/AMICI-dev/AMICI/issues/3538.
+    """
+    from amici.importers.pysb import ode_model_from_pysb_importer
+
+    pysb.SelfExporter.cleanup()  # reset pysb
+    pysb.SelfExporter.do_export = True
+
+    model = pysb.Model("pysb_named_sigma_test")
+    a = pysb.Monomer("A")
+    b = pysb.Monomer("B")
+    pysb.Initial(a(), pysb.Parameter("A_0", 1.0))
+    pysb.Initial(b(), pysb.Parameter("B_0", 1.0))
+    p_sd = pysb.Parameter("p_sd", 0.1)
+    obs_a = pysb.Observable("obs_a", a())
+    pysb.Observable("obs_b", b())
+    sd_a = pysb.Expression("sd_a", 2 * p_sd * obs_a)
+    pysb.Rule("deg_a", a() >> None, pysb.Parameter("k", 1.0))
+    # the sigma expression is also used in the dynamics
+    pysb.Rule("deg_b", b() >> None, sd_a)
+
+    ode = ode_model_from_pysb_importer(
+        model,
+        observation_model=[
+            MeasurementChannel("obs_a", sigma="sd_a"),
+            MeasurementChannel("obs_b"),
+        ],
+    )
+
+    assert [str(y.get_sym()) for y in ode.observables()] == [
+        "obs_a",
+        "obs_b",
+    ]
+    assert [str(s.get_sym()) for s in ode.sigma_ys()] == [
+        "sigma_obs_a",
+        "sigma_obs_b",
+    ]
+    assert [s.get_val() for s in ode.sigma_ys()] == [
+        symbol_with_assumptions("sd_a"),
+        sp.Float(1.0),
+    ]
+    assert "sd_a" in {str(w.get_sym()) for w in ode.expressions()}
+    assert list(ode.eq("sigmay")) == [
+        2 * symbol_with_assumptions("p_sd") * symbol_with_assumptions("obs_a"),
+        sp.Float(1.0),
+    ]
