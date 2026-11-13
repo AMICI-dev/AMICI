@@ -3,6 +3,7 @@
 import os
 from contextlib import contextmanager
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from unittest.mock import Mock
 
 import jax
@@ -845,13 +846,13 @@ class TestEquinoxImport:
             assert isinstance(hybridization["net1"]["model"], Path)
 
             model_file_str = str(hybridization["net1"]["model"])
-            generate_equinox(
-                model_file_str,
-                pi.output_dir / "net1.py",
-                hybridization["net1"]["frozen_layers"],
-            )
-
-            assert os.path.isfile(pi.output_dir / "net1.py")
+            with TemporaryDirectory() as tmpdir:
+                generate_equinox(
+                    model_file_str,
+                    Path(tmpdir, "net1.py"),
+                    hybridization["net1"]["frozen_layers"],
+                )
+                assert os.path.isfile(Path(tmpdir, "net1.py"))
 
             jax_problem = pi.create_simulator(
                 force_import=True,

@@ -6,9 +6,7 @@ into AMICI.
 """
 
 import logging
-import os
 import re
-import shutil
 from pathlib import Path
 
 import pandas as pd
@@ -57,6 +55,8 @@ def import_petab_problem(
     :param output_dir:
         Directory to write the model code to. It will be created if it doesn't
         exist. Defaults to :func:`amici.get_model_dir`.
+        Any previous model import in this directory is removed.
+        Directories containing files not created by AMICI are rejected.
 
     :param model_name:
         Name of the generated model module. Defaults to the ID of the model
@@ -110,17 +110,6 @@ def import_petab_problem(
     if compile_ or (
         compile_ is None and not _can_import_model(model_name, output_dir, jax)
     ):
-        # check if folder exists
-        if os.listdir(output_dir) and not compile_:
-            raise ValueError(
-                f"Cannot compile to {output_dir}: not empty. "
-                "Please assign a different target or set `compile_` to `True`."
-            )
-
-        # remove folder if exists
-        if not jax and os.path.exists(output_dir):
-            shutil.rmtree(output_dir)
-
         logger.info(f"Compiling model {model_name} to {output_dir}.")
 
         if "sciml" in petab_problem.extensions_config:

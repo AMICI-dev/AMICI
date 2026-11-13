@@ -22,6 +22,7 @@ from petab.v2.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
 
 import amici
 from amici import get_model_dir
+from amici._model_dir import is_model_dir_complete
 from amici._symbolic import DEModel, Event
 from amici.importers.utils import MeasurementChannel, amici_time_symbol
 from amici.logging import get_logger
@@ -187,6 +188,8 @@ class PetabImporter:
         :param module_name: The name of model module to generate.
         :param output_dir:
             The output directory where the model files are written to.
+            Any previous model import in this directory is removed.
+            Directories containing files not created by AMICI are rejected.
         :param jax: Whether to generate a JAX model instead of a
             SUNDIALS model. Currently, only ``False`` is supported.
         :param output_parameter_defaults:
@@ -829,11 +832,17 @@ class PetabImporter:
     def import_module(self, force_import: bool = False) -> amici.ModelModule:
         """Import the generated model module.
 
+        If the output directory does not contain a complete model generated
+        with the current AMICI version (e.g., after a failed import),
+        the model is (re-)imported.
+
         :param force_import:
             Whether to force re-import even if the model module already exists.
         :return: The imported model module.
         """
-        if not self.output_dir.is_dir() or force_import:
+        if force_import or not is_model_dir_complete(
+            self.output_dir, jax=self._jax, compiled=self._compile
+        ):
             if self.petab_problem.model.type_id == MODEL_TYPE_SBML:
                 self._do_import_sbml()
             else:
