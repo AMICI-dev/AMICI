@@ -20,6 +20,11 @@ from pathlib import Path
 import numpy as np
 import sympy as sp
 
+from amici._model_dir import (
+    ModelDirStatus,
+    prepare_model_dir,
+    set_model_dir_status,
+)
 from amici._symbolic.de_model import DEModel
 from amici._symbolic.sympy_utils import (
     _monkeypatch_sympy,
@@ -203,17 +208,16 @@ class ODEExporter:
         self._prepare_model_folder()
         self._generate_jax_code()
         self._generate_nn_code()
+        set_model_dir_status(self.model_path, ModelDirStatus.GENERATED)
 
     def _prepare_model_folder(self) -> None:
         """
-        Create model directory or remove all files if the output directory
-        already exists.
-        """
-        self.model_path.mkdir(parents=True, exist_ok=True)
+        Create the model directory, or remove a previous import from it.
 
-        for file in self.model_path.glob("*"):
-            if file.is_file():
-                file.unlink()
+        :raises FileExistsError:
+            If the directory contains files not created by AMICI.
+        """
+        prepare_model_dir(self.model_path, self.model_name, jax=True)
 
     @log_execution_time("generating jax code", logger)
     def _generate_jax_code(self) -> None:

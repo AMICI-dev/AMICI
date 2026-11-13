@@ -96,6 +96,8 @@ def pysb2jax(
     :param output_dir:
         The directory where the generated model code is stored.
         Will be created if it does not exist.
+        Any previous model import in this directory is removed.
+        Directories containing files not created by AMICI are rejected.
 
     :param observation_model:
         The different measurement channels that make up the observation
@@ -201,6 +203,8 @@ def pysb2amici(
     :param output_dir:
         The directory where the generated model code is stored.
         Will be created if it does not exist.
+        Any previous model import in this directory is removed.
+        Directories containing files not created by AMICI are rejected.
 
     :param observation_model:
         The different measurement channels that make up the observation
