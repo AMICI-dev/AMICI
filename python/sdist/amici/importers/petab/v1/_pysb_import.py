@@ -3,10 +3,15 @@ PySB-PEtab Import
 -----------------
 Import a model in the PySB-adapted :mod:`petab`
 (https://github.com/PEtab-dev/PEtab) format into AMICI.
+
+.. deprecated::
+    PEtab v1 does not support PySB models. Use the PEtab v2 importer
+    (:class:`amici.importers.petab.PetabImporter`) instead.
 """
 
 import logging
 import re
+import warnings
 from pathlib import Path
 
 import petab.v1 as petab
@@ -21,6 +26,7 @@ from petab.v1.C import (
 from petab.v1.models.pysb_model import PySBModel
 from petab.v2.math import petab_math_str, sympify_petab
 
+import amici
 from amici import MeasurementChannel
 from amici.logging import get_logger, log_execution_time, set_log_level
 
@@ -240,7 +246,19 @@ def import_model_pysb(
     :param kwargs:
         Additional keyword arguments to be passed to
         :func:`amici.importers.pysb.pysb2amici`.
+
+    .. deprecated::
+        PEtab v1 does not support PySB models. Use the PEtab v2 importer
+        (:class:`amici.importers.petab.PetabImporter`) instead.
     """
+    warnings.warn(
+        "Importing PySB-based PEtab v1 problems is deprecated, since PEtab "
+        "v1 does not support PySB models. Use the PEtab v2 importer "
+        "(`amici.importers.petab.PetabImporter`) instead.",
+        DeprecationWarning,
+        # attribute the warning to the first caller outside of amici
+        skip_file_prefixes=(str(Path(amici.__file__).parent),),
+    )
     set_log_level(logger, verbose)
 
     logger.info("Importing model ...")
