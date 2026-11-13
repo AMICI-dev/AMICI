@@ -1,6 +1,7 @@
 """Tests for SBML events, including piecewise expressions."""
 
 from copy import deepcopy
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -1099,14 +1100,16 @@ def test_switches_triggered_by_event_assignments(tempdir):
             E2: at {trigger}: s2 = 1, acc = acc + time
             """,
             model_name=model_name,
-            output_dir=tempdir,
+            output_dir=Path(tempdir, trigger_id),
             observation_model=[
                 MC("obs_z_on", formula="z_on"),
                 MC("obs_z_off", formula="z_off"),
                 MC("obs_acc", formula="acc"),
             ],
         )
-        model = import_model_module(model_name, tempdir).get_model()
+        model = import_model_module(
+            model_name, Path(tempdir, trigger_id)
+        ).get_model()
         t_end = 3.0
         model.set_timepoints([t_end])
         ik = model.get_free_parameter_ids().index("k")
@@ -1156,10 +1159,12 @@ def test_switches_triggered_by_event_assignments(tempdir):
         Eb: at x >= 1, priority=1: u = 1
         """,
         model_name=model_name,
-        output_dir=tempdir,
+        output_dir=Path(tempdir, "simultaneous"),
         observation_model=[MC("obs_z", formula="z")],
     )
-    model = import_model_module(model_name, tempdir).get_model()
+    model = import_model_module(
+        model_name, Path(tempdir, "simultaneous")
+    ).get_model()
     model.set_timepoints([t_end])
     y = np.array([4 * (t_end - t1)])
     dy_dk = np.array([4 / k**2])
@@ -1193,10 +1198,10 @@ def test_switches_triggered_by_event_assignments(tempdir):
         E1: at time >= 1: s = 1
         """,
         model_name=model_name,
-        output_dir=tempdir,
+        output_dir=Path(tempdir, "fixed"),
         observation_model=[MC("obs_z", formula="z")],
     )
-    model = import_model_module(model_name, tempdir).get_model()
+    model = import_model_module(model_name, Path(tempdir, "fixed")).get_model()
     model.set_timepoints([t_end])
     y = np.array([k * (t_end - 1)])
     dy_dk = np.array([t_end - 1])
@@ -3745,9 +3750,11 @@ def test_dae_explicit_and_solver_tracked_events(tempdir):
             {events}
             """,
             model_name=model_name,
-            output_dir=tempdir,
+            output_dir=Path(tempdir, f"dae_{dae}"),
         )
-        model = import_model_module(model_name, tempdir).get_model()
+        model = import_model_module(
+            model_name, Path(tempdir, f"dae_{dae}")
+        ).get_model()
         assert model.ne - model.ne_solver == 3
         model.set_timepoints(t)
         solver = model.create_solver()

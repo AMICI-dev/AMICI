@@ -12,6 +12,12 @@ import sysconfig
 import warnings
 from pathlib import Path
 
+from ..._model_dir import (
+    ModelDirStatus,
+    get_model_dir_status,
+    set_model_dir_status,
+)
+
 
 def build_model_extension(
     package_dir: str | Path,
@@ -77,6 +83,10 @@ def build_model_extension(
     if "SWIG" in env:
         _check_swig_version(env["SWIG"])
 
+    # until the build succeeds, the extension is not usable
+    if get_model_dir_status(package_dir) == ModelDirStatus.COMPILED:
+        set_model_dir_status(package_dir, ModelDirStatus.GENERATED)
+
     # distutils.core.run_setup looks nicer, but does not let us check the
     # result easily
     try:
@@ -97,6 +107,9 @@ def build_model_extension(
 
     if verbose:
         print(result.stdout.decode("utf-8"))
+
+    if get_model_dir_status(package_dir) == ModelDirStatus.GENERATED:
+        set_model_dir_status(package_dir, ModelDirStatus.COMPILED)
 
 
 def _get_env_swig() -> str | None:
