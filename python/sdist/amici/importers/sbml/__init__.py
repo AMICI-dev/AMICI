@@ -51,6 +51,11 @@ from amici._symbolic.sympy_utils import (
     smart_multiply,
 )
 from amici.constants import SymbolId
+from amici.importers._observation_model import (
+    add_log_likelihoods,
+    add_observables,
+    check_event_id,
+)
 from amici.importers.sbml.splines import AbstractSpline
 from amici.importers.sbml.utils import SBMLException
 from amici.importers.utils import (
@@ -58,7 +63,6 @@ from amici.importers.utils import (
     _check_unsupported_functions,
     _default_simplify,
     _eq_to_and,
-    _get_str_symbol_identifiers,
     _ne_to_or,
     _parse_piecewise_to_heaviside,
     _xor_to_or,
@@ -67,8 +71,6 @@ from amici.importers.utils import (
     generate_flux_symbol,
     make_name_unique,
     maximum_bipartite_matching,
-    noise_distribution_to_cost_function,
-    noise_distribution_to_observable_transformation,
     resolve_reserved_symbol_renames,
     sbml_time_symbol,
     smart_subs,
@@ -2033,24 +2035,13 @@ class SbmlImporter:
         with assignment rules, observable.
         """
         if observation_model:
-            # prepare and validate
             for channel in observation_model:
                 # gather local symbols before parsing observable and sigma
                 # formulas
                 self._add_local_symbol(
                     channel.id, symbol_with_assumptions(channel.id)
                 )
-
-                if (
-                    channel.event_id is not None
-                    and sp.Symbol(channel.event_id)
-                    not in self._symbols[SymbolId.EVENT]
-                ):
-                    raise ValueError(
-                        "Could not find an event with the event identifier "
-                        f"{channel.event_id} for the event observable with "
-                        f"name {channel.name or channel.id}."
-                    )
+                check_event_id(self._symbols, channel)
 
             # FIXME: that name-based approach is a bit fragile
             noise_pars = list(
@@ -2062,11 +2053,6 @@ class SbmlImporter:
                     if re.match(r"noiseParameter\d+$", (name := str(symbol)))
                 }
             )
-            self._symbols[SymbolId.NOISE_PARAMETER] = {
-                symbol_with_assumptions(noise_par): {"name": noise_par}
-                for noise_par in noise_pars
-            }
-
             observable_pars = list(
                 {
                     name
@@ -2078,103 +2064,34 @@ class SbmlImporter:
                     )
                 }
             )
-            self._symbols[SymbolId.OBSERVABLE_PARAMETER] = {
-                symbol_with_assumptions(obs_par): {"name": obs_par}
-                for obs_par in observable_pars
-            }
 
-            # Make the placeholders resolve to the very symbols registered
-            # above when the observable and sigma formulas are parsed below,
-            # like any other model entity -- whatever symbol they were
-            # written with (a plain string, or a sympy expression built
-            # without amici's canonical assumptions). Otherwise the formulas
-            # would refer to a different symbol than the one the generated
-            # code binds the placeholder's value to.
+            # Make the placeholders resolve to the canonical symbols when the
+            # observable and sigma formulas are parsed, like any other model
+            # entity -- whatever symbol they were written with (a plain
+            # string, or a sympy expression built without amici's canonical
+            # assumptions). Otherwise the formulas would refer to a different
+            # symbol than the one the generated code binds the placeholder's
+            # value to.
             for name in (*noise_pars, *observable_pars):
                 if name not in self._local_symbols:
                     self._add_local_symbol(name, symbol_with_assumptions(name))
 
-            # Add time-resolved observables
-            self._symbols[SymbolId.OBSERVABLE] = {
-                symbol_with_assumptions(channel.id): {
-                    "name": channel.name or f"y{iobs}",
-                    "value": self._sympify(channel.formula),
-                    "transformation": noise_distribution_to_observable_transformation(
-                        channel.noise_distribution
-                    ),
-                }
-                for iobs, channel in enumerate(
-                    filter(lambda c: c.is_time_resolved, observation_model)
-                )
-            }
-            # check for nesting of observables (unsupported)
-            _check_symbol_nesting(
-                self._symbols[SymbolId.OBSERVABLE], "observable"
-            )
-
-            # Add event observables
-            self._symbols[SymbolId.EVENT_OBSERVABLE] = {
-                symbol_with_assumptions(channel.id): {
-                    "name": channel.name or f"z{iobs}",
-                    "value": self._sympify(channel.formula),
-                    "event": sp.Symbol(channel.event_id),
-                    "transformation": noise_distribution_to_observable_transformation(
-                        channel.noise_distribution
-                    ),
-                }
-                for iobs, channel in enumerate(
-                    filter(lambda c: c.is_event_resolved, observation_model)
-                )
-            }
-            # Check for time errors
-            wrong_t = sp.Symbol("t")
-            for eo in self._symbols[SymbolId.EVENT_OBSERVABLE].values():
-                if eo["value"].has(wrong_t):
-                    warnings.warn(
-                        f"Event observable {eo['name']} uses `t` in "
-                        "it's formula which is not the time variable. "
-                        "For the time variable, please use `time` "
-                        "instead!",
-                        stacklevel=1,
-                    )
-            # check for nesting of observables (unsupported)
-            _check_symbol_nesting(
-                self._symbols[SymbolId.EVENT_OBSERVABLE], "eventObservable"
+            add_observables(
+                self._symbols,
+                observation_model,
+                sympify=self._sympify,
+                noise_parameters=noise_pars,
+                observable_parameters=observable_pars,
             )
 
         elif observation_model is None:
             self._generate_default_observables()
 
-        # TODO: _process_log_likelihood everything below and
-        #   needs some refactoring
-        sigmas = {
-            channel.id: channel.sigma
-            for channel in observation_model or []
-            if channel.is_time_resolved and channel.sigma is not None
-        }
-        noise_distributions = {
-            channel.id: channel.noise_distribution
-            for channel in observation_model or []
-            if channel.is_time_resolved
-        }
-        self._process_log_likelihood(sigmas, noise_distributions)
-
-        sigmas = {
-            channel.id: channel.sigma
-            for channel in observation_model or []
-            if channel.is_event_resolved and channel.sigma is not None
-        }
-        noise_distributions = {
-            channel.id: channel.noise_distribution
-            for channel in observation_model or []
-            if channel.is_event_resolved
-        }
-        self._process_log_likelihood(sigmas, noise_distributions, events=True)
-        self._process_log_likelihood(
-            sigmas,
-            noise_distributions,
-            events=True,
-            event_reg=True,
+        add_log_likelihoods(
+            self._symbols,
+            observation_model,
+            sympify=self._sympify,
+            make_derived_name_unique=self._make_derived_name_unique,
         )
 
     def _generate_default_observables(self):
@@ -2212,124 +2129,6 @@ class SbmlImporter:
             self._symbols[SymbolId.OBSERVABLE][symbol] = {
                 "name": str(variable),
                 "value": formula,
-            }
-
-    def _process_log_likelihood(
-        self,
-        sigmas: dict[str, str | float],
-        noise_distributions: dict[str, str],
-        events: bool = False,
-        event_reg: bool = False,
-    ):
-        """
-        Perform _symbolic computations required for objective function
-        evaluation.
-
-        :param sigmas:
-            See :py:func:`SBMLImporter._process_observables`
-
-        :param noise_distributions:
-            See :py:func:`SBMLImporter._process_observables`
-
-        :param events:
-            indicates whether the passed definitions are for observables
-            (False) or for event observables (True).
-
-        :param event_reg:
-            indicates whether log-likelihood definitions should be processed
-            for event observable regularization (Jrz). If this is activated,
-            measurements are substituted by 0 and the observable by the
-            respective regularization symbol.
-        """
-
-        if events:
-            if event_reg:
-                obs_symbol = SymbolId.EVENT_OBSERVABLE
-                sigma_symbol = SymbolId.SIGMAZ
-                llh_symbol = SymbolId.LLHRZ
-            else:
-                obs_symbol = SymbolId.EVENT_OBSERVABLE
-                sigma_symbol = SymbolId.SIGMAZ
-                llh_symbol = SymbolId.LLHZ
-        else:
-            assert not event_reg
-            obs_symbol = SymbolId.OBSERVABLE
-            sigma_symbol = SymbolId.SIGMAY
-            llh_symbol = SymbolId.LLHY
-
-        for obs_id, obs in self._symbols[obs_symbol].items():
-            # event observables go through this method twice (once with
-            # `event_reg=False`, once with `event_reg=True`, both against
-            # the same `self._symbols[SymbolId.EVENT_OBSERVABLE]` dict) --
-            # only mint the measurement symbol once, so a second pass
-            # doesn't see its own first choice as an already-taken name and
-            # needlessly disambiguate again
-            if "measurement_symbol" not in obs:
-                obs["measurement_symbol"] = symbol_with_assumptions(
-                    self._make_derived_name_unique(f"m{obs_id}")
-                )
-            if event_reg:
-                obs["regularization_symbol"] = symbol_with_assumptions(
-                    self._make_derived_name_unique(f"r{obs_id}")
-                )
-
-        if not event_reg:
-            sigmas = {
-                obs_id: self._sympify(sigma)
-                for obs_id, sigma in sigmas.items()
-            }
-            obs_syms = set(self._symbols[obs_symbol].keys())
-            for obs_id in self._symbols[obs_symbol]:
-                if (sigma := sigmas.get(str(obs_id))) and sigma.has(
-                    *(obs_syms - {obs_id})
-                ):
-                    raise ValueError(
-                        f"Sigma expression for {obs_id} ({sigma}) must not "
-                        f"contain any observable symbols other than {obs_id}."
-                    )
-            # check that only the corresponding observable ID is used in the
-            #  sigma formula, but not any other observable ID
-            #  https://github.com/AMICI-dev/AMICI/issues/2561
-            self._symbols[sigma_symbol] = {
-                symbol_with_assumptions(
-                    self._make_derived_name_unique(f"sigma_{obs_id}")
-                ): {
-                    "name": f"sigma_{obs['name']}",
-                    "value": sigmas.get(str(obs_id), sp.Float(1.0)),
-                }
-                for obs_id, obs in self._symbols[obs_symbol].items()
-            }
-
-        self._symbols[llh_symbol] = {}
-        for (obs_id, obs), (sigma_id, sigma) in zip(
-            self._symbols[obs_symbol].items(),
-            self._symbols[sigma_symbol].items(),
-            strict=True,
-        ):
-            symbol = symbol_with_assumptions(
-                self._make_derived_name_unique(f"J{obs_id}")
-            )
-            dist = noise_distributions.get(str(obs_id), "normal")
-            cost_fun = noise_distribution_to_cost_function(dist)(obs_id)
-            # TODO: clarify expected grammar for cost_fun
-            #   python vs SBML L3 vs PEtab
-            value = sp.sympify(
-                cost_fun,
-                locals=dict(
-                    zip(
-                        _get_str_symbol_identifiers(obs_id),
-                        (obs_id, obs["measurement_symbol"], sigma_id),
-                        strict=True,
-                    )
-                ),
-            )
-            if event_reg:
-                value = value.subs(obs["measurement_symbol"], 0.0)
-                value = value.subs(obs_id, obs["regularization_symbol"])
-            self._symbols[llh_symbol][symbol] = {
-                "name": f"J{obs['name']}",
-                "value": value,
-                "dist": dist,
             }
 
     @log_execution_time("processing SBML initial assignments", logger)
@@ -3651,19 +3450,6 @@ def _check_unsupported_functions_sbml(
         _check_unsupported_functions(sym, expression_type, full_sym)
     except RuntimeError as err:
         raise SBMLException(str(err))
-
-
-def _check_symbol_nesting(
-    symbols: dict[sp.Symbol, dict[str, sp.Expr]], symbol_type: str
-):
-    observable_syms = set(symbols.keys())
-    for obs in symbols.values():
-        if any(sym in observable_syms for sym in obs["value"].free_symbols):
-            raise ValueError(
-                "Nested observables are not supported, "
-                f"but {symbol_type} `{obs['name']} = {obs['value']}` "
-                "references another observable."
-            )
 
 
 def _conservation_laws_from_stoichiometry(
