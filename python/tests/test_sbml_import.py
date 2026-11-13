@@ -3253,3 +3253,128 @@ def test_assignment_rules_to_observables_csymbols():
     assert obs["value"] == (
         symbol_with_assumptions("x1") * amici_time_symbol * avogadro.evalf()
     )
+
+
+@skip_on_valgrind
+def test_sbml_ids_shadowing_special_names(tempdir):
+    """SBML entities may use IDs that have special meanings elsewhere."""
+    special_ids = [
+        "INF",
+        "NaN",
+        "rem",
+        "avogadro",
+        "exponentiale",
+        "log10",
+        "pi",
+        "true",
+        "false",
+    ]
+    i_pi = special_ids.index("pi")
+    # x1' = -(p0 + p1 + ...) * x1, with p_i = 0.1 * (i + 1)
+    # x2' = <pi/> * <ci>pi</ci>
+    # x3' = <exponentiale/> * <ci>exponentiale</ci>
+    # x4' = 1e-23 * <csymbol>avogadro</csymbol> * <ci>avogadro</ci>
+    ant_model = "\n".join(
+        [
+            "x1 = 1",
+            "x1' = -("
+            + " + ".join(f"p{i}" for i in range(len(special_ids)))
+            + ") * x1",
+            "x2 = 0",
+            f"x2' = pi * p{i_pi}",
+            "x3 = 0",
+            "x3' = 1",
+            "x4 = 0",
+            "x4' = 1",
+            *(f"p{i} = {0.1 * (i + 1)}" for i in range(len(special_ids))),
+        ]
+    )
+    sbml_doc = libsbml.readSBMLFromString(antimony2sbml(ant_model))
+    sbml_model = sbml_doc.getModel()
+    for i, new_id in enumerate(special_ids):
+        sbml_model.getParameter(f"p{i}").setId(new_id)
+        for element in sbml_doc.getListOfAllElements():
+            element.renameSIdRefs(f"p{i}", new_id)
+    mathml = (
+        '<math xmlns="http://www.w3.org/1998/Math/MathML">'
+        "<apply><times/>{}</apply></math>"
+    )
+    sbml_model.getRateRuleByVariable("x3").setMath(
+        libsbml.readMathMLFromString(
+            mathml.format("<exponentiale/><ci>exponentiale</ci>")
+        )
+    )
+    sbml_model.getRateRuleByVariable("x4").setMath(
+        libsbml.readMathMLFromString(
+            mathml.format(
+                "<cn>1e-23</cn>"
+                '<csymbol encoding="text" definitionURL='
+                '"http://www.sbml.org/sbml/symbols/avogadro">avogadro'
+                "</csymbol><ci>avogadro</ci>"
+            )
+        )
+    )
+
+    model_name = "test_sbml_ids_shadowing_special_names"
+    SbmlImporter(sbml_model, from_file=False).sbml2amici(
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[MC("obs_pi", formula="pi")],
+        generate_sensitivity_code=False,
+    )
+    model = amici.import_model_module(model_name, tempdir).get_model()
+
+    assert set(model.get_free_parameter_ids()) == set(special_ids)
+    t = np.linspace(0, 1, 5)
+    model.set_timepoints(t)
+    rdata = model.simulate()
+    assert rdata.status == AMICI_SUCCESS
+    k = sum(0.1 * (i + 1) for i in range(len(special_ids)))
+    assert_allclose(rdata.x[:, 0], np.exp(-k * t), rtol=1e-6)
+    p_pi = model.get_free_parameter_by_id("pi")
+    assert_allclose(rdata.x[:, 1], np.pi * p_pi * t, rtol=1e-6)
+    assert_allclose(rdata.y[:, 0], p_pi, rtol=0)
+    p_e = model.get_free_parameter_by_id("exponentiale")
+    assert_allclose(rdata.by_id("x3"), np.e * p_e * t, rtol=1e-6)
+    # SBML L3 value of the Avogadro constant
+    p_avogadro = model.get_free_parameter_by_id("avogadro")
+    assert_allclose(rdata.by_id("x4"), 6.02214179 * p_avogadro * t, rtol=1e-6)
+
+
+@pytest.mark.parametrize("sid", ["time", "True", "False"])
+def test_sbml_id_rejected(sid, tempdir):
+    """SBML entities with certain IDs are not supported."""
+    sbml_doc = libsbml.readSBMLFromString(
+        antimony2sbml("x1' = -k * x1; x1 = 1; k = 1")
+    )
+    sbml_doc.getModel().getParameter("k").setId(sid)
+    for element in sbml_doc.getListOfAllElements():
+        element.renameSIdRefs("k", sid)
+
+    with pytest.raises(SBMLException, match=f"ID `{sid}`"):
+        SbmlImporter(sbml_doc.getModel(), from_file=False).sbml2amici(
+            model_name="test_sbml_id_rejected",
+            output_dir=tempdir,
+            compile=False,
+        )
+
+
+def test_measurement_channel_id_pi():
+    """A measurement channel with ID `pi` does not affect the constant `pi`
+    in its log-likelihood."""
+    sbml_importer = SbmlImporter(
+        antimony2sbml("x1' = -k * x1; x1 = 1; k = 1"), from_file=False
+    )
+    sbml_importer._build_ode_model(
+        observation_model=[MC("pi", formula="x1", sigma="2")]
+    )
+    symbols = sbml_importer._symbols
+    ((y, obs),) = symbols[SymbolId.OBSERVABLE].items()
+    ((sigma, _),) = symbols[SymbolId.SIGMAY].items()
+    ((_, llh),) = symbols[SymbolId.LLHY].items()
+    m = obs["measurement_symbol"]
+    assert str(y) == "pi"
+    assert llh["value"] == (
+        sp.Float(0.5) * sp.log(2 * sp.pi * sigma**2)
+        + sp.Float(0.5) * ((y - m) / sigma) ** 2
+    )

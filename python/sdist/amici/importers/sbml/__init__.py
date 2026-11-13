@@ -1042,21 +1042,8 @@ class SbmlImporter:
         Populate self.local_symbols with pure symbol definitions that do not
         depend on any other symbol.
         """
-
-        special_symbols_and_funs = {
-            # oo is sympy infinity
-            "INF": sp.oo,
-            "NaN": sp.nan,
-            "rem": sp.Mod,
-            "time": sbml_time_symbol,
-            # SBML L3 explicitly defines this value, which is not equal
-            # to the most recent SI definition.
-            "avogadro": sp.Float(6.02214179e23),
-            "exponentiale": sp.E,
-            "log10": lambda x: sp.log(x, 10),
-        }
-        for s, v in special_symbols_and_funs.items():
-            self._add_local_symbol(s, v)
+        # `time` in expression strings (e.g., observable formulas)
+        self._add_local_symbol("time", sbml_time_symbol)
 
         for c in itt.chain(
             self.sbml_model.getListOfSpecies(),
@@ -1123,6 +1110,12 @@ class SbmlImporter:
         :param value:
             local symbol value
         """
+        if key == "time" and key in self._local_symbols:
+            raise SBMLException(
+                "AMICI does not support SBML elements or measurement "
+                "channels with ID `time`. This can be fixed by renaming "
+                "them."
+            )
         if key in self._local_symbols.keys():
             raise SBMLException(
                 f"AMICI tried to add a local symbol {key} with value {value}, "
@@ -1132,11 +1125,12 @@ class SbmlImporter:
                 f"invalid SBML. This can be fixed by renaming "
                 f"the elements with SId {key}."
             )
-        if key in {"True", "False", "true", "false", "pi"}:
+        if key in {"True", "False"}:
+            # Python keywords, these can't be overridden in expression strings
             raise SBMLException(
-                f"AMICI tried to add a local symbol {key} with value {value}, "
-                f"but {key} is a reserved symbol in AMICI. This can be fixed "
-                f"by renaming the element with SId {key}."
+                "AMICI does not support SBML elements or measurement "
+                f"channels with ID `{key}`. This can be fixed by renaming "
+                "them."
             )
         self._local_symbols[key] = value
 
