@@ -14,7 +14,10 @@ import sympy as sp
 from amici._installation.custom_commands import AmiciBuildPy
 from amici.importers.utils import (
     maximum_bipartite_matching,
+    noise_distribution_to_cost_function,
     smart_subs_dict,
+    symbol_with_assumptions,
+    sympify_str,
 )
 from amici.sim.sundials import (
     ParameterScaling,
@@ -343,3 +346,98 @@ def test_build_py_skips_vendored_sources(tmp_path):
     assert cmd.find_data_files("amici._installation", str(tmp_path)) == [
         str(data_file)
     ]
+
+
+def test_sympify_str():
+    """Test the grammar of expression strings."""
+    x = symbol_with_assumptions("x")
+
+    # no constants: names sympy would resolve to non-function objects
+    #  are symbols with canonical assumptions
+    for name in ("pi", "E", "I", "S", "oo", "zoo", "nan", "true", "gamma"):
+        assert sympify_str(name) == symbol_with_assumptions(name)
+    assert sympify_str("2*pi*x") == 2 * symbol_with_assumptions("pi") * x
+
+    # functions and Python booleans still work
+    assert sympify_str("exp(1)") == sp.E
+    assert sympify_str("Piecewise((1, x > 0), (0, True))") == sp.Piecewise(
+        (1, x > 0), (0, True)
+    )
+    assert sympify_str("x^2") == x**2
+
+    # locals take precedence and their symbols are kept as is
+    y = sp.Symbol("y")
+    assert sympify_str("y + pi", {"y": y, "pi": sp.pi}) == y + sp.pi
+
+    with pytest.raises(ValueError, match="Could not parse"):
+        sympify_str("x &&& y")
+
+
+@pytest.mark.parametrize(
+    "noise_distribution, old_str",
+    [
+        (
+            "normal",
+            "0.5*log(2*pi*{sigma}**2) + 0.5*(({y} - {m}) / {sigma})**2",
+        ),
+        (
+            "log-normal",
+            "0.5*log(2*pi*{sigma}**2*{m}**2) "
+            "+ 0.5*((log({y}) - log({m})) / {sigma})**2",
+        ),
+        (
+            "log10-normal",
+            "0.5*log(2*pi*{sigma}**2*{m}**2*log(10)**2) "
+            "+ 0.5*((log({y}, 10) - log({m}, 10)) / {sigma})**2",
+        ),
+        ("laplace", "log(2*{sigma}) + Abs({y} - {m}) / {sigma}"),
+        (
+            "log-laplace",
+            "log(2*{sigma}*{m}) + Abs(log({y}) - log({m})) / {sigma}",
+        ),
+        (
+            "log10-laplace",
+            "log(2*{sigma}*{m}*log(10)) "
+            "+ Abs(log({y}, 10) - log({m}, 10)) / {sigma}",
+        ),
+        (
+            "binomial",
+            "- log(Heaviside({y} - {m})) - loggamma({y}+1) "
+            "+ loggamma({m}+1) + loggamma({y}-{m}+1) "
+            "- {m} * log({sigma}) - ({y} - {m}) * log(1-{sigma})",
+        ),
+        (
+            "negative-binomial",
+            "- loggamma({m}+{y} * (1-{sigma}) / {sigma}) + loggamma({m}+1) "
+            "+ loggamma({y} * (1-{sigma}) / {sigma}) "
+            "- {y} * (1-{sigma}) / {sigma} * log(1-{sigma}) "
+            "- {m} * log({sigma})",
+        ),
+    ],
+)
+def test_noise_distribution_to_cost_function(noise_distribution, old_str):
+    """Test that the built-in cost functions match their previous
+    string-based definitions exactly (code generation must not change)."""
+    y, m, sigma = sp.symbols("obs mobs sigmaobs", real=True)
+    expected = sp.sympify(
+        old_str.format(y="obs", m="mobs", sigma="sigmaobs"),
+        locals={"obs": y, "mobs": m, "sigmaobs": sigma},
+    )
+    actual = noise_distribution_to_cost_function(noise_distribution)(
+        y, m, sigma
+    )
+    assert actual == expected
+    assert sp.srepr(actual) == sp.srepr(expected)
+
+
+def test_noise_distribution_to_cost_function_custom():
+    """Test parsing of custom cost function strings."""
+    y, m, sigma = sp.symbols("y_renamed my sigma", real=True)
+
+    def nllh(str_symbol):
+        return f"(m{str_symbol} - {str_symbol})**2 / sigma{str_symbol} + pi"
+
+    actual = noise_distribution_to_cost_function(nllh)(
+        y, m, sigma, str_symbol="obs"
+    )
+    assert actual == (m - y) ** 2 / sigma + symbol_with_assumptions("pi")

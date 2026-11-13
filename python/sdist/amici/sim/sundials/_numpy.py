@@ -16,7 +16,6 @@ from typing import Literal
 import numpy as np
 import sympy as sp
 import xarray as xr
-from sympy.abc import _clash
 
 from . import (
     ExpData,
@@ -674,7 +673,8 @@ def evaluate(expr: StrOrExpr, rdata: ReturnDataView) -> np.ndarray:
     """Evaluate a symbolic expression based on the given simulation outputs.
 
     :param expr:
-        A symbolic expression, e.g. a sympy expression or a string that can be sympified.
+        A symbolic expression, e.g. a sympy expression or a string
+        (see :func:`amici.importers.utils.sympify_str`).
         Can include state variable, expression, and observable IDs, depending on whether
         the respective data is available in the simulation results.
         Parameters are not yet supported.
@@ -686,8 +686,10 @@ def evaluate(expr: StrOrExpr, rdata: ReturnDataView) -> np.ndarray:
     """
     from sympy.utilities.lambdify import lambdify
 
+    from amici.importers.utils import sympify_str
+
     if isinstance(expr, str):
-        expr = sp.sympify(expr, locals=_clash)
+        expr = sympify_str(expr)
 
     arg_names = list(sorted(expr.free_symbols, key=lambda x: x.name))
     func = lambdify(arg_names, expr, "numpy")
