@@ -815,6 +815,52 @@ class TestProcessHybridizationErrors:
         # Should not raise any errors
         mock_de_model._process_hybridization(hybridization)
 
+    def test_petab_math_formulas(self, mock_de_model):
+        """Test that input and observable formulas use PEtab math."""
+        import sympy as sp
+        from amici._symbolic.de_model_components import FreeParameter
+
+        lambda_ = symbol_with_assumptions("lambda")
+        mock_de_model._free_parameters.append(
+            FreeParameter(lambda_, "lambda", sp.Float(3.0))
+        )
+        hybridization = {
+            "net": {
+                "pre_initialization": False,
+                "input_vars": ["piecewise(1, x1 > 1, 0)", "lambda ^ 2"],
+                "output_vars": {"expr1": 0},
+                "observable_vars": {
+                    "obs1": {
+                        "index": 0,
+                        "formula": "net_output1 + x2",
+                        "petab_id": "net_output1",
+                    }
+                },
+            }
+        }
+        mock_de_model._process_hybridization(hybridization)
+
+        x1, x2 = (symbol_with_assumptions(s) for s in ("x1", "x2"))
+        inputs = {
+            e.get_name(): e.get_val()
+            for e in mock_de_model._expressions
+            if e.get_name().startswith("net_input_")
+        }
+        assert inputs == {
+            "net_input_0": sp.Piecewise((1.0, x1 > 1.0), (0.0, True)),
+            "net_input_1": lambda_**2.0,
+        }
+
+        input_syms = [
+            symbol_with_assumptions(f"_nn_net_input_{i}") for i in range(2)
+        ]
+        obs1 = next(
+            o
+            for o in mock_de_model._observables
+            if o.get_sym() == symbol_with_assumptions("obs1")
+        )
+        assert obs1.get_val() == sp.Function("net")(*input_syms, 0) + x2
+
 
 class TestEquinoxImport:
     """Test that an Equinox model can be imported and used in a PEtab problem."""
