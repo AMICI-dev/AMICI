@@ -72,6 +72,7 @@ set(SRC_LIST_LIB Jy.cpp
 create_splines.cpp 
 dJydsigmay.cpp 
 dJydy.cpp 
+drootdt_total_or_nan.cpp 
 dwdw.cpp 
 dwdx.cpp 
 dxdotdw.cpp 

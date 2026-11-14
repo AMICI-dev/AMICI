@@ -811,6 +811,17 @@ class DEModel:
             return any(self._contains_dspl(e) for e in expr)
         return expr.has(*self.sym("dspl"))
 
+    def _substitute_splines_or_nan(self, expr: sp.Matrix) -> sp.Matrix:
+        """
+        Like `_substitute_splines`, but replaces the entries that depend on
+        spline time derivatives by NaN, instead of failing as in `eq`.
+        """
+        if not self._splines:
+            return expr
+        return self._substitute_splines(expr).applyfunc(
+            lambda e: sp.nan if self._contains_dspl(e) else e
+        )
+
     def _substitute_splines(self, expr: sp.Matrix):
         """
         Substitutes ``AmiciSpline``/``AmiciSplineDerivative``/
@@ -1795,6 +1806,13 @@ class DEModel:
                 )
                 dwdt_total = dwdt + smart_multiply(dwdx_explicit, xdot)
                 self._eqs[name] += smart_multiply(drootdw, dwdt_total)
+
+        elif name == "drootdt_total_or_nan":
+            # `drootdt_total`, NaN where it depends on spline time
+            # derivatives, which are not available in the generated code
+            self._eqs[name] = self._substitute_splines_or_nan(
+                self._eq_raw("drootdt_total")
+            )
 
         elif name == "deltax":
             # fill boluses for Heaviside functions, as empty state updates

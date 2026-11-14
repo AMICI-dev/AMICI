@@ -41,6 +41,8 @@ extern void Jrz_model_neuron_py(realtype *Jrz, const int iz, const realtype *p, 
 extern void dJrzdsigmaz_model_neuron_py(realtype *dJrzdsigmaz, const int iz, const realtype *p, const realtype *k, const realtype *rz, const realtype *sigmaz);
 extern void dJrzdrz_model_neuron_py(realtype *dJrzdrz, const int iz, const realtype *p, const realtype *k, const realtype *rz, const realtype *sigmaz);
 extern void root_model_neuron_py(realtype *root, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl);
+extern void drootdt_total_or_nan_model_neuron_py(realtype *drootdt_total_or_nan, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const realtype *spl);
+extern void drootdx_model_neuron_py(realtype *drootdx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const realtype *spl);
 
 
 
@@ -371,6 +373,16 @@ class Model_model_neuron_py : public amici::Model_ODE {
     }
 
 
+    void fdrootdt_total_or_nan(realtype *drootdt_total_or_nan, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const realtype *spl) override {
+        drootdt_total_or_nan_model_neuron_py(drootdt_total_or_nan, t, x, p, k, h, w, dx, tcl, spl);
+    }
+
+
+    void fdrootdx(realtype *drootdx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const realtype *spl) override {
+        drootdx_model_neuron_py(drootdx, t, x, p, k, h, w, dx, tcl, spl);
+    }
+
+
     void frz(realtype *rz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {
         rz_model_neuron_py(rz, ie, t, x, p, k, h);
     }
@@ -590,7 +602,7 @@ class Model_model_neuron_py : public amici::Model_ODE {
      * @return AMICI git commit hash
      */
     std::string get_amici_commit() const override {
-        return "208ed2c717010260b89cb8673cf32b55433280df";
+        return "cc5bf93a6c539eeaac3418ce5dd787814c0f6f18";
     }
 
     bool has_quadratic_llh() const override {

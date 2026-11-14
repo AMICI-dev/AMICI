@@ -53,6 +53,8 @@ extern void dJydy_rowvals_model_robertson_py(SUNMatrixWrapper &rowvals, int inde
 
 
 
+
+
 extern void dxdotdp_explicit_model_robertson_py(realtype *dxdotdp_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const realtype *w);
 extern void dxdotdp_explicit_colptrs_model_robertson_py(SUNMatrixWrapper &colptrs);
 extern void dxdotdp_explicit_rowvals_model_robertson_py(SUNMatrixWrapper &rowvals);
@@ -339,6 +341,12 @@ class Model_model_robertson_py : public amici::Model_DAE {
     void froot(realtype *root, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl) override {}
 
 
+    void fdrootdt_total_or_nan(realtype *drootdt_total_or_nan, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const realtype *spl) override {}
+
+
+    void fdrootdx(realtype *drootdx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const realtype *spl) override {}
+
+
     void frz(realtype *rz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {}
 
 
@@ -548,7 +556,7 @@ class Model_model_robertson_py : public amici::Model_DAE {
      * @return AMICI git commit hash
      */
     std::string get_amici_commit() const override {
-        return "208ed2c717010260b89cb8673cf32b55433280df";
+        return "cc5bf93a6c539eeaac3418ce5dd787814c0f6f18";
     }
 
     bool has_quadratic_llh() const override {
