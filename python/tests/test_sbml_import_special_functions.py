@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 from amici import MeasurementChannel as MC
 from amici import SbmlImporter
-from amici.importers.antimony import antimony2amici
+from amici.importers.antimony import antimony2amici, antimony2sbml
 from amici.sim.sundials import (
     ExpData,
     ExpDataView,
@@ -267,3 +267,27 @@ def test_rateof_with_expression_dependent_rate(tempdir):
     assert_array_almost_equal_nulp(
         rdata.by_id("S2"), 2 * rdata.by_id("S1"), 10
     )
+
+
+@pytest.mark.parametrize("via_rule", [False, True])
+def test_rateof_in_initial_assignment(via_rule):
+    """Test rateOf in initial assignments, where the rate depends on
+    expressions that depend on state variables."""
+    ia = "r := rateOf(A); B = r" if via_rule else "B = rateOf(A)"
+    ant_model = f"""
+    model test_rateof_in_initial_assignment
+        species A = 10, B;
+        k = 0.5;
+        R1: A -> ; k * A;
+        {ia};
+    end
+    """
+    de_model = SbmlImporter(
+        antimony2sbml(ant_model), from_file=False
+    )._build_ode_model()
+    states = de_model.differential_states()
+    x0_b = next(s.get_val() for s in states if s.get_id() == "B")
+    # no state variables must remain in x0
+    assert not x0_b.free_symbols & {s.get_sym() for s in states}
+    k = next(p.get_sym() for p in de_model.free_parameters())
+    assert float(x0_b.subs(k, 0.5)) == -5.0
