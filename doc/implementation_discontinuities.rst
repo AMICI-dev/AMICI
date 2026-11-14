@@ -80,9 +80,38 @@ respective root function as argument. These will be automatically updated
 during events and take either 0 or 1 values as appropriate pre/post event
 limits.
 
-In order to fully support SBML events and Piecewise functions, AMICI uses
-the SUNDIALS functionality to only track zero crossings from negative to
-positive. Accordingly, two root functions are necessary to keep track of
+AMICI uses the SUNDIALS functionality to only report the zero crossings that
+change the respective Heaviside helper variable, i.e., from negative to
+positive if it is `0`, and from positive to negative if it is `1`. This
+prevents re-detecting a root right after the respective discontinuity was
+handled, but requires the Heaviside helper variables to be consistent with
+the root functions at any time. Otherwise, crossings are missed.
+
+Event assignments may change the root functions, which may trigger further
+events or move the root functions of the current events back across zero.
+Therefore, after each event assignment, the signs of the root functions are
+compared to the Heaviside helper variables. A root function within its
+uncertainty of zero is treated as follows: An event assignment that moves a
+root function onto zero triggers the respective event, as its trigger is true
+at zero. Afterwards, the direction in which the root function moves decides,
+e.g., after an assignment exactly onto the threshold that reverses the
+direction of the root function, or if it ended up slightly below zero due to
+roundoff. The same holds for root functions that crossed zero at the current
+timepoint, and for other root functions that are exactly zero, whose direction
+may have changed nevertheless. Other root functions, also if slightly changed
+by an event assignment, are left to the root-finding of the solver, so that
+their events trigger at their own time.
+The uncertainty is estimated from the change of the
+root function for a state perturbation within the integration tolerances
+and within the time tolerance of the root-finding.
+Likewise, at the start of a simulation or steady-state computation, the
+Heaviside helper variable of a root function at zero that decreases is set to
+`0`, unless the respective event triggers at the initial time, and conditions
+depending on it are re-evaluated.
+
+In order to fully support SBML events and Piecewise functions, events only
+trigger at zero crossings from negative to positive. For Heaviside
+functions, two root functions are used to keep track of
 Heaviside functions and two Heaviside function helper variables will be
 created, where one corresponds to the value of `Heaviside(...)` and one
 to the value of `1-Heaviside(...)`. To ensure that Heaviside functions are

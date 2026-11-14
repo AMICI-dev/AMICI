@@ -86,6 +86,8 @@ class IDASolver : public Solver {
 
     void get_root_info(int* rootsfound) const override;
 
+    realtype get_root_time_tolerance() const override;
+
     void get_dky(realtype t, int k) const override;
 
     void get_sens() const override;
@@ -275,6 +277,9 @@ class IDASolver : public Solver {
     void qb_init(int which, AmiVector const& xQB0) const override;
 
     void root_init(int ne) const override;
+
+    void
+    set_root_direction(std::vector<int> const& rootdir) const override;
 
     void set_dense_jac_fn() const override;
 

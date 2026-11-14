@@ -148,6 +148,7 @@ int Solver::run(realtype const tout) const {
     int status = AMICI_SUCCESS;
 
     apply_max_num_steps();
+    apply_root_directions();
     if (nx() > 0) {
         if (get_adj_init_done()) {
             status = solve_f(tout, AMICI_NORMAL, &ncheckPtr_);
@@ -167,6 +168,7 @@ int Solver::step(realtype const tout) const {
     int status = AMICI_SUCCESS;
 
     apply_max_num_steps();
+    apply_root_directions();
     if (nx() > 0) {
         if (get_adj_init_done()) {
             status = solve_f(tout, AMICI_ONE_STEP, &ncheckPtr_);
@@ -177,6 +179,16 @@ int Solver::step(realtype const tout) const {
         t_ = tout;
     }
     return status;
+}
+
+void Solver::apply_root_directions() const {
+    auto const* model = user_data_.first;
+    if (root_directions_.empty() || !model)
+        return;
+    auto const& h = model->get_model_state().h;
+    for (int ie = 0; ie < gsl::narrow<int>(root_directions_.size()); ++ie)
+        root_directions_[ie] = h.at(ie) > 0.0 ? -1 : 1;
+    set_root_direction(root_directions_);
 }
 
 void Solver::run_b(realtype const tout) const {
@@ -225,6 +237,8 @@ void Solver::setup(
     set_stab_lim_det(stldet_);
 
     root_init(model->ne_solver);
+    // set from the Heaviside variables before integrating
+    root_directions_.assign(model->ne_solver, 0);
 
     if (nx() == 0)
         return;
