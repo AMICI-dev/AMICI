@@ -92,8 +92,9 @@ General
 Python
 ^^^^^^
 
--  In terms of Python compatibility, we follow numpy's
-   `NEP 29 <https://numpy.org/neps/nep-0029-deprecation_policy.html>`__.
+-  In terms of Python compatibility, we follow
+   `SPEC 0 <https://scientific-python.org/specs/spec-0000/>`__
+   (see :ref:`versioning_policy`).
 
 -  For the Python code we want to follow
    `PEP8 <https://www.python.org/dev/peps/pep-0008/>`__. Although this

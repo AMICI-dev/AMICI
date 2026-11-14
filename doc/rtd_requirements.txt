@@ -8,7 +8,7 @@ setuptools>=67.7.2
 #  for building the documentation, we don't care whether this fully works
 git+https://github.com/jmuhlich/pysb@22d69a350b472f33d85ba64ffb10b190483c1c98
 # For forward type definition in generate_equinox
-matplotlib>=3.7.1
+matplotlib>=3.10
 optax
 nbsphinx
 nbformat
@@ -16,7 +16,7 @@ myst-parser
 sphinx_rtd_theme>=1.2.0
 petab[vis]>=0.2.0
 sphinx-autodoc-typehints
-ipython>=8.13.2
+ipython>=8.30
 h5py>=3.14.0
 breathe>=4.35.0
 exhale>=0.3.7
