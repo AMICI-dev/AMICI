@@ -60,6 +60,7 @@ from amici.importers.utils import (
     _eq_to_and,
     _get_str_symbol_identifiers,
     _ne_to_or,
+    _not_to_nnf,
     _parse_piecewise_to_heaviside,
     _xor_to_or,
     amici_time_symbol,
@@ -3426,6 +3427,11 @@ def _parse_event_trigger(trigger: sp.Expr) -> sp.Expr:
         ):
             # y >= x or y > x
             return root
+
+    if isinstance(trigger, sp.Not) and not isinstance(
+        nnf := _not_to_nnf(trigger), sp.Not
+    ):
+        return _parse_event_trigger(nnf)
 
     # rewrite n-ary XOR to OR to be handled below:
     trigger = trigger.replace(sp.Xor, _xor_to_or)
