@@ -82,6 +82,8 @@ jobs:
       shell: bash
       run: |
         python -m pytest \
+          -n logical --dist=worksteal \
+          --durations=20 \
           --ignore-glob=*petab* \
           --ignore-glob=*special* \
           --ignore-glob=*test_splines.py \

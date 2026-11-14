@@ -39,14 +39,13 @@ def lotka_volterra() -> tuple[v1.Problem, np.ndarray]:
 
 
 @pytest.fixture(scope="session")
-def lotka_volterra_model_module():
+def lotka_volterra_model_module(tmp_path_factory):
     """Imports `lotka_volterra` model module."""
     petab_problem, _ = lotka_volterra()
-    import_petab_problem(petab_problem)
     model_name = petab_problem.model.model_id
-    return amici.import_model_module(
-        model_name, amici.get_model_dir(model_name)
-    )
+    output_dir = tmp_path_factory.mktemp(model_name)
+    import_petab_problem(petab_problem, output_dir=output_dir)
+    return amici.import_model_module(model_name, output_dir)
 
 
 def test_run_amici_simulation_to_function_and_derivative(
