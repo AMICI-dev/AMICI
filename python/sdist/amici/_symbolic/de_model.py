@@ -1772,7 +1772,9 @@ class DEModel:
 
             # += drootdw * dwdt_total
             if not smart_is_zero_matrix(drootdw := self.eq("drootdw")):
-                dwdt = self.eq("dwdt")
+                # raw, as only the root functions that depend on spline time
+                # derivatives are unsupported (see `eq`)
+                dwdt = self._eq_raw("dwdt")
                 dwdx_explicit = smart_jacobian(
                     self._eq_raw("w"), self.sym("x")
                 )

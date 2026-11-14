@@ -2,8 +2,10 @@
 
 from copy import deepcopy
 
+import libsbml
 import numpy as np
 import pytest
+import sympy as sp
 from amici import (
     MeasurementChannel as MC,
 )
@@ -11,7 +13,10 @@ from amici import (
     import_model_module,
 )
 from amici.adapters.fiddy import run_simulation_to_function_and_derivative
-from amici.importers.antimony import antimony2amici
+from amici.importers.antimony import antimony2amici, antimony2sbml
+from amici.importers.sbml import SbmlImporter
+from amici.importers.sbml.splines import CubicHermiteSpline
+from amici.importers.utils import amici_time_symbol
 from amici.sim.sundials import (
     AMICI_SUCCESS,
     ExpData,
@@ -4597,4 +4602,75 @@ def test_switch_after_root_at_stop_time(tempdir, dae):
             sllh[SensitivityMethod.forward],
             rtol=1e-5,
             err_msg=str(timepoints),
+        )
+
+
+@skip_on_valgrind
+def test_event_time_sensitivities_with_time_varying_spline(tempdir):
+    """Event-time sensitivities for a trigger that depends on an expression,
+    in a model with a time-varying spline that the trigger does not depend
+    on."""
+    model_name = "test_event_time_sensitivities_with_time_varying_spline"
+    sbml_model = (
+        libsbml.SBMLReader()
+        .readSBMLFromString(
+            antimony2sbml(
+                r"""
+                model m
+                    k = 0.5
+                    x = 0; y = 0; q = 0
+                    x' = k * u
+                    q' = y
+                    var u = 0; sp1 = 1; sp2 = 2
+                    v := 2 * x
+                    E1: at v >= 2: y = 1
+                end
+                """
+            )
+        )
+        .getModel()
+    )
+    CubicHermiteSpline(
+        sbml_id="u",
+        evaluate_at=amici_time_symbol,
+        nodes=[0, 10],
+        values_at_nodes=[sp.Symbol("sp1"), sp.Symbol("sp2")],
+        extrapolate=("constant", "constant"),
+    ).add_to_sbml_model(sbml_model, auto_add=False)
+    SbmlImporter(sbml_model).sbml2amici(
+        model_name,
+        tempdir,
+        observation_model=[MC("obs_x", formula="x"), MC("obs_q", formula="q")],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints(np.linspace(0, 10, 6))
+    solver = model.create_solver()
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-12)
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+    assert rdata.by_id("q")[-1] > 0
+
+    edata = ExpData(rdata, 1.0, 0.0)
+    # fixed offset, so that the gradient is non-zero
+    edata.set_measurements((np.asarray(rdata.y) + 0.5).flatten())
+    function, _ = run_simulation_to_function_and_derivative(
+        amici_model=model,
+        amici_solver=solver,
+        amici_edata=edata,
+        derivative_variables=["llh"],
+    )
+    point = np.asarray(model.get_free_parameters())
+    ik = list(model.get_free_parameter_ids()).index("k")
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    for sensi_meth in (
+        SensitivityMethod.forward,
+        SensitivityMethod.adjoint,
+    ):
+        solver.set_sensitivity_method(sensi_meth)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS, sensi_meth
+        assert abs(rdata.sllh[ik]) > 0.1, sensi_meth
+        check_gradient(function, point, rdata.sllh).assert_success(
+            always_print=True
         )
