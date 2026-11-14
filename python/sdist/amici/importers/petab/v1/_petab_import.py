@@ -7,11 +7,9 @@ into AMICI.
 
 import logging
 import os
-import re
 import shutil
 from pathlib import Path
 
-import pandas as pd
 import petab.v1 as petab
 from petab.v1.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
 
@@ -123,112 +121,6 @@ def import_petab_problem(
 
         logger.info(f"Compiling model {model_name} to {output_dir}.")
 
-        if "sciml" in petab_problem.extensions_config:
-            from petab_sciml.standard import NNModelStandard
-
-            config = petab_problem.extensions_config["sciml"]
-            # TODO: only accept YAML format for now
-            hybridizations = [
-                pd.read_csv(hf, sep="\t")
-                for hf in config["hybridization_files"]
-            ]
-            hybridization_table = pd.concat(hybridizations)
-
-            input_mapping = dict(
-                zip(
-                    hybridization_table["targetId"],
-                    hybridization_table["targetValue"],
-                )
-            )
-            output_mapping = dict(
-                zip(
-                    hybridization_table["targetValue"],
-                    hybridization_table["targetId"],
-                )
-            )
-            observable_mapping = dict(
-                zip(
-                    petab_problem.observable_df["observableFormula"],
-                    petab_problem.observable_df.index,
-                )
-            )
-            hybridization = {
-                net_id: {
-                    "model": NNModelStandard.load_data(
-                        Path(net_config["location"])
-                    ),
-                    "input_vars": [
-                        input_mapping[petab_id]
-                        for petab_id, model_id in petab_problem.mapping_df.loc[
-                            petab_problem.mapping_df[petab.MODEL_ENTITY_ID]
-                            .str.split(".")
-                            .str[0]
-                            == net_id,
-                            petab.MODEL_ENTITY_ID,
-                        ]
-                        .to_dict()
-                        .items()
-                        if model_id.split(".")[1].startswith("input")
-                        and petab_id in input_mapping.keys()
-                    ],
-                    "output_vars": {
-                        output_mapping[petab_id]: _get_net_index(model_id)
-                        for petab_id, model_id in petab_problem.mapping_df.loc[
-                            petab_problem.mapping_df[petab.MODEL_ENTITY_ID]
-                            .str.split(".")
-                            .str[0]
-                            == net_id,
-                            petab.MODEL_ENTITY_ID,
-                        ]
-                        .to_dict()
-                        .items()
-                        if model_id.split(".")[1].startswith("output")
-                        and petab_id in output_mapping.keys()
-                    },
-                    "observable_vars": {
-                        observable_mapping[petab_id]: _get_net_index(model_id)
-                        for petab_id, model_id in petab_problem.mapping_df.loc[
-                            petab_problem.mapping_df[petab.MODEL_ENTITY_ID]
-                            .str.split(".")
-                            .str[0]
-                            == net_id,
-                            petab.MODEL_ENTITY_ID,
-                        ]
-                        .to_dict()
-                        .items()
-                        if model_id.split(".")[1].startswith("output")
-                        and petab_id in observable_mapping.keys()
-                    },
-                    "frozen_layers": dict(
-                        [
-                            _get_frozen_layers(model_id)
-                            for petab_id, model_id in petab_problem.mapping_df.loc[
-                                petab_problem.mapping_df[petab.MODEL_ENTITY_ID]
-                                .str.split(".")
-                                .str[0]
-                                == net_id,
-                                petab.MODEL_ENTITY_ID,
-                            ]
-                            .to_dict()
-                            .items()
-                            if petab_id in petab_problem.parameter_df.index
-                            and petab_problem.parameter_df.loc[
-                                petab_id, petab.ESTIMATE
-                            ]
-                            == 0
-                        ]
-                    ),
-                    **net_config,
-                }
-                for net_id, net_config in config["neural_nets"].items()
-            }
-            if not jax or petab_problem.model.type_id != MODEL_TYPE_SBML:
-                raise NotImplementedError(
-                    "petab_sciml extension is currently only supported for sbml models"
-                )
-        else:
-            hybridization = None
-
         # compile the model
         if petab_problem.model.type_id == MODEL_TYPE_PYSB:
             import_model_pysb(
@@ -244,7 +136,6 @@ def import_petab_problem(
                 model_name=model_name,
                 output_dir=output_dir,
                 non_estimated_parameters_as_constants=non_estimated_parameters_as_constants,
-                hybridization=hybridization,
                 jax=jax,
                 **kwargs,
             )
@@ -285,17 +176,3 @@ def import_petab_problem(
     logger.info(f"Successfully loaded model {model_name} from {output_dir}.")
 
     return model
-
-
-def _get_net_index(model_id: str):
-    matches = re.findall(r"\[(\d+)\]", model_id)
-    if matches:
-        return int(matches[-1])
-
-
-def _get_frozen_layers(model_id):
-    layers = re.findall(r"\[(.*?)\]", model_id)
-    array_attr = model_id.split(".")[-1]
-    layer_id = layers[0] if len(layers) else None
-    array_attr = array_attr if array_attr in ("weight", "bias") else None
-    return layer_id, array_attr
