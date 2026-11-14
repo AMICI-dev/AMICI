@@ -2790,6 +2790,19 @@ class DEModel:
             dict representation of the hybridization information in the PEtab YAML file, see
             https://petab-sciml.readthedocs.io/latest/format.html#problem-yaml-file
         """
+        from petab.v2.math import sympify_petab
+
+        def parse_petab_math(formula, sym_locals: dict[str, sp.Symbol]):
+            # match symbols to model symbols by name, not by assumptions
+            expr = sympify_petab(formula)
+            return expr.subs(
+                {
+                    s: sym_locals[s.name]
+                    for s in expr.free_symbols
+                    if s.name in sym_locals
+                }
+            )
+
         added_expressions = False
         orig_obs = tuple([s.get_sym() for s in self._observables])
         for net_id, net in hybridization.items():
@@ -2806,8 +2819,8 @@ class DEModel:
                     inputs.append(comp_by_sym[input_var])
                 else:
                     try:
-                        expr = sp.sympify(input_var, locals=sym_locals)
-                    except (sp.SympifyError, Exception):
+                        expr = parse_petab_math(input_var, sym_locals)
+                    except ValueError:
                         unresolved_vars.append(input_var)
                         continue
 
@@ -2953,10 +2966,8 @@ class DEModel:
                 if formula == petab_id:
                     out_val = nn_call
                 else:
-                    from petab.v2.math import sympify_petab
-
-                    out_val = sympify_petab(formula).subs(
-                        symbol_with_assumptions(petab_id), nn_call
+                    out_val = parse_petab_math(
+                        formula, sym_locals | {petab_id: nn_call}
                     )
                 # add to the model
                 self.add_component(
