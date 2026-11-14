@@ -78,16 +78,12 @@ def check_trajectories_with_forward_sensitivities(
     )
 
 
-def check_trajectories_with_adjoint_sensitivities(
-    amici_model: AmiciModel, skip_fd: tuple[str, ...] = ()
-):
+def check_trajectories_with_adjoint_sensitivities(amici_model: AmiciModel):
     """
     Check whether adjoint sensitivities match forward sensitivities and finite
     differences.
 
     :param amici_model: AMICI model to test
-    :param skip_fd: IDs of parameters for which forward sensitivities are not
-        compared to finite differences.
     """
     # First compute dummy experimental data to use adjoints
     solver = amici_model.create_solver()
@@ -158,10 +154,9 @@ def check_trajectories_with_adjoint_sensitivities(
     ):
         print(df)
 
-    check_fd = ~df.index.isin(skip_fd)
     assert_allclose(
-        df["fd"][check_fd],
-        df["fsa"][check_fd],
+        df["fd"],
+        df["fsa"],
         rtol=1e-5,
         atol=1e-8,
         err_msg="Finite differences and forward sensitivities do not match.",
@@ -175,8 +170,8 @@ def check_trajectories_with_adjoint_sensitivities(
         err_msg="Adjoint and forward sensitivities do not match.",
     )
     assert_allclose(
-        df["fd"][check_fd],
-        df["asa"][check_fd],
+        df["fd"],
+        df["asa"],
         rtol=1e-5,
         atol=1e-6,
         err_msg="Finite differences and adjoint sensitivities do not match.",

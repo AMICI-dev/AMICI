@@ -154,12 +154,9 @@ def model_definition_events_plus_heavisides():
         "k2": 0.01,
         "k3": 5,
         "alpha": 2,
-        # FIXME: adjoint sensitivities w.r.t. beta are slightly off
         "beta": 3,
         "gamma": 2,
         "delta": 3,
-        # FIXME: adjoint sensitivities w.r.t. eta are slightly off
-        #  changing eta to e.g. 2.5 "fixes" python/tests/test_events.py::test_models[events_plus_heavisides]
         "eta": 1,
         "zeta": 5,
     }
@@ -300,7 +297,9 @@ def model_definition_nested_events():
         "inflow_1": 4,
         "decay_1": 2,
         "decay_2": 5,
-        "bolus": 0,  # for bolus != 0, nested event sensitivities are off!
+        # `llh` is discontinuous in `bolus` at 0: for `bolus < 0`, `event_1`
+        #  triggers again right after its first occurrence.
+        "bolus": 0.1,
     }
     events = {
         "event_1": {
@@ -726,10 +725,7 @@ def test_models(model):
         amici_model, result_expected_x, result_expected_sx
     )
 
-    # For `nested_events`, `llh` is discontinuous in `bolus` at 0: for
-    # `bolus < 0`, `event_1` triggers again right after its first occurrence.
-    skip_fd = ("bolus",) if amici_model.get_name() == "nested_events" else ()
-    check_trajectories_with_adjoint_sensitivities(amici_model, skip_fd)
+    check_trajectories_with_adjoint_sensitivities(amici_model)
 
 
 def expm(x):
@@ -1048,20 +1044,16 @@ def test_event_priorities(tempdir):
         epsilon=1e-8,
     )
 
-    # TODO: test ASA after https://github.com/AMICI-dev/AMICI/pull/1539
-    # FIXME: sensitivities w.r.t. the bolus and trigger parameter are totally off
-    # solver.setSensitivityMethod(SensitivityMethod.adjoint)
-    # edata.plist = []
-    # model.requireSensitivitiesForAllParameters()
-    # check_derivatives(
-    #     model,
-    #     solver=solver,
-    #     edata=edata,
-    #     atol=1e-6,
-    #     rtol=1e-6,
-    #     # smaller than the offset from the trigger time
-    #     epsilon=1e-8,
-    # )
+    solver.set_sensitivity_method(SensitivityMethod.adjoint)
+    check_derivatives(
+        model,
+        solver=solver,
+        edata=edata,
+        atol=1e-6,
+        rtol=1e-6,
+        # smaller than the offset from the trigger time
+        epsilon=1e-8,
+    )
 
 
 @skip_on_valgrind
@@ -1532,25 +1524,6 @@ def test_event_uses_values_from_trigger_time(tempdir):
         SensitivityMethod.forward,
         SensitivityMethod.adjoint,
     ):
-        if sens_method == SensitivityMethod.forward:
-            # FIXME: forward sensitivities w.r.t. the bolus parameter
-            #  of the first event are wrong
-            model.set_parameter_list(
-                [
-                    ip
-                    for ip, par in enumerate(model.get_free_parameter_ids())
-                    if par not in ["one"]
-                ]
-            )
-        elif sens_method == SensitivityMethod.adjoint:
-            model.set_parameter_list(
-                [
-                    ip
-                    for ip, par in enumerate(model.get_free_parameter_ids())
-                    if par not in ["one"]
-                ]
-            )
-
         solver.set_sensitivity_method(sens_method)
         check_derivatives(
             model,

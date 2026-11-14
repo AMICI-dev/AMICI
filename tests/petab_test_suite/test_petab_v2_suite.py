@@ -194,16 +194,7 @@ def _test_case(case, model_type, version, jax):
     if jax:
         pass  # skip derivative checks for now
     else:
-        if (case, model_type, version) in (
-            ("0016", "sbml", "v2.0.0"),
-            ("0013", "pysb", "v2.0.0"),
-        ):
-            # FIXME: issue with events and sensitivities
-            ...
-        elif ps.model.nx_solver > 0:
-            # sensitivity calculation is currently only supported for models
-            #  with state variables
-            check_derivatives(ps, problem_parameters)
+        check_derivatives(ps, problem_parameters)
 
     if not all([llhs_match, simulations_match]) or not chi2s_match:
         logger.error(f"Case {case} failed.")
@@ -231,9 +222,13 @@ def check_derivatives(
     solver.set_sensitivity_method(SensitivityMethod.forward)
     solver.set_sensitivity_order(SensitivityOrder.first)
 
+    # without state variables, there are no `x` to check
+    skip_fields = ["x"] if model.nx_solver == 0 else None
     for edata in edatas:
         petab_simulator.exp_man.apply_parameters(edata, problem_parameters)
-        amici_check_derivatives(model, solver=solver, edata=edata)
+        amici_check_derivatives(
+            model, solver=solver, edata=edata, skip_fields=skip_fields
+        )
 
     # TODO check aggregated sensitivities over all conditions
 

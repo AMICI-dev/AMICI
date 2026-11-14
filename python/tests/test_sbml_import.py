@@ -687,8 +687,9 @@ def test_presimulation_events(tempdir):
     edata.set_measurements(edata_tmp.get_measurements())
     edata.set_noise_scales(edata_tmp.get_noise_scales())
 
-    # sensitivities w.r.t. t_initial_presim (trigger time of an initial event)
-    #  are not supported
+    # `t_initial_presim` equals the presimulation start time. Decreasing it
+    #  doesn't change the trigger time (t0), increasing it does. I.e., the
+    #  outputs aren't differentiable w.r.t. `t_initial_presim` here.
     edata.plist = [
         ip
         for ip, p in enumerate(model.get_free_parameter_ids())
@@ -698,9 +699,7 @@ def test_presimulation_events(tempdir):
 
     for sensi_method in (
         SensitivityMethod.forward,
-        # FIXME: test with adjoints. currently there is some CVodeF issue
-        #  that fails forward simulation with adjoint sensitivities
-        # SensitivityMethod.adjoint,
+        SensitivityMethod.adjoint,
     ):
         solver.set_sensitivity_method(sensi_method)
         rdata = run_simulation(model, solver, edata)
