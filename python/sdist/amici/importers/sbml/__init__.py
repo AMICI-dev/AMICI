@@ -55,6 +55,7 @@ from amici.importers._observation_model import (
     add_log_likelihoods,
     add_observables,
     check_event_id,
+    get_placeholders,
 )
 from amici.importers.sbml.splines import AbstractSpline
 from amici.importers.sbml.utils import SBMLException
@@ -396,6 +397,12 @@ class SbmlImporter:
         """
         set_log_level(logger, verbose)
 
+        if any(get_placeholders(observation_model or [])):
+            raise NotImplementedError(
+                "Placeholder parameters in the observation model are "
+                "currently only supported by `sbml2jax`."
+            )
+
         ode_model = self._build_ode_model(
             fixed_parameters=fixed_parameters,
             observation_model=observation_model,
@@ -530,6 +537,26 @@ class SbmlImporter:
             https://petab-sciml.readthedocs.io/latest/format.html#problem-yaml-file
         """
         set_log_level(logger, verbose)
+
+        for prefix, placeholders in zip(
+            ("noiseParameter", "observableParameter"),
+            get_placeholders(observation_model or []),
+            strict=True,
+        ):
+            indices = set()
+            for placeholder in placeholders:
+                if not re.fullmatch(rf"{prefix}[1-9]\d*", placeholder):
+                    raise ValueError(
+                        f"Invalid placeholder identifier {placeholder!r}. "
+                        f"Expected `{prefix}{{n}}` with n >= 1."
+                    )
+                indices.add(int(placeholder.removeprefix(prefix)))
+            # the n-th value is bound to the n-th placeholder
+            if indices != set(range(1, len(indices) + 1)):
+                raise ValueError(
+                    f"The indices of the `{prefix}{{n}}` placeholders must "
+                    f"be contiguous and start at 1, got {sorted(indices)}."
+                )
 
         ode_model = self._build_ode_model(
             fixed_parameters=fixed_parameters,
@@ -2045,28 +2072,6 @@ class SbmlImporter:
                 )
                 check_event_id(self._symbols, channel)
 
-            # FIXME: that name-based approach is a bit fragile
-            noise_pars = list(
-                {
-                    name
-                    for channel in observation_model
-                    if channel.is_time_resolved and channel.sigma is not None
-                    for symbol in self._sympify(channel.sigma).free_symbols
-                    if re.match(r"noiseParameter\d+$", (name := str(symbol)))
-                }
-            )
-            observable_pars = list(
-                {
-                    name
-                    for channel in observation_model
-                    if channel.is_time_resolved and channel.sigma is not None
-                    for symbol in self._sympify(channel.formula).free_symbols
-                    if re.match(
-                        r"observableParameter\d+$", (name := str(symbol))
-                    )
-                }
-            )
-
             # Make the placeholders resolve to the canonical symbols when the
             # observable and sigma formulas are parsed, like any other model
             # entity -- whatever symbol they were written with (a plain
@@ -2074,16 +2079,18 @@ class SbmlImporter:
             # assumptions). Otherwise the formulas would refer to a different
             # symbol than the one the generated code binds the placeholder's
             # value to.
-            for name in (*noise_pars, *observable_pars):
-                if name not in self._local_symbols:
-                    self._add_local_symbol(name, symbol_with_assumptions(name))
+            for name in itt.chain(*get_placeholders(observation_model)):
+                if name in self._local_symbols:
+                    raise ValueError(
+                        f"Placeholder identifier {name!r} is already used "
+                        "by another model entity or observable."
+                    )
+                self._add_local_symbol(name, symbol_with_assumptions(name))
 
             add_observables(
                 self._symbols,
                 observation_model,
                 sympify=self._sympify,
-                noise_parameters=noise_pars,
-                observable_parameters=observable_pars,
             )
 
         elif observation_model is None:

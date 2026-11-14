@@ -163,6 +163,12 @@ def _workaround_observable_parameters(
     The PEtab observable table may contain placeholder parameters that are
     not defined in the SBML model. We need to add them to the SBML model before
     the actual SBML import.
+
+    For JAX, placeholders ``noiseParameter{n}_{observableId}`` and
+    ``observableParameter{n}_{observableId}`` are instead replaced by the
+    generic ``noiseParameter{n}`` and ``observableParameter{n}`` in
+    ``observation_model``, and declared as placeholders of the respective
+    measurement channel.
     """
     formulas = chain(
         (obs.formula for obs in observation_model),
@@ -181,17 +187,23 @@ def _workaround_observable_parameters(
             if jax and (m := re.match(r"(noiseParameter\d+)_(\w+)", sym)):
                 # group1 is the noise parameter, group2 is the observable, don't add to sbml but replace with generic
                 # noise parameter
-                id_to_observable[m.group(2)].sigma = sympify_petab(
-                    id_to_observable[m.group(2)].sigma
-                ).subs(free_sym, sp.Symbol(m.group(1)))
+                channel = id_to_observable[m.group(2)]
+                sigma = sympify_petab(channel.sigma)
+                if free_sym in sigma.free_symbols:
+                    channel.noise_placeholders.append(m.group(1))
+                channel.sigma = sigma.subs(free_sym, sp.Symbol(m.group(1)))
             elif jax and (
                 m := re.match(r"(observableParameter\d+)_(\w+)", sym)
             ):
-                # group1 is the noise parameter, group2 is the observable, don't add to sbml but replace with generic
+                # group1 is the observable parameter, group2 is the observable, don't add to sbml but replace with generic
                 # observable parameter
-                id_to_observable[m.group(2)].formula = sympify_petab(
-                    id_to_observable[m.group(2)].formula
-                ).subs(free_sym, sp.Symbol(m.group(1)))
+                channel = id_to_observable[m.group(2)]
+                obs_formula = sympify_petab(channel.formula)
+                if free_sym in obs_formula.free_symbols:
+                    channel.observable_placeholders.append(m.group(1))
+                channel.formula = obs_formula.subs(
+                    free_sym, sp.Symbol(m.group(1))
+                )
             elif (
                 sbml_model.getElementBySId(sym) is None
                 and sym != "time"
@@ -216,6 +228,13 @@ def _workaround_observable_parameters(
             parameter_id=par,
             value=output_parameter_defaults.get(par, 0.0),
         )
+
+    def by_index(par_id: str) -> int:
+        return int(re.match(r"\D+(\d+)$", par_id).group(1))
+
+    for channel in observation_model:
+        channel.noise_placeholders.sort(key=by_index)
+        channel.observable_placeholders.sort(key=by_index)
 
 
 @log_execution_time("Importing PEtab model", logger)

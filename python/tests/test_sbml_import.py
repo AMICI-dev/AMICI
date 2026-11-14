@@ -1415,6 +1415,128 @@ def test_hardcode_parameters():
         )
 
 
+@skip_on_valgrind
+def test_placeholder_parameters():
+    """Test that only declared placeholders become noise or observable
+    parameters."""
+    sbml = antimony2sbml(
+        "species A = 1; A' = -k * A; k = 0.1; E1: at A < 0.5: k = 0.2"
+    )
+    formulas = {
+        "obs_a": {
+            "formula": "observableParameter1 * A",
+            "sigma": "noiseParameter1 + noiseParameter2 * obs_a",
+        },
+        "obs_b": {
+            "formula": "observableParameter1 + observableParameter2 * A",
+            "sigma": "noiseParameter1",
+        },
+    }
+    observation_model = [
+        MC(
+            "obs_a",
+            **formulas["obs_a"],
+            observable_placeholders=["observableParameter1"],
+            noise_placeholders=["noiseParameter2", "noiseParameter1"],
+        ),
+        # placeholders may be shared between channels
+        MC(
+            "obs_b",
+            **formulas["obs_b"],
+            observable_placeholders=[
+                "observableParameter1",
+                "observableParameter2",
+            ],
+            noise_placeholders=["noiseParameter1"],
+        ),
+    ]
+
+    de_model = SbmlImporter(sbml, from_file=False)._build_ode_model(
+        observation_model=observation_model,
+    )
+    noise_parameters = [p.get_sym() for p in de_model.noise_parameters()]
+    observable_parameters = [
+        p.get_sym() for p in de_model.observable_parameters()
+    ]
+    # no duplicates, in order of first declaration
+    assert noise_parameters == [
+        symbol_with_assumptions("noiseParameter2"),
+        symbol_with_assumptions("noiseParameter1"),
+    ]
+    assert observable_parameters == [
+        symbol_with_assumptions("observableParameter1"),
+        symbol_with_assumptions("observableParameter2"),
+    ]
+    # the formulas refer to the very same symbols
+    assert observable_parameters[0] in (
+        de_model.observables()[0].get_val().free_symbols
+    )
+    assert set(observable_parameters) <= (
+        de_model.observables()[1].get_val().free_symbols
+    )
+    assert set(noise_parameters) <= (
+        de_model.sigma_ys()[0].get_val().free_symbols
+    )
+
+    # no name-based detection
+    de_model = SbmlImporter(sbml, from_file=False)._build_ode_model(
+        observation_model=[
+            MC(obs_id, **obs_formulas)
+            for obs_id, obs_formulas in formulas.items()
+        ],
+    )
+    assert de_model.noise_parameters() == []
+    assert de_model.observable_parameters() == []
+
+    # not supported for event observables and for the SUNDIALS backend
+    with pytest.raises(NotImplementedError, match="time-resolved"):
+        SbmlImporter(sbml, from_file=False)._build_ode_model(
+            observation_model=[
+                MC(
+                    "obs_z",
+                    formula="observableParameter1 * A",
+                    event_id="E1",
+                    observable_placeholders=["observableParameter1"],
+                )
+            ],
+        )
+    with pytest.raises(NotImplementedError, match="sbml2jax"):
+        SbmlImporter(sbml, from_file=False).sbml2amici(
+            model_name="test_placeholder_parameters",
+            observation_model=observation_model,
+        )
+    # for JAX, placeholders are bound by the index in their identifier
+    with pytest.raises(ValueError, match="Invalid placeholder identifier"):
+        SbmlImporter(sbml, from_file=False).sbml2jax(
+            model_name="test_placeholder_parameters",
+            observation_model=[
+                MC(
+                    "obs_a",
+                    formula="scaling * A",
+                    observable_placeholders=["scaling"],
+                )
+            ],
+        )
+    with pytest.raises(ValueError, match="contiguous"):
+        SbmlImporter(sbml, from_file=False).sbml2jax(
+            model_name="test_placeholder_parameters",
+            observation_model=[
+                MC(
+                    "obs_a",
+                    formula="observableParameter2 * A",
+                    observable_placeholders=["observableParameter2"],
+                )
+            ],
+        )
+    # placeholders must not collide with model entities
+    with pytest.raises(ValueError, match="already used"):
+        SbmlImporter(sbml, from_file=False)._build_ode_model(
+            observation_model=[
+                MC("obs_a", formula="k * A", observable_placeholders=["k"])
+            ],
+        )
+
+
 def test_constraints(tempdir):
     """Test non-negativity constraint handling."""
     from amici.importers.antimony import antimony2amici
