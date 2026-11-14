@@ -2358,3 +2358,25 @@ def test_failure_before_main_simulation(tempdir):
     assert np.all(np.isnan(rdata.sllh))
     assert np.all(np.isnan(rdata.x))
     assert np.all(np.isnan(rdata.y))
+
+
+@pytest.mark.parametrize(
+    "formula, sigma",
+    [
+        ("2 * pi * x1", None),
+        ("x1", "E * x1"),
+        ("x1 + undeclared", None),
+    ],
+)
+def test_observation_model_undeclared_symbols(tempdir, formula, sigma):
+    """Unknown symbols in observable or sigma formulas are rejected."""
+    sbml_importer = SbmlImporter(
+        antimony2sbml("x1' = -k * x1; x1 = 1; k = 1"), from_file=False
+    )
+    with pytest.raises(ValueError, match="contains unknown symbols"):
+        sbml_importer.sbml2amici(
+            model_name="test_observation_model_undeclared_symbols",
+            output_dir=tempdir,
+            observation_model=[MC("obs1", formula=formula, sigma=sigma)],
+            compile=False,
+        )

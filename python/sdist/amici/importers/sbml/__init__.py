@@ -58,7 +58,6 @@ from amici.importers.utils import (
     _check_unsupported_functions,
     _default_simplify,
     _eq_to_and,
-    _get_str_symbol_identifiers,
     _ne_to_or,
     _parse_piecewise_to_heaviside,
     _xor_to_or,
@@ -75,6 +74,7 @@ from amici.importers.utils import (
     smart_subs_dict,
     substitute_local_symbols,
     symbol_with_assumptions,
+    sympify_str,
     toposort_symbols,
 )
 from amici.logging import get_logger, log_execution_time, set_log_level
@@ -2141,6 +2141,7 @@ class SbmlImporter:
             _check_symbol_nesting(
                 self._symbols[SymbolId.EVENT_OBSERVABLE], "eventObservable"
             )
+            self._check_undeclared_observation_model_symbols(observation_model)
 
         elif observation_model is None:
             self._generate_default_observables()
@@ -2176,6 +2177,40 @@ class SbmlImporter:
             events=True,
             event_reg=True,
         )
+
+    def _check_undeclared_observation_model_symbols(
+        self, observation_model: list[MeasurementChannel]
+    ) -> None:
+        """Check that observable and sigma formulas only use known symbols.
+
+        Free symbols that are neither model entities, observables, nor
+        ``observableParameter{n}``/``noiseParameter{n}`` placeholders would
+        otherwise end up undeclared in the generated model code.
+
+        :raises ValueError:
+            If any observable or sigma formula contains unknown symbols.
+        """
+        known = {
+            sym
+            for value in self._local_symbols.values()
+            if isinstance(value, sp.Basic)
+            for sym in value.free_symbols
+        } | {sbml_time_symbol, amici_time_symbol}
+
+        for channel in observation_model:
+            for attr in ("formula", "sigma"):
+                expr = self._sympify(getattr(channel, attr))
+                if not isinstance(expr, sp.Basic):
+                    continue
+                if unknown := expr.free_symbols - known:
+                    raise ValueError(
+                        f"The {attr} of measurement channel `{channel.id}` "
+                        f"(`{expr}`) contains unknown symbols: "
+                        f"{', '.join(sorted(map(str, unknown)))}. "
+                        "Only model entities, observables, and "
+                        "`observableParameter{n}`/`noiseParameter{n}` "
+                        "placeholders can be used."
+                    )
 
     def _generate_default_observables(self):
         """
@@ -2310,18 +2345,8 @@ class SbmlImporter:
                 self._make_derived_name_unique(f"J{obs_id}")
             )
             dist = noise_distributions.get(str(obs_id), "normal")
-            cost_fun = noise_distribution_to_cost_function(dist)(obs_id)
-            # TODO: clarify expected grammar for cost_fun
-            #   python vs SBML L3 vs PEtab
-            value = sp.sympify(
-                cost_fun,
-                locals=dict(
-                    zip(
-                        _get_str_symbol_identifiers(obs_id),
-                        (obs_id, obs["measurement_symbol"], sigma_id),
-                        strict=True,
-                    )
-                ),
+            value = noise_distribution_to_cost_function(dist)(
+                obs_id, obs["measurement_symbol"], sigma_id
             )
             if event_reg:
                 value = value.subs(obs["measurement_symbol"], 0.0)
@@ -2971,7 +2996,7 @@ class SbmlImporter:
         :param var_or_math:
             A math expression to sympify:
 
-            * a string (see :func:`sympy.core.sympify.sympify`)
+            * a string (see :func:`amici.importers.utils.sympify_str`)
             * a number
             * a libSBML ASTNode
             * a libSBML object that has a ``getMath()`` function
@@ -3010,20 +3035,13 @@ class SbmlImporter:
 
             ele_name = "Expression string"
             try:
-                expr = sp.sympify(
-                    var_or_math,
-                    locals={
-                        "true": sp.Float(1.0),
-                        "false": sp.Float(0.0),
-                        **self._local_symbols,
-                    },
-                )
-            except (sp.SympifyError, TypeError, ZeroDivisionError) as err:
+                expr = sympify_str(var_or_math, self._local_symbols)
+            except ValueError as err:
                 raise SBMLException(
                     f'{ele_name} "{var_or_math}" '
                     "contains an unsupported expression: "
                     f"{err}."
-                )
+                ) from err
 
         # actual libSBML objects
         elif isinstance(var_or_math, libsbml.ASTNode | libsbml.SBase):

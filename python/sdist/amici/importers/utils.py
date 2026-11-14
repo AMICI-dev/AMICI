@@ -5,15 +5,17 @@ import enum
 import numbers
 import sys
 from collections.abc import Callable, Hashable, Iterable, Mapping, Sequence
-from typing import SupportsFloat
+from typing import Any, SupportsFloat
 
 import sympy as sp
+from sympy.abc import _clash
 from sympy.functions.elementary.piecewise import ExprCondPair
 from sympy.logic.boolalg import BooleanAtom
 from toposort import toposort
 
 __all__ = [
     "MeasurementChannel",
+    "sympify_str",
 ]
 
 # Symbols reserved by AMICI: model entities with these IDs will be renamed.
@@ -307,12 +309,9 @@ noise_distribution='log-normal', sigma='sigma1', event_id='event1')
         .. note::
 
             When providing expressions for (event) observables and their sigmas
-            as strings (see below), those will be passed to
-            :func:`sympy.core.sympify.sympify`.
-            The supported grammar is not well-defined.
-            Note there can be issues with, for example, ``==`` or n-ary (n>2)
-            comparison operators.
-            Also note that operator precedence and function names may differ
+            as strings (see below), those will be parsed by
+            :func:`sympify_str`. See there for the grammar and its pitfalls.
+            Note that operator precedence and function names may differ
             from SBML L3 formulas or PEtab math expressions.
             Passing a sympy expression directly will
             be the safer option for more complex expressions.
@@ -346,12 +345,12 @@ noise_distribution='log-normal', sigma='sigma1', event_id='event1')
             log-likelihood contribution for a single data point, using
             variables ``{str_symbol}``, ``m{str_symbol}``, and
             ``sigma{str_symbol}`` for the simulation, measurement, and
-            scale parameter, respectively.
+            scale parameter, respectively (see :func:`sympify_str` for the
+            grammar).
         :param sigma:
             Expression representing the scale parameter of the noise
             distribution. This can be a numeric value, a sympy expression,
-            or an expression string that will be passed to
-            :func:`sympy.core.sympify.sympify`.
+            or an expression string (see :func:`sympify_str`).
         :param event_id:
             Identifier of the associated event for event-resolved observables.
             `None` for time-resolved observables.
@@ -405,7 +404,7 @@ def noise_distribution_to_observable_transformation(
 
 def noise_distribution_to_cost_function(
     noise_distribution: str | Callable,
-) -> Callable[[str], str]:
+) -> Callable[..., sp.Expr]:
     """
     Parse noise distribution string to a cost function definition amici can
     work with.
@@ -504,63 +503,104 @@ def noise_distribution_to_cost_function(
 
         For the meaning of the values see above.
 
-    :return: A function that takes a strSymbol and then creates a cost
-        function string (negative log-likelihood) from it, which can be
-        sympified.
+    :return: A function ``f(y, m, sigma, *, str_symbol=None)`` that returns
+        the negative log-likelihood expression for the simulation ``y``,
+        measurement ``m``, and scale parameter ``sigma``.
+        ``str_symbol`` (default: ``str(y)``) is the string passed to a
+        custom noise distribution callable, whose result is parsed by
+        :func:`sympify_str`.
     """
 
     if isinstance(noise_distribution, Callable):
-        return noise_distribution
 
+        def nllh_custom(y, m, sigma, *, str_symbol=None):
+            str_symbol = str_symbol or str(y)
+            return sympify_str(
+                noise_distribution(str_symbol),
+                dict(
+                    zip(
+                        _get_str_symbol_identifiers(str_symbol),
+                        (y, m, sigma),
+                        strict=True,
+                    )
+                ),
+            )
+
+        return nllh_custom
+
+    half = sp.Float(0.5)
     if noise_distribution in ["normal", "lin-normal"]:
-        y_string = "0.5*log(2*pi*{sigma}**2) + 0.5*(({y} - {m}) / {sigma})**2"
+
+        def nllh(y, m, sigma):
+            return (
+                half * sp.log(2 * sp.pi * sigma**2)
+                + half * ((y - m) / sigma) ** 2
+            )
     elif noise_distribution == "log-normal":
-        y_string = (
-            "0.5*log(2*pi*{sigma}**2*{m}**2) "
-            "+ 0.5*((log({y}) - log({m})) / {sigma})**2"
-        )
+
+        def nllh(y, m, sigma):
+            return (
+                half * sp.log(2 * sp.pi * sigma**2 * m**2)
+                + half * ((sp.log(y) - sp.log(m)) / sigma) ** 2
+            )
     elif noise_distribution == "log10-normal":
-        y_string = (
-            "0.5*log(2*pi*{sigma}**2*{m}**2*log(10)**2) "
-            "+ 0.5*((log({y}, 10) - log({m}, 10)) / {sigma})**2"
-        )
+
+        def nllh(y, m, sigma):
+            return (
+                half * sp.log(2 * sp.pi * sigma**2 * m**2 * sp.log(10) ** 2)
+                + half * ((sp.log(y, 10) - sp.log(m, 10)) / sigma) ** 2
+            )
     elif noise_distribution in ["laplace", "lin-laplace"]:
-        y_string = "log(2*{sigma}) + Abs({y} - {m}) / {sigma}"
+
+        def nllh(y, m, sigma):
+            return sp.log(2 * sigma) + sp.Abs(y - m) / sigma
     elif noise_distribution == "log-laplace":
-        y_string = "log(2*{sigma}*{m}) + Abs(log({y}) - log({m})) / {sigma}"
+
+        def nllh(y, m, sigma):
+            return (
+                sp.log(2 * sigma * m) + sp.Abs(sp.log(y) - sp.log(m)) / sigma
+            )
     elif noise_distribution == "log10-laplace":
-        y_string = (
-            "log(2*{sigma}*{m}*log(10)) "
-            "+ Abs(log({y}, 10) - log({m}, 10)) / {sigma}"
-        )
+
+        def nllh(y, m, sigma):
+            return (
+                sp.log(2 * sigma * m * sp.log(10))
+                + sp.Abs(sp.log(y, 10) - sp.log(m, 10)) / sigma
+            )
     elif noise_distribution in ["binomial", "lin-binomial"]:
         # Binomial noise model parameterized via success probability p
-        y_string = (
-            "- log(Heaviside({y} - {m})) - loggamma({y}+1) "
-            "+ loggamma({m}+1) + loggamma({y}-{m}+1) "
-            "- {m} * log({sigma}) - ({y} - {m}) * log(1-{sigma})"
-        )
+        def nllh(y, m, sigma):
+            return (
+                -sp.log(sp.Heaviside(y - m))
+                - sp.loggamma(y + 1)
+                + sp.loggamma(m + 1)
+                + sp.loggamma(y - m + 1)
+                - m * sp.log(sigma)
+                - (y - m) * sp.log(1 - sigma)
+            )
     elif noise_distribution in ["negative-binomial", "lin-negative-binomial"]:
         # Negative binomial noise model of the number of successes m
         # (data) before r=(1-sigma)/sigma * y failures occur,
         # with mean number of successes y (simulation),
         # parameterized via success probability p = sigma.
-        r = "{y} * (1-{sigma}) / {sigma}"
-        y_string = (
-            f"- loggamma({{m}}+{r}) + loggamma({{m}}+1) "
-            f"+ loggamma({r}) - {r} * log(1-{{sigma}}) "
-            f"- {{m}} * log({{sigma}})"
-        )
+        def nllh(y, m, sigma):
+            r = y * (1 - sigma) / sigma
+            return (
+                -sp.loggamma(m + r)
+                + sp.loggamma(m + 1)
+                + sp.loggamma(r)
+                - r * sp.log(1 - sigma)
+                - m * sp.log(sigma)
+            )
     else:
         raise ValueError(
             f"Cost identifier {noise_distribution} not recognized."
         )
 
-    def nllh_y_string(str_symbol):
-        y, m, sigma = _get_str_symbol_identifiers(str_symbol)
-        return y_string.format(y=y, m=m, sigma=sigma)
+    def nllh_builtin(y, m, sigma, *, str_symbol=None):
+        return nllh(y, m, sigma)
 
-    return nllh_y_string
+    return nllh_builtin
 
 
 def _get_str_symbol_identifiers(str_symbol: str) -> tuple:
@@ -1147,6 +1187,89 @@ def substitute_local_symbols(
             sym: local
             for sym in expr.free_symbols
             if (local := local_symbols.get(str(sym), sym)) != sym
+        }
+    )
+
+
+#: Names that :func:`sympy.sympify` would resolve to sympy objects other than
+#: functions (e.g. ``pi``, ``E``, ``I``, ``oo``, ``S``), but that
+#: :func:`sympify_str` treats as plain symbols.
+_SYMPY_NON_FUNCTION_NAMES = frozenset(
+    set(_clash)
+    | {name for name in dir(sp) if isinstance(getattr(sp, name), sp.Basic)}
+)
+
+
+def sympify_str(
+    expr_str: str, locals_: Mapping[str, Any] | None = None
+) -> sp.Basic:
+    """Parse a math expression string into a sympy expression.
+
+    This is used for expression strings that are not part of an SBML model
+    or PEtab problem, e.g., string arguments to
+    :class:`MeasurementChannel`, :func:`amici.sim.sundials.evaluate`,
+    or :mod:`amici.importers.sbml.splines`.
+
+    The grammar is that of :func:`sympy.sympify` (i.e., Python syntax,
+    sympy function names), except that every identifier that is not called
+    as a function is a plain symbol. In particular, there are no constants:
+    ``pi``, ``E``, ``I``, ``oo``, ``zoo``, ``nan``, ``true``, ``false``, ...
+    are symbols. Use, e.g., ``exp(1)`` or ``acos(-1)`` instead.
+    Also note that:
+
+    * ``gamma``, ``beta``, and ``zeta`` are symbols, not functions.
+    * ``^`` denotes exponentiation, ``True``/``False`` are booleans.
+    * Python's operator semantics apply at parse time:
+      ``a and b`` evaluates to ``b``, ``a != b`` to ``True``,
+      ``a == b`` to ``False`` (for distinct symbols ``a`` and ``b``),
+      and ``a < b < c`` to ``(a < b) and (b < c)``.
+      Use ``And(a, b)``, ``Ne(a, b)``, ``Eq(a, b)``, ... instead.
+
+    Free symbols are created with AMICI's canonical assumptions
+    (see :func:`symbol_with_assumptions`).
+
+    :param expr_str:
+        The expression string.
+    :param locals_:
+        Mapping of names to sympy objects that override the default
+        interpretation of these names. Their free symbols are kept as is.
+    :raises ValueError:
+        If the expression string cannot be parsed.
+    :returns:
+        The sympy expression.
+    """
+    locals_ = locals_ or {}
+    try:
+        expr = sp.sympify(
+            expr_str,
+            locals={
+                **{
+                    name: sp.Symbol(name) for name in _SYMPY_NON_FUNCTION_NAMES
+                },
+                **locals_,
+            },
+        )
+    except (
+        sp.SympifyError,
+        SyntaxError,
+        TypeError,
+        ZeroDivisionError,
+    ) as err:
+        raise ValueError(
+            f"Could not parse expression string {expr_str!r}: {err}"
+        ) from err
+
+    if not isinstance(expr, sp.Basic):
+        return expr
+
+    keep = set().union(
+        *(v.free_symbols for v in locals_.values() if isinstance(v, sp.Basic))
+    )
+    return expr.xreplace(
+        {
+            sym: symbol_with_assumptions(sym.name)
+            for sym in expr.free_symbols
+            if isinstance(sym, sp.Symbol) and sym not in keep
         }
     )
 
