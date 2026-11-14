@@ -32,6 +32,8 @@ struct ModelDimensions {
         Expects(ne >= 0);
         Expects(ne_solver >= 0);
         Expects(ne >= ne_solver);
+        // without states, the solver doesn't step and can't find roots
+        Expects(nx_solver > 0 || ne_solver == 0);
         Expects(nspl >= 0);
         Expects(nw >= 0);
         Expects(ndwdx >= 0);
