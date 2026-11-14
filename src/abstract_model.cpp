@@ -69,6 +69,32 @@ void AbstractModel::fstau(
     );
 }
 
+void AbstractModel::fdrootdt_total_or_nan(
+    realtype* /*drootdt*/, realtype const /*t*/, realtype const* /*x*/,
+    realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
+    realtype const* /*w*/, realtype const* /*dx*/, realtype const* /*tcl*/,
+    realtype const* /*spl*/
+) {
+    throw AmiException(
+        "Requested functionality is not supported as %s is "
+        "not implemented for this model!",
+        __func__
+    );
+}
+
+void AbstractModel::fdrootdx(
+    realtype* /*drootdx*/, realtype const /*t*/, realtype const* /*x*/,
+    realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
+    realtype const* /*w*/, realtype const* /*dx*/, realtype const* /*tcl*/,
+    realtype const* /*spl*/
+) {
+    throw AmiException(
+        "Requested functionality is not supported as %s is "
+        "not implemented for this model!",
+        __func__
+    );
+}
+
 void AbstractModel::
     fy(realtype* /*y*/, realtype const /*t*/, realtype const* /*x*/,
        realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,

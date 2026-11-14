@@ -55,6 +55,8 @@
 %ignore fsigmaz;
 %ignore fsrz;
 %ignore fstau;
+%ignore fdrootdt_total_or_nan;
+%ignore fdrootdx;
 %ignore fsz;
 %ignore fw;
 %ignore fy;

@@ -73,6 +73,7 @@ deltasx.cpp
 deltax.cpp 
 deltaxB.cpp 
 deltaxB_at_trigger.cpp 
+drootdt_total_or_nan.cpp 
 dtaudp.cpp 
 dxdotdp_explicit.cpp 
 dxdotdx_explicit.cpp 

@@ -76,6 +76,8 @@ dJydy.cpp
 dJzdsigmaz.cpp 
 dJzdz.cpp 
 deltasx.cpp 
+drootdt_total_or_nan.cpp 
+drootdx.cpp 
 drzdx.cpp 
 dtaudp.cpp 
 dtaudx.cpp 

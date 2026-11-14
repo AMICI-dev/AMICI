@@ -79,6 +79,8 @@ deltaqB.cpp
 deltasx.cpp 
 deltax.cpp 
 deltaxB.cpp 
+drootdt_total_or_nan.cpp 
+drootdx.cpp 
 drzdx.cpp 
 dtaudx.cpp 
 dxdotdp_explicit.cpp 

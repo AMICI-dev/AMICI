@@ -46,6 +46,8 @@ using namespace amici;
 %ignore get_observable;
 %ignore get_observable_sensitivity;
 %ignore get_expression;
+%ignore get_root_time_derivative;
+%ignore get_root_state_jacobian;
 %ignore reinit_events;
 %ignore initialize;
 %ignore initialize_b;
