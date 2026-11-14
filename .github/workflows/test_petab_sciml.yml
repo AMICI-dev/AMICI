@@ -68,15 +68,6 @@ jobs:
           source ./venv/bin/activate \
             && python -m pip install --group python/sdist/pyproject.toml:petab-sciml-torch
 
-      - name: Install petab
-        # FIXME: Currently, an older version of petab that is required for
-        #  these tests, because petab-sciml is currently a mix of petab v1
-        #  and v2 functionality.
-        run: |
-          source ./venv/bin/activate \
-            && python3 -m pip uninstall -y petab \
-            && python3 -m pip install --group python/sdist/pyproject.toml:libpetab
-
       - name: Run PEtab SciML testsuite
         run: |
           source ./venv/bin/activate \
