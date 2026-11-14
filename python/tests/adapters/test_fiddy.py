@@ -14,6 +14,7 @@ from amici.adapters.fiddy import (
 from amici.importers.petab.v1 import import_petab_problem
 from amici.sim.sundials import SensitivityOrder, SteadyStateSensitivityMode
 from fiddy import (
+    FunctionEvaluationError,
     JoblibExecutor,
     SequentialExecutor,
     Type,
@@ -89,6 +90,28 @@ def test_run_amici_simulation_to_function_and_derivative(
     )
     assert len(output_labels) == len(result.output_results)
     result.assert_success(always_print=True)
+
+
+def test_run_simulation_to_function_and_derivative_raises_on_failure(
+    lotka_volterra_model_module,
+):
+    """A failed simulation raises `FunctionEvaluationError`."""
+    petab_problem, point = lotka_volterra()
+    amici_model = lotka_volterra_model_module.get_model()
+    amici_model.set_timepoints(sorted(set(petab_problem.measurement_df.time)))
+    amici_solver = amici_model.create_solver()
+    amici_solver.set_max_steps(1)
+
+    function, derivative = run_simulation_to_function_and_derivative(
+        free_parameter_ids=["alpha", "gamma"],
+        amici_model=amici_model,
+        amici_solver=amici_solver,
+        derivative_variables=["llh"],
+    )
+    with pytest.raises(FunctionEvaluationError, match="status"):
+        function(point)
+    with pytest.raises(FunctionEvaluationError, match="status"):
+        derivative(point)
 
 
 def test_run_simulation_respects_a_customized_parameter_list(

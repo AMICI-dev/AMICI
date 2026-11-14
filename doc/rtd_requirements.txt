@@ -28,6 +28,7 @@ ipykernel
 -e git+https://github.com/PEtab-dev/petab-benchmark-problems.git@main#subdirectory=src/python&egg=benchmark_models_petab
 -e python/sdist/[jax]
 antimony>=2.13
-fiddy>=0.0.3
+# TODO: switch back to a PyPI release once the fiddy redesign ships
+fiddy @ git+https://github.com/ICB-DCM/fiddy.git@main
 petab_sciml[torch] @ git+https://github.com/petab-dev/petab_sciml.git@76a2006134621ceb1b116eaf2dc23cabc66e6870
 -e git+https://github.com/petab-dev/libpetab-python.git@main#egg=petab
