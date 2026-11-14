@@ -56,6 +56,8 @@ extern void dxdotdw_rowvals_model_calvetti_py(SUNMatrixWrapper &rowvals);
 
 
 
+
+
 extern void dxdotdx_explicit_model_calvetti_py(realtype *dxdotdx_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const realtype *w);
 extern void dxdotdx_explicit_colptrs_model_calvetti_py(SUNMatrixWrapper &colptrs);
 extern void dxdotdx_explicit_rowvals_model_calvetti_py(SUNMatrixWrapper &rowvals);
@@ -315,6 +317,12 @@ class Model_model_calvetti_py : public amici::Model_DAE {
     void fdxdotdp_explicit_colptrs(SUNMatrixWrapper &colptrs) override {}
 
     void fdxdotdp_explicit_rowvals(SUNMatrixWrapper &rowvals) override {}
+
+
+    void fdxdotdt_explicit(realtype *dxdotdt_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const realtype *w) override {}
+
+
+    void fdwdt(realtype *dwdt, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl, const realtype *spl, const realtype *dspl) override {}
 
 
     void fdxdotdx_explicit(realtype *dxdotdx_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const realtype *w) override {
