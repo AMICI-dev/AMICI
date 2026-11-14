@@ -56,6 +56,8 @@ extern void dJydy_rowvals_model_steadystate_py(SUNMatrixWrapper &rowvals, int in
 extern void dxdotdp_explicit_model_steadystate_py(realtype *dxdotdp_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
 extern void dxdotdp_explicit_colptrs_model_steadystate_py(SUNMatrixWrapper &colptrs);
 extern void dxdotdp_explicit_rowvals_model_steadystate_py(SUNMatrixWrapper &rowvals);
+
+
 extern void dxdotdx_explicit_model_steadystate_py(realtype *dxdotdx_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
 extern void dxdotdx_explicit_colptrs_model_steadystate_py(SUNMatrixWrapper &colptrs);
 extern void dxdotdx_explicit_rowvals_model_steadystate_py(SUNMatrixWrapper &rowvals);
@@ -297,6 +299,12 @@ class Model_model_steadystate_py : public amici::Model_ODE {
     }
 
 
+    void fdxdotdt_explicit(realtype *dxdotdt_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const realtype *w) override {}
+
+
+    void fdwdt(realtype *dwdt, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl, const realtype *spl, const realtype *dspl) override {}
+
+
     void fdxdotdx_explicit(realtype *dxdotdx_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w) override {
         dxdotdx_explicit_model_steadystate_py(dxdotdx_explicit, t, x, p, k, h, w);
     }
@@ -536,7 +544,7 @@ class Model_model_steadystate_py : public amici::Model_ODE {
      * @return AMICI git commit hash
      */
     std::string get_amici_commit() const override {
-        return "46a7a00ab9f0aec6603785f7e1a9d878d6dcaa0d";
+        return "41920df14e30b6a6cf70b62f16add8b2e2217175";
     }
 
     bool has_quadratic_llh() const override {
