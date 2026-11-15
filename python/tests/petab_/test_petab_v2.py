@@ -1499,6 +1499,7 @@ def pysb_targets_model():
     model.add_component(pysb.Monomer("A", _export=False))
     model.add_component(pysb.Monomer("Z", _export=False))
     model.add_component(pysb.Parameter("A0", 1.0, _export=False))
+    model.add_component(pysb.Parameter("P", 1.0, _export=False))
     model.add_component(
         pysb.Expression("A0_expr", 2 * model.parameters["A0"], _export=False)
     )
@@ -1579,8 +1580,8 @@ def _create_pysb_targets_problem(model, *periods) -> Problem:
         ("Z_amount", ValueError, "not part of the generated reaction network"),
         # underspecified species (compartment missing)
         ("A_any", ValueError, "must be fully specified"),
-        # not supported yet
-        ("A0", NotImplementedError, "not supported yet"),
+        # neither a model entity nor a mapping table entry
+        ("unknown", ValueError, "Expected a pysb.Parameter or a fully"),
     ],
 )
 def test_pysb_invalid_condition_targets(
@@ -1626,7 +1627,7 @@ def test_pysb_binding_site_species_target(pysb_targets_model):
         pysb_targets_model, 0, "c1", 5, "c1"
     )
     problem.add_condition("c1", L_free=3)
-    _, events = ExperimentsToPySBConverter(problem).convert()
+    _, events, _ = ExperimentsToPySBConverter(problem).convert()
     (event,) = events
     ix_l = next(
         ix
@@ -1642,5 +1643,215 @@ def test_pysb_no_events_without_changes(pysb_targets_model):
     problem = _create_pysb_targets_problem(
         pysb_targets_model, -np.inf, [], 0, []
     )
-    _, events = ExperimentsToPySBConverter(problem).convert()
+    _, events, _ = ExperimentsToPySBConverter(problem).convert()
     assert events == []
+
+
+def test_pysb_first_period_target_value_refers_to_target(pysb_targets_model):
+    """First-period target values must not refer to other condition
+    targets."""
+    problem = _create_pysb_targets_problem(pysb_targets_model, 0, "c1")
+    problem.add_condition("c1", A0="2 * P", P=2)
+    with pytest.raises(ValueError, match="not condition targets.*'P'"):
+        ExperimentsToPySBConverter(problem).convert()
+
+
+def test_pysb_parameter_targets(tmp_path):
+    """PEtab v2 condition changes of pysb.Parameters in the first and later
+    periods."""
+    import warnings
+
+    import sympy as sp
+    from amici.sim.sundials import SensitivityMethod
+    from petab.v2.models.pysb_model import PySBModel
+
+    pysb = pytest.importorskip("pysb")
+
+    # A -> B -> 0
+    model = pysb.Model("pysb_parameter_targets", _export=False)
+    model.add_component(pysb.Monomer("A", _export=False))
+    model.add_component(pysb.Monomer("B", _export=False))
+    model.add_component(pysb.Parameter("k", 0.1, _export=False))
+    model.add_component(pysb.Parameter("kdeg", 0.0, _export=False))
+    model.add_component(pysb.Parameter("A0", 1.0, _export=False))
+    A, B = model.monomers["A"], model.monomers["B"]
+    model.add_initial(pysb.Initial(A(), model.parameters["A0"], _export=False))
+    model.add_component(
+        pysb.Rule(
+            "conversion", A() >> B(), model.parameters["k"], _export=False
+        )
+    )
+    model.add_component(
+        pysb.Rule(
+            "degradation", B() >> None, model.parameters["kdeg"], _export=False
+        )
+    )
+    model.add_component(pysb.Observable("A_obs", A(), _export=False))
+    model.add_component(pysb.Observable("B_obs", B(), _export=False))
+
+    problem = Problem()
+    problem.model = PySBModel(model=model, model_id="pysb_parameter_targets")
+    problem.add_observable("obs_a", "A_obs", noise_formula="1")
+    problem.add_observable("obs_b", "B_obs", noise_formula="1")
+    kk = 0.5
+    problem.add_parameter("kk", nominal_value=kk, estimate=True, lb=0, ub=10)
+    problem.add_condition("set_k", k="kk")
+    problem.add_condition("set_kdeg", kdeg="kk / 10")
+    problem.add_condition("set_A0_2", A0=2)
+    problem.add_condition("set_A0_7", A0=7)
+    problem.add_condition("set_A0_kk", A0="2 * kk")
+
+    e = np.exp
+    # B(20) and dB(20)/dkk for A -> B -> 0, kdeg = kk / 10, A(0) = 1
+    kd = sp.Symbol("kd")
+    b20 = 0.1 / (kd - 0.1) * (sp.exp(-0.1 * 20) - sp.exp(-kd * 20))
+    b20_kdeg = float(b20.subs(kd, kk / 10))
+    sb20_kdeg = float(b20.diff(kd).subs(kd, kk / 10) / 10)
+
+    # experiment ID -> (periods, expected y(20), expected dy(20)/dkk,
+    #  observable ID)
+    experiments = {
+        "no_change": ([(0, [])], e(-2), 0, "obs_a"),
+        # later period: target value depends on an estimated parameter
+        "parameter_10": (
+            [(0, []), (10, ["set_k"])],
+            e(-1) * e(-5),
+            -10 * e(-1) * e(-5),
+            "obs_a",
+        ),
+        # first period: parameter used in an initial, depending on an
+        #  estimated parameter
+        "initial_parameter_kk": (
+            [(0, ["set_A0_kk"])],
+            2 * kk * e(-2),
+            2 * e(-2),
+            "obs_a",
+        ),
+        # first period: parameter used in an initial; later period: changing
+        #  that parameter does not affect the species
+        "initial_parameter": (
+            [(0, ["set_A0_2"]), (10, ["set_A0_7", "set_k"])],
+            2 * e(-1) * e(-5),
+            -10 * 2 * e(-1) * e(-5),
+            "obs_a",
+        ),
+        # first period only: the parameter becomes a model expression
+        "expression_parameter": (
+            [(0, ["set_kdeg"])],
+            b20_kdeg,
+            sb20_kdeg,
+            "obs_b",
+        ),
+    }
+    for exp_id, (periods, _, _, obs_id) in experiments.items():
+        args = []
+        for time, condition_ids in periods:
+            args.extend([time, condition_ids])
+        problem.add_experiment(exp_id, *args)
+        problem.add_measurement(
+            obs_id, experiment_id=exp_id, time=20, measurement=0
+        )
+
+    # parameters changed after the first period become state variables,
+    #  the others expressions
+    pysb.bng.generate_equations(model)
+    _, events, parameter_targets = ExperimentsToPySBConverter(
+        problem
+    ).convert()
+    assert set(parameter_targets) == {"k", "kdeg", "A0"}
+    assert {
+        str(target) for event in events for target in event.assignment_targets
+    } == {"k", "A0"}
+
+    ps = PetabImporter(
+        problem, output_dir=tmp_path / "model"
+    ).create_simulator()
+    ps.solver.set_sensitivity_order(SensitivityOrder.first)
+    ps.solver.set_relative_tolerance(1e-12)
+    ps.solver.set_absolute_tolerance(1e-14)
+    observable_ids = list(ps.model.get_observable_ids())
+    free_parameter_ids = list(ps.model.get_free_parameter_ids())
+    for sensi_method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        ps.solver.set_sensitivity_method(sensi_method)
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", "Adjoint sensitivity analysis for models with"
+            )
+            result = ps.simulate({"kk": kk})
+        assert len(result.rdatas) == len(experiments)
+        for rdata in result.rdatas:
+            _, expected_y, expected_sy, obs_id = experiments[rdata.id]
+            msg = f"{sensi_method!r}: {rdata.id}"
+            assert rdata.status == 0, msg
+            iy = observable_ids.index(obs_id)
+            np.testing.assert_allclose(
+                rdata.y[0, iy], expected_y, rtol=1e-8, err_msg=msg
+            )
+            # llh = -0.5 * y^2 + const, as measurements are 0 and sigma is 1
+            ip = [free_parameter_ids[i] for i in rdata.plist].index("kk")
+            np.testing.assert_allclose(
+                rdata.sllh[ip],
+                -expected_y * expected_sy,
+                rtol=1e-6,
+                atol=1e-12,
+                err_msg=msg,
+            )
+
+
+def test_pysb_parameter_targets_conservation_laws():
+    """Conservation laws are kept for first-period-only parameter
+    targets."""
+    from amici.importers.pysb import ode_model_from_pysb_importer
+    from petab.v2.models.pysb_model import PySBModel
+
+    pysb = pytest.importorskip("pysb")
+
+    # A + B <-> AB
+    model = pysb.Model("pysb_cl_targets", _export=False)
+    model.add_component(pysb.Monomer("A", ["b"], _export=False))
+    model.add_component(pysb.Monomer("B", ["a"], _export=False))
+    model.add_component(pysb.Parameter("A0", 1.0, _export=False))
+    model.add_component(pysb.Parameter("k", 1.0, _export=False))
+    A, B = model.monomers["A"], model.monomers["B"]
+    for monomer, site in ((A, "b"), (B, "a")):
+        model.add_initial(
+            pysb.Initial(
+                monomer(**{site: None}), model.parameters["A0"], _export=False
+            )
+        )
+    model.add_component(
+        pysb.Rule(
+            "binding",
+            A(b=None) + B(a=None) | A(b=1) % B(a=1),
+            model.parameters["k"],
+            model.parameters["k"],
+            _export=False,
+        )
+    )
+    model.add_component(pysb.Observable("A_obs", A(), _export=False))
+    pysb.bng.generate_equations(model)
+
+    problem = Problem()
+    problem.model = PySBModel(model=model, model_id="pysb_cl_targets")
+    problem.add_observable("obs_a", "A_obs", noise_formula="1")
+    problem.add_parameter("kk", nominal_value=2, estimate=True, lb=0, ub=10)
+    problem.add_condition("c1", A0="kk")
+    problem.add_experiment("e1", 0, "c1")
+    problem.add_experiment("e2", 0, [])
+    for exp_id in ("e1", "e2"):
+        problem.add_measurement(
+            "obs_a", experiment_id=exp_id, time=10, measurement=0
+        )
+
+    new_problem, events, parameter_targets = ExperimentsToPySBConverter(
+        problem
+    ).convert()
+    assert events == []
+    assert set(parameter_targets) == {"A0"}
+    ode = ode_model_from_pysb_importer(
+        new_problem.model.model,
+        _parameter_targets=parameter_targets,
+        _events=events,
+    )
+    assert ode.num_cons_law() == 2
+    assert "A0" in {str(expr.get_sym()) for expr in ode.expressions()}

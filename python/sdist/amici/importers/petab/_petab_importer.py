@@ -68,6 +68,7 @@ _RESERVED_IMPORT_KWARGS = frozenset(
         "hybridization",
         "pysb_model_has_obs_and_noise",
         "_events",
+        "_parameter_targets",
         # required for PEtab semantics
         "allow_reinit_fixpar_initcond",
         "hardcode_symbols",
@@ -434,7 +435,11 @@ class PetabImporter:
 
         # Convert PEtab v2 experiments/conditions to events
         converter = ExperimentsToPySBConverter(self.petab_problem)
-        self.petab_problem, self._events = converter.convert()
+        (
+            self.petab_problem,
+            self._events,
+            self._parameter_targets,
+        ) = converter.convert()
         if self._jax and self._events:
             raise NotImplementedError(
                 "The JAX backend does not support condition changes after "
@@ -678,6 +683,7 @@ class PetabImporter:
                 verbose=self._verbose,
                 pysb_model_has_obs_and_noise=True,
                 skip_if_unchanged=skip_if_unchanged,
+                _parameter_targets=self._parameter_targets,
                 **self._import_kwargs,
             )
             return
@@ -693,6 +699,7 @@ class PetabImporter:
                 compile=self._compile,
                 _events=self._events,
                 skip_if_unchanged=skip_if_unchanged,
+                _parameter_targets=self._parameter_targets,
                 **self._import_kwargs,
             )
         # TODO check_model(amici_model=model, petab_problem=petab_problem)
@@ -1609,6 +1616,8 @@ class ExperimentsToPySBConverter:
         #: The PEtab problem to convert. Not modified by this class.
         self._petab_problem = petab_problem
         self._events: list[Event] = []
+        #: pysb.Parameter targets -> value at model initialization
+        self._parameter_targets: dict[str, sp.Expr] = {}
         self._new_problem: v2.Problem | None = None
 
     @staticmethod
@@ -1618,7 +1627,7 @@ class ExperimentsToPySBConverter:
 
     def convert(
         self,
-    ) -> tuple[v2.Problem, list[Event]]:
+    ) -> tuple[v2.Problem, list[Event], dict[str, sp.Expr]]:
         """Convert PEtab experiments to amici events and pysb initials.
 
         Generate events and initial values that implement the changes
@@ -1627,7 +1636,7 @@ class ExperimentsToPySBConverter:
         condition changes that are implemented as events or initial values.
 
         Changes of the first period are applied to the initial values of
-        species.
+        species or :class:`pysb.Parameter` targets.
         Changes of later periods are implemented as events.
         The model must already contain the generated reaction network
         (see :func:`pysb.bng.generate_equations`), since species targets
@@ -1637,18 +1646,27 @@ class ExperimentsToPySBConverter:
             A PEtab problem with only indicator parameters left in the
             condition table and a maximum of two periods per experiment
             (pre-equilibration and main simulation),
-            and a list of events to be passed to `pysb2amici`.
+            a list of events to be passed to `pysb2amici`,
+            and the ``pysb.Parameter`` targets with their values at model
+            initialization, to be passed to `pysb2amici`.
         """
         self._new_problem = copy.deepcopy(self._petab_problem)
         self._events: list[Event] = []
         # target ID -> species index
         self._species_indices: dict[str, int] = {}
+        self._parameter_targets = {}
         model = self._new_problem.model.model
         # mapping table mappings
         self.map_petab_to_pysb: dict[str, str] = {
             mapping.petab_id: mapping.model_id
             for mapping in self._petab_problem.mappings
             if mapping.petab_id is not None and mapping.model_id is not None
+        }
+        # model IDs of all condition targets
+        self._condition_target_ids = {
+            self.map_petab_to_pysb.get(change.target_id, change.target_id)
+            for condition in self._petab_problem.conditions
+            for change in condition.changes
         }
         # first-period changes across all experiments
         # target_id -> [(experiment_indicator, target_value), ...]
@@ -1683,7 +1701,7 @@ class ExperimentsToPySBConverter:
         validation_results = self._new_problem.validate()
         validation_results.log()
 
-        return self._new_problem, self._events
+        return self._new_problem, self._events, self._parameter_targets
 
     def _convert_experiment(
         self,
@@ -1774,9 +1792,11 @@ class ExperimentsToPySBConverter:
             start time.
         """
         model = self._new_problem.model.model
-        allowed = set(self._new_problem.x_ids) | {
-            p.name for p in model.parameters
-        }
+        # Other condition targets are excluded, as their values may depend
+        #  on the experiment and on the order of evaluation.
+        allowed = (
+            set(self._new_problem.x_ids) | {p.name for p in model.parameters}
+        ) - self._condition_target_ids
         time_syms = {
             s
             for s in change.target_value.free_symbols
@@ -1789,7 +1809,8 @@ class ExperimentsToPySBConverter:
         ):
             raise ValueError(
                 "Target values of changes in the first period must only "
-                f"refer to parameters or `{v2.C.TIME_SYMBOL}`. Got "
+                "refer to parameters that are not condition targets, or to "
+                f"`{v2.C.TIME_SYMBOL}`. Got "
                 f"{str(change.target_value)!r} for target "
                 f"{change.target_id!r}, which refers to {invalid}."
             )
@@ -1806,8 +1827,22 @@ class ExperimentsToPySBConverter:
             {s: sp.Float(period.time) for s in time_syms}
         )
 
+    def _get_target_parameter(self, target_id: str) -> pysb.Parameter | None:
+        """Get the :class:`pysb.Parameter` that a condition target refers to.
+
+        :returns:
+            The parameter, or ``None`` if the target is not a parameter.
+        """
+        import pysb
+
+        model_id = self.map_petab_to_pysb.get(target_id, target_id)
+        component = self._new_problem.model.model.components.get(model_id)
+        return component if isinstance(component, pysb.Parameter) else None
+
     def _get_target_species_idx(self, target_id: str) -> int:
         """Get the index of the species that a condition target refers to.
+
+        Parameter targets are handled by :meth:`_get_target_parameter`.
 
         :returns:
             The index of the species in ``model.species``.
@@ -1822,17 +1857,12 @@ class ExperimentsToPySBConverter:
         model_id = self.map_petab_to_pysb.get(target_id, target_id)
 
         if (component := model.components.get(model_id)) is not None:
-            if isinstance(component, pysb.Parameter):
-                raise NotImplementedError(
-                    f"Changes of pysb.Parameters ({target_id!r}) are not "
-                    "supported yet."
-                )
             # Expressions, observables, ... are algebraic entities
             raise ValueError(
                 f"Invalid condition target {target_id!r}: "
                 f"{type(component).__name__}s cannot be targets of "
-                "condition changes. Only species (via the mapping table) "
-                "can be changed."
+                "condition changes. Only pysb.Parameters and species "
+                "(via the mapping table) can be changed."
             )
 
         try:
@@ -1840,7 +1870,7 @@ class ExperimentsToPySBConverter:
         except Exception as e:
             raise ValueError(
                 f"Invalid condition target {target_id!r} ({model_id!r}). "
-                "Expected a fully specified species."
+                "Expected a pysb.Parameter or a fully specified species."
             ) from e
         if not pattern.is_concrete():
             raise ValueError(
@@ -1871,10 +1901,19 @@ class ExperimentsToPySBConverter:
         import pysb
 
         model = self._new_problem.model.model
-        species_idx = self._get_target_species_idx(target_id)
 
-        # update the matching pysb.Initial or create a new one
-        species = model.species[species_idx]
+        if (parameter := self._get_target_parameter(target_id)) is not None:
+            # pysb.Parameters can't be changed to arbitrary expressions,
+            #  this is handled during the PySB-to-DEModel conversion
+            self._parameter_targets[parameter.name] = (
+                self._piecewise_by_experiment(
+                    changes, sp.Float(parameter.value)
+                )
+            )
+            return
+
+        # species: update the matching pysb.Initial or create a new one
+        species = model.species[self._get_target_species_idx(target_id)]
         initial = next(
             (
                 initial
@@ -1950,6 +1989,11 @@ class ExperimentsToPySBConverter:
 
         event_id = f"_petab_event_{experiment.id}_{i_period}"
         model = self._new_problem.model.model
+        # validate the target types before adding any missing parameters
+        for change in changes:
+            if self._get_target_parameter(change.target_id) is None:
+                self._get_target_species_idx(change.target_id)
+
         component_names = {c.name for c in model.components}
         # symbols in target values: species (via the mapping table),
         #  model components, `time`, or parameters that are only defined in
@@ -1988,6 +2032,13 @@ class ExperimentsToPySBConverter:
                         "target values."
                     )
                 sym = symbol_with_assumptions(model_id)
+                if isinstance(component, pysb.Parameter) and petab_id in (
+                    change.target_id for change in changes
+                ):
+                    # parameter targets are converted to state variables
+                    self._parameter_targets.setdefault(
+                        model_id, sp.Float(component.value)
+                    )
             elif petab_id == v2.C.TIME_SYMBOL:
                 sym = amici_time_symbol
             elif petab_id in self.map_petab_to_pysb:
@@ -2002,8 +2053,6 @@ class ExperimentsToPySBConverter:
 
         assignments: dict[sp.Symbol, sp.Expr] = {}
         for change in changes:
-            # validates the target type
-            self._get_target_species_idx(change.target_id)
             # match by name: depending on how the target value was created,
             #  its symbols may have different assumptions
             assignments[symbols[change.target_id]] = (
