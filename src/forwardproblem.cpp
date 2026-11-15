@@ -128,6 +128,20 @@ void set_algebraic_state_derivatives(
         xdot[ia[i]] = dxa[i];
 }
 
+/**
+ * @brief Time tolerance of the root-finding, at least the resolution of `t`.
+ * @param solver Solver
+ * @param t Current time.
+ * @return Time tolerance.
+ */
+realtype root_time_tolerance(Solver const& solver, realtype const t) {
+    return std::max(
+        solver.get_root_time_tolerance(),
+        100 * std::numeric_limits<realtype>::epsilon()
+            * std::max(std::abs(t), 1.0)
+    );
+}
+
 } // namespace
 
 constexpr realtype conv_thresh = 1.0;
@@ -202,9 +216,6 @@ void EventHandlingSimulator::run(
     ws_->tlastroot = t0;
     std::ranges::fill(
         ws_->t_root_crossed, -std::numeric_limits<realtype>::infinity()
-    );
-    t_last_trigger_.assign(
-        model_->ne, -std::numeric_limits<realtype>::infinity()
     );
     t_dropped_roots_ = NAN;
     n_dropped_roots_repeats_ = 0;
@@ -294,11 +305,8 @@ void EventHandlingSimulator::run_steady_state(
     int convergence_check_frequency, int& sim_steps
 ) {
     // NOTE: initial events are assumed to be handled elsewhere
-    // so we do not reinitialize this->result here
+    // so we do not reinitialize this->result or t_last_trigger_ here
     ws_->tlastroot = ws_->sol.t;
-    t_last_trigger_.assign(
-        model_->ne, -std::numeric_limits<realtype>::infinity()
-    );
     t_dropped_roots_ = NAN;
     n_dropped_roots_repeats_ = 0;
 
@@ -598,6 +606,8 @@ void ForwardProblem::handle_postequilibration() {
         // The solver was run before, extract current state from solver.
         solver->write_solution(ws_.sol);
         Expects(t0 == ws_.sol.t);
+        // The Heaviside variables continue from the main simulation.
+        model->set_h_old(model->get_model_state().h);
         posteq_problem_->run(*solver, it, t0);
     }
 }
@@ -862,6 +872,9 @@ void EventHandlingSimulator::handle_events(
 }
 
 void EventHandlingSimulator::handle_initial_events(ExpData const* edata) {
+    t_last_trigger_.assign(
+        model_->ne, -std::numeric_limits<realtype>::infinity()
+    );
     if (!model_->ne)
         return;
 
@@ -886,6 +899,39 @@ void EventHandlingSimulator::handle_initial_events(ExpData const* edata) {
             && root_slope[ie] < 0.0) {
             h_update.at(ie) = -1;
             by_slope.at(ie) = true;
+        }
+    }
+    // The same for trigger timepoints within the root-finding tolerance of the
+    // initial time, which are marked as handled. Unlike for the solver roots,
+    // also if the event triggers at the initial time, as the subsequent
+    // checks do not decide the direction of crossed explicit roots.
+    auto const t_tol = root_time_tolerance(*solver_, ws_->sol.t);
+    auto const& explicit_roots = model_->get_explicit_roots();
+    for (auto it = explicit_roots.lower_bound(ws_->sol.t - t_tol);
+         it != explicit_roots.end() && it->first <= ws_->sol.t + t_tol; ++it) {
+        auto const& [t_trigger, events] = *it;
+        for (auto const ie : events) {
+            if (std::abs(ws_->rootvals.at(ie)) > root_noise[ie]
+                || root_slope[ie] == 0.0)
+                continue;
+            if ((h.at(ie) > 0.0) == (root_slope[ie] > 0.0)) {
+                // already on its final side
+                t_last_trigger_.at(ie) = t_trigger;
+            } else if (h.at(ie) > 0.0) {
+                t_last_trigger_.at(ie) = t_trigger;
+                h_update.at(ie) = -1;
+                by_slope.at(ie) = true;
+            } else if (t_trigger <= ws_->sol.t) {
+                // An increasing root function that is negative due to
+                // roundoff, but whose trigger timepoint is not after the
+                // initial time, so it will not be processed. Handle it as if
+                // the root function were zero at the initial time.
+                t_last_trigger_.at(ie) = t_trigger;
+                h_update.at(ie) = 1;
+                by_slope.at(ie) = true;
+                if (model_->get_h_old().at(ie) <= 0.0)
+                    ws_->roots_found.at(ie) = 1;
+            }
         }
     }
     if (std::ranges::any_of(by_slope, [](bool const b) { return b; })) {
@@ -921,7 +967,7 @@ void EventHandlingSimulator::update_heaviside_after_initial_flips(
             h_update.at(ie) = h_new > 0.0 ? 1 : -1;
             if (h_new == 0.0)
                 ws_->roots_found.at(ie) = 0;
-            else if (!model_->get_event(ie).get_initial_value())
+            else if (model_->get_h_old().at(ie) <= 0.0)
                 ws_->roots_found.at(ie) = 1;
         }
         if (!h_changed)
@@ -1230,11 +1276,7 @@ void EventHandlingSimulator::estimate_root_noise_and_slope(
 
     // restore the model's derived state at the current state
     model_->froot(t, x0, ws_->sol.dx, ws_->rootvals);
-    // time tolerance of the root-finding, at least the resolution of `t`
-    auto const t_tol = std::max(
-        solver_->get_root_time_tolerance(),
-        100 * eps * std::max(std::abs(t), 1.0)
-    );
+    auto const t_tol = root_time_tolerance(*solver_, t);
     for (int ie = 0; ie < model_->ne; ++ie) {
         slope[ie] = (slope[ie] - root_backward[ie]) / ((t + dt) - (t - dt));
         // The perturbation of all states in the same direction may cancel
@@ -1260,12 +1302,8 @@ bool EventHandlingSimulator::collect_roots(realtype const t_trigger) {
     // the root. If the first step is shorter, the root function may still be
     // exactly zero at its end, which the solver reports as a root in the
     // opposite direction.
-    constexpr auto eps = std::numeric_limits<realtype>::epsilon();
     auto const& h = model_->get_model_state().h;
-    auto const t_tol = std::max(
-        solver_->get_root_time_tolerance(),
-        100 * eps * std::max(std::abs(ws_->sol.t), 1.0)
-    );
+    auto const t_tol = root_time_tolerance(*solver_, ws_->sol.t);
     bool const after_last_root
         = std::abs(ws_->sol.t - ws_->tlastroot) <= t_tol;
     std::vector<realtype> rootvals;
