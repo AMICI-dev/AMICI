@@ -9,7 +9,7 @@ from typing import SupportsFloat
 
 import sympy as sp
 from sympy.functions.elementary.piecewise import ExprCondPair
-from sympy.logic.boolalg import BooleanAtom
+from sympy.logic.boolalg import Boolean, BooleanAtom
 from toposort import toposort
 
 __all__ = [
@@ -825,6 +825,69 @@ def _parse_special_functions(sym: sp.Expr, toplevel: bool = True) -> sp.Expr:
     return sym
 
 
+def _is_boolean(expr: sp.Basic) -> bool:
+    """Check whether an expression is Boolean-valued."""
+    # sp.Symbol is a Boolean, but also an Expr
+    return isinstance(expr, Boolean) and not isinstance(expr, sp.Expr)
+
+
+def _boolean_to_number(expr: sp.Basic) -> sp.Piecewise:
+    """Convert a Boolean expression to 1 (true) or 0 (false)."""
+    return sp.Piecewise((1, expr), (0, True))
+
+
+def _boolean_piecewise_to_ite(*expr_cond_pairs: ExprCondPair) -> sp.Basic:
+    """
+    Replace a Boolean-valued Piecewise by nested ITEs.
+
+    Boolean-valued piecewise functions can not be converted to Heaviside
+    functions. ITEs can be handled wherever Boolean expressions are expected.
+    If no condition holds, the result is ``False``.
+    Piecewise functions with any non-Boolean piece are returned as
+    Piecewise, with Boolean pieces converted to numbers.
+    """
+    if not all(_is_boolean(expr) for expr, _ in expr_cond_pairs):
+        return sp.Piecewise(
+            *(
+                (_boolean_to_number(expr) if _is_boolean(expr) else expr, cond)
+                for expr, cond in expr_cond_pairs
+            )
+        )
+
+    result = sp.false
+    for expr, cond in reversed(expr_cond_pairs):
+        result = sp.ITE(cond, expr, result)
+    return result
+
+
+def _convert_boolean_piecewise(expr: sp.Basic) -> sp.Basic:
+    """
+    Replace all Boolean-valued Piecewise functions by nested ITEs.
+
+    See :func:`_boolean_piecewise_to_ite`. Where a Boolean-valued
+    piecewise function is used as a number (e.g., as an operand of an
+    arithmetic or relational operation), the result is converted to
+    ``Piecewise((1, ITE(...)), (0, True))``.
+    """
+    if not expr.has(sp.Piecewise):
+        return expr
+
+    args = [_convert_boolean_piecewise(arg) for arg in expr.args]
+    if isinstance(expr, sp.Piecewise):
+        return _boolean_piecewise_to_ite(*args)
+
+    if isinstance(expr, sp.Expr | sp.Rel):
+        args = [
+            _boolean_to_number(new)
+            if new is not old and _is_boolean(new)
+            else new
+            for new, old in zip(args, expr.args, strict=True)
+        ]
+    if all(new is old for new, old in zip(args, expr.args, strict=True)):
+        return expr
+    return expr.func(*args)
+
+
 def _parse_piecewise_to_heaviside(args: Iterable[ExprCondPair]) -> sp.Expr:
     """
     Piecewise functions cannot be transformed into C++ right away, but AMICI
@@ -861,6 +924,12 @@ def _parse_heaviside_trigger(trigger: sp.Expr) -> sp.Expr:
     :param trigger:
     :return: real valued root function expression
     """
+    # e.g., nested in ITEs
+    if trigger is sp.true:
+        return sp.Integer(1)
+    if trigger is sp.false:
+        return sp.Integer(0)
+
     if trigger.is_Relational:
         root = trigger.args[0] - trigger.args[1]
         _check_unsupported_functions(root, "sympy.Expression")
@@ -905,6 +974,11 @@ def _parse_heaviside_trigger(trigger: sp.Expr) -> sp.Expr:
 
     if isinstance(trigger, sp.And):
         return sp.Mul(*[_parse_heaviside_trigger(arg) for arg in trigger.args])
+
+    # ite(c, a, b) = c * a + (1 - c) * b
+    if isinstance(trigger, sp.ITE):
+        cond, if_true, if_false = map(_parse_heaviside_trigger, trigger.args)
+        return cond * if_true + (sp.Integer(1) - cond) * if_false
 
     raise RuntimeError(
         "AMICI can not parse piecewise/event trigger functions with argument "
