@@ -2,6 +2,7 @@ import copy
 from collections import Counter
 from pathlib import Path
 
+import numpy as np
 import pytest
 from amici.importers.petab import (
     PetabImporter,
@@ -9,6 +10,8 @@ from amici.importers.petab import (
     has_timepoint_specific_overrides,
     unflatten_simulation_df,
 )
+from amici.importers.petab._petab_importer import ExperimentsToPySBConverter
+from amici.importers.utils import symbol_with_assumptions
 from amici.sim.sundials import SensitivityOrder
 from amici.testing import TemporaryDirectoryWinSafe
 from petab.v2 import C, Problem
@@ -1465,3 +1468,179 @@ def test_import_kwargs_var_keyword(monkeypatch):
     assert pi._import_kwargs == {"foo": 1}
     with pytest.raises(ValueError, match=r"\['model_name'\].*set by"):
         PetabImporter(problem, import_kwargs={"model_name": "m"})
+
+
+@pytest.fixture(scope="module")
+def pysb_targets_model():
+    """PySB model for checks of condition targets.
+
+    Includes compartments with parameter- and expression-dependent sizes,
+    a species that is not part of the reaction network (`Z`), and
+    a monomer with a binding site (`L`).
+    """
+    pysb = pytest.importorskip("pysb")
+
+    model = pysb.Model("invalid_targets", _export=False)
+    model.add_component(pysb.Parameter("V", 2.0, _export=False))
+    model.add_component(pysb.Parameter("W", 2.0, _export=False))
+    model.add_component(
+        pysb.Expression("W_expr", 3 * model.parameters["W"], _export=False)
+    )
+    model.add_component(
+        pysb.Compartment(
+            "C", size=model.parameters["V"], dimension=3, _export=False
+        )
+    )
+    model.add_component(
+        pysb.Compartment(
+            "C2", size=model.expressions["W_expr"], dimension=3, _export=False
+        )
+    )
+    model.add_component(pysb.Monomer("A", _export=False))
+    model.add_component(pysb.Monomer("Z", _export=False))
+    model.add_component(pysb.Parameter("A0", 1.0, _export=False))
+    model.add_component(
+        pysb.Expression("A0_expr", 2 * model.parameters["A0"], _export=False)
+    )
+    A = model.monomers["A"]
+    for compartment, value in (
+        ("C", model.expressions["A0_expr"]),
+        ("C2", model.parameters["A0"]),
+    ):
+        model.add_initial(
+            pysb.Initial(
+                A() ** model.compartments[compartment], value, _export=False
+            )
+        )
+        model.add_component(
+            pysb.Rule(
+                f"deg_{compartment}",
+                A() ** model.compartments[compartment] >> None,
+                model.parameters["A0"],
+                _export=False,
+            )
+        )
+    model.add_component(pysb.Observable("A_obs", A(), _export=False))
+    L = pysb.Monomer("L", ["r"], _export=False)
+    model.add_component(L)
+    model.add_initial(
+        pysb.Initial(
+            L(r=None) ** model.compartments["C"],
+            model.parameters["A0"],
+            _export=False,
+        )
+    )
+    model.add_component(
+        pysb.Rule(
+            "deg_L",
+            L(r=None) ** model.compartments["C"] >> None,
+            model.parameters["A0"],
+            _export=False,
+        )
+    )
+    pysb.bng.generate_equations(model)
+    return model
+
+
+def _create_pysb_targets_problem(model, *periods) -> Problem:
+    """Create a PEtab problem for `pysb_targets_model` with a single
+    experiment with the given periods."""
+    from petab.v2.models.pysb_model import PySBModel
+
+    problem = Problem()
+    problem.model = PySBModel(model=model, model_id="invalid_targets")
+    problem.add_observable("obs_a", "A_obs", noise_formula="1")
+    problem.add_mapping("Z_amount", "Z() ** C")
+    problem.add_mapping("A_any", "A()")
+    problem.add_mapping("L_free", "L(r=None) ** C")
+    problem.add_experiment("e1", *periods)
+    problem.add_measurement(
+        "obs_a", experiment_id="e1", time=10, measurement=0
+    )
+    return problem
+
+
+@pytest.mark.parametrize(
+    "periods",
+    [[0, "c1"], [0, [], 5, "c1"]],
+    ids=["first_period", "later_period"],
+)
+@pytest.mark.parametrize(
+    "target_id, exception, message",
+    [
+        # algebraic entities
+        ("A0_expr", ValueError, "Expressions cannot be targets"),
+        ("A_obs", ValueError, "Observables cannot be targets"),
+        # compartments and their sizes
+        ("V", NotImplementedError, "compartment sizes"),
+        ("C", NotImplementedError, "compartment sizes"),
+        ("W", NotImplementedError, "compartment sizes"),
+        # species that is not part of the reaction network
+        ("Z_amount", ValueError, "not part of the generated reaction network"),
+        # underspecified species (compartment missing)
+        ("A_any", ValueError, "must be fully specified"),
+        # not supported yet
+        ("A0", NotImplementedError, "not supported yet"),
+    ],
+)
+def test_pysb_invalid_condition_targets(
+    pysb_targets_model, target_id, exception, message, periods
+):
+    """Invalid or unsupported condition targets for PySB models."""
+
+    problem = _create_pysb_targets_problem(pysb_targets_model, *periods)
+    problem.add_condition("c1", **{target_id: 3})
+    with pytest.raises(exception, match=message):
+        ExperimentsToPySBConverter(problem).convert()
+
+
+def test_pysb_reserved_name_in_later_period(pysb_targets_model):
+    """Reserved names in later-period target values are not supported."""
+
+    # `t` is only defined in the parameter table
+    problem = _create_pysb_targets_problem(pysb_targets_model, 0, [], 5, "c1")
+    problem.add_parameter("t", nominal_value=1, estimate=False)
+    problem.add_condition("c1", L_free="2 * t")
+    with pytest.raises(
+        NotImplementedError, match="'t' can't be used in condition changes"
+    ):
+        ExperimentsToPySBConverter(problem).convert()
+
+
+@pytest.mark.parametrize("symbol", ["A", "C", "deg_C"])
+def test_pysb_invalid_symbols_in_target_values(pysb_targets_model, symbol):
+    """Monomers, compartments, and rules in later-period target values."""
+
+    problem = _create_pysb_targets_problem(pysb_targets_model, 0, [], 5, "c1")
+    problem.add_condition("c1", L_free=f"2 * {symbol}")
+    with pytest.raises(ValueError, match="can't be used in target values"):
+        ExperimentsToPySBConverter(problem).convert()
+
+
+def test_pysb_binding_site_species_target(pysb_targets_model):
+    """Species with binding sites can be condition targets."""
+
+    # libpetab<=0.10.0 fails to validate species with binding sites
+    #  (libpetab#585), but conversion works
+    problem = _create_pysb_targets_problem(
+        pysb_targets_model, 0, "c1", 5, "c1"
+    )
+    problem.add_condition("c1", L_free=3)
+    _, events = ExperimentsToPySBConverter(problem).convert()
+    (event,) = events
+    ix_l = next(
+        ix
+        for ix, species in enumerate(pysb_targets_model.species)
+        if species.monomer_patterns[0].monomer.name == "L"
+    )
+    assert event.assignment_targets == {symbol_with_assumptions(f"__s{ix_l}")}
+
+
+def test_pysb_no_events_without_changes(pysb_targets_model):
+    """No events are created for periods without changes."""
+
+    problem = _create_pysb_targets_problem(
+        pysb_targets_model, -np.inf, [], 0, []
+    )
+    _, events = ExperimentsToPySBConverter(problem).convert()
+    assert events == []
