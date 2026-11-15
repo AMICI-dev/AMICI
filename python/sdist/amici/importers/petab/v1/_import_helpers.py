@@ -26,7 +26,6 @@ from petab.v1.parameters import get_valid_parameters_for_parameter_table
 from petab.v2.math import sympify_petab
 
 import amici
-from amici._model_dir import is_model_dir_complete
 from amici.importers.utils import MeasurementChannel
 
 logger = logging.getLogger(__name__)
@@ -132,32 +131,6 @@ def _create_model_name(folder: str | Path) -> str:
     Just re-use the last part of the folder.
     """
     return os.path.split(os.path.normpath(folder))[-1]
-
-
-def _can_import_model(
-    model_name: str, output_dir: str | Path, jax: bool = False
-) -> bool:
-    """
-    Check whether a module of that name can already be imported.
-    """
-    # a failed or interrupted import, or one by a different AMICI version, may
-    #  leave behind an importable but outdated or incomplete module
-    if not is_model_dir_complete(output_dir, model_name, jax=jax):
-        return False
-
-    # try to import (in particular checks version)
-    try:
-        model_module = amici.import_model_module(
-            *_get_package_name_and_path(model_name, output_dir, jax)
-        )
-    except ModuleNotFoundError:
-        return False
-
-    # no need to (re-)compile
-    if jax:
-        return hasattr(model_module, "Model")
-    else:
-        return hasattr(model_module, "get_model")
 
 
 def get_fixed_parameters(

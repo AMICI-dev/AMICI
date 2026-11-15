@@ -8,13 +8,16 @@ This allows to
 * safely remove previous imports, but refuse to remove directories or files
   not created by AMICI,
 * distinguish complete model directories from those left behind by a failed
-  or interrupted import (see :func:`is_model_dir_complete`).
+  or interrupted import (see :func:`is_model_dir_complete`),
+* reuse models imported from the same inputs (see
+  :func:`can_reuse_model_dir` and :mod:`amici._input_hash`).
 """
 
 from __future__ import annotations
 
 import fnmatch
 import json
+import logging
 import os
 import re
 import shutil
@@ -23,6 +26,10 @@ from collections.abc import Iterable
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
+
+from .logging import get_logger
+
+logger = get_logger(__name__, logging.WARNING)
 
 #: Name of the marker file in a model directory
 MARKER_FILENAME = ".amici_model.json"
@@ -408,6 +415,95 @@ def is_model_dir_complete(
     if compiled:
         return status == ModelDirStatus.COMPILED
     return status in (ModelDirStatus.GENERATED, ModelDirStatus.COMPILED)
+
+
+def set_model_dir_inputs(
+    model_dir: str | Path, input_hash: str | None, inputs: dict
+) -> None:
+    """Record the inputs of the import in the marker of a model directory.
+
+    Must be called after code generation, before compilation.
+    Does nothing if the directory has no marker.
+
+    :param model_dir:
+        The model directory.
+    :param input_hash:
+        The hash of the inputs, see
+        :func:`amici._input_hash.compute_input_hash`.
+    :param inputs:
+        The hashed inputs, for reporting changes.
+    """
+    model_dir = Path(model_dir)
+    marker = _read_marker(model_dir)
+    if marker is None or marker["format_version"] > MARKER_FORMAT_VERSION:
+        return
+    _write_marker(
+        model_dir, marker | {"input_hash": input_hash, "inputs": inputs}
+    )
+
+
+def can_reuse_model_dir(
+    model_dir: str | Path,
+    model_name: str,
+    input_hash: str | None,
+    inputs: dict,
+    jax: bool = False,
+    compiled: bool = True,
+    log: logging.Logger | None = None,
+) -> bool:
+    """Check whether a model directory contains a usable model imported
+    from the same inputs.
+
+    See :func:`is_model_dir_complete` for the other requirements. Logs why
+    an existing model can't be reused.
+
+    :param model_dir:
+        The model directory.
+    :param model_name:
+        The expected model name.
+    :param input_hash:
+        The hash of the inputs of the current import. ``None`` never matches.
+    :param inputs:
+        The hashed inputs of the current import.
+    :param jax:
+        Whether a JAX model is expected.
+    :param compiled:
+        Whether a compiled model extension is required.
+    :param log:
+        The logger to report to. Defaults to this module's logger.
+    """
+    from ._input_hash import UNHASHABLE, get_changed_inputs
+
+    log = log or logger
+    if not is_model_dir_complete(
+        model_dir, model_name, jax=jax, compiled=compiled
+    ):
+        return False
+
+    if input_hash is None:
+        unhashable = [
+            key
+            for key, value in inputs["options"].items()
+            if value == UNHASHABLE
+        ]
+        reason = (
+            f"Import options can't be hashed: {', '.join(unhashable)}."
+            if unhashable
+            else "Reusing models is disabled."
+        )
+        log.info(f"Cannot reuse model {model_name!r} in {model_dir}. {reason}")
+        return False
+
+    marker = _read_marker(Path(model_dir))
+    if marker.get("input_hash") == input_hash:
+        return True
+
+    changed = get_changed_inputs(marker.get("inputs"), inputs)
+    log.info(
+        f"Cannot reuse model {model_name!r} in {model_dir}. "
+        f"Changed import inputs: {', '.join(changed) or '<unknown>'}."
+    )
+    return False
 
 
 def _read_marker(model_dir: Path) -> dict | None:

@@ -120,6 +120,14 @@ def _jax_variable_ids(model: DEModel, sym_names: tuple[str, ...]) -> dict:
     }
 
 
+def get_default_output_dir(model_name: str) -> Path:
+    """Get the default output directory for a JAX model.
+
+    :returns: ``amici-{model_name}`` in the current working directory.
+    """
+    return Path(os.getcwd()) / f"amici-{model_name}"
+
+
 class ODEExporter:
     """
     The ODEExporter class generates AMICI jax files for a model as
@@ -492,7 +500,7 @@ class ODEExporter:
 
         """
         if output_dir is None:
-            output_dir = Path(os.getcwd()) / f"amici-{self.model_name}"
+            output_dir = get_default_output_dir(self.model_name)
 
         self.model_path = Path(output_dir).resolve()
         self.model_path.mkdir(parents=True, exist_ok=True)

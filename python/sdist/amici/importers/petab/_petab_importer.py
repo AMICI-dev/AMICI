@@ -242,6 +242,9 @@ class PetabImporter:
                 print(self.petab_problem.model.to_str())
 
         self._compile = not jax if compile_ is None else compile_
+        # whether the model in the output directory was checked to match the
+        #  current inputs, or was imported from them
+        self._inputs_checked = False
         self._sym_model: DEModel | None = None
         self._model_id = self.petab_problem.model.model_id
         self._module_name = module_name or (
@@ -379,7 +382,7 @@ class PetabImporter:
             self._output_dir = get_model_dir(self._module_name, jax=self._jax)
         return self._output_dir
 
-    def _do_import_sbml(self):
+    def _do_import_sbml(self, skip_if_unchanged: bool = False):
         """Import the model.
 
         Generate the symbolic model according to the given PEtab problem and
@@ -459,6 +462,7 @@ class PetabImporter:
                 fixed_parameters=fixed_parameters,
                 verbose=self._verbose,
                 hybridization=hybridization,
+                skip_if_unchanged=skip_if_unchanged,
                 # **kwargs,
             )
             return sbml_importer
@@ -476,15 +480,14 @@ class PetabImporter:
                 # FIXME: simplification takes ages for Smith_BMCSystBiol2013
                 #  due to nested piecewises / Heavisides?!
                 simplify=None,
+                skip_if_unchanged=skip_if_unchanged,
                 # **kwargs,
             )
         # TODO check_model(amici_model=model, petab_problem=petab_problem)
 
         return sbml_importer
 
-    def _do_import_pysb(
-        self,
-    ):
+    def _do_import_pysb(self, skip_if_unchanged: bool = False):
         """Import the PySB model.
 
         Generate the symbolic model according to the given PEtab problem and
@@ -539,6 +542,7 @@ class PetabImporter:
                 observation_model=observation_model,
                 verbose=self._verbose,
                 pysb_model_has_obs_and_noise=True,
+                skip_if_unchanged=skip_if_unchanged,
                 # TODO: events
                 # **kwargs,
             )
@@ -554,16 +558,10 @@ class PetabImporter:
                 pysb_model_has_obs_and_noise=True,
                 compile=self._compile,
                 _events=self._events,
+                skip_if_unchanged=skip_if_unchanged,
                 # **kwargs,
             )
-
-        if self._compile:
-            # check that the model extension was compiled successfully
-            _ = self.import_module()
-            # model = model_module.getModel()
-            # TODO check_model(amici_model=model, petab_problem=petab_problem)
-
-        return
+        # TODO check_model(amici_model=model, petab_problem=petab_problem)
 
     def _check_placeholders(self):
         # check for time-point-specific placeholders
@@ -744,9 +742,7 @@ class PetabImporter:
             with h5py.File(file_spec, "r") as hf:
                 if "inputs" in hf:
                     for petab_id in hf["inputs"]:
-                        array_input_files[petab_id] = str(
-                            Path(file_spec).resolve()
-                        )
+                        array_input_files[petab_id] = Path(file_spec).resolve()
 
         condition_id_mapping = {}
         if self._unconverted_problem is not None:
@@ -832,24 +828,31 @@ class PetabImporter:
     def import_module(self, force_import: bool = False) -> amici.ModelModule:
         """Import the generated model module.
 
-        If the output directory does not contain a complete model generated
-        with the current AMICI version (e.g., after a failed import),
-        the model is (re-)imported.
+        The model is (re-)imported, unless the output directory contains
+        a complete model that was imported from the same inputs
+        (see :ref:`amici_model_reuse`).
 
         :param force_import:
             Whether to force re-import even if the model module already exists.
         :return: The imported model module.
         """
-        if force_import or not is_model_dir_complete(
-            self.output_dir,
-            self._module_name,
-            jax=self._jax,
-            compiled=self._compile,
+        # the inputs only need to be checked once, since the problem must
+        #  not be changed after construction of the importer
+        if (
+            force_import
+            or not self._inputs_checked
+            or not is_model_dir_complete(
+                self.output_dir,
+                self._module_name,
+                jax=self._jax,
+                compiled=self._compile,
+            )
         ):
             if self.petab_problem.model.type_id == MODEL_TYPE_SBML:
-                self._do_import_sbml()
+                self._do_import_sbml(skip_if_unchanged=not force_import)
             else:
-                self._do_import_pysb()
+                self._do_import_pysb(skip_if_unchanged=not force_import)
+            self._inputs_checked = True
 
         if self._jax:
             return amici.import_model_module(
