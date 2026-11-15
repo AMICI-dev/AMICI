@@ -265,7 +265,14 @@ void IDASolver::set_root_direction(std::vector<int> const& rootdir) const {
 }
 
 void IDASolver::root_init(int const ne) const {
-    int status = IDARootInit(solver_memory_.get(), ne, froot);
+    // For an unchanged number of root functions, `IDARootInit` keeps the
+    // root functions deactivated during a previous simulation (a root
+    // function that is zero at the initial time stays deactivated until it is
+    // nonzero at the end of a step). Free the root-finding memory first, so
+    // that all root functions are active, as for a new solver.
+    int status = IDARootInit(solver_memory_.get(), 0, nullptr);
+    if (status == IDA_SUCCESS)
+        status = IDARootInit(solver_memory_.get(), ne, froot);
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDARootInit");
 }

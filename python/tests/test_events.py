@@ -4475,6 +4475,46 @@ def test_condition_at_threshold_at_t0(tempdir, condition, expected):
 
 
 @skip_on_valgrind
+def test_root_zero_at_t0_with_reused_solver(tempdir):
+    """A root function that was zero during a whole simulation is monitored
+    from the start of the next simulation with the same solver (#3512)."""
+    from amici.sim.sundials import ParameterScaling
+
+    model_name = "test_root_zero_at_t0_with_reused_solver"
+    antimony2amici(
+        r"""
+        k = 1; x0 = 0
+        x = x0; x' = k
+        n = 0
+        E: at x >= 2: n = n + 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    assert model.ne_solver == 1
+    assert model.get_free_parameter_ids() == ("k", "x0")
+    model.set_parameter_scale(ParameterScaling.none)
+    model.set_timepoints([0.0, 1.0, 3.0])
+    solver = model.create_solver()
+
+    # the root function is zero throughout
+    model.set_free_parameters([0.0, 2.0])
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.by_id("x"), [2, 2, 2], rtol=0, atol=0)
+
+    # the root is crossed during the first step
+    model.set_free_parameters([1.0, 2.0 - 1e-6])
+    expected = run_simulation(model, model.create_solver())
+    assert expected.status == AMICI_SUCCESS
+    assert_allclose(expected.by_id("n"), [0, 1, 1], rtol=0, atol=0)
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.by_id("n"), [0, 1, 1], rtol=0, atol=0)
+
+
+@skip_on_valgrind
 def test_event_cascade_assigns_trigger_onto_threshold_twice(tempdir):
     """An event cascade that moves a trigger exactly onto its threshold
     twice at the same time, after it was reset in between.
