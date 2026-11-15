@@ -17,10 +17,11 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import petab.v1 as petab
-from fiddy import CachedFunction, Type
+from fiddy import CachedFunction, FunctionEvaluationError, Type
 from petab.v1.C import LIN, LOG, LOG10
 
 from amici.sim.sundials import (
+    AMICI_SUCCESS,
     AmiciExpData,
     AmiciModel,
     AmiciSolver,
@@ -212,7 +213,8 @@ def run_simulation_to_function_and_derivative(
         or `derivative` raises `ValueError`.
     :param cache:
         Whether to cache the function calls.
-    :returns: A tuple of `(function, derivative)`.
+    :returns: A tuple of `(function, derivative)`. Both raise
+        :class:`fiddy.FunctionEvaluationError` if the simulation fails.
     """
     if amici_solver is None:
         amici_solver = amici_model.create_solver()
@@ -237,11 +239,17 @@ def run_simulation_to_function_and_derivative(
         try:
             amici_model.set_free_parameter_by_id(problem_parameters)
             with _solver_settings(amici_solver, sensi_order=order):
-                return run_simulation(
+                rdata = run_simulation(
                     model=amici_model, solver=amici_solver, edata=amici_edata
                 )
         finally:
             amici_model.set_free_parameters(original_parameters)
+        # A failed simulation may still return finite values
+        if rdata.status != AMICI_SUCCESS:
+            raise FunctionEvaluationError(
+                f"Simulation failed with status {rdata.status} at {point}."
+            )
+        return rdata
 
     def function(point: Type.POINT) -> dict[str, np.ndarray]:
         rdata = run_amici_simulation(point=point, order=SensitivityOrder.none)

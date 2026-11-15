@@ -7,6 +7,7 @@ on:
   pull_request:
     paths:
       - .github/workflows/test_sbml_semantic_test_suite.yml
+      - python/sdist/amici/adapters/fiddy.py
       - python/sdist/amici/exporters/sundials/de_export.py
       - python/sdist/amici/_symbolic/**
       - python/sdist/amici/importers/sbml/**
