@@ -4485,6 +4485,101 @@ def test_condition_at_threshold_at_t0(tempdir, condition, expected):
 
 
 @skip_on_valgrind
+def test_time_condition_at_threshold_at_t0(tempdir):
+    """A `piecewise` condition on time at its threshold at the initial time
+    changes right after it (#3515)."""
+    from amici.sim.sundials import ParameterScaling
+
+    model_name = "test_time_condition_at_threshold_at_t0"
+    antimony2amici(
+        r"""
+        t_sw = 0; k = 1; m = 0; c = 1
+        y_leq = 0; y_leq' = piecewise(2, time <= t_sw, 0)
+        y_gt = 0; y_gt' = piecewise(2, time > t_sw, 0)
+        y_geq = 0; y_geq' = piecewise(2, time >= t_sw, 0)
+        # trigger times 1 / k and c / (k + m), which may differ from where
+        # the computed root functions change their sign
+        y_k_geq = 0; y_k_geq' = piecewise(2, k * time >= 1, 0)
+        y_k_leq = 0; y_k_leq' = piecewise(2, k * time <= 1, 0)
+        y_km_geq = 0; y_km_geq' = piecewise(2, k * time + m * time >= c, 0)
+        y_km_leq = 0; y_km_leq' = piecewise(2, k * time + m * time <= c, 0)
+        n_f = 0; n_t = 0
+        E_f: at k * time >= 1, t0=false: n_f = n_f + 1
+        E_t: at k * time >= 1, t0=true: n_t = n_t + 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    # trigger times are explicit, not tracked by the solver
+    assert model.ne_solver == 0
+    model.set_parameter_scale(ParameterScaling.none)
+    solver = model.create_solver()
+    # switch at t0, within roundoff after t0, and later
+    for t0, t_sw in (
+        (0.0, 0.0),
+        (1.0, 1.0),
+        (1.0, np.nextafter(1.0, 2.0)),
+        (0.0, 1.0),
+    ):
+        model.set_free_parameter_by_id("t_sw", t_sw)
+        model.set_t0(t0)
+        model.set_timepoints([t0, t0 + 1.0, t0 + 2.0])
+        rdata = run_simulation(model, solver)
+        assert rdata.status == AMICI_SUCCESS
+        # time spent before / after the switch
+        t_leq = np.minimum(np.maximum(rdata.ts - t0, 0), t_sw - t0)
+        t_gt = rdata.ts - t0 - t_leq
+        assert_allclose(rdata.by_id("y_leq"), 2 * t_leq, rtol=0, atol=1e-8)
+        assert_allclose(rdata.by_id("y_gt"), 2 * t_gt, rtol=0, atol=1e-8)
+        assert_allclose(rdata.by_id("y_geq"), 2 * t_gt, rtol=0, atol=1e-8)
+
+    # With t0 = 1 / k, `k * t0 - 1` evaluates to slightly below zero,
+    # although the trigger time is not after t0.
+    k = 49.0
+    t0 = 1 / k
+    assert k * t0 - 1 < 0
+    model.set_free_parameter_by_id("k", k)
+    model.set_t0(t0)
+    model.set_timepoints([t0, t0 + 1.0, t0 + 2.0])
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+    t = rdata.ts - t0
+    assert_allclose(rdata.by_id("y_k_geq"), 2 * t, rtol=0, atol=1e-8)
+    assert_allclose(rdata.by_id("y_k_leq"), 0, rtol=0, atol=1e-8)
+    # as for a trigger that is exactly true at t0
+    assert_allclose(rdata.by_id("n_f"), 1, rtol=0, atol=0)
+    assert_allclose(rdata.by_id("n_t"), 0, rtol=0, atol=0)
+    # The same after a presimulation that already triggered the events at t0
+    edata = ExpData(model)
+    edata.t_start = t0
+    edata.t_presim = 1.0
+    rdata = run_simulation(model, solver, edata)
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.by_id("y_k_geq"), 2 * t, rtol=0, atol=1e-8)
+    assert_allclose(rdata.by_id("n_f"), 1, rtol=0, atol=0)
+    assert_allclose(rdata.by_id("n_t"), 1, rtol=0, atol=0)
+
+    # Conversely, with t0 right before c / (k + m), the root function
+    # `-c + k * t0 + m * t0` evaluates to slightly above zero (c = 1), so
+    # the root function of `<=` is slightly below zero, although the trigger
+    # time is after t0 (assuming the generated code evaluates the root
+    # functions as Python does, e.g., without FMA contraction).
+    k, m = 1.5, 3.6
+    t0 = np.nextafter(1 / (k + m), 0)
+    assert -1 + k * t0 + m * t0 > 0
+    model.set_free_parameter_by_id("k", k)
+    model.set_free_parameter_by_id("m", m)
+    model.set_t0(t0)
+    model.set_timepoints([t0, t0 + 1.0, t0 + 2.0])
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+    t = rdata.ts - t0
+    assert_allclose(rdata.by_id("y_km_geq"), 2 * t, rtol=0, atol=1e-8)
+    assert_allclose(rdata.by_id("y_km_leq"), 0, rtol=0, atol=1e-8)
+
+
+@skip_on_valgrind
 def test_root_zero_at_t0_with_reused_solver(tempdir):
     """A root function that was zero during a whole simulation is monitored
     from the start of the next simulation with the same solver (#3512)."""
