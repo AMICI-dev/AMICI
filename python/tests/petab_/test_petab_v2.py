@@ -1296,3 +1296,308 @@ def test_parameter_scales_jax_matches_sundials(
         [result.sllh[par_id] for par_id in jp.parameter_ids],
         rtol=1e-6,
     )
+
+
+def test_pysb_condition_changes(tmp_path):
+    """PEtab v2 condition changes of species in the first and later
+    periods of PySB-model-based problems."""
+    import warnings
+
+    import numpy as np
+    from amici.sim.sundials import SensitivityMethod
+
+    pysb = pytest.importorskip("pysb")
+    from petab.v2.models.pysb_model import PySBModel
+
+    # A(s='u') -> B, without an initial for B
+    model = pysb.Model("pysb_conditions", _export=False)
+    model.add_component(pysb.Monomer("A", ["s"], {"s": ["u"]}, _export=False))
+    model.add_component(pysb.Monomer("B", _export=False))
+    model.add_component(pysb.Parameter("k", 0.1, _export=False))
+    model.add_component(pysb.Parameter("A0", 1.0, _export=False))
+    A, B = model.monomers["A"], model.monomers["B"]
+    model.add_initial(
+        pysb.Initial(A(s="u"), model.parameters["A0"], _export=False)
+    )
+    model.add_component(
+        pysb.Rule(
+            "conversion",
+            A(s="u") >> B(),
+            model.parameters["k"],
+            _export=False,
+        )
+    )
+    model.add_component(pysb.Observable("A_obs", A(), _export=False))
+    model.add_component(pysb.Observable("B_obs", B(), _export=False))
+
+    problem = Problem()
+    problem.model = PySBModel(model=model, model_id="pysb_conditions")
+    problem.add_observable("obs_a", "A_obs", noise_formula="1")
+    problem.add_observable("obs_b", "B_obs", noise_formula="1")
+    kk = 0.5
+    problem.add_parameter("kk", nominal_value=kk, estimate=True, lb=0, ub=10)
+    problem.add_mapping("A_amount", "A(s='u')")
+    problem.add_mapping("B_amount", "B()")
+    problem.add_condition("set_B_2", B_amount=2)
+    problem.add_condition("set_A_3", A_amount=3)
+    problem.add_condition("set_A_4", A_amount=4)
+    problem.add_condition("set_A_5", A_amount=5)
+    problem.add_condition("set_A_kk", A_amount="4 * kk")
+    problem.add_condition("set_B_kk", B_amount="4 * kk")
+    problem.add_condition("set_A_time", A_amount="time + 3")
+    problem.add_condition("set_A_expr", A_amount="kk * time / 10 + B_amount")
+    problem.add_condition("double_A", A_amount="2 * A_obs")
+
+    e = np.exp
+
+    # experiment ID -> (periods, expected y(20), expected dy(20)/dkk,
+    #  observable ID)
+    experiments = {
+        "no_change": ([(0, [])], e(-2), 0, "obs_a"),
+        # first period: species, different values in different experiments
+        "species_0_3": ([(0, ["set_A_3"])], 3 * e(-2), 0, "obs_a"),
+        "species_0_4": ([(0, ["set_A_4"])], 4 * e(-2), 0, "obs_a"),
+        # first period: species, target value depends on an estimated
+        #  parameter
+        "species_0_kk": (
+            [(0, ["set_A_kk"])],
+            4 * kk * e(-2),
+            4 * e(-2),
+            "obs_a",
+        ),
+        # first period: `time` in the target value, t0 != 0
+        "species_5_time": ([(5, ["set_A_time"])], 8 * e(-1.5), 0, "obs_a"),
+        # later period: species
+        "species_10": ([(0, []), (10, ["set_A_5"])], 5 * e(-1), 0, "obs_a"),
+        # later period: state-dependent target value
+        "state_dependent": (
+            [(0, []), (10, ["double_A"])],
+            2 * e(-2),
+            0,
+            "obs_a",
+        ),
+        # later period: target value depends on an estimated parameter,
+        #  `time`, and another species via the mapping table
+        "species_10_expr": (
+            [(0, []), (10, ["set_A_expr"])],
+            (kk + 1 - e(-1)) * e(-1),
+            e(-1),
+            "obs_a",
+        ),
+        # first period: species without a pysb.Initial
+        "species_no_initial": ([(0, ["set_B_2"])], 3 - e(-2), 0, "obs_b"),
+        # pre-equilibration without changes: A = 0, B = 1 at steady state
+        "preeq": ([(-np.inf, []), (0, [])], 1, 0, "obs_b"),
+        # changes in the pre-equilibration period: B = 1 + 4 * kk at steady
+        #  state
+        "preeq_period_changes": (
+            [(-np.inf, ["set_B_kk"]), (0, [])],
+            1 + 4 * kk,
+            4,
+            "obs_b",
+        ),
+        # pre-equilibration, then changes at the start of the main period
+        "preeq_changes": (
+            [(-np.inf, []), (0, ["set_A_expr"])],
+            e(-2),
+            0,
+            "obs_a",
+        ),
+        "preeq_changes_kk": (
+            [(-np.inf, []), (0, ["set_A_kk"])],
+            4 * kk * e(-2),
+            4 * e(-2),
+            "obs_a",
+        ),
+    }
+    for exp_id, (periods, _, _, obs_id) in experiments.items():
+        args = []
+        for time, condition_ids in periods:
+            args.extend([time, condition_ids])
+        problem.add_experiment(exp_id, *args)
+        problem.add_measurement(
+            obs_id, experiment_id=exp_id, time=20, measurement=0
+        )
+    # libpetab wrongly requires `time` in condition target values to be
+    #  defined in the parameter table
+    assert [issue.message for issue in problem.validate()] == [
+        "Missing parameter(s) in the model or the parameters table: {'time'}"
+    ]
+
+    ps = PetabImporter(
+        problem, output_dir=tmp_path / "model", validate=False
+    ).create_simulator()
+    ps.solver.set_sensitivity_order(SensitivityOrder.first)
+    ps.solver.set_relative_tolerance(1e-12)
+    ps.solver.set_absolute_tolerance(1e-14)
+    observable_ids = list(ps.model.get_observable_ids())
+    free_parameter_ids = list(ps.model.get_free_parameter_ids())
+    expected_sllh = -sum(y * sy for _, y, sy, _ in experiments.values())
+    assert expected_sllh != 0
+    for sensi_method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        ps.solver.set_sensitivity_method(sensi_method)
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", "Adjoint sensitivity analysis for models with"
+            )
+            result = ps.simulate({"kk": kk})
+        assert len(result.rdatas) == len(experiments)
+        for rdata in result.rdatas:
+            _, expected_y, expected_sy, obs_id = experiments[rdata.id]
+            msg = f"{sensi_method!r}: {rdata.id}"
+            assert rdata.status == 0, msg
+            iy = observable_ids.index(obs_id)
+            np.testing.assert_allclose(
+                rdata.y[0, iy], expected_y, rtol=1e-8, err_msg=msg
+            )
+            # llh = -0.5 * y^2 + const, as measurements are 0 and sigma is 1
+            ip = [free_parameter_ids[i] for i in rdata.plist].index("kk")
+            np.testing.assert_allclose(
+                rdata.sllh[ip],
+                -expected_y * expected_sy,
+                rtol=1e-6,
+                atol=1e-12,
+                err_msg=msg,
+            )
+        np.testing.assert_allclose(
+            result.sllh["kk"],
+            expected_sllh,
+            rtol=1e-6,
+            err_msg=repr(sensi_method),
+        )
+
+
+def test_pysb_invalid_condition_targets():
+    """Checks of condition targets for PySB models."""
+    import numpy as np
+
+    pysb = pytest.importorskip("pysb")
+    from amici.importers.petab._petab_importer import (
+        ExperimentsToPySBConverter,
+    )
+    from amici.importers.utils import symbol_with_assumptions
+    from petab.v2.models.pysb_model import PySBModel
+
+    model = pysb.Model("invalid_targets", _export=False)
+    model.add_component(pysb.Parameter("V", 2.0, _export=False))
+    model.add_component(pysb.Parameter("W", 2.0, _export=False))
+    model.add_component(
+        pysb.Expression("W_expr", 3 * model.parameters["W"], _export=False)
+    )
+    model.add_component(
+        pysb.Compartment(
+            "C", size=model.parameters["V"], dimension=3, _export=False
+        )
+    )
+    model.add_component(
+        pysb.Compartment(
+            "C2", size=model.expressions["W_expr"], dimension=3, _export=False
+        )
+    )
+    model.add_component(pysb.Monomer("A", _export=False))
+    model.add_component(pysb.Monomer("Z", _export=False))
+    model.add_component(pysb.Parameter("A0", 1.0, _export=False))
+    model.add_component(
+        pysb.Expression("A0_expr", 2 * model.parameters["A0"], _export=False)
+    )
+    A = model.monomers["A"]
+    for compartment, value in (
+        ("C", model.expressions["A0_expr"]),
+        ("C2", model.parameters["A0"]),
+    ):
+        model.add_initial(
+            pysb.Initial(
+                A() ** model.compartments[compartment], value, _export=False
+            )
+        )
+        model.add_component(
+            pysb.Rule(
+                f"deg_{compartment}",
+                A() ** model.compartments[compartment] >> None,
+                model.parameters["A0"],
+                _export=False,
+            )
+        )
+    model.add_component(pysb.Observable("A_obs", A(), _export=False))
+    # a monomer with a binding site
+    L = pysb.Monomer("L", ["r"], _export=False)
+    model.add_component(L)
+    model.add_initial(
+        pysb.Initial(
+            L(r=None) ** model.compartments["C"],
+            model.parameters["A0"],
+            _export=False,
+        )
+    )
+    model.add_component(
+        pysb.Rule(
+            "deg_L",
+            L(r=None) ** model.compartments["C"] >> None,
+            model.parameters["A0"],
+            _export=False,
+        )
+    )
+    pysb.bng.generate_equations(model)
+
+    def create_problem(*periods):
+        problem = Problem()
+        problem.model = PySBModel(model=model, model_id="invalid_targets")
+        problem.add_observable("obs_a", "A_obs", noise_formula="1")
+        problem.add_mapping("Z_amount", "Z() ** C")
+        problem.add_mapping("A_any", "A()")
+        problem.add_mapping("L_free", "L(r=None) ** C")
+        problem.add_experiment("e1", *periods)
+        problem.add_measurement(
+            "obs_a", experiment_id="e1", time=10, measurement=0
+        )
+        return problem
+
+    for target_id, exception, message in (
+        # algebraic entities
+        ("A0_expr", ValueError, "Expressions cannot be targets"),
+        ("A_obs", ValueError, "Observables cannot be targets"),
+        # compartments and their sizes
+        ("V", NotImplementedError, "compartment sizes"),
+        ("C", NotImplementedError, "compartment sizes"),
+        ("W", NotImplementedError, "compartment sizes"),
+        # species that is not part of the reaction network
+        ("Z_amount", ValueError, "not part of the generated reaction network"),
+        # underspecified species (compartment missing)
+        ("A_any", ValueError, "must be fully specified"),
+        # not supported yet
+        ("A0", NotImplementedError, "not supported yet"),
+    ):
+        # first period and later period
+        for periods in ([0, "c1"], [0, [], 5, "c1"]):
+            problem = create_problem(*periods)
+            problem.add_condition("c1", **{target_id: 3})
+            with pytest.raises(exception, match=message):
+                ExperimentsToPySBConverter(problem).convert()
+
+    # reserved names in later-period target values
+    #  (`t` is only defined in the parameter table)
+    problem = create_problem(0, [], 5, "c1")
+    problem.add_parameter("t", nominal_value=1, estimate=False)
+    problem.add_condition("c1", L_free="2 * t")
+    with pytest.raises(
+        NotImplementedError, match="'t' can't be used in condition changes"
+    ):
+        ExperimentsToPySBConverter(problem).convert()
+
+    # species with binding sites can be targets
+    #  (validation fails due to a libpetab bug, but conversion works)
+    problem = create_problem(0, "c1", 5, "c1")
+    problem.add_condition("c1", L_free=3)
+    _, events = ExperimentsToPySBConverter(problem).convert()
+    (event,) = events
+    ix_l = next(
+        ix
+        for ix, species in enumerate(model.species)
+        if species.monomer_patterns[0].monomer.name == "L"
+    )
+    assert event.assignment_targets == {symbol_with_assumptions(f"__s{ix_l}")}
+
+    # no events for periods without changes
+    problem = create_problem(-np.inf, [], 0, [])
+    _, events = ExperimentsToPySBConverter(problem).convert()
+    assert events == []
