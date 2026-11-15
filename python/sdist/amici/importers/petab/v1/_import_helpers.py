@@ -70,7 +70,7 @@ def get_observation_model(
             MeasurementChannel(
                 id_=oid,
                 name=name,
-                formula=formula_obs,
+                formula=formula_obs_sym,
                 sigma=formula_noise_sym,
                 noise_distribution=petab_noise_distribution_to_amici(
                     observable

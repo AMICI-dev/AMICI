@@ -166,3 +166,51 @@ def test_default_output_parameters(simple_sbml_model, tempdir):
             compile=False,
             output_dir=tempdir,
         )
+
+
+@skip_on_valgrind
+def test_observable_formula_petab_math(simple_sbml_model, tempdir):
+    """Observable formulas are parsed according to PEtab math."""
+    import sympy as sp
+    from amici.constants import SymbolId
+    from amici.importers.petab.v1._petab_import import import_model_sbml
+    from petab.v1.models.sbml_model import SbmlModel
+
+    _, sbml_model = simple_sbml_model
+    petab_problem = petab.Problem(
+        model=SbmlModel(sbml_model),
+        condition_df=petab.get_condition_df(
+            pd.DataFrame({petab.CONDITION_ID: ["condition0"]})
+        ),
+        parameter_df=petab.get_parameter_df(
+            pd.DataFrame({petab.PARAMETER_ID: [], petab.ESTIMATE: []})
+        ),
+        observable_df=petab.get_observable_df(
+            pd.DataFrame(
+                {
+                    petab.OBSERVABLE_ID: ["obs1", "obs2"],
+                    petab.OBSERVABLE_FORMULA: [
+                        "piecewise(p1, x1 > 0 && !(x1 > 2), p2)",
+                        "inf",
+                    ],
+                    petab.NOISE_FORMULA: [1, 1],
+                }
+            )
+        ),
+    )
+
+    sbml_importer = import_model_sbml(
+        petab_problem=petab_problem,
+        compile=False,
+        output_dir=tempdir,
+    )
+    observables = {
+        str(obs_id): obs["value"]
+        for obs_id, obs in sbml_importer._symbols[SymbolId.OBSERVABLE].items()
+    }
+    (x1,) = sbml_importer._symbols[SymbolId.SPECIES]
+    p1, p2 = sp.symbols("p1 p2", real=True)
+    assert observables["obs1"].free_symbols == {x1, p1, p2}
+    for x1_val, expected in [(-1, p2), (1, p1), (3, p2)]:
+        assert observables["obs1"].subs(x1, x1_val) == expected
+    assert observables["obs2"] == sp.oo
