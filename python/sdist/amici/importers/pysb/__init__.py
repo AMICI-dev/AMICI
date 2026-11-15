@@ -421,12 +421,13 @@ def ode_model_from_pysb_importer(
 
     _process_pysb_species(model, ode, renames)
     _process_pysb_parameters(model, ode, fixed_parameters, renames)
+    if compute_conservation_laws and _events:
+        logger.warning(
+            "Conservation laws are currently not supported for models "
+            "with events, and will be turned off."
+        )
+        compute_conservation_laws = False
     if compute_conservation_laws:
-        if _events:
-            raise NotImplementedError(
-                "Conservation law computation is not supported for models "
-                "with events. Use `compute_conservation_laws=False`."
-            )
         _process_pysb_conservation_laws(model, ode, all_names)
     _process_pysb_observables(
         model,
