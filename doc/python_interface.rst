@@ -189,6 +189,54 @@ SED-ML import
 We also plan to implement support for the
 `Simulation Experiment Description Markup Language (SED-ML) <https://sed-ml.org/>`_.
 
+.. _amici_model_reuse:
+
+Reusing imported models
+=======================
+
+Model import can take a long time for larger models. Therefore, AMICI can
+reuse a previously imported model if it was imported from the same inputs:
+
+* :class:`amici.importers.petab.PetabImporter` (PEtab v2) and
+  :func:`amici.importers.petab.v1.import_petab_problem` with
+  ``compile_=None`` (PEtab v1) reuse previously imported models by default.
+  Use ``force_import=True`` or ``compile_=True``, respectively, to always
+  import the model.
+* :meth:`amici.importers.sbml.SbmlImporter.sbml2amici`,
+  :func:`amici.importers.pysb.pysb2amici`, and the respective JAX functions
+  reuse previously imported models if ``skip_if_unchanged=True`` is passed.
+
+For this purpose, AMICI stores a hash of the import inputs in the model
+directory. A model is only reused if the previous import completed and the
+hashes match. The hash covers
+
+* the model, i.e., the SBML document after any modifications by the PEtab
+  importers, or the PySB model as exported by
+  ``pysb.export.export(model, "pysb_flat")``,
+* the import options, e.g., fixed parameters and the observation model,
+  including the contents of files they refer to (e.g., PEtab SciML array
+  data),
+* the AMICI version and the AMICI source code relevant for model import,
+  the Python version, and the versions of SymPy, libSBML, sbmlmath, and PySB,
+* environment variables affecting model import (see below),
+* for SUNDIALS models, environment variables affecting compilation
+  (e.g., ``CXX``, ``CXXFLAGS``, ``AMICI_CXXFLAGS``,
+  ``ENABLE_AMICI_DEBUGGING``) and the size and modification time of the
+  AMICI C++ library.
+
+Models are never reused if any import option can't be represented reliably,
+e.g., a custom ``simplify`` function or noise distribution.
+
+Changes that are not detected include changes to
+
+* Python modules imported by a PySB model that are not reflected in the
+  exported model,
+* external tools, such as BioNetGen, the compiler, or CMake,
+* system libraries, such as BLAS.
+
+In such cases, or if in doubt, set the environment variable
+``AMICI_NO_MODEL_REUSE=1`` to always import models.
+
 Environment variables affecting model import
 ============================================
 
@@ -217,6 +265,10 @@ variables control various behaviours during model import and compilation:
      - Compute conservation laws for non-constant species. SBML-import only.
        See :py:meth:`amici.sbml_import.SbmlImporter.sbml2amici`.
      -
+   * - ``AMICI_NO_MODEL_REUSE``
+     - Never reuse previously imported models, see
+       :ref:`amici_model_reuse`.
+     - ``AMICI_NO_MODEL_REUSE=1``
 
 
 Miscellaneous
