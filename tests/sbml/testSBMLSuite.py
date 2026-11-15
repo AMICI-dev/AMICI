@@ -23,7 +23,6 @@ import amici
 import diffrax
 import jax
 import jax.numpy as jnp
-import libsbml
 import numpy as np
 import optimistix
 import pandas as pd
@@ -100,12 +99,9 @@ def _fresh_model_and_solver(
     return model, solver, atol, rtol
 
 
-def _check_simulation_status(rdata, test_id: str) -> None:
-    """Skip/fail consistently for a known-bad vs. a genuinely unexpected
-    base simulation failure."""
+def _check_simulation_status(rdata) -> None:
+    """Fail on an unsuccessful base simulation."""
     if rdata["status"] != AMICI_SUCCESS:
-        if test_id in ("00748", "00374", "00369"):
-            pytest.skip("Simulation Failed expectedly")
         raise RuntimeError("Simulation failed unexpectedly")
 
 
@@ -124,7 +120,7 @@ def test_sbml_testsuite_case(test_id, compiled_case, result_path):
 
     # simulate model
     rdata = run_simulation(model, solver)
-    _check_simulation_status(rdata, test_id)
+    _check_simulation_status(rdata)
 
     # verify
     simulated = verify_results(
@@ -135,67 +131,44 @@ def test_sbml_testsuite_case(test_id, compiled_case, result_path):
     write_result_file(simulated, test_id, result_path)
 
 
-# FIXME: Skip list - to be investigated further
-#  test_id -> adjoint_only (whether forward is unaffected)
-_OTHER_KNOWN_SENSITIVITY_CHECK_ISSUES = {
-    "00048": True,
-    "00066": True,
-    "00208": True,
-    "00589": True,
-    "00879": False,
-    "01530": False,
-    "01104": True,
-    "01107": True,
-    "01148": True,
-    # Adjoint sensitivities & events. To revisit later.
-    "00348": True,
-    "00350": True,
-    "00354": True,
-    "00368": True,
-    "00369": True,
-    "00373": True,
-    "00376": True,
-    "00379": True,
-    "00380": True,
-    "00396": True,
-    "00744": True,
-    "00753": True,
-    "00885": True,
-    "01106": True,
+# Known sensitivity check failures: test_id -> (affected checks, reason)
+_KNOWN_SENSITIVITY_CHECK_ISSUES = {
+    "01530": (
+        {"forward", "adjoint"},
+        "The free parameters are unused and nominally at their lower "
+        "bound 0, so fiddy can't evaluate any direction.",
+    ),
 }
 
 
 def _sensitivity_preflight_checks(
-    model: Model, sbml_importer, test_id: str, uses_adjoint: bool
+    model: Model, sbml_importer, test_id: str, check: str
 ):
-    """Skip if a sensitivity check wouldn't be meaningful/known-correct for
-    this SBML feature.
+    """Skip if a sensitivity check wouldn't be meaningful for this case.
 
-    :param uses_adjoint: Whether the caller's check involves adjoint
-        sensitivities.
+    :param check: The calling check: "forward", "adjoint", or "consistency".
     :return: The current libsbml model.
     """
     if not model.get_free_parameter_ids():
         pytest.skip("No free parameters to differentiate w.r.t.")
-
-    sbml_model = sbml_importer.sbml_model
-    if uses_adjoint and any(
-        rule.getTypeCode() == libsbml.SBML_ALGEBRAIC_RULE
-        for rule in sbml_model.getListOfRules()
-    ):
-        pytest.skip(
-            "Adjoint sensitivities for AlgebraicRule models are known to "
-            "fail -- see https://github.com/AMICI-dev/AMICI/issues/3320"
-        )
-    if uses_adjoint and model.nx_rdata == 0:
-        pytest.skip(
-            "Adjoint sensitivities for zero-state models are known to crash."
-        )
-    if test_id in _OTHER_KNOWN_SENSITIVITY_CHECK_ISSUES:
-        adjoint_only = _OTHER_KNOWN_SENSITIVITY_CHECK_ISSUES[test_id]
-        if uses_adjoint or not adjoint_only:
-            pytest.skip("Known sensitivity-check issue, not yet investigated.")
-    return sbml_model
+    if not np.all(np.isfinite(model.get_free_parameters())):
+        pytest.skip("Non-finite nominal parameter values.")
+    if check == "forward":
+        if model.nx_rdata == 0 and model.ny == 0:
+            pytest.skip("No states or observables.")
+    else:
+        if model.ny == 0:
+            pytest.skip("No observables, the likelihood is constant.")
+        if model.nx_rdata == 0:
+            pytest.skip(
+                "Adjoint sensitivity analysis fails for models without "
+                "state variables (#3546)."
+            )
+    if test_id in _KNOWN_SENSITIVITY_CHECK_ISSUES:
+        checks, reason = _KNOWN_SENSITIVITY_CHECK_ISSUES[test_id]
+        if check in checks:
+            pytest.skip(f"Known sensitivity check issue: {reason}")
+    return sbml_importer.sbml_model
 
 
 def test_sbml_testsuite_case_sensitivity_forward(test_id, compiled_case):
@@ -205,13 +178,13 @@ def test_sbml_testsuite_case_sensitivity_forward(test_id, compiled_case):
         model_module, settings, test_id
     )
     sbml_model = _sensitivity_preflight_checks(
-        model, sbml_importer, test_id, uses_adjoint=False
+        model, sbml_importer, test_id, check="forward"
     )
 
-    # Test whether base-simulation succeeds. If not, we can skip fail right
+    # Test whether base-simulation succeeds. If not, we can fail right
     # away with a clearer message than the FD check's own failure would give.
     rdata = run_simulation(model, solver)
-    _check_simulation_status(rdata, test_id)
+    _check_simulation_status(rdata)
 
     def check(sensi_solver, point, bounds, retried):
         sensi_solver.set_sensitivity_method(SensitivityMethod.forward)
@@ -221,11 +194,6 @@ def test_sbml_testsuite_case_sensitivity_forward(test_id, compiled_case):
             derivative_variables=["x", "x0", "y", "sigmay"],
         )
         expected = derivative(point)
-        # A bare parameter-only model has nothing for `x`/`x0`/`y`/`sigmay` to
-        # report -- `derivative`/`function` then both return an empty
-        # dict
-        if not expected:
-            return None
         result = check_jacobian(function, point, expected, bounds=bounds)
         result.assert_success(always_print=True)
         _assert_check_confirms_something(result, has_events)
@@ -258,12 +226,12 @@ def test_sbml_testsuite_case_sensitivity_adjoint(test_id, compiled_case):
         model_module, settings, test_id
     )
     sbml_model = _sensitivity_preflight_checks(
-        model, sbml_importer, test_id, uses_adjoint=True
+        model, sbml_importer, test_id, check="adjoint"
     )
 
     # generate synthetic measurements
     rdata = run_simulation(model, solver)
-    _check_simulation_status(rdata, test_id)
+    _check_simulation_status(rdata)
     # `amici.ExpData(rdata, sigma_y, sigma_z, seed)`
     edata = ExpData(rdata, 1.0, 1.0, 42)
 
@@ -292,21 +260,21 @@ def test_sbml_testsuite_case_sensitivity_adjoint(test_id, compiled_case):
         # result (confirmed on case 00945: keeping this fixed tight gives
         # ~0.1% error at the same state/backward tolerance that gives ~7%
         # error if quadrature tolerance also scales alongside it). Only if
-        # that fails outright (NaN) set the quadrature
+        # that fails outright (failure or NaN) set the quadrature
         # tolerance to the already-escalated backward tolerance -- some
         # cases' backward integration genuinely cannot converge *at all*
         # without that (confirmed on cases 00754/00755/00756).
-        function, expected = _run(1e-16, 1e-15)
-        if expected and np.any(np.isnan(expected["llh"])):
+        try:
+            function, expected = _run(1e-16, 1e-15)
+        except FunctionEvaluationError:
+            expected = None
+        if expected is None or np.any(np.isnan(expected["llh"])):
             function, expected = _run(
                 sensi_solver.get_absolute_tolerance_b(),
                 sensi_solver.get_relative_tolerance_b(),
             )
-        if not expected:
-            return None
-        # Raise on simulation failure (NaN)
         if np.any(np.isnan(expected["llh"])):
-            raise FunctionEvaluationError("Simulation failed.")
+            raise FunctionEvaluationError("Gradient is NaN.")
         result = check_gradient(
             function, point, expected["llh"], bounds=bounds
         )
@@ -331,11 +299,11 @@ def test_sbml_testsuite_case_sensitivity_consistency(test_id, compiled_case):
         model_module, settings, test_id
     )
     sbml_model = _sensitivity_preflight_checks(
-        model, sbml_importer, test_id, uses_adjoint=True
+        model, sbml_importer, test_id, check="consistency"
     )
 
     rdata = run_simulation(model, solver)
-    _check_simulation_status(rdata, test_id)
+    _check_simulation_status(rdata)
     edata = ExpData(rdata, 1.0, 1.0, 42)
 
     def check(sensi_solver, point, bounds, retried):
@@ -348,8 +316,6 @@ def test_sbml_testsuite_case_sensitivity_consistency(test_id, compiled_case):
             derivative_variables=["llh"],
         )
         fsa_expected = fsa_derivative(point)
-        if not fsa_expected:
-            return None
 
         # ASA
         asa_solver = model.create_solver()
@@ -368,6 +334,9 @@ def test_sbml_testsuite_case_sensitivity_consistency(test_id, compiled_case):
         )
         asa_solver.set_sensitivity_order(SensitivityOrder.first)
         asa_solver.set_sensitivity_method(SensitivityMethod.adjoint)
+        asa_solver.set_max_steps_backward_problem(
+            sensi_solver.get_max_steps_backward_problem()
+        )
 
         def _run_asa(atol_quad, rtol_quad):
             asa_solver.set_absolute_tolerance_quadratures(atol_quad)
@@ -382,17 +351,18 @@ def test_sbml_testsuite_case_sensitivity_consistency(test_id, compiled_case):
 
         # Same two-tier quadrature-tolerance strategy (tightest first,
         # falling back to matching the already-escalated backward
-        # tolerance only if that's NaN) as
+        # tolerance only if that fails) as
         # `test_sbml_testsuite_case_sensitivity_adjoint`'s `check` -- see
         # its comment for why.
-        asa_expected = _run_asa(1e-16, 1e-15)
-        if asa_expected and np.any(np.isnan(asa_expected["llh"])):
+        try:
+            asa_expected = _run_asa(1e-16, 1e-15)
+        except FunctionEvaluationError:
+            asa_expected = None
+        if asa_expected is None or np.any(np.isnan(asa_expected["llh"])):
             asa_expected = _run_asa(
                 asa_solver.get_absolute_tolerance_b(),
                 asa_solver.get_relative_tolerance_b(),
             )
-        if not asa_expected:
-            return None
 
         fsa_sllh = fsa_expected["llh"]
         asa_sllh = asa_expected["llh"]
@@ -445,13 +415,23 @@ def compile_model(
     return model_module, sbml_importer
 
 
-# Case 01395-specific: `v1_h`..`v15_h` are Hill coefficients with nominal
-# value exactly 1, acting on species (`p1`, `p2`, ...) that start at
-# exactly 0. The forward-sensitivity RHS (not the state RHS itself)
-# contains a `species**(h-1)` term; reducing `h` even infinitesimally
-# below 1 makes that exponent negative, and `0**(negative)` is `+inf`.
-_HILL_EXPONENT_LOWER_BOUND_OVERRIDES = {
-    "01395": tuple(f"v{i}_h" for i in range(1, 16)),
+# Case-specific bounds overriding `_derive_generic_bounds`:
+#  test_id -> {parameter_id: (lower, upper)}, as factors of the nominal
+#  value (assumed positive); `None` keeps the generic bound.
+_BOUND_OVERRIDES = {
+    # `v1_h`..`v15_h` are Hill coefficients with nominal value exactly 1,
+    # acting on species (`p1`, `p2`, ...) that start at exactly 0. The
+    # forward-sensitivity RHS (not the state RHS itself) contains a
+    # `species**(h-1)` term; reducing `h` even infinitesimally below 1
+    # makes that exponent negative, and `0**(negative)` is `+inf`.
+    "01395": {f"v{i}_h": (1.0, None) for i in range(1, 16)},
+    # The species grows like `exp(c * t**2)` with
+    # `c ~ extentconv**3 / timeconv**6`: overflow at nominal * (0.5, 2).
+    "01148": {
+        f"{prefix}{name}": (0.9, 1.1)
+        for prefix in ("", "sub1__", "sub1__sub1__")
+        for name in ("timeconv", "extentconv")
+    },
 }
 
 
@@ -470,7 +450,7 @@ def _derive_generic_bounds(
 
     :param point: Nominal free-parameter values.
     :param param_ids: `point`'s parameter IDs, same order -- only used to
-        apply `_HILL_EXPONENT_LOWER_BOUND_OVERRIDES`.
+        apply `_BOUND_OVERRIDES`.
     :param test_id: The SBML semantic test suite case ID -- ditto.
     :return: A `(lower, upper)` bounds tuple, same shape as `point`.
     """
@@ -485,9 +465,14 @@ def _derive_generic_bounds(
     upper[negative] = np.minimum(point[negative] * 1e-6, -1e-9)
     lower[zero] = 0.0
     upper[zero] = 1000.0
-    for param_id in _HILL_EXPONENT_LOWER_BOUND_OVERRIDES.get(test_id, ()):
+    for param_id, (lower_factor, upper_factor) in _BOUND_OVERRIDES.get(
+        test_id, {}
+    ).items():
         idx = param_ids.index(param_id)
-        lower[idx] = point[idx]
+        if lower_factor is not None:
+            lower[idx] = point[idx] * lower_factor
+        if upper_factor is not None:
+            upper[idx] = point[idx] * upper_factor
     return lower, upper
 
 
@@ -557,13 +542,13 @@ def _run_sensitivity_check(
     test_id: str,
     has_events: bool,
     check: Callable[
-        [Solver, np.ndarray, tuple[np.ndarray, np.ndarray]], object
+        [Solver, np.ndarray, tuple[np.ndarray, np.ndarray], bool], None
     ],
     jitter_seed: int | None = None,
 ) -> None:
     """Retry `check` (a sensitivity FD check via fiddy)
-    at looser solver tolerance (event-triggered models only) if the
-    simulation itself fails to produce a finite value.
+    at looser solver tolerance (event-triggered models and DAEs only) if
+    the simulation itself fails.
 
     :param model: The AMICI model.
     :param settings: This case's parsed `{test_id}-settings.txt`.
@@ -572,12 +557,10 @@ def _run_sensitivity_check(
         tolerance-retry loop, together with the model being a DAE;
         other models get exactly one attempt.
     :param check: Called as `check(sensi_solver, point, bounds, retried)`
-        (`retried` is `True` once a looser-than-default tolerance was
-        needed to get this far) -- responsible for configuring
+        (`retried` is `True` once a looser tolerance than the first attempted
+        one was needed to get this far) -- responsible for configuring
         `sensi_solver`'s sensitivity method, running the check, and
-        asserting success itself. Returns `None` if there's nothing to check
-        for this model -- in which case `_run_sensitivity_check` returns
-        immediately without retrying; any other return value is ignored.
+        asserting success itself.
     :param jitter_seed: If given, `point` is perturbed by fixed-seed 5%
         relative Gaussian noise (then clipped back into `bounds`) before
         checking -- the same "avoid small gradients at nominal value"
@@ -590,12 +573,16 @@ def _run_sensitivity_check(
     # all -- confirmed on cases 00026/00041/00074/00745/00746/00747/
     # 00789/00845/00945 (all fail with CVodeB's error-test repeatedly
     # failing/`|h| = hmin` up to 1e4x, several needing up to 1e8x).
-    # IDAS may fail at the initial tolerances close to machine precision
-    # (e.g. 00039).
+    # IDAS fails at tolerances close to machine precision (forward
+    # sensitivities silently become NaN, backward integration fails), but
+    # always succeeded at 100x in the semantic test suite.
     is_dae = any(i == 0.0 for i in model.get_id_list())
-    tolerance_multipliers = (
-        (1, 10, 100, 1e4, 1e6, 1e8) if has_events or is_dae else (1,)
-    )
+    if is_dae:
+        tolerance_multipliers = (100, 1e4, 1e6, 1e8)
+    elif has_events:
+        tolerance_multipliers = (1, 10, 100, 1e4, 1e6, 1e8)
+    else:
+        tolerance_multipliers = (1,)
     param_ids = model.get_free_parameter_ids()
     point = np.asarray(
         [
@@ -629,10 +616,17 @@ def _run_sensitivity_check(
                 sensi_solver.get_relative_tolerance() * multiplier
             )
         sensi_solver.set_sensitivity_order(SensitivityOrder.first)
+        # The default (100 * forward max steps) lets failing backward
+        # integrations run for minutes.
+        sensi_solver.set_max_steps_backward_problem(int(1e6))
 
         try:
-            if check(sensi_solver, point, bounds, multiplier != 1) is None:
-                return
+            check(
+                sensi_solver,
+                point,
+                bounds,
+                multiplier != tolerance_multipliers[0],
+            )
         except FunctionEvaluationError as err:
             error = err
             continue
