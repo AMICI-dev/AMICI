@@ -248,6 +248,43 @@ environment variables:
      - ``AMICI_TRY_ENABLE_HDF5=OFF``
 
 
+.. _amici_python_install_ccache:
+
+Compiler caching with ccache
+----------------------------
+
+When the same models are compiled repeatedly,
+e.g., when re-running test suites or after re-installing AMICI,
+`ccache <https://ccache.dev>`_ can reuse previously compiled object files.
+AMICI and model builds use CMake,
+which picks up the compiler launcher from the environment:
+
+.. code-block:: bash
+
+   export CMAKE_C_COMPILER_LAUNCHER=ccache
+   export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+
+This only takes effect for newly configured build directories.
+
+Model code is generated deterministically,
+so re-importing an unchanged model with the same model name
+and the same AMICI version results in cache hits.
+However, by default, ccache includes absolute paths in its lookup.
+If models are built in varying directories
+(e.g., temporary directories, or different model output directories),
+set ccache's ``base_dir`` to a directory containing all of them,
+and disable hashing of the working directory
+(relevant for debug builds, e.g., with ``ENABLE_AMICI_DEBUGGING``):
+
+.. code-block:: bash
+
+   export CCACHE_BASEDIR=/tmp  # or any directory containing the model directories
+   export CCACHE_NOHASHDIR=1
+
+Paths in debug information will then refer to the directory of the build
+that populated the cache.
+
+
 Installation under conda
 ------------------------
 

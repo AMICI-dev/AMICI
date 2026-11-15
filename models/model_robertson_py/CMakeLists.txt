@@ -59,8 +59,11 @@ endif()
 
 # coverage options
 if($ENV{ENABLE_GCOV_COVERAGE})
-  string(APPEND CMAKE_CXX_FLAGS_DEBUG " --coverage")
-  string(APPEND CMAKE_EXE_LINKER_FLAGS_DEBUG " --coverage")
+  # Only link with --coverage, for the instrumented amici library.
+  # The model sources are not instrumented: their coverage is not collected,
+  # and instrumentation would prevent compiler cache (ccache) hits across
+  # build directories.
+  add_link_options($<$<CONFIG:Debug>:--coverage>)
 endif()
 
 set(MODEL_DIR ${CMAKE_CURRENT_LIST_DIR})
