@@ -1185,6 +1185,16 @@ def test_fsa_settings_after_simulation_without_states(tmp_path):
     assert rdata.status == amici.sim.sundials.AMICI_SUCCESS
     np.testing.assert_allclose(rdata.sy[:, :, 0], [[3.0, 2.0]] * 2)
 
+    # with measurements (#3557)
+    edata = ExpData(rdata, 1.0, 1.0, 42)
+    rdata = run_simulation(model, solver, edata)
+    assert rdata.status == amici.sim.sundials.AMICI_SUCCESS
+    # normal noise with sigma = 1
+    res = np.asarray(edata.get_measurements()).reshape(rdata.y.shape) - rdata.y
+    expected_sllh = np.einsum("ty,tpy->p", res, rdata.sy)
+    assert np.all(expected_sllh != 0)
+    np.testing.assert_allclose(rdata.sllh, expected_sllh)
+
 
 def test_get_initial_state_sensitivities(tmp_path):
     """Test computed initial state sensitivities for multiple parameters."""
