@@ -1315,6 +1315,9 @@ class DEModel:
 
         self._generate_symbol("x")
 
+        for event in self._events:
+            event.check_assignment_targets(self.sym("x"))
+
     def parse_events(self) -> None:
         """
         This function checks the right-hand side for roots of Heaviside

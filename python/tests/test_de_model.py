@@ -417,3 +417,31 @@ def test_has_implicit_event_assignments():
     for trigger in ("time >= x", "x > 0.5"):
         model = _build_event_model(trigger)
         assert model.has_implicit_event_assignments(), trigger
+
+
+def test_event_assignment_to_non_state():
+    """Event assignments to entities that aren't state variables are
+    rejected instead of being silently ignored."""
+    x1, x2, k = sp.symbols("x1 x2 k")
+    x = sp.Matrix([x1, x2])
+    event = Event(
+        symbol=sp.Symbol("e1"),
+        name="e1",
+        value=amici_time_symbol - 1,
+        assignments={x1: x2 + 1},
+        use_values_from_trigger_time=False,
+    )
+    assert event.assignment_targets == {x1}
+    assert sp.simplify(
+        event.get_state_update(x, x) - sp.Matrix([x2 + 1 - x1, 0])
+    ).is_zero_matrix
+
+    event = Event(
+        symbol=sp.Symbol("e2"),
+        name="e2",
+        value=amici_time_symbol - 1,
+        assignments={x1: 1, k: 2},
+        use_values_from_trigger_time=False,
+    )
+    with pytest.raises(ValueError, match=r"\['k'\].*not \(solver\) state"):
+        event.get_state_update(x, x)
