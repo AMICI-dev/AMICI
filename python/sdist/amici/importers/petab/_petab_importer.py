@@ -72,6 +72,33 @@ def _all_placeholder_parameters(observables: list[v2.Observable]) -> set[str]:
     }
 
 
+def _has_bare_noise_placeholder(
+    petab_problem: v2.Problem, observable: v2.Observable
+) -> bool:
+    """Check whether the noise formula is just the single noise placeholder.
+
+    Only then can numeric noise parameter overrides be used as sigmas
+    directly. For PySB models, this resolves the ``{observable_id}_sigma``
+    expression introduced by :func:`_add_observation_model_pysb`.
+    """
+    if len(observable.noise_placeholders) != 1:
+        return False
+
+    formula = observable.noise_formula
+    if petab_problem.model.type_id == MODEL_TYPE_PYSB and isinstance(
+        formula, sp.Symbol
+    ):
+        expressions = petab_problem.model.model.expressions
+        if formula.name == f"{observable.id}_sigma" and (
+            sigma_expr := expressions.get(formula.name)
+        ):
+            formula = sigma_expr.expr
+
+    return isinstance(formula, sp.Symbol) and formula.name == str(
+        observable.noise_placeholders[0]
+    )
+
+
 def _substitute_jax_placeholder_parameters(
     observation_model: list[MeasurementChannel],
     observables: list[v2.Observable],
@@ -571,7 +598,9 @@ class PetabImporter:
         #    for all measurements for a given experiment
         #  * noise placeholders if there is only a single placeholder which
         #    is replaced by literals for all measurements for a given
-        #    experiment
+        #    experiment, and the noise formula is just that placeholder
+        #    (the literals are then passed as sigmas via ExpData)
+        id_to_observable = {o.id: o for o in self.petab_problem.observables}
         for experiment in self.petab_problem.experiments:
             measurements = self.petab_problem.get_measurements_for_experiment(
                 experiment
@@ -598,15 +627,20 @@ class PetabImporter:
                     )
             for observable_id, overrides in noise_overrides.items():
                 if len(overrides) > 1:
-                    if len(next(iter(overrides))) == 1 and all(
-                        isinstance(p[0], numbers.Number) for p in overrides
+                    if all(
+                        len(p) == 1 and isinstance(p[0], numbers.Number)
+                        for p in overrides
+                    ) and _has_bare_noise_placeholder(
+                        self.petab_problem, id_to_observable[observable_id]
                     ):
                         continue
 
                     raise NotImplementedError(
                         f"Observable {observable_id} has multiple "
                         "timepoint-specific mappings for noise parameters. "
-                        "This is not supported by AMICI."
+                        "This is not supported by AMICI. "
+                        "Use `flatten_timepoint_specific_output_overrides` "
+                        "on the PEtab problem before importing into amici."
                     )
                 if len(overrides) == 1 and next(iter(overrides)) == ():
                     # this is a single literal, which is fine
