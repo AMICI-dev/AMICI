@@ -120,6 +120,17 @@ class ExperimentManager:
         self._petab_id_to_obs: dict[str, v2.Observable] = {
             obs.id: obs for obs in self._petab_problem.observables
         }
+        # IDs of observables for which numeric noise parameter overrides can
+        #  be passed as sigmas directly
+        from amici.importers.petab._petab_importer import (
+            _has_bare_noise_placeholder,
+        )
+
+        self._obs_ids_bare_noise_placeholder: set[str] = {
+            obs.id
+            for obs in self._petab_problem.observables
+            if _has_bare_noise_placeholder(self._petab_problem, obs)
+        }
         self._id_to_experiment: dict[str, v2.Experiment] = {
             exp.id: exp for exp in self._petab_problem.experiments
         }
@@ -384,8 +395,12 @@ class ExperimentManager:
                 y[time_ix_for_obs_ix[observable_ix], observable_ix] = (
                     m.measurement
                 )
+                # A numeric override can be passed as sigma directly only if
+                #  the noise formula is just the placeholder. Otherwise, it
+                #  is handled as a parameter override in `apply_parameters`.
                 if (
-                    len(m.noise_parameters) == 1
+                    m.observable_id in self._obs_ids_bare_noise_placeholder
+                    and len(m.noise_parameters) == 1
                     and m.noise_parameters[0].is_Number
                 ):
                     sigma_y[
