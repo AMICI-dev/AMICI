@@ -5,13 +5,14 @@ from __future__ import annotations
 import logging
 import numbers
 import warnings
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 
 import numpy as np
 import pandas as pd
 import petab.v1 as petab
 from petab.v1.C import (
     MEASUREMENT,
+    NOISE_FORMULA,
     NOISE_PARAMETERS,
     OBSERVABLE_ID,
     PREEQUILIBRATION_CONDITION_ID,
@@ -392,6 +393,9 @@ def create_edata_for_condition(
         df_for_condition=measurement_df,
         timepoints_w_reps=timepoints_w_reps,
         observable_ids=observable_ids,
+        numeric_sigma_observable_ids=_get_bare_noise_placeholder_observables(
+            petab_problem.observable_df
+        ),
     )
     edata.set_measurements(y.flatten())
     edata.set_noise_scales(sigma_y.flatten())
@@ -500,6 +504,7 @@ def _get_measurements_and_sigmas(
     df_for_condition: pd.DataFrame,
     timepoints_w_reps: Sequence[numbers.Number],
     observable_ids: Sequence[str],
+    numeric_sigma_observable_ids: Collection[str],
 ) -> tuple[np.array, np.array]:
     """
     Get measurements and sigmas
@@ -515,6 +520,11 @@ def _get_measurements_and_sigmas(
 
     :param observable_ids:
         List of observable IDs for mapping IDs to indices.
+
+    :param numeric_sigma_observable_ids:
+        IDs of observables for which numeric noise parameters are used as
+        sigmas directly. For all other observables, numeric noise parameters
+        are handled by the parameter mapping.
 
     :return:
         arrays for measurement and sigmas
@@ -539,7 +549,8 @@ def _get_measurements_and_sigmas(
         # iterate over measurements
         for _, measurement in df_for_time.iterrows():
             # extract observable index
-            observable_ix = observable_ids.index(measurement[OBSERVABLE_ID])
+            observable_id = measurement[OBSERVABLE_ID]
+            observable_ix = observable_ids.index(observable_id)
 
             # update time index for observable
             if observable_ix in time_ix_for_obs_ix:
@@ -551,10 +562,29 @@ def _get_measurements_and_sigmas(
             y[time_ix_for_obs_ix[observable_ix], observable_ix] = measurement[
                 MEASUREMENT
             ]
-            if isinstance(
-                measurement.get(NOISE_PARAMETERS, None), numbers.Number
+            noise_parameters = measurement.get(NOISE_PARAMETERS, None)
+            if observable_id in numeric_sigma_observable_ids and isinstance(
+                noise_parameters, numbers.Number
             ):
                 sigma_y[time_ix_for_obs_ix[observable_ix], observable_ix] = (
-                    measurement[NOISE_PARAMETERS]
+                    noise_parameters
                 )
     return y, sigma_y
+
+
+def _get_bare_noise_placeholder_observables(
+    observable_df: pd.DataFrame | None,
+) -> set[str]:
+    """Get IDs of observables whose noise formula is just the placeholder.
+
+    Only for those, numeric noise parameters can be used as sigmas directly.
+    """
+    if observable_df is None or NOISE_FORMULA not in observable_df:
+        return set()
+
+    noise_formulas = observable_df[NOISE_FORMULA]
+    return {
+        observable_id
+        for observable_id, noise_formula in noise_formulas.items()
+        if str(noise_formula).strip() == f"noiseParameter1_{observable_id}"
+    }
