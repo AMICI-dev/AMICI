@@ -82,8 +82,7 @@ jobs:
           source ./venv/bin/activate \
             && python3 -m pip uninstall -y petab \
             && python3 -m pip install --group python/sdist/pyproject.toml:libpetab \
-            && python3 -m pip install --group python/sdist/pyproject.toml:pysb-dev \
-            && python3 -m pip install sympy>=1.12.1
+            && python3 -m pip install --group python/sdist/pyproject.toml:pysb-dev
 
 
       - name: Run PEtab-related unit tests
@@ -179,8 +178,7 @@ jobs:
           source ./venv/bin/activate \
             && python3 -m pip uninstall -y petab \
             && python3 -m pip install --group python/sdist/pyproject.toml:libpetab \
-            && python3 -m pip install --group python/sdist/pyproject.toml:pysb-dev \
-            && python3 -m pip install sympy>=1.12.1
+            && python3 -m pip install --group python/sdist/pyproject.toml:pysb-dev
 
       # run test models
       - name: Run PEtab test suite

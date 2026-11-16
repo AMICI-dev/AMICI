@@ -81,7 +81,6 @@ jobs:
         python3 -m pip install --upgrade pip \
         &&  python3 -m pip uninstall -y petab \
         &&  python3 -m pip install --group python/sdist/pyproject.toml:libpetab \
-        &&  python3 -m pip install -U sympy \
         &&  python3 -m pip install --group python/sdist/pyproject.toml:fiddy
 
     - name: Download benchmark collection
@@ -170,7 +169,6 @@ jobs:
         python3 -m pip install --upgrade pip \
         &&  python3 -m pip uninstall -y petab \
         &&  python3 -m pip install --group python/sdist/pyproject.toml:libpetab \
-        &&  python3 -m pip install -U sympy \
         &&  python3 -m pip install --group python/sdist/pyproject.toml:fiddy
 
     - run: pip uninstall -y diffrax && pip install --group python/sdist/pyproject.toml:diffrax-dev # TODO FIXME https://github.com/patrick-kidger/diffrax/issues/654 + event dirs
