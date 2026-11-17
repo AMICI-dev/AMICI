@@ -186,7 +186,8 @@ def test_species_named_t(tempdir):
     # distinct state -- not merged away into the time argument `t`
     xdot = _generated_source(tempdir, "xdot.cpp")
     assert "amici_t_ = x[0];" in xdot
-    assert "-1.0/10.0*amici_t_" in xdot
+    # sympy>=1.15 parenthesizes the rational coefficient
+    assert "-1.0/10.0*amici_t_" in xdot or "-(1.0/10.0)*amici_t_" in xdot
 
 
 @skip_on_valgrind

@@ -799,8 +799,8 @@ class Event(ModelQuantity):
             # `solve` will solve, e.g., sin(t), but will only return [0, pi],
             #  so we better skip any periodic expressions here
             # Min/Max (And/Or-combined) triggers: `sympy.solve` raises
-            # NotImplementedError for most of them, and returns
-            # Heaviside-based expressions for the others
+            # NotImplementedError for most of them (sympy<1.15), or returns
+            # Heaviside- or Piecewise-based expressions
             t_root = solve_minmax_trigger_for_t(
                 self.get_val(), amici_time_symbol
             )
@@ -808,10 +808,18 @@ class Event(ModelQuantity):
                 self._t_root = [t_root]
             else:
                 try:
-                    self._t_root = sp.solve(self.get_val(), amici_time_symbol)
+                    t_roots = sp.solve(self.get_val(), amici_time_symbol)
                 except NotImplementedError:
                     # the trigger can't be solved for `t`
-                    pass
+                    t_roots = []
+                # sympy>=1.15 returns, e.g., `Piecewise((5, p < 1/2),
+                #  (nan, True))` for `Max(t - 5, p - 1/2)`. A NaN trigger
+                #  time would be interpreted as "never triggers", but here,
+                #  it only means that there is no unique root (e.g., the
+                #  trigger is fulfilled independent of `t`). Leave those to
+                #  root-finding.
+                if not any(r.has(sp.nan) for r in t_roots):
+                    self._t_root = t_roots
 
         self._is_negative_event = is_negative_event
 
