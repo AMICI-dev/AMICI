@@ -22,6 +22,7 @@ def _check_adjoint_gradient(model):
     solver = model.create_solver()
     solver.set_relative_tolerance(1e-12)
     solver.set_absolute_tolerance(1e-14)
+    solver.set_relative_tolerance_quadratures(1e-10)
 
     rdata = run_simulation(model, solver)
     assert rdata.status == AMICI_SUCCESS
