@@ -7,7 +7,10 @@ from typing import SupportsFloat
 
 import sympy as sp
 
-from amici._symbolic.sympy_utils import solve_minmax_trigger_for_t
+from amici._symbolic.sympy_utils import (
+    is_exact_condition_root,
+    solve_minmax_trigger_for_t,
+)
 from amici.constants import SymbolId
 from amici.importers.utils import (
     RESERVED_SYMBOLS,
@@ -806,7 +809,14 @@ class Event(ModelQuantity):
             )
             if t_root is not None:
                 self._t_root = [t_root]
-            else:
+            # Triggers with exactly evaluated conditions
+            #  (`exact_condition_root`) that `solve_minmax_trigger_for_t`
+            #  can't handle are left to root-finding. `solve` doesn't
+            #  handle those `Piecewise` leaves reliably.
+            elif not any(
+                is_exact_condition_root(arg)
+                for arg in sp.preorder_traversal(self.get_val())
+            ):
                 try:
                     self._t_root = sp.solve(self.get_val(), amici_time_symbol)
                 except NotImplementedError:

@@ -27,6 +27,8 @@ __all__ = [
     "_parallel_applyfunc",
     "_piecewise_to_minmax",
     "solve_minmax_trigger_for_t",
+    "exact_condition_root",
+    "is_exact_condition_root",
 ]
 
 # Number of matrix elements below which the inter-process communication
@@ -380,6 +382,9 @@ def solve_minmax_trigger_for_t(expr: sp.Basic, t: sp.Symbol) -> sp.Expr | None:
     ``Min`` never reaches zero and the event never triggers, represented
     here by ``sp.oo``. For the negated expression, the gating leaves must be
     positive, since a zero gating leaf keeps it at zero.
+    Gating leaves of a ``Max`` are only supported if they are exactly
+    evaluated conditions (see :func:`exact_condition_root`): while any of
+    them holds, the ``Max`` stays positive and never crosses zero.
 
     A negated expression is solved by negating it first: AMICI tracks a
     persisted Heaviside trigger together with its negated counterpart, and
@@ -390,7 +395,7 @@ def solve_minmax_trigger_for_t(expr: sp.Basic, t: sp.Symbol) -> sp.Expr | None:
     Returns ``None`` whenever the trigger time cannot be established this
     way: a leaf that isn't affine in ``t``, leaves of mixed monotonicity,
     nested ``Min``-inside-``Max`` (or vice versa), or a ``Max`` with a
-    gating leaf.
+    gating leaf that is not an exactly evaluated condition.
 
     Examples:
 
@@ -408,6 +413,12 @@ def solve_minmax_trigger_for_t(expr: sp.Basic, t: sp.Symbol) -> sp.Expr | None:
     >>> # t >= a && p >= 0 (gating leaf)
     >>> solve_minmax_trigger_for_t(Min(t - a, p), t)
     Piecewise((a, p >= 0), (oo, True))
+    >>> # t >= a && p > 0 (exactly evaluated gating leaf)
+    >>> solve_minmax_trigger_for_t(Min(t - a, exact_condition_root(p > 0)), t)
+    Piecewise((a, p > 0), (oo, True))
+    >>> # t >= a || p > 0 (exactly evaluated gating leaf)
+    >>> solve_minmax_trigger_for_t(Max(t - a, exact_condition_root(p > 0)), t)
+    Piecewise((oo, p > 0), (a, True))
     >>> # t >= a && t <= b (mixed monotonicity) -> not supported
     >>> solve_minmax_trigger_for_t(Min(t - a, b - t), t) is None
     True
@@ -452,20 +463,72 @@ def solve_minmax_trigger_for_t(expr: sp.Basic, t: sp.Symbol) -> sp.Expr | None:
     if not roots:
         return None
 
-    if isinstance(expr, sp.Max) and gating:
+    if (
+        isinstance(expr, sp.Max)
+        and gating
+        and not all(is_exact_condition_root(g) for g in gating)
+    ):
         return None
 
     take_latest = isinstance(expr, sp.Min) == increasing
     crossing = sp.Max(*roots) if take_latest else sp.Min(*roots)
+    if isinstance(expr, sp.Max) and gating:
+        # true while any exactly evaluated condition holds: no crossing
+        gate = sp.Or(*(_gate_condition(g, strict=False) for g in gating))
+        return sp.Piecewise((sp.oo, gate), (crossing, True))
 
     if not gating:
         return crossing
-    gate = sp.And(*(g >= 0 for g in gating))
+    gate = sp.And(*(_gate_condition(g, strict=False) for g in gating))
     if gate == sp.false:
         # gated off for all parameter values: never triggers
         return None
     if negated:
         # Decided above on the non-strict condition, so that both twins are
         # classified the same.
-        gate = sp.And(*(g > 0 for g in gating))
+        gate = sp.And(*(_gate_condition(g, strict=True) for g in gating))
     return sp.Piecewise((crossing, gate), (sp.oo, True))
+
+
+def _gate_condition(leaf: sp.Expr, strict: bool) -> sp.Basic:
+    """Condition under which a ``t``-independent root leaf is positive.
+
+    For exactly evaluated conditions (see :func:`exact_condition_root`),
+    this is the condition itself.
+    """
+    if is_exact_condition_root(leaf):
+        return leaf.args[0].cond
+    return leaf > 0 if strict else leaf >= 0
+
+
+def exact_condition_root(condition: sp.Basic) -> sp.Piecewise:
+    """Root function for a condition that is evaluated exactly.
+
+    The root function is ``1`` if the condition holds and ``-1`` otherwise.
+    It is used for conditions that only change at events, and which don't
+    require root-finding.
+    Unlike a root function derived from the difference of the two sides of
+    a relational, it is never zero, and preserves strict and (in)equality
+    comparisons.
+
+    >>> from sympy import Eq
+    >>> from sympy.abc import p
+    >>> exact_condition_root(Eq(p, 0))
+    Piecewise((1.0, Eq(p, 0)), (-1.0, True))
+    """
+    return sp.Piecewise((sp.Float(1.0), condition), (sp.Float(-1.0), True))
+
+
+def is_exact_condition_root(expr: sp.Basic) -> bool:
+    """Check whether ``expr`` was created by :func:`exact_condition_root`."""
+    if not isinstance(expr, sp.Piecewise) or len(expr.args) != 2:
+        return False
+    (if_true, _), (if_false, otherwise) = expr.args
+    # (`Float(1.0) == 1` is False)
+    return (
+        if_true.is_Number
+        and if_false.is_Number
+        and float(if_true) == 1.0
+        and float(if_false) == -1.0
+        and otherwise == sp.true
+    )
