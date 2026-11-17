@@ -60,6 +60,10 @@ def test_run_amici_simulation_to_function_and_derivative(
     amici_solver = amici_model.create_solver()
 
     amici_solver.set_sensitivity_order(SensitivityOrder.first)
+    # At the default tolerances, the finite differences' own solver error
+    # exceeds the check tolerance.
+    amici_solver.set_relative_tolerance(1e-12)
+    amici_solver.set_absolute_tolerance(1e-15)
 
     parameter_ids = list(
         petab_problem.parameter_df[
