@@ -335,12 +335,12 @@ def compile_model(
 #  test_id -> {parameter_id: (lower, upper)}, as factors of the nominal
 #  value (assumed positive); `None` keeps the generic bound.
 _BOUND_OVERRIDES = {
-    # `v1_h`..`v15_h` are Hill coefficients with nominal value exactly 1,
-    # acting on species (`p1`, `p2`, ...) that start at exactly 0. The
-    # forward-sensitivity RHS (not the state RHS itself) contains a
+    # `v1_h`, `v3_h`, `v15_h` are Hill coefficients with nominal value
+    # exactly 1, acting on species (`p1`, `p2`, ...) that start at exactly
+    # 0. The forward-sensitivity RHS (not the state RHS itself) contains a
     # `species**(h-1)` term; reducing `h` even infinitesimally below 1
     # makes that exponent negative, and `0**(negative)` is `+inf`.
-    "01395": {f"v{i}_h": (1.0, None) for i in range(1, 16)},
+    "01395": {f"v{i}_h": (1.0, None) for i in (1, 3, 15)},
     # The species grows like `exp(c * t**2)` with
     # `c ~ extentconv**3 / timeconv**6`: overflow at nominal * (0.5, 2).
     "01148": {
