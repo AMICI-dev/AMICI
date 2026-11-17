@@ -163,6 +163,7 @@ class GradientCheckSettings:
 settings = defaultdict(GradientCheckSettings)
 # NOTE: Newton method fails badly with ASA for Blasi_CellSystems2016
 settings["Blasi_CellSystems2016"] = GradientCheckSettings(
+    rtol_sim=1e-13,
     ss_sensitivity_mode=SteadyStateSensitivityMode.integrationOnly,
 )
 settings["Brannmark_JBC2010"] = GradientCheckSettings(
@@ -374,6 +375,7 @@ def test_benchmark_gradient(benchmark_problem, scale, sensitivity_method):
     amici_solver = amici_model.create_solver()
     amici_solver.set_absolute_tolerance(cur_settings.atol_sim)
     amici_solver.set_relative_tolerance(cur_settings.rtol_sim)
+    amici_solver.set_relative_tolerance_quadratures(1e-10)
     amici_solver.set_max_steps(2 * 10**5)
     amici_solver.set_sensitivity_method(sensitivity_method)
     # TODO: we should probably test all sensitivity modes
