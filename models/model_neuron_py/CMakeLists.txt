@@ -87,7 +87,7 @@ dtaudx.cpp
 dxdotdp_explicit.cpp 
 dxdotdx_explicit.cpp 
 dydx.cpp 
-dzdx.cpp 
+dzdt.cpp 
 model_neuron_py.cpp 
 model_neuron_py.h 
 root.cpp 

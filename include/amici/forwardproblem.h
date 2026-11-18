@@ -161,6 +161,20 @@ struct Discontinuity {
      */
     AmiVector xdot_jump;
 
+    /**
+     * Event-time sensitivity (shape `nplist`, see `Model::fstau`). For
+     * secondary discontinuities, the one of the discontinuity that triggered
+     * them. Only populated for forward sensitivities.
+     */
+    std::vector<realtype> stau;
+
+    /**
+     * Total time derivative of the event likelihood along the trajectory at
+     * this discontinuity, summed over the triggered events (shape `nJ`, see
+     * `Model::fdJzdt`). Only populated for adjoint sensitivities.
+     */
+    std::vector<realtype> dJzdt;
+
     /** Whether this discontinuity is due to events at the initial time. */
     bool initial_event{false};
 

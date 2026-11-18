@@ -1352,66 +1352,98 @@ def test_switch_crossed_back_by_event_assignment(tempdir, dae):
 
 
 @skip_on_valgrind
-def test_event_output_parameter_derivatives(tempdir):
-    """Test forward sensitivities of event outputs that depend explicitly on
-    the parameters, and of the root function value of an event that does
-    not trigger."""
+def test_event_output_sensitivities(tempdir):
+    """Test the sensitivities of event outputs and of the root function value
+    of an event that does not trigger.
+
+    Covers the explicit parameter dependence of event outputs, the
+    dependence on the event time for parameter-dependent time triggers,
+    state-dependent triggers, and secondary events, and a model without
+    (non-event) observables.
+    """
     from amici.sim.sundials import ParameterScaling
 
-    model_name = "test_event_output_parameter_derivatives"
+    model_name = "test_event_output_sensitivities"
     model = antimony2amici(
         """
-        k = 0.5; p = 0.1
-        x = 1; y = 0
+        k = 0.5; p = 0.1; c = 0.6; q = 1.3
+        x = 1; w = 0
         x' = -k * x
-        y' = 0
-        E1: at time > 1.3: y = y + 1
+        w' = 0
+        E1: at time > q: w = w + 2
+        # does not trigger
         E2: at x < p: x = x + 1
+        # c only enters via the trigger
+        E3: at x < c: w = w + 1
+        # secondary event, triggered by E3
+        E4: at w > 0.5: w = w + 2
         """,
         model_name=model_name,
         output_dir=tempdir,
         observation_model=[
-            MC("obs_x", formula="x"),
-            MC("z1", formula="p * x", event_id="E1"),
+            MC("z1_px", formula="p * x", event_id="E1"),
+            MC("z1_pt", formula="p * time", event_id="E1"),
             MC("z2", formula="time", event_id="E2"),
+            MC("z3_t", formula="time", event_id="E3"),
+            MC("z3_kx", formula="k * x", event_id="E3"),
+            MC("z4", formula="time + x", event_id="E4"),
         ],
     )
     model.set_parameter_scale(ParameterScaling.none)
     t = np.linspace(0.5, 2, 4)
     model.set_timepoints(t)
-    assert model.get_free_parameter_ids() == ("k", "p")
+    assert model.get_free_parameter_ids() == ("k", "p", "c", "q")
+    assert model.ny == 0
+
+    # E1 triggers at q, E3 and E4 at t3, E2 does not trigger until the last
+    # output time T
+    k, p, c, q = model.get_free_parameters()
+    T = t[-1]
+    x1, xT = np.exp(-k * q), np.exp(-k * T)
+    t3 = np.log(1 / c) / k
+    dt3 = np.array([-t3 / k, 0, -1 / (k * c), 0])
+    assert t3 < q
+    z_expected = [p * x1, p * q, T, t3, k * c, t3 + c]
+    sz_expected = np.array(
+        [
+            [-p * q * x1, x1, 0, -k * p * x1],
+            [0, q, 0, p],
+            [0, 0, 0, 0],
+            dt3,
+            [c, 0, k, 0],
+            dt3 + [0, 0, 1, 0],
+        ]
+    ).T
+    rz2 = p - xT
+    drz2 = np.array([T * xT, 1.0, 0, 0])
 
     edata = ExpData(model)
-    edata.set_measurements(np.full(len(t), np.nan))
-    edata.set_noise_scales(np.ones(len(t)))
-    mz = np.full(model.n_max_event() * model.nztrue, np.nan)
-    mz[:2] = [1.0, 3.0]
-    edata.set_event_measurements(mz)
-    edata.set_event_noise_scales(np.ones_like(mz))
+    mz = np.full((model.n_max_event(), model.nztrue), np.nan)
+    mz[0] = [1.0, 2.0, 3.0, 0.0, 0.0, 0.0]
+    edata.set_event_measurements(mz.flatten())
+    edata.set_event_noise_scales(np.ones(mz.size))
+    # Jz(z2) does not depend on the parameters (z2 = T), only Jrz(rz2)
+    is_z = np.arange(model.nztrue) != 2
+    sllh_expected = -(
+        (np.array(z_expected) - mz[0])[is_z] @ sz_expected[:, is_z].T
+        + rz2 * drz2
+    )
+    assert np.all(np.abs(sllh_expected) > 0.1)
 
     solver = model.create_solver()
     solver.set_relative_tolerance(1e-12)
     solver.set_absolute_tolerance(1e-12)
     solver.set_sensitivity_order(SensitivityOrder.first)
-    solver.set_sensitivity_method(SensitivityMethod.forward)
-    rdata = run_simulation(model, solver, edata)
-    assert rdata.status == AMICI_SUCCESS
-
-    # E1 triggers at t1, E2 does not trigger until the last output time T
-    k, p, t1, T = 0.5, 0.1, 1.3, t[-1]
-    x1, xT = np.exp(-k * t1), np.exp(-k * T)
-    z1 = p * x1
-    dz1 = np.array([-p * t1 * x1, x1])
-    rz2 = p - xT
-    drz2 = np.array([T * xT, 1.0])
-    assert_allclose(rdata.z[0], [z1, T], rtol=1e-8)
-    assert_allclose(rdata.sz[0][:, 0], dz1, rtol=1e-6)
-    assert_allclose(rdata.rz[0][1], rz2, rtol=1e-8)
-    assert_allclose(rdata.srz[0][:, 1], drz2, rtol=1e-6)
-    # Jz(z2) does not depend on the parameters (z2 = T)
-    sllh_expected = -(z1 - mz[0]) * dz1 - rz2 * drz2
-    assert np.all(np.abs(sllh_expected) > 0.1)
-    assert_allclose(rdata.sllh, sllh_expected, rtol=1e-6)
+    for sensi_meth in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver.set_sensitivity_method(sensi_meth)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS, sensi_meth
+        assert_allclose(rdata.z[0], z_expected, rtol=1e-8)
+        assert_allclose(rdata.rz[0][2], rz2, rtol=1e-8)
+        if sensi_meth == SensitivityMethod.forward:
+            assert_allclose(rdata.sz[0], sz_expected, rtol=1e-6, atol=1e-8)
+            assert_allclose(rdata.srz[0][:, 2], drz2, rtol=1e-6)
+        assert_allclose(rdata.sllh, sllh_expected, rtol=1e-6)
 
 
 @skip_on_valgrind
