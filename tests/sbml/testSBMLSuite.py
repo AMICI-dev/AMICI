@@ -94,6 +94,8 @@ def _fresh_model_and_solver(
 ) -> tuple[Model, Solver, float, float]:
     """Build a fresh `Model`/`Solver` and set up for test."""
     model = model_module.get_model()
+    if test_id in _NON_NEGATIVE_STATES:
+        model.set_all_states_non_negative()
     solver = model.create_solver()
     atol, rtol = apply_settings(settings, solver, model, test_id)
     solver.set_sensitivity_order(SensitivityOrder.first)
@@ -349,6 +351,12 @@ _BOUND_OVERRIDES = {
         for name in ("timeconv", "extentconv")
     },
 }
+
+# Cases whose states are kept non-negative: slightly negative values due to
+# integration errors would make non-integer powers of them NaN, so that the
+# simulation fails at isolated parameter values.
+#  - 01395: `(p / Kd)**h` with Hill coefficients `h` (see above).
+_NON_NEGATIVE_STATES = {"01395"}
 
 
 def _derive_generic_bounds(
