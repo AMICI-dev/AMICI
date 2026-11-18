@@ -12,7 +12,13 @@ from amici.adapters.fiddy import (
     simulate_petab_to_function_and_derivative,
 )
 from amici.importers.petab.v1 import import_petab_problem
-from amici.sim.sundials import SensitivityOrder, SteadyStateSensitivityMode
+from amici.sim.sundials import (
+    ExpData,
+    ParameterScaling,
+    SensitivityOrder,
+    SteadyStateSensitivityMode,
+    run_simulation,
+)
 from fiddy import (
     FunctionEvaluationError,
     JoblibExecutor,
@@ -290,3 +296,71 @@ def test_derivative_check_leaves_solver_and_model_unchanged(
     check_gradient(function, point, derivative(point))
     assert amici_solver.get_sensitivity_order() == SensitivityOrder.first
     assert amici_model.get_free_parameters() == original_parameters
+
+
+def test_event_output_derivatives(tempdir):
+    """The derivatives of event outputs are mapped to the right parameters.
+
+    `E1` is time-triggered: AMICI's `sz` ignores the parameter dependence
+    of state-dependent event times (#3361).
+    """
+    from amici.importers.antimony import antimony2amici
+    from amici.importers.utils import MeasurementChannel as MC
+
+    model_name = "test_fiddy_event_outputs"
+    antimony2amici(
+        """
+        k = 0.5; q = 0.1; s = 0.3
+        x = 1
+        x' = -k * x + q
+        E1: at time > 1.3: x = x + 1
+        E2: at x > 5: x = 0
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[
+            MC("obs_x", formula="x", sigma="s"),
+            MC("z1", formula="q * x", event_id="E1", sigma="2 * s"),
+            # For events that did not occur, `sz` is 0, but `z` is the
+            # output at the last time point: use a constant output.
+            MC("z2", formula="1", event_id="E2", sigma="s * k"),
+        ],
+    )
+    model = amici.import_model_module(model_name, tempdir).get_model()
+    model.set_parameter_scale(ParameterScaling.none)
+    model.set_timepoints([0.5, 2.0])
+    model.set_n_max_event(1)
+    edata = ExpData(model)
+    edata.set_measurements(np.ones(2))
+    edata.set_event_measurements(np.ones(model.nztrue))
+    solver = model.create_solver()
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-15)
+    solver.set_sensitivity_order(SensitivityOrder.first)
+
+    rdata = run_simulation(model, solver, edata)
+    # E1 triggers, E2 does not
+    assert rdata.rz[0, 0] == 0
+    assert rdata.rz[0, 1] != 0
+    # nontrivial derivatives, w.r.t. different parameters
+    assert np.count_nonzero(rdata.sz[0, :, 0]) == 2
+    assert np.count_nonzero(rdata.srz[0, :, 1]) == 2
+    assert np.count_nonzero(rdata.ssigmaz[0, :, 1]) == 2
+
+    # not in the model's order, to check the reordering
+    free_parameter_ids = ["s", "k", "q"]
+    point = np.array(
+        [model.get_free_parameter_by_id(p) for p in free_parameter_ids]
+    )
+    for variable in ("z", "rz", "sigmaz"):
+        function, derivative = run_simulation_to_function_and_derivative(
+            free_parameter_ids=free_parameter_ids,
+            amici_model=model,
+            amici_solver=solver,
+            amici_edata=edata,
+            derivative_variables=[variable],
+        )
+        expected = derivative(point)
+        check_jacobian(
+            function, point, expected, direction_labels=free_parameter_ids
+        ).assert_success()
