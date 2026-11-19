@@ -1,4 +1,3 @@
-import os
 import warnings
 
 import amici
@@ -55,7 +54,7 @@ def edata_fixture():
 
 
 @pytest.fixture(scope="session")
-def models():
+def models(tmp_path_factory):
     from amici.importers.antimony import antimony2sbml
 
     ant_model = """model *model_constant_species()
@@ -92,8 +91,10 @@ end"""
     )
 
     # Name of the model that will also be the name of the python module
-    model_name = output_dir = "model_constant_species"
-    model_name_cl = output_dir_cl = "model_constant_species_cl"
+    model_name = "model_constant_species"
+    model_name_cl = "model_constant_species_cl"
+    output_dir = tmp_path_factory.mktemp(model_name)
+    output_dir_cl = tmp_path_factory.mktemp(model_name_cl)
 
     # Define constants, observables, sigmas
     fixed_parameters = ["synthesis_substrate", "init_enzyme"]
@@ -119,10 +120,10 @@ end"""
 
     # load both models
     model_without_cl_module = amici.import_model_module(
-        model_name, module_path=os.path.abspath(model_name)
+        model_name, module_path=output_dir
     )
     model_with_cl_module = amici.import_model_module(
-        model_name_cl, module_path=os.path.abspath(model_name_cl)
+        model_name_cl, module_path=output_dir_cl
     )
 
     # get the models and return
