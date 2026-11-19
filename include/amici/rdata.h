@@ -852,11 +852,13 @@ class ReturnData : public ModelDimensions {
      * (1 indicating fired, 0/-1 for not)
      * @param model model that was used in forward solve
      * @param sol Solution state the timepoint `it`
+     * @param stau Event-time sensitivity (forward sensitivities only,
+     * see `Discontinuity::stau`)
      * @param edata ExpData instance carrying experimental data
      */
     void get_event_output(
         std::vector<int> const& rootidx, Model& model, SolutionState const& sol,
-        ExpData const* edata
+        std::vector<realtype> const& stau, ExpData const* edata
     );
 
     /**
@@ -866,10 +868,12 @@ class ReturnData : public ModelDimensions {
      * @param ie index of event type
      * @param model model that was used in forward solve
      * @param sol Solution state the timepoint `it`
+     * @param stau Event-time sensitivity (see `Discontinuity::stau`)
      * @param edata ExpData instance carrying experimental data
      */
     void get_event_sensis_fsa(
-        int ie, Model& model, SolutionState const& sol, ExpData const* edata
+        int ie, Model& model, SolutionState const& sol,
+        std::vector<realtype> const& stau, ExpData const* edata
     );
 
     /**

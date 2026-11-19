@@ -50,6 +50,7 @@
 %ignore fdydx;
 %ignore fdzdp;
 %ignore fdzdx;
+%ignore fdzdt;
 %ignore frz;
 %ignore fsigmay;
 %ignore fsigmaz;

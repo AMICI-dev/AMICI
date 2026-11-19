@@ -1824,24 +1824,21 @@ class DEModel:
             "ddeltaxdt",
             "dzdp",
             "dzdx",
+            "dzdt",
         ]:
             if match_deriv[2] == "t":
                 var = time_symbol
             else:
                 var = self.sym(match_deriv[2])
 
+            # For `dzdx`, `dzdp`, and `dzdt`, these are the partial
+            # derivatives. The dependence of the event time on the
+            # parameters is taken into account at runtime (see
+            # `Model::fdzdt`).
             self._eqs[name] = [
                 smart_jacobian(self.eq(match_deriv[1])[ie], var)
                 for ie in range(self.num_events())
             ]
-            if name == "dzdx":
-                dtaudx = self.eq("dtaudx")
-                for ie in range(self.num_events()):
-                    for iz in range(self.num_eventobs()):
-                        if ie != self._z2event[iz]:
-                            continue
-                        dzdt = sp.diff(self.eq("z")[ie][iz], time_symbol)
-                        self._eqs[name][ie][iz, :] += dzdt * -dtaudx[ie]
 
         elif name in ["rz", "drzdx", "drzdp"]:
             eq_events = []

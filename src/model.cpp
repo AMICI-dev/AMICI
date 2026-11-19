@@ -67,6 +67,7 @@ std::map<ModelQuantity, std::string> const model_quantity_to_str{
     {ModelQuantity::dJzdx, "dJzdx"},
     {ModelQuantity::dzdp, "dzdp"},
     {ModelQuantity::dzdx, "dzdx"},
+    {ModelQuantity::dzdt, "dzdt"},
     {ModelQuantity::dJrzdsigmaz, "dJrzdsigmaz"},
     {ModelQuantity::dJrzdrz, "dJrzdrz"},
     {ModelQuantity::dJzdsigmaz, "dJzdsigmaz"},
@@ -1404,13 +1405,22 @@ void Model::get_event(
 
 void Model::get_event_sensitivity(
     gsl::span<realtype> sz, int const ie, realtype const t, AmiVector const& x,
-    AmiVectorArray const& sx
+    AmiVectorArray const& sx, AmiVector const& dx,
+    std::vector<realtype> const& stau
 ) {
     if (!nz)
         return;
 
-    fdzdx(ie, t, x);
     fdzdp(ie, t, x);
+    // also computes dzdx
+    fdzdt(ie, t, x, dx);
+
+    // event-time dependence: dzdp -= dzdt * stau
+    Expects(gsl::narrow<int>(stau.size()) == nplist());
+    for (int ip = 0; ip < nplist(); ++ip)
+        for (int iz = 0; iz < nz; ++iz)
+            derived_state_.dzdp_[iz + ip * nz]
+                -= derived_state_.dzdt_[iz] * stau[ip];
 
     derived_state_.sx_.resize(nx_solver * nplist());
     sx.flatten_to_vector(derived_state_.sx_);
@@ -1547,7 +1557,8 @@ void Model::add_event_objective_regularization(
 void Model::add_event_objective_sensitivity(
     std::vector<realtype>& sllh, std::vector<realtype>& s2llh, int const ie,
     int const nroots, realtype const t, AmiVector const& x,
-    AmiVectorArray const& sx, ExpData const& edata
+    AmiVectorArray const& sx, AmiVector const& dx,
+    std::vector<realtype> const& stau, ExpData const& edata
 ) {
 
     if (!nz)
@@ -1555,6 +1566,14 @@ void Model::add_event_objective_sensitivity(
 
     fdJzdx(ie, nroots, t, x, edata);
     fdJzdp(ie, nroots, t, x, edata);
+    fdJzdt(ie, nroots, t, x, dx, edata);
+
+    // event-time dependence: dJzdp -= dJzdt * stau
+    Expects(gsl::narrow<int>(stau.size()) == nplist());
+    for (int ip = 0; ip < nplist(); ++ip)
+        for (int iJ = 0; iJ < nJ; ++iJ)
+            derived_state_.dJzdp_[iJ + ip * nJ]
+                -= derived_state_.dJzdt_[iJ] * stau[ip];
 
     // sJz           nJ x nplist()
     // dJzdp         nJ x nplist()
@@ -1579,11 +1598,14 @@ void Model::add_event_objective_sensitivity(
 }
 
 void Model::get_adjoint_state_event_update(
-    gsl::span<realtype> dJzdx, int const ie, int const nroots, realtype const t,
-    AmiVector const& x, ExpData const& edata
+    gsl::span<realtype> dJzdx, gsl::span<realtype> dJzdt, int const ie,
+    int const nroots, realtype const t, AmiVector const& x, AmiVector const& dx,
+    ExpData const& edata
 ) {
     fdJzdx(ie, nroots, t, x, edata);
     write_slice(derived_state_.dJzdx_, dJzdx);
+    fdJzdt(ie, nroots, t, x, dx, edata);
+    write_slice(derived_state_.dJzdt_, dJzdt);
 }
 
 void Model::add_partial_event_objective_sensitivity(
@@ -2665,10 +2687,9 @@ void Model::fdJydp(int const it, AmiVector const& x, ExpData const& edata) {
 }
 
 void Model::fdJydx(int const it, AmiVector const& x, ExpData const& edata) {
+    derived_state_.dJydx_.assign(nJ * nx_solver, 0.0);
     if (!ny)
         return;
-
-    derived_state_.dJydx_.assign(nJ * nx_solver, 0.0);
 
     fdydx(edata.get_timepoint(it), x);
     fdJydy(it, x, edata);
@@ -2739,6 +2760,38 @@ void Model::fdzdx(int const ie, realtype const t, AmiVector const& x) {
 
     if (always_check_finite_) {
         check_finite(derived_state_.dzdx_, ModelQuantity::dzdx, nx_solver);
+    }
+}
+
+void Model::fdzdt(
+    int const ie, realtype const t, AmiVector const& x, AmiVector const& dx
+) {
+    if (!nz)
+        return;
+
+    AmiVector xdot(nx_solver, x.get_ctx());
+    fdxdt(t, x, dx, xdot);
+    fdzdx(ie, t, x);
+    set_nan_to_zero(derived_state_.dzdx_);
+
+    derived_state_.dzdt_.assign(nz, 0.0);
+    fdzdt(
+        derived_state_.dzdt_.data(), ie, t, compute_x_pos(x),
+        state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
+        state_.h.data()
+    );
+
+    // dzdx: nz x nx_solver, column-major
+    for (int ix = 0; ix < nx_solver; ++ix) {
+        if (xdot[ix] == 0.0)
+            continue;
+        for (int iz = 0; iz < nz; ++iz)
+            derived_state_.dzdt_[iz]
+                += derived_state_.dzdx_[iz + ix * nz] * xdot[ix];
+    }
+
+    if (always_check_finite_) {
+        check_finite(derived_state_.dzdt_, ModelQuantity::dzdt, t);
     }
 }
 
@@ -2923,6 +2976,31 @@ void Model::fdJzdsigmaz(
                 );
             }
         }
+    }
+}
+
+void Model::fdJzdt(
+    int const ie, int const nroots, realtype const t, AmiVector const& x,
+    AmiVector const& dx, ExpData const& edata
+) {
+    derived_state_.dJzdt_.assign(nJ, 0.0);
+    if (!nz || edata.nt() == 0 || t >= edata.get_timepoint(edata.nt() - 1))
+        return;
+
+    fdJzdz(ie, nroots, t, x, edata);
+    fdzdt(ie, t, x, dx);
+    set_nan_to_zero(derived_state_.dJzdz_);
+
+    // dJzdz: nJ x nz x nztrue
+    for (int izt = 0; izt < nztrue; ++izt) {
+        if (z2event_.at(izt) != ie
+            || !edata.is_set_event_measurement(nroots, izt))
+            continue;
+        for (int iz = 0; iz < nz; ++iz)
+            for (int iJ = 0; iJ < nJ; ++iJ)
+                derived_state_.dJzdt_[iJ]
+                    += derived_state_.dJzdz_[iJ + (iz + izt * nz) * nJ]
+                       * derived_state_.dzdt_[iz];
     }
 }
 

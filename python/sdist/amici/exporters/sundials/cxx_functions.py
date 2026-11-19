@@ -239,6 +239,11 @@ functions = {
         "const realtype *x, const realtype *p, const realtype *k, "
         "const realtype *h",
     ),
+    "dzdt": _FunctionInfo(
+        "realtype *dzdt, const int ie, const realtype t, "
+        "const realtype *x, const realtype *p, const realtype *k, "
+        "const realtype *h",
+    ),
     "dzdp": _FunctionInfo(
         "realtype *dzdp, const int ie, const realtype t, "
         "const realtype *x, const realtype *p, const realtype *k, "
@@ -459,7 +464,15 @@ sensi_functions = [
     func_name
     for func_name, func_info in functions.items()
     if "const int ip" in func_info.arguments()
-] + ["deltaxB", "deltaxB_at_trigger", "stauB", "dtaudx", "dzdx", "drzdx"]
+] + [
+    "deltaxB",
+    "deltaxB_at_trigger",
+    "stauB",
+    "dtaudx",
+    "dzdx",
+    "dzdt",
+    "drzdx",
+]
 
 #: list of sparse sensitivity functions
 sparse_sensi_functions = [

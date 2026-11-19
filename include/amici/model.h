@@ -83,6 +83,7 @@ enum class ModelQuantity {
     dJydx,
     dzdx,
     dzdp,
+    dzdt,
     dJrzdsigmaz,
     dJrzdrz,
     dJrzdx,
@@ -210,6 +211,7 @@ class Model : public AbstractModel, public ModelDimensions {
     using AbstractModel::fdydp;
     using AbstractModel::fdydx;
     using AbstractModel::fdzdp;
+    using AbstractModel::fdzdt;
     using AbstractModel::fdzdx;
     using AbstractModel::fJrz;
     using AbstractModel::fJy;
@@ -1315,10 +1317,13 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param t Timepoint
      * @param x State variables
      * @param sx State sensitivities
+     * @param dx Time derivative of the state (DAE only)
+     * @param stau Event-time sensitivity (shape `nplist`, see `fstau`)
      */
     void get_event_sensitivity(
         gsl::span<realtype> sz, int ie, realtype t, AmiVector const& x,
-        AmiVectorArray const& sx
+        AmiVectorArray const& sx, AmiVector const& dx,
+        std::vector<realtype> const& stau
     );
 
     /**
@@ -1436,11 +1441,14 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param t Timepoint
      * @param x State variables
      * @param sx State sensitivities
+     * @param dx Time derivative of the state (DAE only)
+     * @param stau Event-time sensitivity (shape `nplist`, see `fstau`)
      * @param edata Experimental data
      */
     void add_event_objective_sensitivity(
         std::vector<realtype>& sllh, std::vector<realtype>& s2llh, int ie,
         int nroots, realtype t, AmiVector const& x, AmiVectorArray const& sx,
+        AmiVector const& dx, std::vector<realtype> const& stau,
         ExpData const& edata
     );
 
@@ -1469,16 +1477,22 @@ class Model : public AbstractModel, public ModelDimensions {
      *
      * Partial derivative (to be used with adjoint sensitivities).
      *
+     * Also returns the total time derivative of \f$ Jz \f$ along the
+     * trajectory, which determines the dependence on the event time.
+     *
      * @param dJzdx Output buffer (shape `nJ` x `nx_solver`, column-major)
+     * @param dJzdt Output buffer (shape `nJ`, see `fdJzdt`)
      * @param ie Event index
      * @param nroots Event occurrence
      * @param t Timepoint
      * @param x State variables
+     * @param dx Time derivative of the state (DAE only)
      * @param edata Experimental data
      */
     void get_adjoint_state_event_update(
-        gsl::span<realtype> dJzdx, int ie, int nroots, realtype t,
-        AmiVector const& x, ExpData const& edata
+        gsl::span<realtype> dJzdx, gsl::span<realtype> dJzdt, int ie,
+        int nroots, realtype t, AmiVector const& x, AmiVector const& dx,
+        ExpData const& edata
     );
 
     /**
@@ -2141,6 +2155,22 @@ class Model : public AbstractModel, public ModelDimensions {
     void fdzdx(int ie, realtype t, AmiVector const& x);
 
     /**
+     * @brief Compute the total time derivative of event-resolved output `z`
+     * along the trajectory.
+     *
+     * `dz/dt = ∂z/∂t + ∂z/∂x * xdot`, with `xdot` for the current Heaviside
+     * variables. With the event-time sensitivity `stau`, the event-time
+     * dependence of `z` is `-dzdt * stau` (see `fstau` for the sign
+     * convention).
+     *
+     * @param ie Event index
+     * @param t Current timepoint
+     * @param x Current state
+     * @param dx Time derivative of the state (DAE only)
+     */
+    void fdzdt(int ie, realtype t, AmiVector const& x, AmiVector const& dx);
+
+    /**
      * @brief Compute event root function of events.
      *
      * Equal to `Model::froot` but does not include non-output events.
@@ -2246,6 +2276,25 @@ class Model : public AbstractModel, public ModelDimensions {
      */
     void fdJzdx(
         int ie, int nroots, realtype t, AmiVector const& x, ExpData const& edata
+    );
+
+    /**
+     * @brief Compute the total time derivative of the event-resolved
+     * measurement negative log-likelihood Jz along the trajectory.
+     *
+     * Only the measurements of events that occurred are taken into account,
+     * not the root function values of those that did not (see `fdJzdx`).
+     *
+     * @param ie Event index
+     * @param nroots Event occurrence
+     * @param t Current timepoint
+     * @param x State variables
+     * @param dx Time derivative of the state (DAE only)
+     * @param edata Experimental data
+     */
+    void fdJzdt(
+        int ie, int nroots, realtype t, AmiVector const& x, AmiVector const& dx,
+        ExpData const& edata
     );
 
     /**

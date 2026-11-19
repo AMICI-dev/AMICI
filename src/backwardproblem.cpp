@@ -258,6 +258,10 @@ void EventHandlingBwdSimulator::handle_event_b(
     // Event outputs were evaluated at the state at which the discontinuity
     // was reached, also for events without state updates and for the events
     // filled in at the last timepoint.
+    // Their dependence on the event time (`-dJzdt * stau`, see
+    // `Model::add_event_objective_sensitivity`):
+    for (int iJ = 0; iJ < gsl::narrow<int>(disc.dJzdt.size()); ++iJ)
+        stauB.at(iJ) -= disc.dJzdt[iJ];
     for (int ie = 0; ie < model_->ne; ie++) {
         if (disc.root_info[ie] != 1)
             continue;
