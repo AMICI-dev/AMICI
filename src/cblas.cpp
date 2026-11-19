@@ -6,6 +6,8 @@
 
 #include "amici/cblas.h"
 
+#include <algorithm>
+
 #ifdef __APPLE__
 #include <Accelerate/Accelerate.h>
 #elif defined(AMICI_BLAS_MKL)
@@ -30,6 +32,11 @@ extern "C" {
 
 namespace amici {
 
+// BLAS requires leading dimensions >= 1, even for empty matrices.
+// Some implementations (e.g., Apple Accelerate) terminate the process
+// otherwise.
+static int blas_ld(int const n) { return std::max(1, n); }
+
 void amici_dgemm(
     BLASLayout layout, BLASTranspose TransA, BLASTranspose TransB, int const M,
     int const N, int const K, double const alpha, double const* A,
@@ -39,7 +46,7 @@ void amici_dgemm(
 
     BLAS_FUNC(dgemm)(
         (CBLAS_ORDER)layout, (CBLAS_TRANSPOSE)TransA, (CBLAS_TRANSPOSE)TransB,
-        M, N, K, alpha, A, lda, B, ldb, beta, C, ldc
+        M, N, K, alpha, A, blas_ld(lda), B, blas_ld(ldb), beta, C, blas_ld(ldc)
     );
 }
 
@@ -49,8 +56,8 @@ void amici_dgemv(
     int const incX, double const beta, double* Y, int const incY
 ) {
     BLAS_FUNC(dgemv)(
-        (CBLAS_ORDER)layout, (CBLAS_TRANSPOSE)TransA, M, N, alpha, A, lda, X,
-        incX, beta, Y, incY
+        (CBLAS_ORDER)layout, (CBLAS_TRANSPOSE)TransA, M, N, alpha, A,
+        blas_ld(lda), X, incX, beta, Y, incY
     );
 }
 
