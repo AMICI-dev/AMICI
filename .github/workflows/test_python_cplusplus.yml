@@ -52,6 +52,26 @@ jobs:
     - name: C++ tests
       run: scripts/run-cpp-tests.sh
 
+    # ccache is only used for the Python extension and the test models,
+    # not for the C++ build above (Sonar build-wrapper doesn't see cache hits)
+    - name: Set up ccache
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        key: ${{ github.job }}
+        restore-keys: ${{ github.job }}
+        max-size: 500M
+        # merge_group caches can't be restored by any other run
+        save: ${{ github.event_name != 'merge_group' }}
+
+    - name: Set ccache environment variables
+      run: |
+        echo "CMAKE_C_COMPILER_LAUNCHER=ccache" >> $GITHUB_ENV
+        echo "CMAKE_CXX_COMPILER_LAUNCHER=ccache" >> $GITHUB_ENV
+        echo "CCACHE_COMPILERCHECK=content" >> $GITHUB_ENV
+        # test models are often built in temporary directories
+        echo "CCACHE_BASEDIR=$(python3 -c 'import os, tempfile; print(os.path.realpath(tempfile.gettempdir()))')" >> $GITHUB_ENV
+        echo "CCACHE_NOHASHDIR=1" >> $GITHUB_ENV
+
     - name: Install python package
       env:
           CMAKE_EXPORT_COMPILE_COMMANDS: "ON"
