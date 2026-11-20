@@ -1211,6 +1211,51 @@ def test_fsa_settings_after_simulation_without_states(tmp_path):
     np.testing.assert_allclose(rdata.sllh, expected_sllh)
 
 
+@skip_on_valgrind
+@pytest.mark.filterwarnings(
+    # https://github.com/AMICI-dev/AMICI/issues/18
+    "ignore:Adjoint sensitivity analysis for models with discontinuous "
+    "right hand sides .*:UserWarning",
+)
+def test_adjoint_without_states(tmp_path):
+    """Test adjoint sensitivities for a model without state variables."""
+    from amici.importers.antimony import antimony2amici
+    from amici.importers.sbml import MeasurementChannel as MC
+
+    model = antimony2amici(
+        """
+        model test_adjoint_no_states
+            k = 2
+            y := piecewise(k * time, time > 1.5, k)
+        end
+        """,
+        model_name="test_adjoint_no_states",
+        output_dir=tmp_path,
+        observation_model=[MC("obs", formula="y")],
+    )
+    assert model.nx_solver == 0
+    # explicit-time events only
+    assert model.ne > 0
+    assert model.ne_solver == 0
+
+    model.set_timepoints([1.0, 2.0, 3.0])
+    model.set_parameter_scale(ParameterScaling.none)
+    solver = model.create_solver()
+    edata = ExpData(run_simulation(model, solver), 1.0, 1.0, 42)
+    solver.set_sensitivity_order(SensitivityOrder.first)
+
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    rdata_fsa = run_simulation(model, solver, edata)
+    assert rdata_fsa.status == amici.sim.sundials.AMICI_SUCCESS
+    np.testing.assert_allclose(rdata_fsa.sy[:, 0, 0], [1.0, 2.0, 3.0])
+
+    solver.set_sensitivity_method(SensitivityMethod.adjoint)
+    rdata_asa = run_simulation(model, solver, edata)
+    assert rdata_asa.status == amici.sim.sundials.AMICI_SUCCESS
+    assert rdata_asa.sllh[0] != 0.0
+    np.testing.assert_allclose(rdata_asa.sllh, rdata_fsa.sllh)
+
+
 def test_get_initial_state_sensitivities(tmp_path):
     """Test computed initial state sensitivities for multiple parameters."""
     from amici import import_model_module
