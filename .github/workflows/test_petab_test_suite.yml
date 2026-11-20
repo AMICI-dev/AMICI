@@ -63,14 +63,9 @@ jobs:
 
       # retrieve test models
       - name: Download and install PEtab test suite
-        # FIXME: Until we have proper PEtab v2 import
-        #  (https://github.com/AMICI-dev/AMICI/issues/2662),
-        #  we need the pseudo-v2-format commit pinned in
-        #  python/sdist/pyproject.toml's petab-test-suite-v1 group
-        #  instead of `main`.
         run: |
           source ./venv/bin/activate \
-            && pip3 install --group python/sdist/pyproject.toml:petab-test-suite-v1
+            && pip3 install --group python/sdist/pyproject.toml:petab-test-suite
 
       - name: Install PEtab benchmark collection
         run: |
@@ -100,6 +95,19 @@ jobs:
             --cov-report=xml:coverage.xml \
             --cov-append \
             --cov=amici \
+            tests/petab_test_suite/test_petab_suite.py
+
+      # TODO: remove together with PEtab v1 PySB support (#3541)
+      - name: Run PEtab v1 PySB tests (pre-v2 PEtab test suite)
+        run: |
+          source ./venv/bin/activate \
+          && pip3 install --force-reinstall --no-deps \
+            --group python/sdist/pyproject.toml:petab-test-suite-v1-pysb \
+          && AMICI_PARALLEL_COMPILE="" pytest -rxXs -v \
+            --cov-report=xml:coverage.xml \
+            --cov-append \
+            --cov=amici \
+            --legacy-pysb \
             tests/petab_test_suite/test_petab_suite.py
 
       - name: Codecov
@@ -166,7 +174,7 @@ jobs:
       - name: Download and install PEtab test suite
         run: |
           source ./venv/bin/activate \
-            && pip3 install --group python/sdist/pyproject.toml:petab-test-suite-v2
+            && pip3 install --group python/sdist/pyproject.toml:petab-test-suite
 
 # TODO: once there is a PEtab v2 benchmark collection
 #      - name: Install PEtab benchmark collection
