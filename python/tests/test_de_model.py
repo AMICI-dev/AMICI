@@ -222,9 +222,14 @@ def test_event_trigger_time_minmax():
     assert t_root.subs({e0: 0}) == sp.oo
 
     # ... but mixed monotonicity is not, since the expression may then
-    # cross zero more than once
+    # cross zero more than once. sympy>=1.15 solves it, though.
     e = make_event(sp.Min(t - 5, 10 - t))
-    assert not e.has_explicit_trigger_times(static_syms)
+    if e.has_explicit_trigger_times(static_syms):
+        assert e.get_trigger_times() == {5, 10}
+    # ... unless the result depends on the parameter values
+    a, b = sp.symbols("a b")
+    e = make_event(sp.Min(t - a, b - t))
+    assert not e.has_explicit_trigger_times({a, b})
 
     # a trigger and its negated counterpart (AMICI tracks both for
     # persisted Heaviside variables) must resolve to the same time, or
@@ -269,9 +274,11 @@ def test_event_trigger_time_minmax():
     e = make_event(sp.Min(t**2 - 100, e0 - sp.Rational(1, 2)))
     assert not e.has_explicit_trigger_times(static_syms)
 
-    # nested Min-inside-Max (or vice versa) is not (yet) supported
+    # nested Min-inside-Max (or vice versa) is not (yet) supported by
+    # `solve_minmax_trigger_for_t`, but sympy>=1.15 solves this one
     e = make_event(sp.Max(t - 5, sp.Min(t - 10, e0 - sp.Rational(1, 2))))
-    assert not e.has_explicit_trigger_times(static_syms)
+    if e.has_explicit_trigger_times(static_syms):
+        assert e.get_trigger_times() == {5}
 
 
 def _build_event_model(trigger: str):

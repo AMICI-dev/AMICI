@@ -47,16 +47,20 @@ def test_hill_function_dwdx():
     Test that what we are applying the right sympy simplification."""
 
     w = sp.Matrix([[sp.sympify("Pow(x1, p1) / (Pow(x1, p1) + a)")]])
-    dwdx = w.diff(sp.Symbol("x1"))
+    x1 = sp.Symbol("x1")
+    dwdx = w.diff(x1)
+
+    def has_zero_denominator(expr):
+        return any(
+            sp.denom(term).subs(x1, 0) == 0 for term in sp.Add.make_args(expr)
+        )
 
     # Verify that without simplification we fail
-    with pytest.raises(ZeroDivisionError):
-        with sp.evaluate(False):
-            res = dwdx.subs({"x1": 0.0})
-        _ = str(res)
+    assert has_zero_denominator(dwdx[0])
 
     # Test that powsimp does the job
     dwdx = dwdx.applyfunc(lambda x: sp.powsimp(x, deep=True))
+    assert not has_zero_denominator(dwdx[0])
     with sp.evaluate(False):
         res = dwdx.subs({"x1": 0.0})
     _ = str(res)
