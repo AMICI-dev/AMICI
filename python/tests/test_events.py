@@ -1773,6 +1773,7 @@ def test_presim_event_outputs(tempdir):
     solver = model.create_solver()
     solver.set_relative_tolerance(1e-12)
     solver.set_absolute_tolerance(1e-12)
+    solver.set_relative_tolerance_quadratures(1e-10)
     point = np.asarray(model.get_free_parameters())
 
     # E2 occurs during the main simulation, or not at all
