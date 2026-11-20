@@ -32,7 +32,8 @@ jax.config.update("jax_enable_x64", True)
 
 
 @pytest.mark.filterwarnings(
-    "ignore:Event `_E0` has `useValuesFromTriggerTime=true'"
+    "ignore:Event `_E0` has `useValuesFromTriggerTime=true'",
+    "ignore:Adjoint sensitivity analysis for models with discontinuous ",
 )
 def test_case(case, model_type, version, jax):
     """Wrapper for _test_case for handling test outcomes"""
@@ -219,16 +220,21 @@ def check_derivatives(
     model = petab_simulator.model
     edatas = petab_simulator.exp_man.create_edatas()
 
-    solver.set_sensitivity_method(SensitivityMethod.forward)
     solver.set_sensitivity_order(SensitivityOrder.first)
 
     # without state variables, there are no `x` to check
     skip_fields = ["x"] if model.nx_solver == 0 else None
+    sensi_methods = [SensitivityMethod.forward]
+    # TODO: adjoints fail for models without state variables (#3546)
+    if model.nx_solver > 0:
+        sensi_methods.append(SensitivityMethod.adjoint)
     for edata in edatas:
         petab_simulator.exp_man.apply_parameters(edata, problem_parameters)
-        amici_check_derivatives(
-            model, solver=solver, edata=edata, skip_fields=skip_fields
-        )
+        for sensi_method in sensi_methods:
+            solver.set_sensitivity_method(sensi_method)
+            amici_check_derivatives(
+                model, solver=solver, edata=edata, skip_fields=skip_fields
+            )
 
     # TODO check aggregated sensitivities over all conditions
 
