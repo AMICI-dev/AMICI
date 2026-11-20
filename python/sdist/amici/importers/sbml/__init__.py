@@ -47,6 +47,7 @@ from amici._symbolic.de_model_components import (
 from amici._symbolic.sympy_utils import (
     _monkeypatch_sympy,
     _piecewise_to_minmax,
+    exact_condition_root,
     smart_is_zero_matrix,
     smart_multiply,
 )
@@ -1866,6 +1867,56 @@ class SbmlImporter:
                 }
                 del self._compartments[variable]
 
+    def _event_invariant_symbols(self) -> set[sp.Symbol]:
+        """Symbols that are constant during integration.
+
+        These only change through event assignments or when parameters are
+        set between simulations: parameters, constant compartments, species
+        that are neither changed by reactions nor by rate rules
+        (concentrations only if their compartment is invariant),
+        and expressions depending only on those.
+        Must be called after processing reactions and rules.
+        """
+        invariant = (
+            set(self._symbols[SymbolId.FREE_PARAMETER])
+            | set(self._symbols[SymbolId.FIXED_PARAMETER])
+            # compartments with assignment rules are handled as expressions
+            | (
+                set(self._compartments)
+                - set(self._compartment_assignment_rules)
+            )
+        )
+        stoich = self._stoichiometric_matrix
+        # species changed by reactions
+        reactive_rows = {i for i, _, _ in stoich.row_list()}
+        # candidate symbol -> symbols that must be invariant for it to be
+        dependencies: dict[sp.Symbol, set[sp.Symbol]] = {}
+        for ix, (sym, spec) in enumerate(
+            self._symbols[SymbolId.SPECIES].items()
+        ):
+            if "dt" in spec:
+                # rate rule, or parameter/compartment changed by events
+                if sp.sympify(spec["dt"]).is_zero is True:
+                    invariant.add(sym)
+            elif ix not in reactive_rows:
+                if spec["amount"]:
+                    invariant.add(sym)
+                else:
+                    dependencies[sym] = {spec["compartment"]}
+        for sym, spec in self._symbols[SymbolId.EXPRESSION].items():
+            dependencies[sym] = sp.sympify(spec["value"]).free_symbols
+
+        # expressions and concentrations may depend on each other
+        changed = True
+        while changed:
+            changed = False
+            for sym, deps in list(dependencies.items()):
+                if deps <= invariant:
+                    invariant.add(sym)
+                    del dependencies[sym]
+                    changed = True
+        return invariant
+
     @log_execution_time("processing SBML events", logger)
     def _process_events(self) -> None:
         """Process SBML events."""
@@ -1892,6 +1943,9 @@ class SbmlImporter:
         # Currently, all event assignment targets must exist in
         # self.symbols[SymbolId.SPECIES]
         state_vector = list(self._symbols[SymbolId.SPECIES].keys())
+        invariant_symbols = (
+            self._event_invariant_symbols() if events else set()
+        )
 
         for ievent, event in enumerate(events):
             # get the event id (which is optional unfortunately)
@@ -1903,7 +1957,7 @@ class SbmlImporter:
             # get and parse the trigger function
             trigger_sbml = event.getTrigger()
             trigger_sym = self._sympify(trigger_sbml, bool2num=False)
-            trigger = _parse_event_trigger(trigger_sym)
+            trigger = _parse_event_trigger(trigger_sym, invariant_symbols)
 
             # parse the boluses / event assignments
             assignment_exprs = {}
@@ -3199,15 +3253,31 @@ def _check_lib_sbml_errors(
         )
 
 
-def _parse_event_trigger(trigger: sp.Expr) -> sp.Expr:
+def _parse_event_trigger(
+    trigger: sp.Expr, invariant_symbols: set[sp.Symbol] | None = None
+) -> sp.Expr:
     """
     Recursively translates a boolean trigger function into a real valued
     root function
 
     :param trigger: The Boolean trigger expression.
         The event triggers when this expression changes from False to True.
+    :param invariant_symbols: Symbols that are constant during integration,
+        i.e., that only change through event assignments.
+        Sub-conditions that only depend on these symbols are evaluated
+        exactly (see :func:`exact_condition_root`) instead of becoming part
+        of the root function.
     :return: real-valued root function expression
     """
+    invariant_symbols = invariant_symbols or set()
+
+    def _recurse(t):
+        return _parse_event_trigger(t, invariant_symbols)
+
+    def is_invariant(expr: sp.Basic) -> bool:
+        free_symbols = expr.free_symbols
+        return bool(free_symbols) and free_symbols <= invariant_symbols
+
     # Events can be defined without trigger, i.e., the event will never fire.
     # In this case, set a dummy trigger:
     if trigger is None or trigger is sp.false:
@@ -3215,6 +3285,13 @@ def _parse_event_trigger(trigger: sp.Expr) -> sp.Expr:
 
     if trigger is sp.true:
         return sp.Float(1.0)
+
+    # Conditions that can only change at events don't need root-finding.
+    #  Evaluate them exactly, so that strict and (in)equality comparisons
+    #  don't end up in a root function that touches zero without changing
+    #  sign (e.g., `Min(u, -u, x - 1)` for `(u == 0) && (x > 1)`).
+    if is_invariant(trigger):
+        return exact_condition_root(sp.to_nnf(trigger, simplify=False))
 
     if trigger.is_Relational:
         root = trigger.args[0] - trigger.args[1]
@@ -3238,30 +3315,55 @@ def _parse_event_trigger(trigger: sp.Expr) -> sp.Expr:
     # ~ite(c, a, b) = ite(c, ~a, ~b), to keep the consensus term (see below)
     if isinstance(trigger, sp.Not) and isinstance(trigger.args[0], sp.ITE):
         cond, if_true, if_false = trigger.args[0].args
-        return _parse_event_trigger(sp.ITE(cond, ~if_true, ~if_false))
+        return _recurse(sp.ITE(cond, ~if_true, ~if_false))
 
     if isinstance(trigger, sp.Not) and not isinstance(
         nnf := _not_to_nnf(trigger), sp.Not
     ):
-        return _parse_event_trigger(nnf)
+        return _recurse(nnf)
 
-    # rewrite n-ary XOR to OR to be handled below:
-    trigger = trigger.replace(sp.Xor, _xor_to_or)
-    # rewrite ==, !=
-    trigger = trigger.replace(sp.Eq, _eq_to_and)
-    trigger = trigger.replace(sp.Ne, _ne_to_or)
+    # rewrite n-ary XOR, ==, != to AND/OR, to be handled below.
+    #  Only at this level: the operands are handled by the recursion, which
+    #  checks for invariant conditions first.
+    if isinstance(trigger, sp.Xor):
+        return _recurse(_xor_to_or(*trigger.args))
+    if isinstance(trigger, sp.Eq):
+        return _recurse(_eq_to_and(*trigger.args))
+    if isinstance(trigger, sp.Ne):
+        return _recurse(_ne_to_or(*trigger.args))
 
-    # or(x,y): any of {x,y} is > 0: sp.Max(x, y)
-    if isinstance(trigger, sp.Or):
-        return sp.Max(*[_parse_event_trigger(arg) for arg in trigger.args])
-    # and(x,y): all out of {x,y} are > 0: sp.Min(x, y)
-    if isinstance(trigger, sp.And):
-        return sp.Min(*[_parse_event_trigger(arg) for arg in trigger.args])
+    if isinstance(trigger, sp.And | sp.Or):
+        # all invariant operands are evaluated as a single exact condition
+        invariant, other = [], []
+        for arg in trigger.args:
+            (invariant if is_invariant(arg) else other).append(arg)
+        root_args = [_recurse(arg) for arg in other]
+        if invariant:
+            root_args.append(
+                exact_condition_root(
+                    sp.to_nnf(trigger.func(*invariant), simplify=False)
+                )
+            )
+        # or(x,y): any of {x,y} is > 0: sp.Max(x, y)
+        # and(x,y): all out of {x,y} are > 0: sp.Min(x, y)
+        return (
+            sp.Max(*root_args)
+            if isinstance(trigger, sp.Or)
+            else sp.Min(*root_args)
+        )
+    if isinstance(trigger, sp.ITE) and is_invariant(trigger.args[0]):
+        # ite(c, a, b) = (c & a) | (~c & b). No consensus term (see below)
+        #  is needed, since c is evaluated exactly.
+        cond, if_true, if_false = trigger.args
+        return sp.Max(
+            _recurse(sp.And(cond, if_true)),
+            _recurse(sp.And(sp.Not(cond), if_false)),
+        )
     # ite(c, a, b) = (c & a) | (~c & b) | (a & b)
     #  The redundant consensus term (a & b) avoids a root function that
     #  touches zero without changing sign when c changes while a == b.
     if isinstance(trigger, sp.ITE):
-        cond, if_true, if_false = map(_parse_event_trigger, trigger.args)
+        cond, if_true, if_false = map(_recurse, trigger.args)
         return sp.Max(
             sp.Min(cond, if_true),
             sp.Min(-cond, if_false),
