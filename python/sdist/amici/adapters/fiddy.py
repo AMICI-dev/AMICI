@@ -90,9 +90,9 @@ derivative_parameter_dimension = {
     "sx_ss": 0,
     "sy": 1,
     "ssigmay": 1,
-    # 'sz'      : ???,
-    "srz": 2,
-    # 'ssigmaz' : ???,
+    "sz": 1,
+    "srz": 1,
+    "ssigmaz": 1,
     "sllh": 0,
     "s2llh": 1,
     "sres": 1,
@@ -207,6 +207,11 @@ def run_simulation_to_function_and_derivative(
     :param derivative_variables:
         The variables that derivatives will be computed or approximated for.
         See the keys of `all_rdata_derivatives` for options.
+        For the event outputs `z`, `rz` and `sigmaz`, note that
+        `sz` does not account for the parameter dependence of
+        state-dependent event times (#3361), and that for events that
+        did not occur, `z` is the output at the last time point, but
+        `sz` is 0.
     :param free_parameter_ids:
         IDs for the values in the simulated free parameter vector. Each
         must be in the resolved `plist` (`amici_model` or `amici_edata`),
