@@ -35,6 +35,7 @@ from amici._symbolic.de_model_components import (
 )
 from amici.logging import get_logger, log_execution_time, set_log_level
 
+from .._observation_model import get_placeholders
 from ..utils import (
     MeasurementChannel,
     _default_simplify,
@@ -383,6 +384,11 @@ def ode_model_from_pysb_importer(
 
     if observation_model is None:
         observation_model = []
+    if any(get_placeholders(observation_model)):
+        raise NotImplementedError(
+            "Placeholder parameters in the observation model are not "
+            "supported for PySB models."
+        )
     observation_model = {channel.id: channel for channel in observation_model}
 
     pysb.bng.generate_equations(model, verbose=verbose)

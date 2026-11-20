@@ -219,6 +219,8 @@ noise_distribution='log-normal', sigma='sigma1', event_id='event1')
         noise_distribution: str | Callable[[str], str] | None = None,
         sigma: str | sp.Expr | float | None = None,
         event_id: str | None = None,
+        observable_placeholders: Iterable[str] = (),
+        noise_placeholders: Iterable[str] = (),
     ):
         """
         Initialize a measurement channel.
@@ -355,6 +357,22 @@ noise_distribution='log-normal', sigma='sigma1', event_id='event1')
         :param event_id:
             Identifier of the associated event for event-resolved observables.
             `None` for time-resolved observables.
+        :param observable_placeholders:
+            Identifiers of the placeholder parameters in ``formula``.
+
+            The values of placeholder parameters are provided per measurement
+            at simulation time. They are not model parameters.
+            Placeholders are currently only supported by the JAX backend and
+            for time-resolved observables. For the JAX backend, the
+            identifiers must be of the form ``observableParameter{n}``, with
+            the indices ``n`` of all placeholders of the model forming a
+            contiguous range starting at 1. The ``n``-th value provided for
+            a measurement is bound to ``observableParameter{n}``.
+        :param noise_placeholders:
+            Identifiers of the placeholder parameters in ``sigma``.
+
+            See ``observable_placeholders``, with ``noiseParameter{n}``
+            instead of ``observableParameter{n}``.
         """
         self.id = id_
         self.name = name
@@ -362,13 +380,20 @@ noise_distribution='log-normal', sigma='sigma1', event_id='event1')
         self.noise_distribution = noise_distribution or "normal"
         self.sigma = sigma
         self.event_id = event_id
+        self.observable_placeholders = list(observable_placeholders)
+        self.noise_placeholders = list(noise_placeholders)
 
     def __repr__(self):
+        placeholders = "".join(
+            f", {attr}={value!r}"
+            for attr in ("observable_placeholders", "noise_placeholders")
+            if (value := getattr(self, attr))
+        )
         return (
             f"{self.__class__.__name__}(id_={self.id!r}, name={self.name!r}, "
             f"formula={self.formula!r}, noise_distribution="
             f"{self.noise_distribution!r}, sigma={self.sigma!r}, "
-            f"event_id={self.event_id!r})"
+            f"event_id={self.event_id!r}{placeholders})"
         )
 
     @property

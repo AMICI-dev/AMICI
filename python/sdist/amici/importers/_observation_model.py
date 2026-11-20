@@ -22,7 +22,12 @@ from amici.importers.utils import (
     symbol_with_assumptions,
 )
 
-__all__ = ["add_log_likelihoods", "add_observables", "check_event_id"]
+__all__ = [
+    "add_log_likelihoods",
+    "add_observables",
+    "check_event_id",
+    "get_placeholders",
+]
 
 #: ``SymbolId`` -> {symbol -> component attributes}
 SymbolDict = dict[SymbolId, dict[sp.Symbol, dict[str, Any]]]
@@ -48,12 +53,41 @@ def check_event_id(symbols: SymbolDict, channel: MeasurementChannel) -> None:
         )
 
 
+def get_placeholders(
+    observation_model: Iterable[MeasurementChannel],
+) -> tuple[list[str], list[str]]:
+    """Get the placeholder parameters declared by the measurement channels.
+
+    :param observation_model:
+        The measurement channels.
+    :return:
+        The identifiers of the noise and of the observable placeholders,
+        each without duplicates, in order of first declaration.
+    :raises NotImplementedError:
+        If an event-resolved channel declares placeholders.
+    """
+    noise_placeholders = {}
+    observable_placeholders = {}
+    for channel in observation_model:
+        if channel.is_event_resolved and (
+            channel.noise_placeholders or channel.observable_placeholders
+        ):
+            raise NotImplementedError(
+                "Placeholder parameters are only supported for "
+                f"time-resolved observables, but {channel.id} is "
+                "event-resolved."
+            )
+        noise_placeholders.update(dict.fromkeys(channel.noise_placeholders))
+        observable_placeholders.update(
+            dict.fromkeys(channel.observable_placeholders)
+        )
+    return list(noise_placeholders), list(observable_placeholders)
+
+
 def add_observables(
     symbols: SymbolDict,
     observation_model: list[MeasurementChannel],
     sympify: Callable[[Any], sp.Expr],
-    noise_parameters: Iterable[str] = (),
-    observable_parameters: Iterable[str] = (),
 ) -> None:
     """Add observables, event observables, and placeholder parameters.
 
@@ -65,14 +99,13 @@ def add_observables(
     :param sympify:
         Function to convert formulas to sympy expressions, resolving
         identifiers in the importer's namespace.
-    :param noise_parameters:
-        Names of the noise parameter placeholders.
-    :param observable_parameters:
-        Names of the observable parameter placeholders.
     """
     for channel in observation_model:
         check_event_id(symbols, channel)
 
+    noise_parameters, observable_parameters = get_placeholders(
+        observation_model
+    )
     symbols[SymbolId.NOISE_PARAMETER] = {
         symbol_with_assumptions(noise_par): {"name": noise_par}
         for noise_par in noise_parameters
