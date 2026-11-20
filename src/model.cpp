@@ -530,6 +530,7 @@ void Model::reinit_events(
         }
     }
 
+    h_old_ = h_old;
     std::ranges::fill(roots_found, 0);
     for (int ie = 0; ie < ne; ie++) {
         if (state_.h.at(ie) > 0.0 && h_old.at(ie) <= 0.0) {

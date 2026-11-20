@@ -361,6 +361,29 @@ class Model : public AbstractModel, public ModelDimensions {
     );
 
     /**
+     * @brief Get the Heaviside variables before the latest (re-)initialization
+     * of the events.
+     *
+     * These are the values at the end of the previous simulation period, or,
+     * for the first one, the initial values of the triggers. An event triggers
+     * at the initial time if its Heaviside variable changes from 0 to 1
+     * relative to these values.
+     *
+     * @return Heaviside variables (dimension: ne)
+     */
+    [[nodiscard]] std::vector<realtype> const& get_h_old() const {
+        return h_old_;
+    }
+
+    /**
+     * @brief Set the Heaviside variables before the initial time of a
+     * simulation period that does not re-initialize the events.
+     *
+     * @param h_old Heaviside variables (dimension: ne), see get_h_old()
+     */
+    void set_h_old(std::vector<realtype> const& h_old) { h_old_ = h_old; }
+
+    /**
      * @brief Re-compute the explicit roots.
      *
      * Re-compute the explicit roots based on the current model parameters
@@ -2558,6 +2581,12 @@ class Model : public AbstractModel, public ModelDimensions {
      * require root-finding.
      */
     std::map<realtype, std::vector<int>> explicit_roots_ = {};
+
+    /**
+     * @brief Heaviside variables before the latest (re-)initialization of the
+     * events, see get_h_old().
+     */
+    std::vector<realtype> h_old_;
 };
 
 bool operator==(Model const& a, Model const& b);

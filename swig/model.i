@@ -47,6 +47,8 @@ using namespace amici;
 %ignore get_observable_sensitivity;
 %ignore get_expression;
 %ignore reinit_events;
+%ignore get_h_old;
+%ignore set_h_old;
 %ignore initialize;
 %ignore initialize_b;
 %ignore initialize_state_sensitivities;
