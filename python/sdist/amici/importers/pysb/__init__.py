@@ -75,6 +75,7 @@ def pysb2jax(
     cache_simplify: bool = False,
     model_name: str | None = None,
     pysb_model_has_obs_and_noise: bool = False,
+    _parameter_targets: dict[str, sp.Expr] | None = None,
 ):
     r"""
     Generate AMICI jax files for the provided model.
@@ -147,6 +148,7 @@ def pysb2jax(
         verbose=verbose,
         jax=True,
         pysb_model_has_obs_and_noise=pysb_model_has_obs_and_noise,
+        _parameter_targets=_parameter_targets,
     )
 
     from amici.exporters.jax.ode_export import ODEExporter
@@ -179,6 +181,7 @@ def pysb2amici(
     model_name: str | None = None,
     pysb_model_has_obs_and_noise: bool = False,
     _events: list[Event] = None,
+    _parameter_targets: dict[str, sp.Expr] | None = None,
 ) -> amici.sim.sundials.Model | None:
     r"""
     Generate AMICI C++ files for the provided model.
@@ -283,6 +286,7 @@ def pysb2amici(
         verbose=verbose,
         pysb_model_has_obs_and_noise=pysb_model_has_obs_and_noise,
         _events=_events,
+        _parameter_targets=_parameter_targets,
     )
 
     from amici.exporters.sundials.de_export import (
@@ -331,6 +335,7 @@ def ode_model_from_pysb_importer(
     jax: bool = False,
     pysb_model_has_obs_and_noise: bool = False,
     _events: list[Event] = None,
+    _parameter_targets: dict[str, sp.Expr] | None = None,
 ) -> DEModel:
     """
     Creates an :class:`DEModel` instance from a :class:`pysb.core.Model`
@@ -368,6 +373,15 @@ def ode_model_from_pysb_importer(
         if set to ``True``, the pysb model is expected to have extra
         observables and noise variables added
 
+    :param _events:
+        Events to be added to the model.
+
+    :param _parameter_targets:
+        :class:`pysb.Parameter` IDs that are to be replaced by the given
+        initial values, e.g., to implement PEtab condition changes.
+        Parameters that are assignment targets of ``_events`` are converted
+        to constant state variables, all others to expressions.
+
     :return:
         New DEModel instance according to `model`
     """
@@ -384,6 +398,43 @@ def ode_model_from_pysb_importer(
     if observation_model is None:
         observation_model = []
     observation_model = {channel.id: channel for channel in observation_model}
+    _parameter_targets = _parameter_targets or {}
+    event_targets = {
+        str(target)
+        for event in _events or []
+        for target in event.assignment_targets
+    }
+    if unknown := set(_parameter_targets) - {
+        par.name for par in model.parameters
+    }:
+        raise ValueError(f"Unknown parameter targets: {unknown}")
+    if invalid := (
+        event_targets & {par.name for par in model.parameters}
+    ) - set(_parameter_targets):
+        raise ValueError(
+            f"Parameters {invalid} are event assignment targets, but are "
+            "not included in `_parameter_targets`."
+        )
+    #: parameter targets to be converted to state variables
+    state_parameters = {
+        par_id: init
+        for par_id, init in _parameter_targets.items()
+        if par_id in event_targets
+    }
+    #: parameter targets to be converted to expressions
+    expression_parameters = {
+        par_id: init
+        for par_id, init in _parameter_targets.items()
+        if par_id not in event_targets
+    }
+    if size_parameters := _compartment_size_parameters(model) & set(
+        _parameter_targets
+    ):
+        raise NotImplementedError(
+            "Compartment size parameters can't be changed: "
+            f"{size_parameters}. BioNetGen evaluates compartment sizes "
+            "during network generation."
+        )
 
     pysb.bng.generate_equations(model, verbose=verbose)
 
@@ -414,13 +465,21 @@ def ode_model_from_pysb_importer(
     }
 
     _process_pysb_species(model, ode, renames)
-    _process_pysb_parameters(model, ode, fixed_parameters, renames)
+    _process_pysb_parameters(
+        model,
+        ode,
+        fixed_parameters,
+        renames,
+        state_parameters=state_parameters,
+        expression_parameters=expression_parameters,
+    )
+    if compute_conservation_laws and _events:
+        logger.warning(
+            "Conservation laws are currently not supported for models "
+            "with events, and will be turned off."
+        )
+        compute_conservation_laws = False
     if compute_conservation_laws:
-        if _events:
-            raise NotImplementedError(
-                "Conservation law computation is not supported for models "
-                "with events. Use `compute_conservation_laws=False`."
-            )
         _process_pysb_conservation_laws(model, ode, all_names)
     _process_pysb_observables(
         model,
@@ -448,11 +507,31 @@ def ode_model_from_pysb_importer(
         for channel in observation_model.values()
     )
 
-    _process_stoichiometric_matrix(model, ode, fixed_parameters, renames)
+    _process_stoichiometric_matrix(
+        model,
+        ode,
+        fixed_parameters,
+        renames,
+        state_parameters=set(state_parameters),
+        expression_parameters=set(expression_parameters),
+    )
 
     ode.generate_basic_variables()
 
     return ode
+
+
+def _compartment_size_parameters(model: pysb.Model) -> set[str]:
+    """Get the IDs of all parameters that compartment sizes depend on."""
+    names = set()
+    for compartment in model.compartments:
+        if isinstance(compartment.size, pysb.Expression):
+            names |= {
+                sym.name for sym in compartment.size.expand_expr().free_symbols
+            }
+        elif compartment.size is not None:
+            names.add(compartment.size.name)
+    return names
 
 
 @log_execution_time("processing PySB stoich. matrix", logger)
@@ -461,6 +540,8 @@ def _process_stoichiometric_matrix(
     ode_model: DEModel,
     fixed_parameters: list[str],
     renames: dict[str, str],
+    state_parameters: set[str] | None = None,
+    expression_parameters: set[str] | None = None,
 ) -> None:
     """
     Exploits the PySB stoichiometric matrix to generate xdot derivatives
@@ -477,7 +558,15 @@ def _process_stoichiometric_matrix(
     :param renames:
         mapping from a PySB-chosen name to a non-colliding replacement, see
         `resolve_reserved_symbol_renames`
+
+    :param state_parameters:
+        IDs of parameters that were converted to state variables
+
+    :param expression_parameters:
+        IDs of parameters that were converted to expressions
     """
+    state_parameters = state_parameters or set()
+    expression_parameters = expression_parameters or set()
 
     x = ode_model.sym("x")
     w = list(ode_model.sym("w"))
@@ -497,6 +586,7 @@ def _process_stoichiometric_matrix(
     w_idx = dict()
     p_idx = dict()
     wx_idx = dict()
+    x_idx = {}
 
     def get_cached_index(symbol, sarray, index_cache):
         idx = index_cache.get(symbol, None)
@@ -526,10 +616,20 @@ def _process_stoichiometric_matrix(
         # can only be a parameter or expression
         for fs in rxn["rate"].free_symbols:
             # dw
-            if isinstance(fs, pysb.Expression):
+            if isinstance(fs, pysb.Expression) or (
+                isinstance(fs, pysb.Parameter)
+                and fs.name in expression_parameters
+            ):
                 var = w
                 idx_cache = w_idx
                 values = dflux_dw_dict
+            # dx (parameters converted to states)
+            elif (
+                isinstance(fs, pysb.Parameter) and fs.name in state_parameters
+            ):
+                var = list(x)
+                idx_cache = x_idx
+                values = dflux_dx_dict
             # dp
             elif isinstance(fs, pysb.Parameter):
                 if fs.name in fixed_parameters:
@@ -553,13 +653,22 @@ def _process_stoichiometric_matrix(
     dflux_dw = sp.ImmutableSparseMatrix(n_r, n_w, dflux_dw_dict)
     dflux_dp = sp.ImmutableSparseMatrix(n_r, n_p, dflux_dp_dict)
 
+    # Rows of the stoichiometric matrix for the species in the solver state.
+    #  Any non-species states (converted parameters) come after the species
+    #  and have zero rows.
+    n_species = len(pysb_model.species)
+    species_rows = [ix for ix in solver_index if ix < n_species]
+    if any(
+        solver_index[ix] >= len(species_rows)
+        for ix in solver_index
+        if ix < n_species
+    ):
+        raise AssertionError("Unexpected state order.")
     # use dok format to convert numeric csc to sparse _symbolic
     S = sp.ImmutableSparseMatrix(
         n_x,
         n_r,  # don't use shape here as we are eliminating rows
-        pysb_model.stoichiometry_matrix[
-            np.asarray(list(solver_index.keys())), :
-        ].todok(),
+        pysb_model.stoichiometry_matrix[np.asarray(species_rows), :].todok(),
     )
     # don't use `.dot` since it's awfully slow
     ode_model._eqs["dxdotdx_explicit"] = S * dflux_dx
@@ -619,6 +728,8 @@ def _process_pysb_parameters(
     ode_model: DEModel,
     fixed_parameters: list[str],
     renames: dict[str, str],
+    state_parameters: dict[str, sp.Expr] | None = None,
+    expression_parameters: dict[str, sp.Expr] | None = None,
 ) -> None:
     """
     Converts pysb parameters into Parameters or Constants and adds them to
@@ -636,9 +747,39 @@ def _process_pysb_parameters(
     :param renames:
         mapping from a PySB-chosen name to a non-colliding replacement, see
         `resolve_reserved_symbol_renames`
+
+    :param state_parameters:
+        Parameters to be converted to constant state variables
+        (e.g., to be targets of event assignments), mapped to their
+        initial values.
+
+    :param expression_parameters:
+        Parameters to be converted to expressions, mapped to their values.
     """
+    state_parameters = state_parameters or {}
+    expression_parameters = expression_parameters or {}
+    # parameter symbol -> value at initialization
+    initial_values = {}
+
     for par in pysb_model.parameters:
         symbol = symbol_with_assumptions(renames.get(par.name, par.name))
+        if par.name in state_parameters:
+            init = _expr_to_amici(
+                sp.sympify(state_parameters[par.name]), renames
+            )
+            ode_model.add_component(
+                DifferentialState(symbol, par.name, init, sp.Float(0.0))
+            )
+            initial_values[symbol] = init
+            continue
+        if par.name in expression_parameters:
+            value = _expr_to_amici(
+                sp.sympify(expression_parameters[par.name]), renames
+            )
+            ode_model.add_component(Expression(symbol, par.name, value))
+            initial_values[symbol] = value
+            continue
+
         args = [symbol, par.name]
         if par.name in fixed_parameters:
             comp = FixedParameter
@@ -648,6 +789,14 @@ def _process_pysb_parameters(
             args.append(par.value)
 
         ode_model.add_component(comp(*args))
+
+    # Species initial values may depend on the converted parameters.
+    #  Those must be expressed in terms of parameters only.
+    if initial_values:
+        for state in ode_model.states():
+            if state.get_sym() in initial_values:
+                continue
+            state.set_val(state.get_val().xreplace(initial_values))
 
 
 @log_execution_time("processing PySB expressions", logger)
