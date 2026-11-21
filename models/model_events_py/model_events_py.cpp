@@ -40,7 +40,7 @@ std::array<const ObservableScaling, 1> observable_scalings = {
     ObservableScaling::lin, // y[0]
 };
 
-extern const std::array<std::string_view const, 0> expression_names = {
+extern const std::array<std::string_view const, 0 + 0> expression_names = {
     
 };
 
@@ -74,7 +74,7 @@ extern const std::array<std::string_view const, 1> observable_ids = {
     "y1", // y[0]
 };
 
-extern const std::array<std::string_view const, 0> expression_ids = {
+extern const std::array<std::string_view const, 0 + 0> expression_ids = {
     
 };
 

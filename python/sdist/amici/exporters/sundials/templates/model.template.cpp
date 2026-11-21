@@ -30,7 +30,7 @@ std::array<const ObservableScaling, TPL_NY> observable_scalings = {
     TPL_OBSERVABLE_TRAFO_INITIALIZER_LIST
 };
 
-extern const std::array<std::string_view const, TPL_NW> expression_names = {
+extern const std::array<std::string_view const, TPL_NW + TPL_NWS> expression_names = {
     TPL_EXPRESSION_NAMES_INITIALIZER_LIST
 };
 
@@ -54,7 +54,7 @@ extern const std::array<std::string_view const, TPL_NY> observable_ids = {
     TPL_OBSERVABLE_IDS_INITIALIZER_LIST
 };
 
-extern const std::array<std::string_view const, TPL_NW> expression_ids = {
+extern const std::array<std::string_view const, TPL_NW + TPL_NWS> expression_ids = {
     TPL_EXPRESSION_IDS_INITIALIZER_LIST
 };
 

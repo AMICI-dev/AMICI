@@ -49,7 +49,7 @@ void dxdotdx_explicit_rowvals_model_nested_events_py(SUNMatrixWrapper &dxdotdx_e
 namespace amici {
 namespace model_model_nested_events_py {
 
-void dxdotdx_explicit_model_nested_events_py(realtype *dxdotdx_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w){
+void dxdotdx_explicit_model_nested_events_py(realtype *dxdotdx_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *w){
     const realtype rho_V_ = p[3];
     const realtype delta_V_ = p[4];
     const realtype Heaviside_1_ = h[0];

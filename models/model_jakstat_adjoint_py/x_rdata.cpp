@@ -6,7 +6,7 @@
 namespace amici {
 namespace model_model_jakstat_adjoint_py {
 
-void x_rdata_model_jakstat_adjoint_py(realtype *x_rdata, const realtype *x, const realtype *tcl, const realtype *p, const realtype *k){
+void x_rdata_model_jakstat_adjoint_py(realtype *x_rdata, const realtype *x, const realtype *tcl, const realtype *p, const realtype *k, const realtype *ws){
     const realtype STAT_ = x[0];
     const realtype pSTAT_ = x[1];
     const realtype pSTAT_pSTAT_ = x[2];

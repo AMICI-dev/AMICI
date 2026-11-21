@@ -34,6 +34,7 @@ struct ModelDimensions {
         Expects(ne >= ne_solver);
         Expects(nspl >= 0);
         Expects(nw >= 0);
+        Expects(nws >= 0);
         Expects(ndwdx >= 0);
         Expects(ndwdx <= nw * nx_solver);
         Expects(ndwdp >= 0);
@@ -102,6 +103,9 @@ struct ModelDimensions {
 
     /** Number of common expressions */
     int nw{0};
+
+    /** Number of static expressions */
+    int nws{0};
 
     /**
      * Number of nonzero elements in the `x` derivative of the

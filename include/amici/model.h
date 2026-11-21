@@ -57,6 +57,7 @@ enum class ModelQuantity {
     x_rdata,
     x,
     dwdw,
+    ws,
     dwdx,
     dwdp,
     y,
@@ -224,6 +225,8 @@ class Model : public AbstractModel, public ModelDimensions {
     using AbstractModel::fsx0_fixedParameters;
     using AbstractModel::fsz;
     using AbstractModel::fw;
+    using AbstractModel::fws;
+    using AbstractModel::fws_fixedParameters;
     using AbstractModel::fx0;
     using AbstractModel::fx0_fixedParameters;
     using AbstractModel::fy;
@@ -595,6 +598,7 @@ class Model : public AbstractModel, public ModelDimensions {
      * @brief Set values for constants.
      *
      * @param k Vector of fixed parameters
+     * @param ws static expressions
      */
     void set_fixed_parameters(std::vector<realtype> const& k);
 
@@ -1141,9 +1145,9 @@ class Model : public AbstractModel, public ModelDimensions {
     void require_sensitivities_for_all_parameters();
 
     /**
-     * @brief Get time-resolved `w`.
+     * @brief Get time-resolved `w`, followed by the static expressions `ws`.
      *
-     * @param w Buffer (shape `nw`)
+     * @param w Buffer (shape `nw + nws`)
      * @param t Current timepoint
      * @param x Current state
      */
@@ -1705,6 +1709,27 @@ class Model : public AbstractModel, public ModelDimensions {
     [[nodiscard]] bool get_always_check_finite() const;
 
     /**
+     * @brief Compute static expressions.
+     *
+     * Static expressions are evaluated once at the initial time point and
+     * stored in the model state.
+     *
+     * @param t Initial timepoint.
+     */
+    void fws(realtype t);
+
+    /**
+     * @brief Re-evaluate only those static expressions that depend on fixed
+     * parameters.
+     *
+     * No-op unless fixed-parameter-dependent reinitialization of initial
+     * states is enabled.
+     *
+     * @param t Timepoint.
+     */
+    void fws_fixedParameters(realtype t);
+
+    /**
      * @brief Compute/get pre-event initial state.
      *
      * @param t Timepoint.
@@ -1857,7 +1882,8 @@ class Model : public AbstractModel, public ModelDimensions {
 
     [[nodiscard]] std::vector<std::vector<realtype>> fexplicit_roots(
         [[maybe_unused]] realtype const* x, [[maybe_unused]] realtype const* p,
-        [[maybe_unused]] realtype const* k, [[maybe_unused]] realtype const* w
+        [[maybe_unused]] realtype const* k, [[maybe_unused]] realtype const* ws,
+        [[maybe_unused]] realtype const* w
     ) override {
         if (ne != ne_solver) {
             throw AmiException(
@@ -2348,10 +2374,11 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param tcl Total abundances for conservation laws
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      */
     virtual void fx_rdata(
         realtype* x_rdata, realtype const* x_solver, realtype const* tcl,
-        realtype const* p, realtype const* k
+        realtype const* p, realtype const* k, realtype const* ws
     );
 
     /**
@@ -2366,14 +2393,15 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param stcl Sensitivities of total abundances for conservation laws
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param x_solver State variables with conservation laws applied
      * @param tcl Total abundances for conservation laws
      * @param ip Sensitivity index
      */
     virtual void fsx_rdata(
         realtype* sx_rdata, realtype const* sx_solver, realtype const* stcl,
-        realtype const* p, realtype const* k, realtype const* x_solver,
-        realtype const* tcl, int ip
+        realtype const* p, realtype const* k, realtype const* ws,
+        realtype const* x_solver, realtype const* tcl, int ip
     );
 
     /**
@@ -2407,10 +2435,11 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param x_rdata State variables with conservation laws expanded
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      */
     virtual void ftotal_cl(
         realtype* total_cl, realtype const* x_rdata, realtype const* p,
-        realtype const* k
+        realtype const* k, realtype const* ws
     );
 
     /**
@@ -2426,12 +2455,13 @@ class Model : public AbstractModel, public ModelDimensions {
      * @param x_rdata State variables with conservation laws expanded
      * @param p parameter vector
      * @param k constant vector
+     * @param ws static expressions
      * @param tcl Total abundances for conservation laws
      */
     virtual void fstotal_cl(
         realtype* stotal_cl, realtype const* sx_rdata, int ip,
         realtype const* x_rdata, realtype const* p, realtype const* k,
-        realtype const* tcl
+        realtype const* ws, realtype const* tcl
     );
 
     /**

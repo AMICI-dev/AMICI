@@ -6,7 +6,7 @@
 namespace amici {
 namespace model_model_jakstat_adjoint_py {
 
-void dspline_valuesdp_model_jakstat_adjoint_py(realtype *dspline_valuesdp, const realtype *p, const realtype *k, const int ip){
+void dspline_valuesdp_model_jakstat_adjoint_py(realtype *dspline_valuesdp, const realtype *p, const realtype *k, const realtype *ws, const int ip){
     switch(ip) {
         case 5:
             dspline_valuesdp[0] = 1;

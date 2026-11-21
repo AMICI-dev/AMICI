@@ -53,7 +53,7 @@ void dJydy_rowvals_model_steadystate_py(SUNMatrixWrapper &dJydy, int index){
 namespace amici {
 namespace model_model_steadystate_py {
 
-void dJydy_model_steadystate_py(realtype *dJydy, const int iy, const realtype *p, const realtype *k, const realtype *y, const realtype *sigmay, const realtype *my){
+void dJydy_model_steadystate_py(realtype *dJydy, const int iy, const realtype *p, const realtype *k, const realtype *ws, const realtype *y, const realtype *sigmay, const realtype *my){
     const realtype obs_x1_ = y[0];
     const realtype obs_x2_ = y[1];
     const realtype obs_x3_ = y[2];

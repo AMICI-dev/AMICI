@@ -6,7 +6,7 @@
 namespace amici {
 namespace model_model_events_py {
 
-void dtaudx_model_events_py(realtype *dtaudx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const int ie){
+void dtaudx_model_events_py(realtype *dtaudx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const int ie){
     const realtype x1_ = x[0];
     const realtype x2_ = x[1];
     const realtype x3_ = x[2];

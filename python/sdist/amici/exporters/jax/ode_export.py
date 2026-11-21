@@ -176,6 +176,11 @@ class ODEExporter:
                 "The JAX backend does not support event priorities."
             )
 
+        if ode_model.static_expressions():
+            raise NotImplementedError(
+                "The JAX backend does not support static expressions yet."
+            )
+
         if ode_model.has_implicit_event_assignments():
             raise NotImplementedError(
                 "The JAX backend does not support event assignments with implicit triggers."

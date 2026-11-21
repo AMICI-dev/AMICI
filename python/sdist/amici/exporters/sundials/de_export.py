@@ -623,6 +623,7 @@ class DEExporter:
         if not self.allow_reinit_fixpar_initcond and function in {
             "sx0_fixedParameters",
             "x0_fixedParameters",
+            "ws_fixedParameters",
         }:
             return lines
 
@@ -693,6 +694,22 @@ class DEExporter:
                     f"{function}[{index}] = "
                     f"{self._code_printer.doprint(formula)};"
                 )
+
+        elif function == "ws_fixedParameters":
+            # updates the k-dependent entries in place; all other entries are
+            #  read from the output array, which aliases the current values
+            ws_syms = self.model.sym("ws")
+            idxs = self.model._ws_fixedParameters_idx
+            lines += self._code_printer._get_output_declarations(
+                ws_syms, function, 4
+            )
+            lines += self._code_printer._get_sym_lines_symbols(
+                sp.Matrix([ws_syms[i] for i in idxs]),
+                equations,
+                function,
+                4,
+                idxs,
+            )
 
         elif function in event_functions:
             cases = {
@@ -991,6 +1008,7 @@ class DEExporter:
             "NOBJECTIVE": "1",
             "NSPL": len(self.model._splines),
             "NW": len(self.model.sym("w")),
+            "NWS": len(self.model.sym("ws")),
             "NDWDP": len(
                 self.model.sparsesym(
                     "dwdp", force_generate=self.generate_sensitivity_code
@@ -1201,6 +1219,9 @@ class DEExporter:
                 for state in self.model.states()
                 if not state.has_conservation_law()
             ]
+        elif name == "w":
+            # `ReturnData::w` holds `w` followed by `ws`
+            names = self.model.name("w") + self.model.name("ws")
         else:
             names = self.model.name(name)
 
@@ -1227,6 +1248,9 @@ class DEExporter:
                 for state in self.model.states()
                 if not state.has_conservation_law()
             ]
+        elif name == "w":
+            # `ReturnData::w` holds `w` followed by `ws`
+            syms = list(self.model.sym("w")) + list(self.model.sym("ws"))
         else:
             syms = self.model.sym(name)
 

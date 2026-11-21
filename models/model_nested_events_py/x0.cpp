@@ -6,7 +6,7 @@
 namespace amici {
 namespace model_model_nested_events_py {
 
-void x0_model_nested_events_py(realtype *x0, const realtype t, const realtype *p, const realtype *k){
+void x0_model_nested_events_py(realtype *x0, const realtype t, const realtype *p, const realtype *k, const realtype *ws){
     const realtype V_0_ = p[0];
 
     x0[0] = V_0_;

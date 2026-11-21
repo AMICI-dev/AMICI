@@ -57,6 +57,8 @@
 %ignore fstau;
 %ignore fsz;
 %ignore fw;
+%ignore fws;
+%ignore fws_fixedParameters;
 %ignore fy;
 %ignore fz;
 %ignore fx0;

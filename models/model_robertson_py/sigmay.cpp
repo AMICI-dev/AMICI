@@ -6,7 +6,7 @@
 namespace amici {
 namespace model_model_robertson_py {
 
-void sigmay_model_robertson_py(realtype *sigmay, const realtype t, const realtype *p, const realtype *k, const realtype *y){
+void sigmay_model_robertson_py(realtype *sigmay, const realtype t, const realtype *p, const realtype *k, const realtype *ws, const realtype *y){
     realtype &sigma_obs_x1_ = sigmay[0];
     realtype &sigma_obs_x2_ = sigmay[1];
     realtype &sigma_obs_x3_ = sigmay[2];

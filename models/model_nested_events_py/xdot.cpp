@@ -6,7 +6,7 @@
 namespace amici {
 namespace model_model_nested_events_py {
 
-void xdot_model_nested_events_py(realtype *xdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w){
+void xdot_model_nested_events_py(realtype *xdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *w){
     const realtype Virus_ = x[0];
     const realtype rho_V_ = p[3];
     const realtype delta_V_ = p[4];

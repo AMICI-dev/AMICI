@@ -6,7 +6,7 @@
 namespace amici {
 namespace model_model_neuron_py {
 
-void dJzdz_model_neuron_py(realtype *dJzdz, const int iz, const realtype *p, const realtype *k, const realtype *z, const realtype *sigmaz, const double *mz){
+void dJzdz_model_neuron_py(realtype *dJzdz, const int iz, const realtype *p, const realtype *k, const realtype *ws, const realtype *z, const realtype *sigmaz, const double *mz){
     const realtype z1_ = z[0];
     const realtype sigma_z1_ = sigmaz[0];
     const realtype mz1_ = mz[0];

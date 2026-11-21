@@ -49,7 +49,7 @@ void dxdotdp_explicit_rowvals_model_steadystate_py(SUNMatrixWrapper &dxdotdp_exp
 namespace amici {
 namespace model_model_steadystate_py {
 
-void dxdotdp_explicit_model_steadystate_py(realtype *dxdotdp_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w){
+void dxdotdp_explicit_model_steadystate_py(realtype *dxdotdp_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *w){
     const realtype x1_ = x[0];
     const realtype x2_ = x[1];
     const realtype x3_ = x[2];

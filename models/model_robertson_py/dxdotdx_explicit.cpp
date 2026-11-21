@@ -49,7 +49,7 @@ void dxdotdx_explicit_rowvals_model_robertson_py(SUNMatrixWrapper &dxdotdx_expli
 namespace amici {
 namespace model_model_robertson_py {
 
-void dxdotdx_explicit_model_robertson_py(realtype *dxdotdx_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const realtype *w){
+void dxdotdx_explicit_model_robertson_py(realtype *dxdotdx_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *dx, const realtype *w){
     const realtype x2_ = x[1];
     const realtype x3_ = x[2];
     const realtype p1_ = p[0];

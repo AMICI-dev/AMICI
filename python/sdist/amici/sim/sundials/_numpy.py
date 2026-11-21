@@ -444,7 +444,7 @@ class ReturnDataView(SwigPtrView):
         "FIM": lambda rdata: [rdata.nplist, rdata.nplist],
         # diagnosis
         "J": lambda rdata: [rdata.nx_solver, rdata.nx_solver],
-        "w": lambda rdata: [rdata.nt, rdata.nw],
+        "w": lambda rdata: [rdata.nt, rdata.nw + rdata.nws],
         "xdot": lambda rdata: [rdata.nx_solver],
         "preeq_numlinsteps": lambda rdata: [rdata.newton_maxsteps, 2],
         "preeq_numsteps": lambda rdata: [3],

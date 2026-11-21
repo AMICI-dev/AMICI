@@ -6,7 +6,7 @@
 namespace amici {
 namespace model_model_steadystate_py {
 
-void x0_model_steadystate_py(realtype *x0, const realtype t, const realtype *p, const realtype *k){
+void x0_model_steadystate_py(realtype *x0, const realtype t, const realtype *p, const realtype *k, const realtype *ws){
     const realtype k1_ = k[0];
     const realtype k2_ = k[1];
     const realtype k3_ = k[2];

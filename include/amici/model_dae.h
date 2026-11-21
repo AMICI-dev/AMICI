@@ -389,6 +389,7 @@ class Model_DAE : public Model {
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
+     * @param ws static expressions
      * @param h Heaviside vector
      * @param cj scaling factor, inverse of the step size
      * @param dx Vector with the derivative states
@@ -397,8 +398,8 @@ class Model_DAE : public Model {
      **/
     virtual void fJSparse(
         SUNMatrixContent_Sparse JSparse, realtype t, realtype const* x,
-        double const* p, double const* k, realtype const* h, realtype cj,
-        realtype const* dx, realtype const* w, realtype const* dwdx
+        double const* p, double const* k, double const* ws, realtype const* h,
+        realtype cj, realtype const* dx, realtype const* w, realtype const* dwdx
     );
 
     /**
@@ -409,13 +410,14 @@ class Model_DAE : public Model {
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
+     * @param ws static expressions
      * @param h Heaviside vector
      * @param w vector with helper variables
      * @param dx Vector with the derivative states
      **/
     virtual void froot(
         realtype* root, realtype t, realtype const* x, double const* p,
-        double const* k, realtype const* h, realtype const* w,
+        double const* k, double const* ws, realtype const* h, realtype const* w,
         realtype const* dx
     );
 
@@ -427,14 +429,15 @@ class Model_DAE : public Model {
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
+     * @param ws static expressions
      * @param h Heaviside vector
      * @param w vector with helper variables
      * @param dx Vector with the derivative states
      **/
     virtual void fxdot(
         realtype* xdot, realtype t, realtype const* x, double const* p,
-        double const* k, realtype const* h, realtype const* dx,
-        realtype const* w
+        double const* k, double const* ws, realtype const* h,
+        realtype const* dx, realtype const* w
     ) = 0;
 
     /**
@@ -445,14 +448,15 @@ class Model_DAE : public Model {
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
+     * @param ws static expressions
      * @param h Heaviside vector
      * @param dx Vector with the derivative states
      * @param w vector with helper variables
      */
     virtual void fdxdotdp_explicit(
         realtype* dxdotdp_explicit, realtype t, realtype const* x,
-        realtype const* p, realtype const* k, realtype const* h,
-        realtype const* dx, realtype const* w
+        realtype const* p, realtype const* k, realtype const* ws,
+        realtype const* h, realtype const* dx, realtype const* w
     );
 
     /**
@@ -477,14 +481,15 @@ class Model_DAE : public Model {
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
+     * @param ws static expressions
      * @param h Heaviside vector
      * @param dx Vector with the derivative states
      * @param w vector with helper variables
      */
     virtual void fdxdotdx_explicit(
         realtype* dxdotdx_explicit, realtype t, realtype const* x,
-        realtype const* p, realtype const* k, realtype const* h,
-        realtype const* dx, realtype const* w
+        realtype const* p, realtype const* k, realtype const* ws,
+        realtype const* h, realtype const* dx, realtype const* w
     );
 
     /**
@@ -509,14 +514,15 @@ class Model_DAE : public Model {
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
+     * @param ws static expressions
      * @param h Heaviside vector
      * @param dx Vector with the derivative states
      * @param w vector with helper variables
      */
     virtual void fdxdotdw(
         realtype* dxdotdw, realtype t, realtype const* x, realtype const* p,
-        realtype const* k, realtype const* h, realtype const* dx,
-        realtype const* w
+        realtype const* k, realtype const* ws, realtype const* h,
+        realtype const* dx, realtype const* w
     );
 
     /**
@@ -550,10 +556,11 @@ class Model_DAE : public Model {
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
+     * @param ws static expressions
      */
     virtual void
     fM(realtype* M, realtype t, realtype const* x, realtype const* p,
-       realtype const* k);
+       realtype const* k, realtype const* ws);
 };
 } // namespace amici
 

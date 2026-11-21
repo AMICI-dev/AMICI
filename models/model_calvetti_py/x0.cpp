@@ -6,7 +6,7 @@
 namespace amici {
 namespace model_model_calvetti_py {
 
-void x0_model_calvetti_py(realtype *x0, const realtype t, const realtype *p, const realtype *k){
+void x0_model_calvetti_py(realtype *x0, const realtype t, const realtype *p, const realtype *k, const realtype *ws){
     const realtype V1ss_ = k[0];
     const realtype V2ss_ = k[2];
     const realtype V3ss_ = k[4];

@@ -34,6 +34,7 @@ __all__ = [
     "FreeParameter",
     "SigmaY",
     "SigmaZ",
+    "StaticExpression",
     "DifferentialState",
     "EventObservable",
     "AlgebraicState",
@@ -591,6 +592,36 @@ class Expression(ModelQuantity):
 
         :param name:
             individual name of the Expression (does not need to be unique)
+
+        :param value:
+            formula
+        """
+        super().__init__(symbol, name, value)
+
+
+class StaticExpression(ModelQuantity):
+    """
+    A derived model quantity that is evaluated once at the initial time point.
+
+    Static expressions may depend on free and fixed parameters, on the
+    initial time, and on other static expressions, but not on states, time
+    (beyond the initial time point), or dynamic expressions. They are
+    evaluated once at the start of a simulation and re-evaluated after
+    pre-equilibration only if they depend on fixed parameters and
+    fixed-parameter-dependent reinitialization is enabled. Abbreviated by
+    ``ws``.
+    """
+
+    def __init__(self, symbol: sp.Symbol, name: str, value: sp.Expr):
+        """
+        Create a new StaticExpression instance.
+
+        :param symbol:
+            unique symbol of the StaticExpression
+
+        :param name:
+            individual name of the StaticExpression (does not need to be
+            unique)
 
         :param value:
             formula

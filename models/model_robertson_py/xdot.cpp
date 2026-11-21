@@ -6,7 +6,7 @@
 namespace amici {
 namespace model_model_robertson_py {
 
-void xdot_model_robertson_py(realtype *xdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const realtype *w){
+void xdot_model_robertson_py(realtype *xdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *ws, const realtype *h, const realtype *dx, const realtype *w){
     const realtype x1_ = x[0];
     const realtype x2_ = x[1];
     const realtype x3_ = x[2];

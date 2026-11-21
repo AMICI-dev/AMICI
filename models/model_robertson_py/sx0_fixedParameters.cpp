@@ -7,7 +7,7 @@
 namespace amici {
 namespace model_model_robertson_py {
 
-void sx0_fixedParameters_model_robertson_py(realtype *sx0_fixedParameters, const realtype t, const realtype *x0, const realtype *p, const realtype *k, const int ip, gsl::span<const int> reinitialization_state_idxs){
+void sx0_fixedParameters_model_robertson_py(realtype *sx0_fixedParameters, const realtype t, const realtype *x0, const realtype *p, const realtype *k, const realtype *ws, const int ip, gsl::span<const int> reinitialization_state_idxs){
     static const std::array<int, 1> _x0_fixedParameters_idxs = {
         0
     };
