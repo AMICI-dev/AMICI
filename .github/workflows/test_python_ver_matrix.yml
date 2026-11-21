@@ -25,6 +25,8 @@ jobs:
             experimental: false
           - python-version: '3.14'
             experimental: false
+          - python-version: '3.15'
+            experimental: false
 
     steps:
     - uses: dweindl/gha-runner-diagnostics@v1
@@ -50,6 +52,14 @@ jobs:
 
     - name: Install python package
       run: scripts/installAmiciSource.sh
+
+    - name: Install petab_sciml
+      # only needed for test_sciml.py, which is skipped otherwise;
+      # petab_sciml dependencies are not yet available for 3.15
+      if: matrix.python-version != '3.15'
+      run: |
+        source venv/bin/activate \
+          && python -m pip install --group python/sdist/pyproject.toml:petab-sciml
 
     # install pysb before sympy to allow for sympy>=1.12 (https://github.com/pysb/pysb/commit/e83937cb8c74afc9b2fa96595b68464946745f33)
     - run: source venv/bin/activate && pip3 install --group python/sdist/pyproject.toml:pysb-dev

@@ -21,7 +21,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ["3.14"]
+        python-version: ["3.15"]
 
     steps:
       - uses: dweindl/gha-runner-diagnostics@v1

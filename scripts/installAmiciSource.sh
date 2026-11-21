@@ -38,8 +38,7 @@ python -m pip install \
   --group "${DEP_GROUPS}:build" \
   --group "${DEP_GROUPS}:pysb-dev" \
   --group "${DEP_GROUPS}:diffrax-dev" \
-  --group "${DEP_GROUPS}:libpetab" \
-  --group "${DEP_GROUPS}:petab-sciml"
+  --group "${DEP_GROUPS}:libpetab"
 python -m pip install optax # for jax petab notebook
 AMICI_BUILD_TEMP="${AMICI_PATH}/python/sdist/build/temp" \
   python -m pip install --verbose \
