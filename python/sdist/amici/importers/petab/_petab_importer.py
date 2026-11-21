@@ -23,7 +23,12 @@ from petab.v2.models import MODEL_TYPE_PYSB, MODEL_TYPE_SBML
 import amici
 from amici import get_model_dir
 from amici._symbolic import DEModel, Event
-from amici.importers.utils import MeasurementChannel, amici_time_symbol
+from amici.importers.utils import (
+    RESERVED_SYMBOLS,
+    MeasurementChannel,
+    amici_time_symbol,
+    symbol_with_assumptions,
+)
 from amici.logging import get_logger
 
 from .v1._sbml_import import _add_global_parameter
@@ -359,19 +364,18 @@ class PetabImporter:
             raise ValueError("The PEtab problem must contain a PySB model.")
 
         _add_observation_model_pysb(self.petab_problem, self._jax)
-        # TODO: clarify in PEtab whether its allowed to set initial amounts
-        #  for a species without a pysb.Initial.
-        #  Currently, we fail in that case.
-        #  If so add a test case for changing the initial amount for a species
-        #  without a pysb.Initial
-        #  fixed_parameters = _add_initialization_variables(pysb_model,
-        #                                                 petab_problem)
 
+        # Species targets are resolved against the reaction network
         pysb.bng.generate_equations(self.petab_problem.model.model)
 
         # Convert PEtab v2 experiments/conditions to events
         converter = ExperimentsToPySBConverter(self.petab_problem)
         self.petab_problem, self._events = converter.convert()
+        if self._jax and self._events:
+            raise NotImplementedError(
+                "The JAX backend does not support condition changes after "
+                "the first period for PySB models."
+            )
 
     def _upgrade_or_copy_if_needed(
         self, problem: v1.Problem | v2.Problem
@@ -563,7 +567,6 @@ class PetabImporter:
                 observation_model=observation_model,
                 verbose=self._verbose,
                 pysb_model_has_obs_and_noise=True,
-                # TODO: events
                 # **kwargs,
             )
             return
@@ -1454,66 +1457,36 @@ class ExperimentsToPySBConverter:
         """
         from petab.v2.models.pysb_model import PySBModel
 
+        from amici.importers.pysb import _compartment_size_parameters
+
         if len(petab_problem.models) > 1:
             #  https://github.com/PEtab-dev/libpetab-python/issues/392
             raise NotImplementedError(
                 "Only single-model PEtab problems are supported."
             )
         if not isinstance(petab_problem.model, PySBModel):
-            raise ValueError("Only SBML models are supported.")
+            raise ValueError("Only PySB models are supported.")
         model = petab_problem.model.model
-        compartment_ids = {c.name for c in model.compartments}
-        if compartment_ids and any(
-            change.target_id in compartment_ids
-            for cond in petab_problem.conditions
-            for change in cond.changes
-        ):
-            # BNG evaluates compartment sizes during network generation.
-            #  Changing those values later on will lead to incorrect results.
-            raise NotImplementedError(
-                "Changes to compartment sizes are not supported for PySB "
-                "models."
-            )
-
-        # For the moment, we only support changes that are time-constant
-        #  expressions, i.e., that only contain numbers or pysb.Parameters.
-        # Furthermore, we only support changing species and pysb.Expressions,
-        #  but not pysb.Parameter. (Expressions can be easily changed, but
-        #  we can't easily convert a Parameter to an Expression, because we
-        #  can't remove components from a PySB model. This either
-        #  requires deeper integration with `pysb2amici`, or we need to
-        #  recreate the PySB model.)
-        parameter_ids = set(petab_problem.x_ids) | {
-            p.name for p in model.parameters
+        # BNG evaluates compartment sizes during network generation.
+        #  Changing those values later on would lead to incorrect results.
+        compartment_ids = {c.name for c in model.compartments} | (
+            _compartment_size_parameters(model)
+        )
+        petab_to_model = {
+            mapping.petab_id: mapping.model_id
+            for mapping in petab_problem.mappings
         }
-
         for cond in petab_problem.conditions:
             for change in cond.changes:
-                if (
-                    set(map(str, change.target_value.free_symbols))
-                    - parameter_ids
-                ):
-                    # TODO: we can't just change Parameter to Expression in
-                    #  this case.
-                    #  Expressions are evaluated continuously during the
-                    #  simulation. i.e., to only set the initial value, we need
-                    #  to replace all dynamic constructs by their initials.
-                    # TODO: we may have to convert some parameters and
-                    #  expressions to state variables,
-                    #  otherwise we can't use them as event targets.
-                    #  This will require deeper integration of PEtab and PySB
-                    #  import
+                model_id = (
+                    petab_to_model.get(change.target_id) or change.target_id
+                )
+                if model_id in compartment_ids:
                     raise NotImplementedError(
-                        "Currently, only time-constant targetValue expressions"
-                        f" are supported. Got {str(change.target_value)!r} "
-                        f"for target {change.target_id!r}."
+                        "Changes to compartment sizes are not supported for "
+                        f"PySB models. Got a change of {change.target_id!r}."
                     )
-                if change.target_id in parameter_ids:
-                    raise NotImplementedError(
-                        "Currently, PySB parameters are not supported as "
-                        "targets of condition table changes. Replace "
-                        f"parameter {change.target_id!r} by a pysb.Expression."
-                    )
+
         #: The PEtab problem to convert. Not modified by this class.
         self._petab_problem = petab_problem
         self._events: list[Event] = []
@@ -1529,25 +1502,62 @@ class ExperimentsToPySBConverter:
     ) -> tuple[v2.Problem, list[Event]]:
         """Convert PEtab experiments to amici events and pysb initials.
 
-        Generate events, add Initials, or convert Parameters to Expressions
-        that implement the changes encoded in the PEtab v2
-        experiment / condition table.
+        Generate events and initial values that implement the changes
+        encoded in the PEtab v2 experiment / condition table.
         This adds indicator variables to the PEtab problem and removes all
-        condition changes that are implemented as events.
+        condition changes that are implemented as events or initial values.
+
+        Changes of the first period are applied to the initial values of
+        species.
+        Changes of later periods are implemented as events.
+        The model must already contain the generated reaction network
+        (see :func:`pysb.bng.generate_equations`), since species targets
+        are resolved against it.
 
         :returns:
             A PEtab problem with only indicator parameters left in the
-            condition table a maximum of two periods per experiment
-            (pre-equilibration and main simulation), and a list of events
-            to be passed to `pysb2amici`.
+            condition table and a maximum of two periods per experiment
+            (pre-equilibration and main simulation),
+            and a list of events to be passed to `pysb2amici`.
         """
         self._new_problem = copy.deepcopy(self._petab_problem)
         self._events: list[Event] = []
+        # target ID -> species index
+        self._species_indices: dict[str, int] = {}
+        model = self._new_problem.model.model
+        # mapping table mappings
+        self.map_petab_to_pysb = {
+            mapping.petab_id: mapping.model_id
+            for mapping in self._petab_problem.mappings
+            if mapping.petab_id is not None and mapping.model_id is not None
+        }
+        # first-period changes across all experiments
+        # target_id -> [(experiment_indicator, target_value), ...]
+        period0_assignments: dict[str, list[tuple[str, sp.Basic]]] = {}
 
         self._add_preequilibration_indicator()
 
         for experiment in self._new_problem.experiments:
-            self._convert_experiment(experiment)
+            self._convert_experiment(experiment, period0_assignments)
+
+        # the target values may depend on parameters that are only
+        #  introduced in the PEtab parameter table - those need
+        #  to be added to the model
+        component_names = {c.name for c in model.components}
+        for sym in sorted(
+            {
+                sym
+                for _, changes in period0_assignments.items()
+                for _, target_value in changes
+                for sym in target_value.free_symbols
+            },
+            key=str,
+        ):
+            if sym.name not in component_names:
+                self._add_parameter(sym.name, 0)
+
+        for target_id, changes in period0_assignments.items():
+            self._apply_first_period_changes(target_id, changes)
 
         self._add_indicators_to_conditions()
 
@@ -1556,26 +1566,24 @@ class ExperimentsToPySBConverter:
 
         return self._new_problem, self._events
 
-    def _convert_experiment(self, experiment: v2.Experiment) -> None:
+    def _convert_experiment(
+        self,
+        experiment: v2.Experiment,
+        period0_assignments: dict[str, list[tuple[str, sp.Basic]]],
+    ) -> None:
         """
-        Convert a single experiment to SBML events or initial assignments.
-        """
-        import pysb
+        Convert a single experiment to events or initial values.
 
-        model: pysb.Model = self._new_problem.model.model
+        :param experiment: The experiment to convert.
+        :param period0_assignments: The changes of the first period are not
+            applied directly, but are added to this dictionary
+            (``target_id -> [(experiment_indicator, target_value), ...]``).
+            They are combined across experiments by
+            :meth:`_apply_first_period_changes`.
+        """
+        model = self._new_problem.model.model
         experiment.sort_periods()
         has_preequilibration = experiment.has_preequilibration
-        # mapping table mappings
-        self.map_petab_to_pysb = {
-            mapping.petab_id: mapping.model_id
-            for mapping in self._petab_problem.mappings
-            if mapping.petab_id is not None and mapping.model_id is not None
-        }
-        self.map_pysb_to_petab = {
-            mapping.model_id: mapping.petab_id
-            for mapping in self._petab_problem.mappings
-            if mapping.petab_id is not None and mapping.model_id is not None
-        }
 
         # add experiment indicator
         exp_ind_id = self.get_experiment_indicator(experiment.id)
@@ -1588,11 +1596,6 @@ class ExperimentsToPySBConverter:
             )
         self._add_parameter(exp_ind_id, 0)
         kept_periods: list[ExperimentPeriod] = []
-        # Collect values for initial assignments for the different experiments.
-        #  All expressions must be combined into a single initial assignment
-        #  per target.
-        # target_id -> [(experiment_indicator, target_value), ...]
-        period0_assignments: dict[str, list[tuple[str, sp.Basic]]] = {}
 
         for i_period, period in enumerate(experiment.sorted_periods):
             if period.is_preequilibration:
@@ -1609,111 +1612,24 @@ class ExperimentsToPySBConverter:
                 #  or the only non-equilibration period (handled above)
                 continue
 
-            # Encode the period changes as events
-            #  that trigger at the start of the period or,
-            #  for the first period, as pysb.Initials.
-            #  pysb.Initials are required for the first period,
-            #  because other initial assignments may depend on
-            #  the changed values.
+            # Encode the period changes as events that trigger at the start
+            #  of the period or, for the first period, as initial values.
+            #  Initial values are required for the first period,
+            #  because other initial values may depend on the changed values.
             if i_period == 0:
-                exp_ind_id = self.get_experiment_indicator(experiment.id)
                 for change in self._new_problem.get_changes_for_period(period):
+                    target_value = self._check_first_period_change(
+                        change, period
+                    )
                     period0_assignments.setdefault(
                         change.target_id, []
-                    ).append((exp_ind_id, change.target_value))
+                    ).append((exp_ind_id, target_value))
             else:
                 self._create_period_start_event(
                     experiment=experiment,
                     i_period=i_period,
                     period=period,
                 )
-
-        # Create initials for the first period
-        if period0_assignments:
-            free_symbols_in_assignments = set()
-            for target_id, changes in period0_assignments.items():
-                # The initial value might only be changed for a subset of
-                #  experiments. We need to keep the original initial value
-                #  for all other experiments.
-                target_entity = None
-                try:
-                    target_entity = next(
-                        c
-                        for c in model.components
-                        if c.name
-                        == self.map_petab_to_pysb.get(target_id, target_id)
-                    )
-                    if isinstance(target_entity, pysb.Parameter):
-                        default = target_entity.value
-                    elif isinstance(target_entity, pysb.Expression):
-                        default = target_entity.expr
-                    else:
-                        raise AssertionError(target_id)
-                except StopIteration:
-                    # species pattern?
-                    for initial in model.initials:
-                        if str(initial.pattern) == self.map_petab_to_pysb.get(
-                            target_id, target_id
-                        ):
-                            default = initial.value
-                            break
-                    else:
-                        raise AssertionError(target_id)
-
-                # Only create the initial assignment if there is
-                #  actually something to change.
-                if expr_cond_pairs := [
-                    (target_value, sp.Symbol(exp_ind) > 0.5)
-                    for exp_ind, target_value in changes
-                    if target_value != default
-                ]:
-                    # Unlike events, we can't have different initial
-                    #  assignments for different experiments, so we need to
-                    #  combine all changes into a single piecewise
-                    #  expression.
-                    expr = sp.Piecewise(
-                        *expr_cond_pairs,
-                        (default, True),
-                    )
-
-                    # Update the target expression
-                    if target_entity is not None and isinstance(
-                        target_entity, pysb.Expression
-                    ):
-                        target_entity.value = expr
-                    else:
-                        # if the target is not an expression, it must be an
-                        #  initial. the rest is excluded in __init__
-                        # TODO (performance): It might be more efficient
-                        #  to handle this as multi-model problem.
-                        #  Individual models might result in smaller networks
-                        #  than the superset model required here.
-                        for initial in model.initials:
-                            if str(
-                                initial.pattern
-                            ) == self.map_petab_to_pysb.get(
-                                target_id, target_id
-                            ):
-                                # Initial.value needs to be parameter or
-                                # expression, we can't use piecewise directly
-                                expr_expr = pysb.Expression(
-                                    f"_petab_initial_{target_id}",
-                                    expr,
-                                    _export=False,
-                                )
-                                model.add_component(expr_expr)
-                                initial.value = expr_expr
-                                break
-                        else:
-                            raise AssertionError(target_id, target_entity)
-                    free_symbols_in_assignments |= expr.free_symbols
-
-            # the target value may depend on parameters that are only
-            #  introduced in the PEtab parameter table - those need
-            #  to be added to the model
-            for sym in free_symbols_in_assignments:
-                if model.parameters.get(sym.name) is None:
-                    self._add_parameter(sym.name, 0)
 
         if len(kept_periods) > 2:
             raise AssertionError("Expected at most two periods to be kept.")
@@ -1729,6 +1645,156 @@ class ExperimentsToPySBConverter:
 
         experiment.periods = kept_periods
 
+    def _check_first_period_change(
+        self, change: v2.Change, period: ExperimentPeriod
+    ) -> sp.Basic:
+        """Check that the target value of a first-period change can be
+        evaluated before model initialization.
+
+        :returns: The target value with `time` replaced by the period's
+            start time.
+        """
+        model = self._new_problem.model.model
+        allowed = set(self._new_problem.x_ids) | {
+            p.name for p in model.parameters
+        }
+        time_syms = {
+            s for s in change.target_value.free_symbols if s.name == "time"
+        }
+        if (
+            invalid := {str(s) for s in change.target_value.free_symbols}
+            - allowed
+            - {"time"}
+        ):
+            raise ValueError(
+                "Target values of changes in the first period must only "
+                "refer to parameters or `time`. Got "
+                f"{str(change.target_value)!r} for target "
+                f"{change.target_id!r}, which refers to {invalid}."
+            )
+        if not time_syms:
+            return change.target_value
+        if not np.isfinite(period.time):
+            raise NotImplementedError(
+                "`time` in target values of pre-equilibration changes is "
+                f"not supported. Got {str(change.target_value)!r} for "
+                f"target {change.target_id!r}."
+            )
+        return change.target_value.xreplace(
+            {s: sp.Float(period.time) for s in time_syms}
+        )
+
+    def _get_target(self, target_id: str):
+        """Get the PySB model entity that a condition target refers to.
+
+        :returns:
+            The index of the species in ``model.species``.
+        """
+        import pysb
+        from petab.v1.models.pysb_model import pattern_from_string
+
+        if (ix := self._species_indices.get(target_id)) is not None:
+            return ix
+
+        model = self._new_problem.model.model
+        model_id = self.map_petab_to_pysb.get(target_id, target_id)
+
+        if (component := model.components.get(model_id)) is not None:
+            if isinstance(component, pysb.Parameter):
+                raise NotImplementedError(
+                    f"Changes of pysb.Parameters ({target_id!r}) are not "
+                    "supported yet."
+                )
+            # Expressions, observables, ... are algebraic entities
+            raise ValueError(
+                f"Invalid condition target {target_id!r}: "
+                f"{type(component).__name__}s cannot be targets of "
+                "condition changes. Only species (via the mapping table) "
+                "can be changed."
+            )
+
+        try:
+            pattern = pattern_from_string(model_id, model)
+        except Exception as e:
+            raise ValueError(
+                f"Invalid condition target {target_id!r} ({model_id!r}). "
+                "Expected a fully specified species."
+            ) from e
+        if not pattern.is_concrete():
+            raise ValueError(
+                f"Invalid condition target {target_id!r} ({model_id!r}). "
+                "Species targets must be fully specified (all sites and "
+                "compartments)."
+            )
+        for ix, species in enumerate(model.species):
+            if pysb.pattern.match_complex_pattern(
+                pattern, species, exact=True
+            ):
+                self._species_indices[target_id] = ix
+                return ix
+        raise ValueError(
+            f"Species {model_id!r} (condition target {target_id!r}) is not "
+            "part of the generated reaction network."
+        )
+
+    def _apply_first_period_changes(
+        self, target_id: str, changes: list[tuple[str, sp.Basic]]
+    ) -> None:
+        """Apply the first-period changes of all experiments to the initial
+        value of the given target.
+
+        :param target_id: The target ID of the changes.
+        :param changes: ``[(experiment_indicator, target_value), ...]``
+        """
+        import pysb
+
+        model = self._new_problem.model.model
+        target = self._get_target(target_id)
+
+        # update the matching pysb.Initial or create a new one
+        species = model.species[target]
+        initial = next(
+            (
+                initial
+                for initial in model.initials
+                if pysb.pattern.match_complex_pattern(
+                    initial.pattern, species, exact=True
+                )
+            ),
+            None,
+        )
+        default = initial.value if initial is not None else sp.Float(0.0)
+        expr = self._piecewise(changes, default)
+        if expr == default:
+            return
+        # Initial.value needs to be a parameter or an expression
+        expr_expr = pysb.Expression(
+            f"_petab_initial_{target_id}", expr, _export=False
+        )
+        model.add_component(expr_expr)
+        if initial is not None:
+            initial.value = expr_expr
+        else:
+            # pysb.Initial only accepts constant expressions, which excludes
+            #  piecewise functions. Set the actual value afterwards.
+            expr_expr.expr = sp.Float(0.0)
+            model.add_initial(pysb.Initial(species, expr_expr, _export=False))
+            expr_expr.expr = expr
+
+    @staticmethod
+    def _piecewise(
+        changes: list[tuple[str, sp.Basic]], default: sp.Basic
+    ) -> sp.Basic:
+        """Combine the first-period changes of different experiments into
+        a single expression, conditional on the experiment indicators."""
+        if expr_cond_pairs := [
+            (target_value, sp.Symbol(exp_ind) > 0.5)
+            for exp_ind, target_value in changes
+            if target_value != default
+        ]:
+            return sp.Piecewise(*expr_cond_pairs, (default, True))
+        return default
+
     def _create_period_start_event(
         self,
         experiment: v2.Experiment,
@@ -1736,9 +1802,13 @@ class ExperimentsToPySBConverter:
         period: ExperimentPeriod,
     ):
         """Create an event that triggers at the start of a period."""
-        exp_ind_id = self.get_experiment_indicator(experiment.id)
-        exp_ind_sym = sp.Symbol(exp_ind_id)
-        preeq_ind_sym = sp.Symbol(self.PREEQ_INDICATOR)
+        if not (changes := self._new_problem.get_changes_for_period(period)):
+            return
+
+        exp_ind_sym = symbol_with_assumptions(
+            self.get_experiment_indicator(experiment.id)
+        )
+        preeq_ind_sym = symbol_with_assumptions(self.PREEQ_INDICATOR)
 
         # Create trigger expressions
         # Since handling of == and !=, and distinguishing < and <=
@@ -1755,20 +1825,56 @@ class ExperimentsToPySBConverter:
             )
 
         event_id = f"_petab_event_{experiment.id}_{i_period}"
-        assignments: dict[sp.Symbol, sp.Expr] = {}
         model = self._new_problem.model.model
-        for change in self._new_problem.get_changes_for_period(period):
-            if change.target_id in model.parameters:
-                assignments[sp.Symbol(change.target_id)] = change.target_value
-                # add any missing parameters
-                for sym in change.target_value.free_symbols:
-                    if sym.name not in model.parameters:
-                        self._add_parameter(sym.name, 0)
+        component_names = {c.name for c in model.components}
+        # symbols in target values: species (via the mapping table),
+        #  model components, `time`, or parameters that are only defined in
+        #  the parameter table
+        subs = {}
+        targets: dict[str, sp.Symbol] = {}
+        for petab_id in sorted(
+            {
+                *(change.target_id for change in changes),
+                *(
+                    str(sym)
+                    for change in changes
+                    for sym in change.target_value.free_symbols
+                ),
+            }
+        ):
+            model_id = self.map_petab_to_pysb.get(petab_id, petab_id)
+            if model_id in RESERVED_SYMBOLS:
+                # would require the renames from the PySB import
+                raise NotImplementedError(
+                    f"Entities named {model_id!r} can't be used in "
+                    "condition changes after the first period."
+                )
+            if model_id in component_names:
+                sym = symbol_with_assumptions(model_id)
+            elif petab_id == "time":
+                sym = amici_time_symbol
+            elif petab_id in self.map_petab_to_pysb:
+                sym = symbol_with_assumptions(
+                    f"__s{self._get_target(petab_id)}"
+                )
             else:
-                raise AssertionError(change)
+                self._add_parameter(model_id, 0)
+                component_names.add(model_id)
+                sym = symbol_with_assumptions(model_id)
+            targets[petab_id] = sym
+            subs[sp.Symbol(petab_id)] = sym
+            subs[sp.Symbol(petab_id, real=True)] = sym
+
+        assignments: dict[sp.Symbol, sp.Expr] = {}
+        for change in changes:
+            # validates the target type
+            self._get_target(change.target_id)
+            assignments[targets[change.target_id]] = sp.sympify(
+                change.target_value
+            ).xreplace(subs)
 
         event = Event(
-            symbol=sp.Symbol(event_id),
+            symbol=symbol_with_assumptions(event_id),
             name=event_id,
             value=root_fun,
             assignments=assignments,
