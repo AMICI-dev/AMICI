@@ -6,8 +6,6 @@ into AMICI.
 """
 
 import logging
-import os
-import shutil
 from pathlib import Path
 
 import petab.v1 as petab
@@ -17,7 +15,6 @@ import amici
 from amici.logging import get_logger
 
 from ._import_helpers import (
-    _can_import_model,
     _create_model_name,
     _get_package_name_and_path,
     check_model,
@@ -55,15 +52,19 @@ def import_petab_problem(
     :param output_dir:
         Directory to write the model code to. It will be created if it doesn't
         exist. Defaults to :func:`amici.get_model_dir`.
+        Any previous model import in this directory is removed.
+        Directories containing files not created by AMICI are rejected.
 
     :param model_name:
         Name of the generated model module. Defaults to the ID of the model
         or the model file name without the extension.
 
     :param compile_:
-        If ``True``, the model will be compiled. If ``False``, the model will
-        not be compiled. If ``None``, the model will be compiled if it cannot
-        be imported.
+        If ``True``, the model will be imported and compiled. If ``False``,
+        an existing model will be loaded without importing it. If ``None``,
+        the model will be imported and compiled, unless ``output_dir``
+        contains a complete model that was imported from the same inputs
+        (see :ref:`amici_model_reuse`).
 
     :param non_estimated_parameters_as_constants:
         Whether parameters marked as non-estimated in PEtab should be
@@ -104,22 +105,8 @@ def import_petab_problem(
 
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # check if compilation necessary
-    if compile_ or (
-        compile_ is None and not _can_import_model(model_name, output_dir, jax)
-    ):
-        # check if folder exists
-        if os.listdir(output_dir) and not compile_:
-            raise ValueError(
-                f"Cannot compile to {output_dir}: not empty. "
-                "Please assign a different target or set `compile_` to `True`."
-            )
-
-        # remove folder if exists
-        if not jax and os.path.exists(output_dir):
-            shutil.rmtree(output_dir)
-
-        logger.info(f"Compiling model {model_name} to {output_dir}.")
+    if compile_ is not False:
+        logger.info(f"Importing model {model_name} to {output_dir}.")
 
         # compile the model
         if petab_problem.model.type_id == MODEL_TYPE_PYSB:
@@ -128,6 +115,7 @@ def import_petab_problem(
                 model_name=model_name,
                 output_dir=output_dir,
                 jax=jax,
+                skip_if_unchanged=compile_ is None,
                 **kwargs,
             )
         else:
@@ -137,6 +125,7 @@ def import_petab_problem(
                 output_dir=output_dir,
                 non_estimated_parameters_as_constants=non_estimated_parameters_as_constants,
                 jax=jax,
+                skip_if_unchanged=compile_ is None,
                 **kwargs,
             )
 

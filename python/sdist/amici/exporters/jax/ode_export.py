@@ -20,6 +20,11 @@ from pathlib import Path
 import numpy as np
 import sympy as sp
 
+from amici._model_dir import (
+    ModelDirStatus,
+    prepare_model_dir,
+    set_model_dir_status,
+)
 from amici._symbolic.de_model import DEModel
 from amici._symbolic.sympy_utils import (
     _monkeypatch_sympy,
@@ -115,6 +120,14 @@ def _jax_variable_ids(model: DEModel, sym_names: tuple[str, ...]) -> dict:
     }
 
 
+def get_default_output_dir(model_name: str) -> Path:
+    """Get the default output directory for a JAX model.
+
+    :returns: ``amici-{model_name}`` in the current working directory.
+    """
+    return Path(os.getcwd()) / f"amici-{model_name}"
+
+
 class ODEExporter:
     """
     The ODEExporter class generates AMICI jax files for a model as
@@ -203,17 +216,16 @@ class ODEExporter:
         self._prepare_model_folder()
         self._generate_jax_code()
         self._generate_nn_code()
+        set_model_dir_status(self.model_path, ModelDirStatus.GENERATED)
 
     def _prepare_model_folder(self) -> None:
         """
-        Create model directory or remove all files if the output directory
-        already exists.
-        """
-        self.model_path.mkdir(parents=True, exist_ok=True)
+        Create the model directory, or remove a previous import from it.
 
-        for file in self.model_path.glob("*"):
-            if file.is_file():
-                file.unlink()
+        :raises FileExistsError:
+            If the directory contains files not created by AMICI.
+        """
+        prepare_model_dir(self.model_path, self.model_name, jax=True)
 
     @log_execution_time("generating jax code", logger)
     def _generate_jax_code(self) -> None:
@@ -488,7 +500,7 @@ class ODEExporter:
 
         """
         if output_dir is None:
-            output_dir = Path(os.getcwd()) / f"amici-{self.model_name}"
+            output_dir = get_default_output_dir(self.model_name)
 
         self.model_path = Path(output_dir).resolve()
         self.model_path.mkdir(parents=True, exist_ok=True)

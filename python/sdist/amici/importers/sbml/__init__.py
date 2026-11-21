@@ -37,6 +37,8 @@ from sympy.matrices.dense import MutableDenseMatrix
 
 import amici
 from amici import get_model_dir
+from amici._input_hash import NON_HASHED_ARGS, compute_input_hash
+from amici._model_dir import can_reuse_model_dir, set_model_dir_inputs
 from amici._symbolic.de_model import DEModel
 from amici._symbolic.de_model_components import (
     DifferentialState,
@@ -292,6 +294,7 @@ class SbmlImporter:
         cache_simplify: bool = False,
         generate_sensitivity_code: bool = True,
         hardcode_symbols: Sequence[str] = None,
+        skip_if_unchanged: bool = False,
     ) -> amici.sim.sundials.Model | None:
         """
         Generate and compile AMICI C++ files for the model provided to the
@@ -318,6 +321,8 @@ class SbmlImporter:
         :param output_dir:
             Directory where the generated model package will be stored.
             Defaults to :func:`amici.get_model_dir`.
+            Any previous model import in this directory is removed.
+            Directories containing files not created by AMICI are rejected.
 
         :param fixed_parameters:
             SBML Ids to be excluded from sensitivity analysis
@@ -390,11 +395,39 @@ class SbmlImporter:
             Currently, only parameters that are not targets of rules or
             initial assignments are supported.
 
+        :param skip_if_unchanged:
+            If ``True``, and ``output_dir`` contains a complete model that was
+            imported from the same inputs, reuse that model instead of
+            importing it again. See :ref:`amici_model_reuse` for the
+            inputs considered and for limitations.
+
         :return:
             If `compile` is `True` and compilation was successful, an instance
             of the generated model class, otherwise `None`.
         """
+        call_args = locals().copy()
         set_log_level(logger, verbose)
+
+        output_dir = Path(output_dir or get_model_dir(model_name)).absolute()
+        input_hash, inputs = self._compute_input_hash(
+            call_args, "sbml2amici", build=True
+        )
+        if skip_if_unchanged and can_reuse_model_dir(
+            output_dir,
+            model_name,
+            input_hash,
+            inputs,
+            compiled=compile,
+            log=logger,
+        ):
+            logger.info(f"Reusing model {model_name!r} in {output_dir}.")
+            if not compile:
+                return None
+            from amici import import_model_module
+
+            return import_model_module(
+                module_name=model_name, module_path=output_dir
+            ).get_model()
 
         ode_model = self._build_ode_model(
             fixed_parameters=fixed_parameters,
@@ -405,8 +438,6 @@ class SbmlImporter:
             cache_simplify=cache_simplify,
             hardcode_symbols=hardcode_symbols,
         )
-
-        output_dir = output_dir or get_model_dir(model_name)
 
         from amici.exporters.sundials.de_export import (
             DEExporter,
@@ -424,6 +455,7 @@ class SbmlImporter:
                 generate_sensitivity_code=generate_sensitivity_code,
             )
             exporter.generate_model_code()
+            set_model_dir_inputs(exporter.model_path, input_hash, inputs)
         except NotImplementedError as e:
             raise SBMLException(
                 "The SBML model contains features that are currently not "
@@ -460,6 +492,7 @@ class SbmlImporter:
         simplify: Callable | None = _default_simplify,
         cache_simplify: bool = False,
         hybridization: dict = None,
+        skip_if_unchanged: bool = False,
     ) -> None:
         """
         Generate and compile AMICI jax files for the model provided to the
@@ -480,6 +513,8 @@ class SbmlImporter:
 
         :param output_dir:
             Directory where the generated model package will be stored.
+            Any previous model import in this directory is removed.
+            Directories containing files not created by AMICI are rejected.
 
         :param fixed_parameters:
             SBML Ids to be excluded from sensitivity analysis
@@ -528,8 +563,37 @@ class SbmlImporter:
         :param hybridization:
             dict representation of the hybridization information in the PEtab YAML file, see
             https://petab-sciml.readthedocs.io/latest/format.html#problem-yaml-file
+
+        :param skip_if_unchanged:
+            If ``True``, and ``output_dir`` contains a complete model that was
+            imported from the same inputs, reuse that model instead of
+            importing it again. See :ref:`amici_model_reuse` for the
+            inputs considered and for limitations.
         """
+        call_args = locals().copy()
         set_log_level(logger, verbose)
+
+        from amici.exporters.jax.ode_export import (
+            ODEExporter,
+            get_default_output_dir,
+        )
+
+        output_dir = Path(
+            output_dir or get_default_output_dir(model_name)
+        ).absolute()
+        input_hash, inputs = self._compute_input_hash(
+            call_args, "sbml2jax", build=False
+        )
+        if skip_if_unchanged and can_reuse_model_dir(
+            output_dir,
+            model_name,
+            input_hash,
+            inputs,
+            jax=True,
+            log=logger,
+        ):
+            logger.info(f"Reusing model {model_name!r} in {output_dir}.")
+            return
 
         ode_model = self._build_ode_model(
             fixed_parameters=fixed_parameters,
@@ -541,8 +605,6 @@ class SbmlImporter:
             hybridization=hybridization,
         )
 
-        from amici.exporters.jax.ode_export import ODEExporter
-
         exporter = ODEExporter(
             ode_model,
             model_name=model_name,
@@ -551,6 +613,41 @@ class SbmlImporter:
             hybridization=hybridization,
         )
         exporter.generate_model_code()
+        set_model_dir_inputs(exporter.model_path, input_hash, inputs)
+
+    def _compute_input_hash(
+        self, call_args: dict[str, Any], entry_point: str, build: bool
+    ) -> tuple[str | None, dict[str, Any]]:
+        """Compute the hash of the inputs of an import.
+
+        See :func:`amici._input_hash.compute_input_hash`.
+
+        :param call_args:
+            The arguments of the import function.
+        :param entry_point:
+            Name of the import function.
+        :param build:
+            Whether the build configuration is relevant (SUNDIALS models).
+        """
+        options = {
+            key: value
+            for key, value in call_args.items()
+            if key not in NON_HASHED_ARGS
+        }
+        options |= {
+            "entry_point": entry_point,
+            "jax": self.jax,
+            "discard_annotations": self._discard_annotations,
+            "non_const_conservation_laws": (
+                _get_non_const_conservation_law_algorithm()
+            ),
+        }
+        return compute_input_hash(
+            libsbml.writeSBMLToString(self._sbml_doc),
+            options,
+            packages=("python-libsbml", "sbmlmath"),
+            build=build,
+        )
 
     @_monkeypatch_sympy
     def _build_ode_model(
@@ -2313,10 +2410,7 @@ class SbmlImporter:
             ode_model, conservation_laws, self._make_derived_name_unique
         )
         # Non-constant species processed here
-        if (
-            "AMICI_EXPERIMENTAL_SBML_NONCONST_CLS" in os.environ
-            or "GITHUB_ACTIONS" in os.environ
-        ):
+        if _get_non_const_conservation_law_algorithm() is not None:
             species_solver = list(
                 set(
                     self._add_conservation_for_non_constant_species(
@@ -2491,8 +2585,7 @@ class SbmlImporter:
         # indices of retained species
         species_solver = list(range(len(model._differential_states)))
 
-        algorithm = os.environ.get("AMICI_EXPERIMENTAL_SBML_NONCONST_CLS", "")
-        if algorithm.lower() == "demartino":
+        if _get_non_const_conservation_law_algorithm() == "demartino":
             raw_cls = self._get_conservation_laws_demartino(model)
         else:
             raw_cls = self._get_conservation_laws_nullspace()
@@ -3530,6 +3623,23 @@ def _conservation_laws_from_stoichiometry(
         coefficients = [coeff for coeff in row if coeff]
         raw_cls.append((pivot, state_idxs, coefficients))
     return raw_cls
+
+
+def _get_non_const_conservation_law_algorithm() -> str | None:
+    """Get the algorithm for conservation laws for non-constant species.
+
+    Set via the ``AMICI_EXPERIMENTAL_SBML_NONCONST_CLS`` environment variable,
+    and always enabled on GitHub Actions.
+
+    :returns: ``"demartino"``, ``"nullspace"``, or ``None`` if disabled.
+    """
+    if (
+        "AMICI_EXPERIMENTAL_SBML_NONCONST_CLS" not in os.environ
+        and "GITHUB_ACTIONS" not in os.environ
+    ):
+        return None
+    algorithm = os.environ.get("AMICI_EXPERIMENTAL_SBML_NONCONST_CLS", "")
+    return "demartino" if algorithm.lower() == "demartino" else "nullspace"
 
 
 def _non_const_conservation_laws_supported(sbml_model: libsbml.Model) -> bool:

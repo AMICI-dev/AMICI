@@ -20,6 +20,12 @@ from amici.importers.utils import (
 )
 
 
+def _extract_cse_from_env() -> bool:
+    """Whether common subexpression extraction is enabled via the
+    ``AMICI_EXTRACT_CSE`` environment variable."""
+    return os.getenv("AMICI_EXTRACT_CSE", "0").lower() in ("1", "on", "true")
+
+
 class AmiciCxxCodePrinter(CXX11CodePrinter):
     """
     C++ code printer
@@ -44,14 +50,7 @@ class AmiciCxxCodePrinter(CXX11CodePrinter):
 
         # extract common subexpressions in matrix functions?
         self.extract_cse = (
-            os.getenv("AMICI_EXTRACT_CSE", "0").lower()
-            in (
-                "1",
-                "on",
-                "true",
-            )
-            if extract_cse is None
-            else extract_cse
+            _extract_cse_from_env() if extract_cse is None else extract_cse
         )
 
         # Floating-point optimizations

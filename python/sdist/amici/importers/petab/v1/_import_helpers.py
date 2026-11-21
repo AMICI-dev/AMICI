@@ -133,27 +133,6 @@ def _create_model_name(folder: str | Path) -> str:
     return os.path.split(os.path.normpath(folder))[-1]
 
 
-def _can_import_model(
-    model_name: str, output_dir: str | Path, jax: bool = False
-) -> bool:
-    """
-    Check whether a module of that name can already be imported.
-    """
-    # try to import (in particular checks version)
-    try:
-        model_module = amici.import_model_module(
-            *_get_package_name_and_path(model_name, output_dir, jax)
-        )
-    except ModuleNotFoundError:
-        return False
-
-    # no need to (re-)compile
-    if jax:
-        return hasattr(model_module, "Model")
-    else:
-        return hasattr(model_module, "get_model")
-
-
 def get_fixed_parameters(
     petab_problem: petab.Problem,
     non_estimated_parameters_as_constants=True,

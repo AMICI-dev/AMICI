@@ -32,6 +32,11 @@ from ... import (
     __version__,
     get_model_dir,
 )
+from ..._model_dir import (
+    ModelDirStatus,
+    prepare_model_dir,
+    set_model_dir_status,
+)
 from ...importers.sbml import splines
 from ...logging import get_logger, log_execution_time, set_log_level
 from ..template import apply_template
@@ -235,6 +240,7 @@ class DEExporter:
         """
         self._prepare_model_folder()
         self._generate_c_code()
+        set_model_dir_status(self.model_path, ModelDirStatus.GENERATED)
 
     @log_execution_time("compiling cpp code", logger)
     def compile_model(self) -> None:
@@ -250,15 +256,12 @@ class DEExporter:
 
     def _prepare_model_folder(self) -> None:
         """
-        Create model directory or remove all files if the output directory
-        already exists.
-        """
-        os.makedirs(self.model_path, exist_ok=True)
+        Create the model directory, or remove a previous import from it.
 
-        for file in os.listdir(self.model_path):
-            file_path = os.path.join(self.model_path, file)
-            if os.path.isfile(file_path):
-                os.remove(file_path)
+        :raises FileExistsError:
+            If the directory contains files not created by AMICI.
+        """
+        prepare_model_dir(self.model_path, self.model_name)
 
     def _generate_c_code(self) -> None:
         """
