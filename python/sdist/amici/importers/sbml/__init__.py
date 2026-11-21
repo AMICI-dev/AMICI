@@ -318,6 +318,8 @@ class SbmlImporter:
         :param output_dir:
             Directory where the generated model package will be stored.
             Defaults to :func:`amici.get_model_dir`.
+            Any previous model import in this directory is removed.
+            Directories containing files not created by AMICI are rejected.
 
         :param fixed_parameters:
             SBML Ids to be excluded from sensitivity analysis
@@ -480,6 +482,8 @@ class SbmlImporter:
 
         :param output_dir:
             Directory where the generated model package will be stored.
+            Any previous model import in this directory is removed.
+            Directories containing files not created by AMICI are rejected.
 
         :param fixed_parameters:
             SBML Ids to be excluded from sensitivity analysis
