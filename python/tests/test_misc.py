@@ -5,6 +5,7 @@ import re
 import shutil
 import subprocess
 import sys
+import sysconfig
 import warnings
 from pathlib import Path
 
@@ -240,6 +241,44 @@ def test_model_build_uses_env_swig(tmp_path, monkeypatch):
 
     assert len(build_envs) == 1
     assert build_envs[0]["SWIG"] == env_swig != str(fake_swig)
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize("env_activated", [False, True])
+def test_model_build_env_scripts_on_path(tmp_path, monkeypatch, env_activated):
+    """Check that model compilation finds the executables of the current
+    Python environment, such as cmake and ninja, also if the environment is
+    not activated, and keeps the order of an existing PATH otherwise."""
+    from amici.exporters.sundials import compile as compile_module
+
+    scripts_dir = sysconfig.get_path("scripts")
+    other_dir = str(tmp_path / "bin")
+    path = os.pathsep.join(
+        [other_dir, scripts_dir] if env_activated else [other_dir]
+    )
+    monkeypatch.setenv("PATH", path)
+    monkeypatch.setattr(
+        compile_module, "_check_swig_version", lambda swig: None
+    )
+
+    # record the environment of the build command instead of building
+    build_envs = []
+
+    def run(args, **kwargs):
+        build_envs.append(kwargs["env"])
+        return subprocess.CompletedProcess(args, 0, stdout=b"")
+
+    monkeypatch.setattr(compile_module.subprocess, "run", run)
+
+    compile_module.build_model_extension(tmp_path)
+
+    assert len(build_envs) == 1
+    if env_activated:
+        assert build_envs[0]["PATH"] == path
+    else:
+        assert build_envs[0]["PATH"] == os.pathsep.join(
+            [scripts_dir, other_dir]
+        )
 
 
 @skip_on_valgrind
