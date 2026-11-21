@@ -101,9 +101,11 @@ timepoint, and for other root functions that are exactly zero, whose direction
 may have changed nevertheless. Other root functions, also if slightly changed
 by an event assignment, are left to the root-finding of the solver, so that
 their events trigger at their own time.
-The uncertainty is estimated from the change of the
-root function for a state perturbation within the integration tolerances
-and within the time tolerance of the root-finding.
+The uncertainty is estimated by the change of the root function for a
+perturbation of the states within the integration tolerances, in the direction
+of the gradient of the root function, plus its change within the time
+tolerance of the root-finding.
+The direction is given by the time derivative of the root function.
 Likewise, at the start of a simulation or steady-state computation, the
 Heaviside helper variable of a root function at zero that decreases is set to
 `0`, unless the respective event triggers at the initial time, and conditions

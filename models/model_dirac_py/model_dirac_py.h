@@ -41,6 +41,8 @@ extern void dJydy_rowvals_model_dirac_py(SUNMatrixWrapper &rowvals, int index);
 
 
 extern void root_model_dirac_py(realtype *root, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl);
+extern void drootdt_total_or_nan_model_dirac_py(realtype *drootdt_total_or_nan, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const realtype *spl);
+
 
 
 
@@ -343,6 +345,14 @@ class Model_model_dirac_py : public amici::Model_ODE {
     }
 
 
+    void fdrootdt_total_or_nan(realtype *drootdt_total_or_nan, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const realtype *spl) override {
+        drootdt_total_or_nan_model_dirac_py(drootdt_total_or_nan, t, x, p, k, h, w, dx, tcl, spl);
+    }
+
+
+    void fdrootdx(realtype *drootdx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const realtype *spl) override {}
+
+
     void frz(realtype *rz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {}
 
 
@@ -550,7 +560,7 @@ class Model_model_dirac_py : public amici::Model_ODE {
      * @return AMICI git commit hash
      */
     std::string get_amici_commit() const override {
-        return "46a7a00ab9f0aec6603785f7e1a9d878d6dcaa0d";
+        return "32c3e29f53e8298b0153eec5e791d09220db5f5d";
     }
 
     bool has_quadratic_llh() const override {

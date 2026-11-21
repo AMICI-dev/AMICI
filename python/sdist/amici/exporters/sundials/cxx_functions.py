@@ -284,7 +284,18 @@ functions = {
     "drootdt": _FunctionInfo(generate_body=False),
     "drootdt_total": _FunctionInfo(generate_body=False),
     "drootdp": _FunctionInfo(generate_body=False),
-    "drootdx": _FunctionInfo(generate_body=False),
+    "drootdx": _FunctionInfo(
+        "realtype *drootdx, const realtype t, "
+        "const realtype *x, const realtype *p, const realtype *k, "
+        "const realtype *h, const realtype *w, const realtype *dx, "
+        "const realtype *tcl, const realtype *spl"
+    ),
+    "drootdt_total_or_nan": _FunctionInfo(
+        "realtype *drootdt_total_or_nan, const realtype t, "
+        "const realtype *x, const realtype *p, const realtype *k, "
+        "const realtype *h, const realtype *w, const realtype *dx, "
+        "const realtype *tcl, const realtype *spl"
+    ),
     "stau": _FunctionInfo(
         "realtype *stau, const realtype t, const realtype *x, "
         "const realtype *p, const realtype *k, const realtype *h, "

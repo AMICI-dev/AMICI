@@ -334,6 +334,48 @@ class AbstractModel {
     );
 
     /**
+     * @brief Model-specific implementation of fdrootdt_total_or_nan
+     *
+     * @param drootdt total time derivative of the root functions, NaN
+     * for root functions that depend on the time derivative of a spline
+     * @param t current time
+     * @param x current state
+     * @param p parameter vector
+     * @param k constant vector
+     * @param h Heaviside vector
+     * @param w vector with helper variables
+     * @param dx time derivative of state (DAE only)
+     * @param tcl total abundances for conservation laws
+     * @param spl spline values
+     */
+    virtual void fdrootdt_total_or_nan(
+        realtype* drootdt, realtype t, realtype const* x, realtype const* p,
+        realtype const* k, realtype const* h, realtype const* w,
+        realtype const* dx, realtype const* tcl, realtype const* spl
+    );
+
+    /**
+     * @brief Model-specific implementation of fdrootdx
+     *
+     * @param drootdx total derivative of the root functions w.r.t. the
+     * solver states (row-major, `ne` x `nx_solver`)
+     * @param t current time
+     * @param x current state
+     * @param p parameter vector
+     * @param k constant vector
+     * @param h Heaviside vector
+     * @param w vector with helper variables
+     * @param dx time derivative of state (DAE only)
+     * @param tcl total abundances for conservation laws
+     * @param spl spline values
+     */
+    virtual void fdrootdx(
+        realtype* drootdx, realtype t, realtype const* x, realtype const* p,
+        realtype const* k, realtype const* h, realtype const* w,
+        realtype const* dx, realtype const* tcl, realtype const* spl
+    );
+
+    /**
      * @brief Model-specific implementation of fy
      *
      * @param y model output at current timepoint

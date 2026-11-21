@@ -180,6 +180,8 @@ class Model : public AbstractModel, public ModelDimensions {
     using AbstractModel::fdJydy_rowvals;
     using AbstractModel::fdJzdsigmaz;
     using AbstractModel::fdJzdz;
+    using AbstractModel::fdrootdt_total_or_nan;
+    using AbstractModel::fdrootdx;
     using AbstractModel::fdrzdp;
     using AbstractModel::fdrzdx;
     using AbstractModel::fdsigmaydp;
@@ -1496,6 +1498,44 @@ class Model : public AbstractModel, public ModelDimensions {
     void get_event_time_sensitivity(
         std::vector<realtype>& stau, realtype t, int ie, AmiVector const& x,
         AmiVectorArray const& sx, AmiVector const& dx
+    );
+
+    /**
+     * @brief Total time derivative of the root functions.
+     *
+     * The derivative along the right-hand side for the current Heaviside
+     * variables. For DAEs, the derivatives of the algebraic states are
+     * taken from `dx`. NaN for root functions that depend on the time
+     * derivative of a spline.
+     *
+     * Evaluates the model expressions at `x`, overwriting the model's derived
+     * state. The static expressions must have been evaluated before.
+     *
+     * @param drootdt Output: time derivatives (shape `ne`)
+     * @param t Timepoint
+     * @param x State variables
+     * @param dx Current derivative of state (DAE only)
+     */
+    void get_root_time_derivative(
+        std::vector<realtype>& drootdt, realtype t, AmiVector const& x,
+        AmiVector const& dx
+    );
+
+    /**
+     * @brief Total derivative of the root functions w.r.t. the solver
+     * states.
+     *
+     * Evaluates the model expressions at `x`, overwriting the model's derived
+     * state. The static expressions must have been evaluated before.
+     *
+     * @param drootdx Output: derivative (row-major, `ne` x `nx_solver`)
+     * @param t Timepoint
+     * @param x State variables
+     * @param dx Current derivative of state (DAE only)
+     */
+    void get_root_state_jacobian(
+        std::vector<realtype>& drootdx, realtype t, AmiVector const& x,
+        AmiVector const& dx
     );
 
     /**

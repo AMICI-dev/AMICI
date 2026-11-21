@@ -1615,6 +1615,36 @@ void Model::get_event_time_sensitivity(
     }
 }
 
+void Model::get_root_time_derivative(
+    std::vector<realtype>& drootdt, realtype const t, AmiVector const& x,
+    AmiVector const& dx
+) {
+    auto const* x_pos = compute_x_pos(x);
+    fw(t, x_pos, false);
+    drootdt.assign(ne, 0.0);
+    fdrootdt_total_or_nan(
+        drootdt.data(), t, x_pos, state_.unscaled_parameters.data(),
+        state_.fixed_parameters.data(), state_.h.data(),
+        derived_state_.w_.data(), dx.data(), state_.total_cl.data(),
+        derived_state_.spl_.data()
+    );
+}
+
+void Model::get_root_state_jacobian(
+    std::vector<realtype>& drootdx, realtype const t, AmiVector const& x,
+    AmiVector const& dx
+) {
+    auto const* x_pos = compute_x_pos(x);
+    fw(t, x_pos, false);
+    drootdx.assign(ne * nx_solver, 0.0);
+    fdrootdx(
+        drootdx.data(), t, x_pos, state_.unscaled_parameters.data(),
+        state_.fixed_parameters.data(), state_.h.data(),
+        derived_state_.w_.data(), dx.data(), state_.total_cl.data(),
+        derived_state_.spl_.data()
+    );
+}
+
 void Model::fdxdt(
     realtype const t, AmiVector const& x, AmiVector const& dx, AmiVector& dxdt
 ) {
