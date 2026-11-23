@@ -32,6 +32,19 @@ print("--------------")
 print()
 print(",".join(sorted(results.supported_tags)))
 print()
+print("For doc/python_interface.rst")
+print("----------------------------")
+print()
+num_passed = len(results.passed["simulation"])
+num_total = num_passed + len(results.failed_or_skipped["simulation"])
+print(
+    f"**passes {num_passed} out of the {num_total} "
+    f"(~{num_passed / num_total:.0%}) test cases**"
+)
+print()
+for tag in sorted(results.supported_tags):
+    print(f"* {tag}")
+print()
 print("Unsupported tags")
 print("----------------")
 print()
