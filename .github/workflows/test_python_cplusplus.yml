@@ -359,6 +359,25 @@ jobs:
     - name: Install dependencies
       uses: ./.github/actions/install-macos-dependencies
 
+    - name: Set up ccache
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        key: ${{ github.job }}
+        restore-keys: ${{ github.job }}
+        max-size: 500M
+        # merge_group caches can't be restored by any other run
+        save: ${{ github.event_name != 'merge_group' }}
+
+    - name: Set ccache environment variables
+      run: |
+        echo "CMAKE_C_COMPILER_LAUNCHER=ccache" >> $GITHUB_ENV
+        echo "CMAKE_CXX_COMPILER_LAUNCHER=ccache" >> $GITHUB_ENV
+        echo "CCACHE_COMPILERCHECK=content" >> $GITHUB_ENV
+        # test models are often built in temporary directories
+        # (/var/folders/..., where /var is a symlink to /private/var)
+        echo "CCACHE_BASEDIR=$(python3 -c 'import os, tempfile; d = tempfile.gettempdir(); print(f"{d}:{os.path.realpath(d)}")')" >> $GITHUB_ENV
+        echo "CCACHE_NOHASHDIR=1" >> $GITHUB_ENV
+
     - name: Install python package
       run: |
         pip show numpy > /dev/null || python3 -m pip install numpy
