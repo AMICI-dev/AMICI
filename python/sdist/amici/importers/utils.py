@@ -1035,7 +1035,8 @@ def _xor_to_or(*args):
 
     ``xor(x, y, ...) = (x & ~y & ...) | (~x & y & ...) | ...``.
 
-    to be used in ``trigger = trigger.replace(sp.Xor, _xor_to_or)``.
+    To be used in ``expr.replace(sp.Xor, _xor_to_or)``, or applied to the
+    arguments of an ``sp.Xor``.
     """
     res = sp.false
     for i in range(len(args)):
@@ -1054,7 +1055,8 @@ def _eq_to_and(*args):
 
     ``Eq(x, y) = (x >= y) & (x <= y)``.
 
-    to be used in ``trigger = trigger.replace(sp.Eq, _eq_to_and)``.
+    To be used in ``expr.replace(sp.Eq, _eq_to_and)``, or applied to the
+    arguments of an ``sp.Eq``.
     """
     x, y = args
     return (x >= y) & (x <= y)
@@ -1066,7 +1068,8 @@ def _ne_to_or(*args):
 
     ``Ne(x, y) = (x > y) | (x < y)``.
 
-    to be used in ``trigger = trigger.replace(sp.Ne, _ne_to_or)``.
+    To be used in ``expr.replace(sp.Ne, _ne_to_or)``, or applied to the
+    arguments of an ``sp.Ne``.
 
     This expects x and y to be not-NaN. No model should rely on NaN semantics
     anyways: In sympy, NaNs are equal, but they don't support <, >, >=, <=.
@@ -1309,7 +1312,10 @@ def contains_periodic_subexpression(expr: sp.Expr, symbol: sp.Symbol) -> bool:
         `False` otherwise.
     """
     for subexpr in expr.atoms(sp.Function):
-        if sp.periodicity(subexpr, symbol) is not None:
+        # `periodicity` is 0 for functions that don't depend on `symbol`
+        if symbol in subexpr.free_symbols and (
+            sp.periodicity(subexpr, symbol) is not None
+        ):
             return True
     return False
 

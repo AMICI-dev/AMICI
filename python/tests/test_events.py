@@ -4727,3 +4727,91 @@ def test_event_time_sensitivities_with_time_varying_spline(tempdir):
         check_gradient(function, point, rdata.sllh).assert_success(
             always_print=True
         )
+
+
+@skip_on_valgrind
+def test_triggers_gated_by_event_invariant_conditions(tempdir):
+    """Trigger conditions that only change at events are evaluated exactly.
+
+    E.g., for `E1`, a root function `Min(u, -u, s - c)` would be negative
+    before `s = c` and zero afterwards for `u = 0`. It never changes sign,
+    so the event would only be detected at the end of the next integration
+    step (#3586).
+    Strict conditions on parameters at their threshold are false (#3508).
+    The species `v` is changed by `E5`, which opens the gates of `E6` and
+    `E8` (whose trigger time has already passed) and closes the one of `E7`.
+    `E9` is true at the start, due to an invariant condition.
+    `E10`'s trigger time contains a time-independent function.
+    """
+    model_name = "test_triggers_gated_by_event_invariant_conditions"
+    antimony2amici(
+        """
+        c = 0.3; tg = 0.5
+        p0 = 0; p1 = 1
+        s = 0; s' = 1
+        u = 0
+        species v = 1
+        t1 = -1; t2 = -1; t3 = -1; t4 = -1; t6 = -1; t7 = -1; t8 = -1; t9 = -1
+        t10 = -1
+        E1: at (s > c) && (u == 0): u = 1, t1 = time
+        E2: at (p0 > 0) && (time > 0.5): t2 = time
+        E3: at (p0 != 0) && (s > 0.6): t3 = time
+        E4: at (p0 > 0) || (s > c + 0.4): t4 = time
+        E5: at time >= tg: v = 0
+        E6: at (s > c) && (v == 0): t6 = time
+        E7: at (v != 0) && (s > 0.7): t7 = time
+        E8: at (v == 0) && (time > 0.3): t8 = time
+        E9: at (p1 > 0) || (s > 0.8), t0=false: t9 = time
+        E10: at time >= 0.6 * exp(p0): t10 = time
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[
+            MC(f"obs_t{i}", formula=f"t{i}")
+            for i in (1, 2, 3, 4, 6, 7, 8, 9, 10)
+        ],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    # E2, E5, E8, and E10 have explicit trigger times
+    assert model.ne_solver == 6
+    par_ids = model.get_free_parameter_ids()
+    ip = [par_ids.index(pid) for pid in ("c", "tg", "p0")]
+    c, tg, p0 = (model.get_free_parameters()[i] for i in ip)
+    y = np.array([c, -1, -1, c + 0.4, tg, -1, tg, 0, 0.6 * np.exp(p0)])
+    dy_dp = np.array(
+        [
+            # c
+            [1, 0, 0, 1, 0, 0, 0, 0, 0],
+            # tg
+            [0, 0, 0, 0, 1, 0, 1, 0, 0],
+            # p0
+            [0, 0, 0, 0, 0, 0, 0, 0, 0.6 * np.exp(p0)],
+        ]
+    )
+
+    for timepoints in ([1.0], [0.0, 0.25, 0.5, 0.75, 1.0]):
+        model.set_timepoints(timepoints)
+        solver = model.create_solver()
+        solver.set_sensitivity_order(SensitivityOrder.first)
+        solver.set_sensitivity_method(SensitivityMethod.forward)
+        rdata = run_simulation(model, solver)
+        err_msg = str(timepoints)
+        assert rdata.status == AMICI_SUCCESS, err_msg
+        assert_allclose(rdata.y[-1], y, rtol=1e-8, err_msg=err_msg)
+        assert_allclose(rdata.sy[-1, ip], dy_dp, rtol=1e-6, err_msg=err_msg)
+
+    model.set_timepoints([1.0])
+    measurements = np.zeros_like(y)
+    expected_sllh = -dy_dp @ (y - measurements)
+    assert np.all(np.abs(expected_sllh) > 0.3)
+    edata = ExpData(model)
+    edata.set_measurements(measurements)
+    edata.set_noise_scales(np.ones_like(measurements))
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.adjoint)
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-12)
+    rdata = run_simulation(model, solver, edata=edata)
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.sllh[ip], expected_sllh, rtol=1e-6)

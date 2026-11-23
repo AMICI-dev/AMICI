@@ -1,5 +1,6 @@
 """Tests related to amici.importers.sbml"""
 
+import itertools
 import logging
 import os
 import re
@@ -151,6 +152,90 @@ def test_ite_and_not_event_trigger_to_root_function(trigger):
     ):
         subs = dict(zip((a, b, c), point, strict=True))
         assert (root.subs(subs) > 0) == bool(trigger.subs(subs)), subs
+
+
+_u, _p, _x = sp.symbols("u p x")
+
+
+@pytest.mark.parametrize(
+    "trigger",
+    [
+        sp.And(sp.Eq(_u, 0), _x > 1),
+        sp.And(sp.Ne(_u, 0), _x > 1),
+        sp.And(_u > 0, _p < 0, _x > 1),
+        sp.Or(_u >= 0, _x > 1),
+        sp.Or(sp.Eq(_u, 0), _x > 1),
+        sp.Or(sp.And(sp.Eq(_u, 0), _x > 1), _x > 2),
+        sp.Not(sp.And(sp.Eq(_u, 0), _x <= 1)),
+        sp.Xor(sp.Eq(_u, 0), _x > 1),
+        sp.ITE(_u > 0, _x > 1, _x < -1),
+        sp.ITE(_u > 0, _p > 0, _x > 1),
+        sp.ITE(_x > 1, sp.Eq(_u, 0), sp.false),
+        sp.And(sp.Eq(_u, 0), sp.Or(_p > 0, _x > 1)),
+        sp.And(_p > 0, _u < 1),
+        sp.Ne(_p, 0),
+    ],
+)
+def test_gated_event_trigger_to_root_function(trigger):
+    """Conditions that only change at events are evaluated exactly.
+
+    They must not be part of a root function that touches zero without
+    changing sign when they are at their threshold.
+    """
+    from amici._symbolic.sympy_utils import is_exact_condition_root
+    from amici.importers.sbml import _parse_event_trigger
+
+    root = _parse_event_trigger(trigger, {_u, _p})
+    # `u` and `p` only occur in exactly evaluated conditions
+    stripped = root.replace(is_exact_condition_root, lambda _: sp.Dummy())
+    assert not stripped.has(_u, _p)
+
+    # values on the boundaries of the invariant conditions,
+    #  off the boundaries of the time-dependent ones
+    for u_val, p_val, x_val in itertools.product(
+        [-1, 0, 1], [-1, 0, 1], [-2.5, -0.5, 0.5, 1.5, 2.5]
+    ):
+        subs = {_u: u_val, _p: p_val, _x: x_val}
+        root_val = root.subs(subs)
+        # a zero root would not be detected as a crossing
+        assert root_val != 0, subs
+        assert (root_val > 0) == bool(trigger.subs(subs)), subs
+
+
+def test_event_invariant_symbols():
+    """Only quantities that can only change at events are invariant."""
+    ant_model = """
+    compartment C = 1
+    compartment V = 1; V' = 0.1
+    compartment W; W := 1 + time
+    species s_reaction in C = 1
+    species s_free in C = 1
+    species s_event in C = 1
+    species s_conc_v in V = 1
+    substanceOnly species s_amount_v in V = 1
+    species s_conc_w in W = 1
+    R: s_reaction -> ; k * s_reaction
+    k = 1
+    p_rate = 0; p_rate' = 1
+    p_event = 0
+    e_static := 2 * k
+    e_time := k * time
+    e_conc := s_free + s_amount_v
+    E: at time > 1: p_event = 1, s_event = 2
+    """
+    importer = SbmlImporter(antimony2sbml(ant_model), from_file=False)
+    importer._process_sbml(hardcode_symbols=[])
+    invariant = {str(s) for s in importer._event_invariant_symbols()}
+    assert invariant == {
+        "C",
+        "k",
+        "s_free",
+        "s_event",
+        "s_amount_v",
+        "p_event",
+        "e_static",
+        "e_conc",
+    }
 
 
 def test_ite_event_trigger_condition_change():
