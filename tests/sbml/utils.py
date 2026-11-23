@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -30,7 +30,7 @@ def verify_results(
     expected: pd.DataFrame,
     importer: SbmlImporter,
     parameters: dict[str, float],
-    expression_ids: list[str],
+    expression_ids: Sequence[str],
 ) -> pd.DataFrame:
     """Verify simulation results against the expected results.
 
@@ -203,7 +203,7 @@ def compile_model_jax(
 def simulate_jax(
     model: JAXModel,
     parameters: jnp.ndarray,
-    ts: np.ndarray,
+    ts: np.ndarray | jnp.ndarray,
     atol: float,
     rtol: float,
     tol_factor: float = 1e2,

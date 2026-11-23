@@ -10,14 +10,15 @@ import pytest
 
 if TYPE_CHECKING:
     from _pytest.reports import TestReport
+    from _pytest.terminal import TerminalReporter
 
 # ensure that the script directory is in the Python path
 script_dir = Path(__file__).parent.resolve()
 if str(script_dir) not in sys.path:
     sys.path.insert(0, str(script_dir))
 
-from sbml_cases import read_tags  # noqa: E402
-from suite_results import SuiteResults  # noqa: E402
+from sbml_cases import read_tags
+from suite_results import SuiteResults
 
 # test function -> check name in `results.json`, per test case
 _CHECKS_BY_TEST = {
@@ -99,10 +100,12 @@ def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
         # Get CLI option
         cases = metafunc.config.getoption("cases")
         if cases:
-            # Run selected tests
-            last_id = int(list(get_all_semantic_case_ids())[-1])
-            test_numbers = sorted(set(parse_selection(cases, last_id)))
-            test_ids = list(map(format_test_id, test_numbers))
+            # Run selected tests, ignoring nonexistent ones
+            all_ids = get_all_semantic_case_ids()
+            test_numbers = parse_selection(cases, int(all_ids[-1]))
+            test_ids = sorted(
+                set(map(format_test_id, test_numbers)) & set(all_ids)
+            )
         else:
             # Run all tests
             test_ids = get_all_semantic_case_ids()
@@ -138,7 +141,9 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
     terminalreporter.ensure_newline()
 
 
-def write_passed_tags(out: TextIO = sys.stdout) -> None:
+def write_passed_tags(
+    out: "TextIO | TerminalReporter" = sys.stdout,
+) -> None:
     """Write tags of passed SBML semantic test cases
 
     Tag coverage (what the SBML test suite's own result database tracks)

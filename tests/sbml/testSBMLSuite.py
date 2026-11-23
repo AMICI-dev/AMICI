@@ -16,7 +16,7 @@ Usage:
 from __future__ import annotations
 
 import shutil
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
@@ -401,7 +401,7 @@ _NON_NEGATIVE_STATES = {"01395"}
 
 
 def _derive_generic_bounds(
-    point: np.ndarray, param_ids: tuple[str, ...], test_id: str
+    point: np.ndarray, param_ids: Sequence[str], test_id: str
 ) -> tuple[np.ndarray, np.ndarray]:
     """Derive per-parameter bounds for finite differences.
 
