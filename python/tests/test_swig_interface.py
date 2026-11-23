@@ -5,6 +5,7 @@ Test getters, setters, etc.
 
 import copy
 import gc
+import itertools
 import numbers
 import pickle
 import subprocess
@@ -35,6 +36,7 @@ from amici.sim.sundials import (
     SolverPtr,
     SteadyStateComputationMode,
     SteadyStateSensitivityMode,
+    SteadyStateStatus,
     get_model_settings,
     get_solver_settings,
     parameter_scaling_from_int_vector,
@@ -1254,6 +1256,109 @@ def test_adjoint_without_states(tmp_path):
     assert rdata_asa.status == amici.sim.sundials.AMICI_SUCCESS
     assert rdata_asa.sllh[0] != 0.0
     np.testing.assert_allclose(rdata_asa.sllh, rdata_fsa.sllh)
+
+
+@skip_on_valgrind
+def test_steadystate_without_states(tmp_path):
+    """Test pre- and post-equilibration of a model without state variables."""
+    from amici.importers.antimony import antimony2amici
+    from amici.importers.sbml import MeasurementChannel as MC
+
+    model = antimony2amici(
+        """
+        model test_steadystate_no_states
+            k = 2
+            kf = 1
+        end
+        """,
+        model_name="test_steadystate_no_states",
+        output_dir=tmp_path,
+        observation_model=[MC("obs", formula="k * kf")],
+        fixed_parameters=["kf"],
+    )
+    assert model.nx_solver == 0
+    model.set_parameter_scale(ParameterScaling.none)
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_newton_max_steps(10)
+
+    for (
+        equilibration,
+        ss_comp_mode,
+        ss_sensi_mode,
+        sensi_meth,
+    ) in itertools.product(
+        ("pre", "post"),
+        (
+            SteadyStateComputationMode.integrationOnly,
+            SteadyStateComputationMode.integrateIfNewtonFails,
+        ),
+        (
+            SteadyStateSensitivityMode.newtonOnly,
+            SteadyStateSensitivityMode.integrationOnly,
+        ),
+        (
+            SensitivityMethod.none,
+            SensitivityMethod.forward,
+            SensitivityMethod.adjoint,
+        ),
+    ):
+        msg = f"{equilibration}, {ss_comp_mode!r}, {ss_sensi_mode!r}, {sensi_meth!r}"
+        model.set_steady_state_computation_mode(ss_comp_mode)
+        model.set_steady_state_sensitivity_mode(ss_sensi_mode)
+        solver.set_sensitivity_method(sensi_meth)
+        preeq_sensi_meth = (
+            SensitivityMethod.adjoint
+            if sensi_meth == SensitivityMethod.adjoint
+            else SensitivityMethod.forward
+        )
+        solver.set_sensitivity_method_pre_equilibration(preeq_sensi_meth)
+        edata = ExpData(model)
+        if equilibration == "pre":
+            edata.set_timepoints([1.0, 2.0])
+            edata.fixed_parameters_pre_equilibration = [3.0]
+        else:
+            edata.set_timepoints([1.0, np.inf])
+        edata.set_measurements([1.0, 1.0])
+        edata.set_noise_scales(1.0)
+
+        rdata = run_simulation(model, solver, edata)
+
+        assert rdata.status == amici.sim.sundials.AMICI_SUCCESS, msg
+        # Newton's method is used unless disabled by the settings
+        forward_sensi = sensi_meth == SensitivityMethod.forward or (
+            equilibration == "pre"
+            and preeq_sensi_meth == SensitivityMethod.forward
+        )
+        use_newton = not (
+            ss_comp_mode == SteadyStateComputationMode.integrationOnly
+            or (
+                ss_sensi_mode == SteadyStateSensitivityMode.integrationOnly
+                and forward_sensi
+            )
+        )
+        expected_status = (
+            [SteadyStateStatus.success] + [SteadyStateStatus.not_run] * 2
+            if use_newton
+            else [
+                SteadyStateStatus.not_run,
+                SteadyStateStatus.success,
+                SteadyStateStatus.not_run,
+            ]
+        )
+        if equilibration == "pre":
+            ss_status, ss_wrms = rdata.preeq_status, rdata.preeq_wrms
+        else:
+            ss_status, ss_wrms = rdata.posteq_status, rdata.posteq_wrms
+        assert list(ss_status) == expected_status, msg
+        assert ss_wrms == 0.0, msg
+        np.testing.assert_allclose(rdata.y[:, 0], [2.0, 2.0], err_msg=msg)
+        # residuals 1 - 2 at both time points, dy/dk = kf = 1
+        np.testing.assert_allclose(
+            rdata.llh, -1 - np.log(2 * np.pi), err_msg=msg
+        )
+        if sensi_meth != SensitivityMethod.none:
+            np.testing.assert_allclose(rdata.sllh, [-2.0], err_msg=msg)
 
 
 def test_get_initial_state_sensitivities(tmp_path):
