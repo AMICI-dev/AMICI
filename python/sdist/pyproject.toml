@@ -132,7 +132,8 @@ petab-sciml-torch = [
     "petab_sciml[torch] @ git+https://github.com/petab-dev/petab_sciml.git@76a2006134621ceb1b116eaf2dc23cabc66e6870",
 ]
 petab-test-suite = [
-    "petabtests @ git+https://github.com/PEtab-dev/petab_test_suite@main",
+    # TODO: back to main once #3599 is fixed
+    "petabtests @ git+https://github.com/PEtab-dev/petab_test_suite@281e3e2671d542a85e888ee8e890770f77264616",
 ]
 # Pre-v2 test suite with PySB cases using PEtab v1 tables.
 # TODO: remove together with PEtab v1 PySB support (#3541)
