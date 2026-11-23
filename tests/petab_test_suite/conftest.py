@@ -39,6 +39,13 @@ def pytest_addoption(parser):
         help="Run only SBML tests",
         action="store_true",
     )
+    # TODO: remove together with PEtab v1 PySB support (#3541)
+    parser.addoption(
+        "--legacy-pysb",
+        help="Run PEtab v1 PySB tests on the pre-v2 PEtab test suite cases. "
+        "Requires the `petab-test-suite-v1-pysb` dependency group.",
+        action="store_true",
+    )
 
 
 def generate_v1_tests(metafunc):
@@ -56,35 +63,38 @@ def generate_v1_tests(metafunc):
             # Run all tests
             test_numbers = None
 
-        if metafunc.config.getoption("--only-sbml"):
+        # PEtab v1 test cases are SBML-only.
+        #  PEtab v2 test cases are run by test_petab_v2_suite.py.
+        if metafunc.config.getoption("--legacy-pysb"):
+            # TODO: remove together with PEtab v1 PySB support (#3541)
+            # The pinned pre-v2 test suite has PySB cases with PEtab v1
+            #  tables under `v2.0.0`.
             argvalues = [
-                (case, "sbml", version, False)
-                for version in ("v1.0.0", "v2.0.0")
-                for case in (
-                    test_numbers
-                    if test_numbers
-                    else get_cases("sbml", version=version)
-                )
-            ]
-        elif metafunc.config.getoption("--only-pysb"):
-            argvalues = [
-                (case, "pysb", "v2.0.0", False)
+                (case, "pysb", "v2.0.0", jax)
+                for jax in (True, False)
                 for case in (
                     test_numbers
                     if test_numbers
                     else get_cases("pysb", version="v2.0.0")
                 )
             ]
-        else:
+        elif metafunc.config.getoption("--only-pysb"):
             argvalues = []
-            for version in ("v1.0.0", "v2.0.0"):
-                for format in ("sbml", "pysb"):
-                    for jax in (True, False):
-                        argvalues.extend(
-                            (case, format, version, jax)
-                            for case in test_numbers
-                            or get_cases(format, version)
-                        )
+        else:
+            jax_values = (
+                (False,)
+                if metafunc.config.getoption("--only-sbml")
+                else (True, False)
+            )
+            argvalues = [
+                (case, "sbml", "v1.0.0", jax)
+                for jax in jax_values
+                for case in (
+                    test_numbers
+                    if test_numbers
+                    else get_cases("sbml", version="v1.0.0")
+                )
+            ]
         metafunc.parametrize("case,model_type,version,jax", argvalues)
 
 

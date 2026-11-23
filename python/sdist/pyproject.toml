@@ -131,13 +131,13 @@ petab-sciml-torch = [
     # (observed on macOS) - only install it where actually needed.
     "petab_sciml[torch] @ git+https://github.com/petab-dev/petab_sciml.git@76a2006134621ceb1b116eaf2dc23cabc66e6870",
 ]
-# TODO: PEtab test suite: v1 is intentionally pinned to a pre-v2 commit until
-# proper PEtab v2 import support lands (https://github.com/AMICI-dev/AMICI/issues/2662).
-petab-test-suite-v1 = [
-    "petabtests @ git+https://github.com/PEtab-dev/petab_test_suite@10ffb050380933b60ac192962bf9550a9df65a9c",
-]
-petab-test-suite-v2 = [
+petab-test-suite = [
     "petabtests @ git+https://github.com/PEtab-dev/petab_test_suite@main",
+]
+# Pre-v2 test suite with PySB cases using PEtab v1 tables.
+# TODO: remove together with PEtab v1 PySB support (#3541)
+petab-test-suite-v1-pysb = [
+    "petabtests @ git+https://github.com/PEtab-dev/petab_test_suite@10ffb050380933b60ac192962bf9550a9df65a9c",
 ]
 pysb-dev = [
     # master, not the PyPI release, to allow a more recent sympy

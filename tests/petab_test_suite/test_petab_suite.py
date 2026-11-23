@@ -29,6 +29,7 @@ from amici.sim.sundials.petab.v1 import (
     rdatas_to_measurement_df,
     simulate_petab,
 )
+from petab.v2.C import EXPERIMENT_ID
 
 logger = get_logger(__name__, logging.DEBUG)
 set_log_level(get_logger("amici.petab_import"), logging.DEBUG)
@@ -60,22 +61,6 @@ def test_case(case, model_type, version, jax):
             "v1->v2 upgrade substitutes `log-normal`, giving a chi2 "
             "value that is inherently different from (but consistent "
             "with LLH matching) the v1-format ground truth."
-        )
-    if jax and petabtests.test_id_str(case) == "0021":
-        # Case 0021 has an observable-dependent noise formula
-        # (`noiseParameter1_obs_a * obs_a`, i.e. proportional noise). The
-        # JAX backend upgrades the (v1-loaded) problem to PEtab v2 via
-        # `petab1to2`, whose internal PEtab v1 linting rejects the
-        # observable reference `obs_a` in the noise formula as a missing
-        # parameter -- so the upgrade cannot round-trip this case. The case
-        # itself is handled correctly through the native PEtab v2 API (it
-        # passes in `test_petab_v2_suite.py`); only this v1-import-path
-        # round-trip is affected. The non-jax (SUNDIALS) path uses the v1
-        # problem directly (no upgrade) and passes.
-        pytest.xfail(
-            "Case 0021's observable-dependent noise formula is rejected "
-            "by petab1to2's PEtab v1 linting during the JAX-only v1->v2 "
-            "upgrade; the case passes via the native PEtab v2 API."
         )
     try:
         _test_case(case, model_type, version, jax)
@@ -152,6 +137,9 @@ def _test_case(case, model_type, version, jax):
                 simulation_df.index, petab.SIMULATION_CONDITION_ID
             ].values
         )
+        simulation_df = simulation_df.drop(
+            columns=EXPERIMENT_ID, errors="ignore"
+        )
     else:
         model = imported  # import_petab_problem returns Model when jax=False
         solver = model.create_solver()
@@ -185,10 +173,9 @@ def _test_case(case, model_type, version, jax):
     gt_llh = solution[petabtests.LLH]
     gt_simulation_dfs = solution[petabtests.SIMULATION_DFS]
     if case.startswith("0006") and not jax:
-        # account for flattening
-        gt_simulation_dfs[0].loc[:, petab.OBSERVABLE_ID] = (
-            "obs_a__10__c0",
-            "obs_a__15__c0",
+        unflattened_problem = petab.Problem.from_yaml(yaml_file)
+        simulation_df = petab.unflatten_simulation_df(
+            simulation_df, unflattened_problem
         )
     tol_chi2 = solution[petabtests.TOL_CHI2]
     tol_llh = solution[petabtests.TOL_LLH]
@@ -287,20 +274,20 @@ def run():
     n_success = 0
     n_skipped = 0
     n_total = 0
-    for version in ("v1.0.0", "v2.0.0"):
-        for jax in (False, True):
-            cases = petabtests.get_cases("sbml", version=version)
-            n_total += len(cases)
-            for case in cases:
-                try:
-                    test_case(case, "sbml", version=version, jax=jax)
-                    n_success += 1
-                except Skipped:
-                    n_skipped += 1
-                except Exception as e:
-                    # run all despite failures
-                    logger.error(f"Case {case} failed.")
-                    logger.error(e)
+    version = "v1.0.0"
+    for jax in (False, True):
+        cases = petabtests.get_cases("sbml", version=version)
+        n_total += len(cases)
+        for case in cases:
+            try:
+                test_case(case, "sbml", version=version, jax=jax)
+                n_success += 1
+            except Skipped:
+                n_skipped += 1
+            except Exception as e:
+                # run all despite failures
+                logger.error(f"Case {case} failed.")
+                logger.error(e)
 
     logger.info(f"{n_success} / {n_total} successful, {n_skipped} skipped")
     if n_success != len(cases):
