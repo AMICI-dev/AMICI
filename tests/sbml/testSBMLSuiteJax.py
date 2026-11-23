@@ -3,6 +3,7 @@
 
 import shutil
 from pathlib import Path
+from typing import Any
 
 import amici
 import jax
@@ -10,6 +11,7 @@ import jax.numpy as jnp
 import numpy as np
 import optimistix
 import pytest
+from amici.sim.jax import JAXModel
 from amici.sim.sundials import AMICI_SUCCESS
 from sbml_cases import (
     CaseSettings,
@@ -30,7 +32,13 @@ def result_path_jax() -> Path:
     return Path(__file__).parent / "amici-semantic-results-jax"
 
 
-def run_jax_simulation(model, ts, atol, rtol, tol_factor=1e2):
+def run_jax_simulation(
+    model: JAXModel,
+    ts: np.ndarray,
+    atol: float,
+    rtol: float,
+    tol_factor: float = 1e2,
+) -> dict[str, Any]:
     p = model.parameters
     ts_jnp = jnp.asarray(ts, dtype=float)
     x, stats = simulate_jax(
@@ -70,8 +78,8 @@ def run_jax_simulation(model, ts, atol, rtol, tol_factor=1e2):
 
 
 def test_sbml_testsuite_case_jax(
-    test_id, result_path_jax, sbml_semantic_cases_dir
-):
+    test_id: str, result_path_jax: Path, sbml_semantic_cases_dir: Path
+) -> None:
     model_dir = Path(__file__).parent / "SBMLTestModelsJax" / test_id
     try:
         case_dir = sbml_semantic_cases_dir / test_id

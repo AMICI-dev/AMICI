@@ -100,7 +100,7 @@ def read_tags(case_dir: Path, test_id: str) -> tuple[set[str], set[str]]:
 
 def write_result_file(
     simulated: pd.DataFrame, test_id: str, result_path: Path
-):
+) -> None:
     """
     Create test result file for upload to
     http://raterule.caltech.edu/Facilities/Database

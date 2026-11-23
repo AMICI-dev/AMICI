@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pathlib import Path
+from typing import Any
 
 import amici
 import amici.sim.jax
@@ -13,6 +15,7 @@ import optimistix
 import pandas as pd
 from amici.constants import SymbolId
 from amici.importers.sbml import SbmlImporter
+from amici.sim.jax import JAXModel
 from amici.sim.jax.petab import (
     DEFAULT_CONTROLLER_SETTINGS,
     DEFAULT_ROOT_FINDER_SETTINGS,
@@ -23,7 +26,7 @@ from sbml_cases import CaseSettings, find_model_file
 
 def verify_results(
     settings: CaseSettings,
-    rdata,
+    rdata: Mapping[str, Any],
     expected: pd.DataFrame,
     importer: SbmlImporter,
     parameters: dict[str, float],
@@ -114,8 +117,11 @@ def verify_results(
 
 
 def amounts_to_concentrations(
-    amount_species, wrapper, simulated, requested_concentrations
-):
+    amount_species: list[str],
+    wrapper: SbmlImporter,
+    simulated: pd.DataFrame,
+    requested_concentrations: list[str],
+) -> None:
     """
     Convert AMICI simulated amounts to concentrations
 
@@ -138,8 +144,11 @@ def amounts_to_concentrations(
 
 
 def concentrations_to_amounts(
-    amount_species, wrapper, simulated, requested_concentrations
-):
+    amount_species: list[str],
+    wrapper: SbmlImporter,
+    simulated: pd.DataFrame,
+    requested_concentrations: list[str],
+) -> None:
     """Convert AMICI simulated concentrations to amounts"""
     for species in amount_species:
         s = wrapper.sbml_model.getElementBySId(species)
@@ -165,7 +174,7 @@ def concentrations_to_amounts(
 
 def apply_settings(
     settings: CaseSettings, solver: asd.Solver, model: asd.Model, test_id: str
-):
+) -> None:
     """Apply model and solver settings as specified in the test case"""
     model.set_timepoints(settings.timepoints)
     solver.set_max_steps(int(1e6))
@@ -177,7 +186,9 @@ def apply_settings(
         solver.set_absolute_tolerance(settings.atol / 1e4)
 
 
-def compile_model_jax(case_dir: Path, test_id: str, model_dir: Path):
+def compile_model_jax(
+    case_dir: Path, test_id: str, model_dir: Path
+) -> tuple[JAXModel, SbmlImporter]:
     """Import the given test model as JAX model.
 
     :return: The JAX model and the importer.
@@ -190,14 +201,14 @@ def compile_model_jax(case_dir: Path, test_id: str, model_dir: Path):
 
 
 def simulate_jax(
-    model,
-    parameters,
+    model: JAXModel,
+    parameters: jnp.ndarray,
     ts: np.ndarray,
     atol: float,
     rtol: float,
     tol_factor: float = 1e2,
     root_finder: optimistix.AbstractRootFinder | None = None,
-):
+) -> tuple[jnp.ndarray, dict]:
     """Simulate a JAX model without data.
 
     :param parameters: The parameter values (`model.parameters` order).

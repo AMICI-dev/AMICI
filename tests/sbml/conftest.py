@@ -4,7 +4,7 @@ import os
 import re
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TextIO
 
 import pytest
 
@@ -75,7 +75,7 @@ def parse_selection(selection_str: str, last: int) -> list[int]:
     return indices
 
 
-def get_all_semantic_case_ids():
+def get_all_semantic_case_ids() -> list[str]:
     """Get iterator over test sorted IDs of all cases in the SBML semantic
     suite"""
     pattern = re.compile(r"\d{5}")
@@ -86,12 +86,12 @@ def get_all_semantic_case_ids():
     )
 
 
-def pytest_addoption(parser):
+def pytest_addoption(parser: pytest.Parser) -> None:
     """Add pytest CLI options"""
     parser.addoption("--cases", help="Test cases to run")
 
 
-def pytest_generate_tests(metafunc):
+def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
     """Parameterize tests"""
 
     # Run for all SBML semantic test suite cases
@@ -127,7 +127,7 @@ def pytest_generate_tests(metafunc):
         )
 
 
-def pytest_sessionfinish(session, exitstatus):
+def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
     """Process test results"""
     terminalreporter = session.config.pluginmanager.get_plugin(
         "terminalreporter"
@@ -138,7 +138,7 @@ def pytest_sessionfinish(session, exitstatus):
     terminalreporter.ensure_newline()
 
 
-def write_passed_tags(out=sys.stdout):
+def write_passed_tags(out: TextIO = sys.stdout) -> None:
     """Write tags of passed SBML semantic test cases
 
     Tag coverage (what the SBML test suite's own result database tracks)
@@ -201,6 +201,6 @@ def pytest_runtest_logreport(report: "TestReport") -> None:
         results.failed_or_skipped[check][test_case_id] = report.longreprtext
 
 
-def format_test_id(test_id) -> str:
+def format_test_id(test_id: int | str) -> str:
     """Format numeric to 0-padded string"""
     return f"{test_id:0>5}"
