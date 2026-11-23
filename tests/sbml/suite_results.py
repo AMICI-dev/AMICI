@@ -1,4 +1,4 @@
-"""Results of SBML semantic test suite runs (`results.json`) and case tags.
+"""Results of SBML semantic test suite runs (`results.json`).
 
 Only uses the standard library, so that results can be consolidated
 without AMICI installed.
@@ -7,7 +7,6 @@ without AMICI installed.
 from __future__ import annotations
 
 import json
-import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -79,25 +78,3 @@ class SuiteResults:
                 check: data[f"failed_or_skipped_{check}"] for check in CHECKS
             },
         )
-
-
-def read_tags(case_dir: Path, test_id: str) -> tuple[set[str], set[str]]:
-    """Read the component tags and test tags of the given test case."""
-    component_tags = set()
-    test_tags = set()
-    with open(case_dir / f"{test_id}-model.m") as f:
-        for line in f:
-            if line.startswith("testTags:"):
-                test_tags = set(
-                    re.split(r"[ ,:]", line[len("testTags:") :].strip())
-                )
-                test_tags.discard("")
-            if line.startswith("componentTags:"):
-                component_tags = set(
-                    re.split(r"[ ,:]", line[len("componentTags:") :].strip())
-                )
-                component_tags.discard("")
-            if test_tags and component_tags:
-                return component_tags, test_tags
-    print(f"No componentTags or testTags found for test case {test_id}.")
-    return component_tags, test_tags

@@ -11,13 +11,15 @@ import numpy as np
 import optimistix
 import pytest
 from amici.sim.sundials import AMICI_SUCCESS
-from utils import (
+from sbml_cases import (
     CaseSettings,
-    compile_model_jax,
     read_expected_results,
+    write_result_file,
+)
+from utils import (
+    compile_model_jax,
     simulate_jax,
     verify_results,
-    write_result_file,
 )
 
 jax.config.update("jax_enable_x64", True)

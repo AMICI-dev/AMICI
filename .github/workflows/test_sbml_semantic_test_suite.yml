@@ -16,6 +16,7 @@ on:
       - tests/sbml/testSBMLSuite.py
       - tests/sbml/conftest.py
       - tests/sbml/consolidate_results.py
+      - tests/sbml/sbml_cases.py
       - tests/sbml/suite_results.py
       - tests/sbml/utils.py
   check_suite:

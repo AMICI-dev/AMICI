@@ -16,7 +16,8 @@ script_dir = Path(__file__).parent.resolve()
 if str(script_dir) not in sys.path:
     sys.path.insert(0, str(script_dir))
 
-from suite_results import SuiteResults, read_tags  # noqa: E402
+from sbml_cases import read_tags  # noqa: E402
+from suite_results import SuiteResults  # noqa: E402
 
 # test function -> check name in `results.json`, per test case
 _CHECKS_BY_TEST = {

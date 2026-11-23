@@ -38,15 +38,17 @@ from amici.sim.sundials import (
     run_simulation,
 )
 from fiddy import FunctionEvaluationError, check_gradient, check_jacobian
-from utils import (
+from sbml_cases import (
     CaseSettings,
-    apply_settings,
-    compile_model_jax,
     find_model_file,
     read_expected_results,
+    write_result_file,
+)
+from utils import (
+    apply_settings,
+    compile_model_jax,
     simulate_jax,
     verify_results,
-    write_result_file,
 )
 
 # test cases for which the separate, autodiff-based JAX sensitivity
