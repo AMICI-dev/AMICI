@@ -78,14 +78,18 @@ def test_conversion():
     pysb.Observable("ab", a(s="b"))
 
     with TemporaryDirectoryWinSafe() as outdir:
-        pysb2amici(model, outdir, verbose=True, observation_model=[MC("ab")])
-        pysb2jax(model, outdir, verbose=True, observation_model=[MC("ab")])
+        amici_dir = Path(outdir, "amici")
+        jax_dir = Path(outdir, "jax")
+        pysb2amici(
+            model, amici_dir, verbose=True, observation_model=[MC("ab")]
+        )
+        pysb2jax(model, jax_dir, verbose=True, observation_model=[MC("ab")])
 
         amici_module = import_model_module(
-            module_name=model.name, module_path=outdir
+            module_name=model.name, module_path=amici_dir
         )
         jax_module = import_model_module(
-            module_name=Path(outdir).stem, module_path=Path(outdir).parent
+            module_name=jax_dir.stem, module_path=jax_dir.parent
         )
 
         ts = tuple(np.linspace(0, 1, 10))
@@ -129,24 +133,26 @@ def test_dimerization():
     pysb.Observable("b_obs", b())
 
     with TemporaryDirectoryWinSafe() as outdir:
+        amici_dir = Path(outdir, "amici")
+        jax_dir = Path(outdir, "jax")
         pysb2amici(
             model,
-            outdir,
+            amici_dir,
             verbose=True,
             observation_model=[MC("a_obs"), MC("b_obs")],
             fixed_parameters=["ksyn_a", "ksyn_b"],
         )
         pysb2jax(
             model,
-            outdir,
+            jax_dir,
             observation_model=[MC("a_obs"), MC("b_obs")],
         )
 
         amici_module = import_model_module(
-            module_name=model.name, module_path=outdir
+            module_name=model.name, module_path=amici_dir
         )
         jax_module = import_model_module(
-            module_name=Path(outdir).stem, module_path=Path(outdir).parent
+            module_name=jax_dir.stem, module_path=jax_dir.parent
         )
 
         ts = tuple(np.linspace(0, 1, 10))

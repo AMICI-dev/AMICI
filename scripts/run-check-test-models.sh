@@ -58,7 +58,9 @@ python -c "from amici.testing.models import import_test_models; import_test_mode
 # content.
 git add -A -f -- models
 
-diff_output=$(git diff --cached -I 'return "[0-9a-f]{40}";' -- models)
+# model directory markers are not part of the generated code
+diff_output=$(git diff --cached -I 'return "[0-9a-f]{40}";' -- models \
+    ':(exclude)models/*/.amici_model.json')
 if [[ -n "$diff_output" ]]; then
     echo ""
     echo "$diff_output"
