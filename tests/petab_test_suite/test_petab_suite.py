@@ -36,6 +36,9 @@ stream_handler = logging.StreamHandler()
 logger.addHandler(stream_handler)
 
 
+@pytest.mark.filterwarnings(
+    "ignore:Adjoint sensitivity analysis for models with discontinuous ",
+)
 def test_case(case, model_type, version, jax):
     """Wrapper for _test_case for handling test outcomes"""
     if jax and petabtests.test_id_str(case) == "0007":
@@ -258,7 +261,6 @@ def check_derivatives(
         solver: AMICI solver
         problem_parameters: Dictionary of problem parameters
     """
-    solver.set_sensitivity_method(SensitivityMethod.forward)
     solver.set_sensitivity_order(SensitivityOrder.first)
     # Required for case 9 to not fail in
     #  amici::NewtonSolver::computeNewtonSensis
@@ -266,12 +268,18 @@ def check_derivatives(
         SteadyStateSensitivityMode.integrateIfNewtonFails
     )
 
+    sensi_methods = [SensitivityMethod.forward]
+    # TODO: adjoints fail for models without state variables (#3546)
+    if model.nx_solver > 0:
+        sensi_methods.append(SensitivityMethod.adjoint)
     for edata in create_parameterized_edatas(
         amici_model=model,
         petab_problem=problem,
         problem_parameters=problem_parameters,
     ):
-        amici_check_derivatives(model, solver=solver, edata=edata)
+        for sensi_method in sensi_methods:
+            solver.set_sensitivity_method(sensi_method)
+            amici_check_derivatives(model, solver=solver, edata=edata)
 
 
 def run():
