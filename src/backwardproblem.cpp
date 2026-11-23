@@ -29,6 +29,9 @@ BackwardProblem::BackwardProblem(ForwardProblem& fwd)
     , simulator_(model_, solver_, &ws_) {}
 
 void BackwardProblem::workBackwardProblem() {
+    // zero-initialized, needed by ReturnData even if we return early
+    xB_pre_preeq_ = ws_.xB_;
+    xQB_pre_preeq_ = ws_.xQB_;
 
     if (model_->nx_solver <= 0
         || solver_->get_sensitivity_order() < SensitivityOrder::first

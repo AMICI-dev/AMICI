@@ -160,11 +160,6 @@ def _sensitivity_preflight_checks(model: Model, test_id: str, check: str):
     else:
         if model.ny == 0:
             pytest.skip("No observables, the likelihood is constant.")
-        if model.nx_rdata == 0:
-            pytest.skip(
-                "Adjoint sensitivity analysis fails for models without "
-                "state variables (#3546)."
-            )
     if test_id in _KNOWN_SENSITIVITY_CHECK_ISSUES:
         checks, reason = _KNOWN_SENSITIVITY_CHECK_ISSUES[test_id]
         if check in checks:
