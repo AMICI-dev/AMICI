@@ -117,6 +117,8 @@ struct ModelStateDerived {
         , dJzdp_(other.dJzdp_)
         , dzdx_(other.dzdx_)
         , dzdp_(other.dzdp_)
+        , dzdt_(other.dzdt_)
+        , dJzdt_(other.dJzdt_)
         , drzdx_(other.drzdx_)
         , drzdp_(other.drzdp_)
         , dydp_(other.dydp_)
@@ -335,6 +337,16 @@ struct ModelStateDerived {
      * (dimension: nz x nplist, row-major)
      */
     std::vector<realtype> dzdp_;
+
+    /** total time derivative of event output along the trajectory
+     * (dimension: nz)
+     */
+    std::vector<realtype> dzdt_;
+
+    /** total time derivative of event likelihood along the trajectory
+     * (dimension: nJ)
+     */
+    std::vector<realtype> dJzdt_;
 
     /** state derivative of event regularization variable
      * (dimension: `nz` x `nx_solver`, row-major)

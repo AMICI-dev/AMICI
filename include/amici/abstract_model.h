@@ -490,6 +490,22 @@ class AbstractModel {
     );
 
     /**
+     * @brief Model-specific implementation of fdzdt
+     *
+     * @param dzdt partial derivative of event-resolved output z w.r.t. time
+     * @param ie event index
+     * @param t current time
+     * @param x current state
+     * @param p parameter vector
+     * @param k constant vector
+     * @param h Heaviside vector
+     */
+    virtual void fdzdt(
+        realtype* dzdt, int ie, realtype t, realtype const* x,
+        realtype const* p, realtype const* k, realtype const* h
+    );
+
+    /**
      * @brief Model-specific implementation of fdrzdp
      *
      * @param drzdp partial derivative of root output rz w.r.t. model parameters

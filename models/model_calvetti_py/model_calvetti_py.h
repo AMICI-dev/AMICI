@@ -65,6 +65,7 @@ extern void dydx_model_calvetti_py(realtype *dydx, const realtype t, const realt
 
 
 
+
 extern void sigmay_model_calvetti_py(realtype *sigmay, const realtype t, const realtype *p, const realtype *k, const realtype *y);
 
 
@@ -343,6 +344,9 @@ class Model_model_calvetti_py : public amici::Model_DAE {
     void fdzdx(realtype *dzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {}
 
 
+    void fdzdt(realtype *dzdt, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {}
+
+
     void froot(realtype *root, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl) override {
         root_model_calvetti_py(root, t, x, p, k, h, w, tcl);
     }
@@ -559,7 +563,7 @@ class Model_model_calvetti_py : public amici::Model_DAE {
      * @return AMICI git commit hash
      */
     std::string get_amici_commit() const override {
-        return "46a7a00ab9f0aec6603785f7e1a9d878d6dcaa0d";
+        return "7cb3c096d8a57127a4f6e7b46a29698f850bc01c";
     }
 
     bool has_quadratic_llh() const override {

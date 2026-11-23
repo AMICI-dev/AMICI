@@ -380,9 +380,9 @@ void ReturnData::process_forward_problem(
         for (int iroot = 0; iroot <= fwd.get_event_counter(); iroot++) {
             auto const simulation_state = fwd.get_simulation_state_event(iroot);
             model.set_model_state(simulation_state.mod);
+            auto const& disc = discontinuities.at(iroot);
             get_event_output(
-                discontinuities.at(iroot).root_info, model,
-                simulation_state.sol, edata
+                disc.root_info, model, simulation_state.sol, disc.stau, edata
             );
         }
     }
@@ -456,7 +456,7 @@ void ReturnData::get_data_sensis_fsa(
 
 void ReturnData::get_event_output(
     std::vector<int> const& rootidx, Model& model, SolutionState const& sol,
-    ExpData const* edata
+    std::vector<realtype> const& stau, ExpData const* edata
 ) {
 
     for (int ie = 0; ie < ne; ie++) {
@@ -497,7 +497,7 @@ void ReturnData::get_event_output(
 
         if (sensi >= SensitivityOrder::first) {
             if (sensi_meth == SensitivityMethod::forward) {
-                get_event_sensis_fsa(ie, model, sol, edata);
+                get_event_sensis_fsa(ie, model, sol, stau, edata);
             } else if (edata && !sllh.empty()) {
                 model.add_partial_event_objective_sensitivity(
                     sllh, s2llh, ie, nroots_.at(ie), sol.t, sol.x, *edata
@@ -514,8 +514,14 @@ void ReturnData::get_event_output(
 }
 
 void ReturnData::get_event_sensis_fsa(
-    int ie, Model& model, SolutionState const& sol, ExpData const* edata
+    int ie, Model& model, SolutionState const& sol,
+    std::vector<realtype> const& stau, ExpData const* edata
 ) {
+    // Not set for the outputs of events that did not occur, which don't
+    // depend on the event time.
+    std::vector<realtype> const no_stau(stau.empty() ? nplist : 0, 0.0);
+    auto const& stau_ = stau.empty() ? no_stau : stau;
+
     if (sol.t == model.get_timepoint(nt - 1)) {
         // call from fillEvent at last timepoint
         if (!sz.empty())
@@ -529,13 +535,15 @@ void ReturnData::get_event_sensis_fsa(
             );
     } else if (!sz.empty()) {
         model.get_event_sensitivity(
-            slice(sz, nroots_.at(ie), nz * nplist), ie, sol.t, sol.x, sol.sx
+            slice(sz, nroots_.at(ie), nz * nplist), ie, sol.t, sol.x, sol.sx,
+            sol.dx, stau_
         );
     }
 
     if (edata && !sllh.empty()) {
         model.add_event_objective_sensitivity(
-            sllh, s2llh, ie, nroots_.at(ie), sol.t, sol.x, sol.sx, *edata
+            sllh, s2llh, ie, nroots_.at(ie), sol.t, sol.x, sol.sx, sol.dx,
+            stau_, *edata
         );
     }
 }

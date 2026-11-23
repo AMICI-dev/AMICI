@@ -61,7 +61,8 @@ extern void dxdotdx_explicit_colptrs_model_events_py(SUNMatrixWrapper &colptrs);
 extern void dxdotdx_explicit_rowvals_model_events_py(SUNMatrixWrapper &rowvals);
 extern void dydx_model_events_py(realtype *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
 extern void dydp_model_events_py(realtype *dydp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *w, const realtype *tcl, const realtype *dtcldp, const realtype *spl, const realtype *sspl);
-extern void dzdx_model_events_py(realtype *dzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
+
+extern void dzdt_model_events_py(realtype *dzdt, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
 
 extern void drzdx_model_events_py(realtype *drzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
 
@@ -352,8 +353,11 @@ class Model_model_events_py : public amici::Model_ODE {
     void fdzdp(realtype *dzdp, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip) override {}
 
 
-    void fdzdx(realtype *dzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {
-        dzdx_model_events_py(dzdx, ie, t, x, p, k, h);
+    void fdzdx(realtype *dzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {}
+
+
+    void fdzdt(realtype *dzdt, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {
+        dzdt_model_events_py(dzdt, ie, t, x, p, k, h);
     }
 
 
@@ -581,7 +585,7 @@ class Model_model_events_py : public amici::Model_ODE {
      * @return AMICI git commit hash
      */
     std::string get_amici_commit() const override {
-        return "46a7a00ab9f0aec6603785f7e1a9d878d6dcaa0d";
+        return "7cb3c096d8a57127a4f6e7b46a29698f850bc01c";
     }
 
     bool has_quadratic_llh() const override {

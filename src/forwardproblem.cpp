@@ -975,13 +975,19 @@ void EventHandlingSimulator::store_event(ExpData const* edata) {
 
         if (edata && solver_->computing_asa()) {
             Expects(dJzdx_ != nullptr);
+            auto& disc_dJzdt = result.discs.back().dJzdt;
+            disc_dJzdt.resize(model_->nJ, 0.0);
+            std::vector<realtype> dJzdt(model_->nJ, 0.0);
             model_->get_adjoint_state_event_update(
                 slice(
                     *dJzdx_, ie * model_->n_max_event() + ws_->nroots.at(ie),
                     model_->nx_solver * model_->nJ
                 ),
-                ie, ws_->nroots.at(ie), ws_->sol.t, ws_->sol.x, *edata
+                dJzdt, ie, ws_->nroots.at(ie), ws_->sol.t, ws_->sol.x,
+                ws_->sol.dx, *edata
             );
+            for (int iJ = 0; iJ < model_->nJ; ++iJ)
+                disc_dJzdt[iJ] += dJzdt[iJ];
         }
         ws_->nroots.at(ie)++;
     }
@@ -1021,6 +1027,8 @@ void EventHandlingSimulator::store_state_at_trigger(
             // t0 has no parameter dependency
             std::ranges::fill(ws_->stau, 0.0);
         }
+        // for the event outputs
+        result.discs.back().stau = ws_->stau;
     } else if (solver_->computing_asa()) {
         result.discs.back().h_at_trigger = model_->get_model_state().h;
         result.discs.back().total_cl_at_trigger
@@ -1171,13 +1179,11 @@ int EventHandlingSimulator::detect_secondary_events() {
     if (secondevent > 0) {
         // Known limitations of sensitivities at secondary events.
         if ((solver_->computing_fsa() || solver_->computing_asa())
-            && (model_->has_algebraic_states() || model_->nz > 0)
-            && solver_->get_logger())
+            && model_->has_algebraic_states() && solver_->get_logger())
             solver_->get_logger()->log(
                 LogSeverity::warning, "SECONDARY_EVENT",
                 "Secondary event was triggered. Sensitivities can be "
-                "incorrect for models with algebraic states and for event "
-                "outputs of secondary events."
+                "incorrect for models with algebraic states."
             );
     }
 

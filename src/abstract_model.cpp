@@ -175,6 +175,18 @@ void AbstractModel::fdzdx(
     );
 }
 
+void AbstractModel::fdzdt(
+    realtype* /*dzdt*/, int const /*ie*/, realtype const /*t*/,
+    realtype const* /*x*/, realtype const* /*p*/, realtype const* /*k*/,
+    realtype const* /*h*/
+) {
+    throw AmiException(
+        "Requested functionality is not supported as %s is "
+        "not implemented for this model!",
+        __func__
+    );
+}
+
 void AbstractModel::fdrzdp(
     realtype* /*drzdp*/, int const /*ie*/, realtype const /*t*/,
     realtype const* /*x*/, realtype const* /*p*/, realtype const* /*k*/,
