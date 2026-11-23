@@ -179,6 +179,10 @@ jobs:
 
       # The distributions' Python versions are too old for some images
       - uses: astral-sh/setup-uv@v10.3.2
+        with:
+          # restoring/saving the cache takes longer than downloading
+          # the packages, and the cache is rarely hit
+          enable-cache: false
 
       - uses: actions/download-artifact@v8
         with:
