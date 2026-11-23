@@ -127,25 +127,47 @@ def _substitute_jax_placeholder_parameters(
     modified. Only affects the (ephemeral) importer-internal observation
     model used for JAX code generation -- the PEtab problem itself is left
     untouched.
+
+    :return:
+        The new measurement channels. Each declares the generic placeholders
+        corresponding to the placeholders of its observable.
     """
     observables_by_id = {obs.id: obs for obs in observables}
     result = []
     for channel in observation_model:
         channel = copy.copy(channel)
+        channel.noise_placeholders = list(channel.noise_placeholders)
+        channel.observable_placeholders = list(channel.observable_placeholders)
         obs = observables_by_id.get(channel.id)
         if obs is not None:
-            for attr, placeholders, generic_prefix in (
-                ("sigma", obs.noise_placeholders, "noiseParameter"),
+            for attr, placeholders, generic_prefix, declared_attr in (
+                (
+                    "sigma",
+                    obs.noise_placeholders,
+                    "noiseParameter",
+                    "noise_placeholders",
+                ),
                 (
                     "formula",
                     obs.observable_placeholders,
                     "observableParameter",
+                    "observable_placeholders",
                 ),
             ):
                 expr = getattr(channel, attr)
                 if expr is None or not placeholders:
                     continue
                 expr = sp.sympify(expr)
+                # declare all placeholders, also those that don't occur in
+                # the formula: values are bound by position
+                setattr(
+                    channel,
+                    declared_attr,
+                    [
+                        f"{generic_prefix}{i}"
+                        for i in range(1, len(placeholders) + 1)
+                    ],
+                )
                 for i, placeholder in enumerate(placeholders, start=1):
                     # substitute using the placeholder symbol itself, not a
                     # freshly created one: petab.v2 symbols carry assumptions

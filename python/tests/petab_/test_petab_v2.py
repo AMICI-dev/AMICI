@@ -799,6 +799,59 @@ def test_jax_matches_sundials_with_arbitrarily_named_noise_placeholders():
     np.testing.assert_allclose(float(llh_jax), float(llh_sundials), rtol=1e-5)
 
 
+def test_jax_placeholder_absent_from_formula():
+    """JAX binds the placeholder values by position, also if a declared
+    placeholder does not occur in the formula."""
+    import numpy as np
+    from petab.v2.core import ProblemConfig
+    from petab.v2.models.sbml_model import SbmlModel
+
+    problem = Problem()
+    problem.config = ProblemConfig()
+    problem.model = SbmlModel.from_antimony(
+        "xa = 1; xb = 2; xa' = -0.1*xa; xb' = 0.05*xb;"
+    )
+    problem.add_parameter(
+        "k_unused", nominal_value=7.0, estimate=True, lb=0, ub=10
+    )
+    problem.add_parameter(
+        "k_offset", nominal_value=3.0, estimate=True, lb=0, ub=10
+    )
+    problem.add_parameter(
+        "sd_a", nominal_value=1.0, estimate=True, lb=0.1, ub=10
+    )
+    problem.add_observable(
+        "obs_a",
+        formula="xa + offset",
+        noise_formula="sd_a",
+        observable_placeholders=["unused", "offset"],
+    )
+    ts = np.array([0.0, 1.0, 2.0])
+    measurements = 4.0 - 0.05 * ts
+    for t, measurement in zip(ts, measurements, strict=True):
+        problem.add_measurement(
+            "obs_a",
+            time=t,
+            measurement=measurement,
+            observable_parameters=["k_unused", "k_offset"],
+        )
+
+    from amici.sim.jax.petab import run_simulations
+
+    jax_problem = PetabImporter(
+        problem,
+        jax=True,
+        module_name="test_placeholder_absent_from_formula_jax",
+        verbose=False,
+    ).create_simulator(force_import=True)
+    llh_jax, _ = run_simulations(jax_problem, max_steps=10_000)
+
+    # y = xa + k_offset, sigma = 1
+    residuals = np.exp(-0.1 * ts) + 3.0 - measurements
+    llh_expected = np.sum(-0.5 * np.log(2 * np.pi) - 0.5 * residuals**2)
+    np.testing.assert_allclose(float(llh_jax), llh_expected, rtol=1e-5)
+
+
 def _parameter_scales_test_problem() -> Problem:
     """A small two-experiment problem for parameter scale tests.
 
