@@ -3,12 +3,21 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+import amici
+import amici.sim.jax
 import amici.sim.sundials as asd
+import diffrax
+import jax.numpy as jnp
 import libsbml as sbml
 import numpy as np
+import optimistix
 import pandas as pd
 from amici.constants import SymbolId
 from amici.importers.sbml import SbmlImporter
+from amici.sim.jax.petab import (
+    DEFAULT_CONTROLLER_SETTINGS,
+    DEFAULT_ROOT_FINDER_SETTINGS,
+)
 from numpy.testing import assert_allclose
 
 
@@ -251,6 +260,67 @@ def apply_settings(
         solver.set_absolute_tolerance(settings.atol / 1e6)
     else:
         solver.set_absolute_tolerance(settings.atol / 1e4)
+
+
+def compile_model_jax(case_dir: Path, test_id: str, model_dir: Path):
+    """Import the given test model as JAX model.
+
+    :return: The JAX model and the importer.
+    """
+    model_dir.mkdir(parents=True, exist_ok=True)
+    importer = SbmlImporter(find_model_file(case_dir, test_id), jax=True)
+    importer.sbml2jax(f"SBMLTest{test_id}_jax", output_dir=model_dir)
+    model_module = amici.import_model_module(model_dir.name, model_dir.parent)
+    return model_module.Model(), importer
+
+
+def simulate_jax(
+    model,
+    parameters,
+    ts: np.ndarray,
+    atol: float,
+    rtol: float,
+    tol_factor: float = 1e2,
+    root_finder: optimistix.AbstractRootFinder | None = None,
+):
+    """Simulate a JAX model without data.
+
+    :param parameters: The parameter values (`model.parameters` order).
+    :param atol: The absolute tolerance for comparing against the expected
+        results; the integration tolerance is `atol / tol_factor`.
+    :param rtol: The relative tolerance, analogous to `atol`.
+    :param root_finder: The root finder for events; defaults to
+        `optimistix.Newton` with `DEFAULT_ROOT_FINDER_SETTINGS`.
+    :return: The state trajectory and the simulation statistics, see
+        `amici.sim.jax.JAXModel.simulate_condition`.
+    """
+    ts = jnp.asarray(ts, dtype=float)
+    controller = diffrax.PIDController(
+        rtol=rtol / tol_factor,
+        atol=atol / tol_factor,
+        pcoeff=DEFAULT_CONTROLLER_SETTINGS["pcoeff"],
+        icoeff=DEFAULT_CONTROLLER_SETTINGS["icoeff"],
+        dcoeff=DEFAULT_CONTROLLER_SETTINGS["dcoeff"],
+    )
+    if root_finder is None:
+        root_finder = optimistix.Newton(**DEFAULT_ROOT_FINDER_SETTINGS)
+    return model.simulate_condition(
+        parameters,
+        ts,
+        jnp.array([]),
+        jnp.zeros_like(ts),
+        jnp.zeros_like(ts, dtype=int),
+        jnp.zeros_like(ts, dtype=int),
+        jnp.zeros((ts.shape[0], 0)),
+        jnp.zeros((ts.shape[0], 0)),
+        diffrax.Kvaerno5(),
+        controller,
+        root_finder,
+        diffrax.DirectAdjoint(),
+        diffrax.SteadyStateEvent(),
+        2**10,
+        ret=amici.sim.jax.ReturnValue.x,
+    )
 
 
 def find_model_file(current_test_path: Path, test_id: str) -> Path:

@@ -22,17 +22,11 @@ from pathlib import Path
 from types import ModuleType
 
 import amici
-import diffrax
 import jax
 import jax.numpy as jnp
 import numpy as np
-import optimistix
 import pytest
 from amici.adapters.fiddy import run_simulation_to_function_and_derivative
-from amici.sim.jax.petab import (
-    DEFAULT_CONTROLLER_SETTINGS,
-    DEFAULT_ROOT_FINDER_SETTINGS,
-)
 from amici.sim.sundials import (
     AMICI_SUCCESS,
     ExpData,
@@ -47,8 +41,10 @@ from fiddy import FunctionEvaluationError, check_gradient, check_jacobian
 from utils import (
     CaseSettings,
     apply_settings,
+    compile_model_jax,
     find_model_file,
     read_expected_results,
+    simulate_jax,
     verify_results,
     write_result_file,
 )
@@ -523,18 +519,6 @@ def _run_sensitivity_check(
     raise error
 
 
-def compile_model_jax(sbml_dir: Path, test_id: str, model_dir: Path):
-    """Import the given test model as JAX model"""
-    model_dir.mkdir(parents=True, exist_ok=True)
-    sbml_file = find_model_file(sbml_dir, test_id)
-    sbml_importer = amici.SbmlImporter(sbml_file)
-    model_name = f"SBMLTest{test_id}_jax"
-    sbml_importer.sbml2jax(model_name, output_dir=model_dir)
-    model_module = amici.import_model_module(model_dir.name, model_dir.parent)
-    jax_model = model_module.Model()
-    return jax_model, sbml_importer
-
-
 def jax_sensitivity_check(
     sbml_dir: Path,
     test_id: str,
@@ -553,39 +537,10 @@ def jax_sensitivity_check(
         raise
 
     try:
-        ts = rdata["ts"]
         p = jax_model.parameters
-        ts_jnp = jnp.asarray(ts, dtype=float)
-        zeros = jnp.zeros_like(ts_jnp)
-        tol_factor = 1e2
-        solver = diffrax.Kvaerno5()
-        controller = diffrax.PIDController(
-            rtol=rtol / tol_factor,
-            atol=atol / tol_factor,
-            pcoeff=DEFAULT_CONTROLLER_SETTINGS["pcoeff"],
-            icoeff=DEFAULT_CONTROLLER_SETTINGS["icoeff"],
-            dcoeff=DEFAULT_CONTROLLER_SETTINGS["dcoeff"],
-        )
-        root_finder = optimistix.Newton(**DEFAULT_ROOT_FINDER_SETTINGS)
 
         def simulate(pars):
-            x, _ = jax_model.simulate_condition(
-                pars,
-                ts_jnp,
-                jnp.array([]),
-                zeros,
-                jnp.zeros_like(ts_jnp, dtype=int),
-                jnp.zeros_like(ts_jnp, dtype=int),
-                jnp.zeros((ts_jnp.shape[0], 0)),
-                jnp.zeros((ts_jnp.shape[0], 0)),
-                solver,
-                controller,
-                root_finder,
-                diffrax.DirectAdjoint(),
-                diffrax.SteadyStateEvent(),
-                2**10,
-                ret=amici.sim.jax.ReturnValue.x,
-            )
+            x, _ = simulate_jax(jax_model, pars, rdata["ts"], atol, rtol)
             return x
 
         x = simulate(p)
