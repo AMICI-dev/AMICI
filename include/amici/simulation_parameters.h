@@ -236,14 +236,18 @@ class SimulationParameters {
     bool reinitialize_fixed_parameter_initial_states{false};
 
     /**
-     * @brief Indices of states to be reinitialized based on provided
-     * presimulation constants / fixed parameters.
+     * @brief Indices of states to be reinitialized at the start of
+     * presimulation.
+     *
+     * The states are reinitialized based on the presimulation fixed
+     * parameters, or the main simulation fixed parameters if no
+     * presimulation fixed parameters are provided.
      */
     std::vector<int> reinitialization_state_idxs_presim;
 
     /**
-     * @brief Indices of states to be reinitialized based on provided
-     * constants / fixed parameters.
+     * @brief Indices of states to be reinitialized at the start of the main
+     * simulation (after pre-equilibration or presimulation).
      */
     std::vector<int> reinitialization_state_idxs_sim;
 };
