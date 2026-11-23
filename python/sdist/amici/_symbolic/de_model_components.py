@@ -2,7 +2,7 @@
 
 import abc
 import numbers
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from typing import SupportsFloat
 
 import sympy as sp
@@ -845,6 +845,8 @@ class Event(ModelQuantity):
         if len(self._assignments) == 0:
             return None
 
+        self.check_assignment_targets(x)
+
         x_to_x_eval = dict(zip(x, x_eval, strict=True))
 
         def get_bolus(x_i: sp.Symbol) -> sp.Expr:
@@ -961,6 +963,25 @@ class Event(ModelQuantity):
     def updates_state(self) -> bool:
         """Whether the event assignment updates the model state."""
         return bool(self._assignments)
+
+    @property
+    def assignment_targets(self) -> set[sp.Symbol]:
+        """The symbols of the entities that are assigned by this event."""
+        return set(self._assignments)
+
+    def check_assignment_targets(self, x: Iterable[sp.Symbol]) -> None:
+        """
+        Check that all assignment targets are state variables.
+
+        :param x: The (solver) state variables.
+        :raises ValueError: If any assignment target is not in `x`.
+        """
+        if invalid_targets := self.assignment_targets - set(x):
+            raise ValueError(
+                f"Event `{self.get_id()}` has assignments to "
+                f"{sorted(map(str, invalid_targets))}, which are not "
+                "(solver) state variables."
+            )
 
 
 # defines the type of some attributes in DEModel

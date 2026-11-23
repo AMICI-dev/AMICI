@@ -417,7 +417,6 @@ def test_pysb_event(tempdir):
 
     events = [
         Event(
-            # note that unlike for SBML import, we must omit the real=True here
             symbol=symbol_with_assumptions("event1"),
             name="Event1",
             value=amici_time_symbol - 5,
@@ -612,3 +611,59 @@ def test_pysb_named_sigma():
         2 * symbol_with_assumptions("p_sd") * symbol_with_assumptions("obs_a"),
         sp.Float(1.0),
     ]
+
+
+def test_pysb_events_disable_conservation_laws(caplog):
+    """Conservation laws are turned off for PySB models with events, and
+    event assignments to non-states are rejected during import."""
+    from amici.importers.pysb import ode_model_from_pysb_importer
+
+    model = pysb.Model("pysb_event_cl_test", _export=False)
+    model.add_component(pysb.Monomer("A", ["b"], _export=False))
+    model.add_component(pysb.Monomer("B", ["a"], _export=False))
+    model.add_component(pysb.Parameter("a0", 1.0, _export=False))
+    model.add_component(pysb.Parameter("k", 1.0, _export=False))
+    model.add_initial(
+        pysb.Initial(
+            model.monomers["A"](b=None), model.parameters["a0"], _export=False
+        )
+    )
+    model.add_initial(
+        pysb.Initial(
+            model.monomers["B"](a=None), model.parameters["a0"], _export=False
+        )
+    )
+    model.add_component(
+        pysb.Rule(
+            "binding",
+            model.monomers["A"](b=None) + model.monomers["B"](a=None)
+            >> model.monomers["A"](b=1) % model.monomers["B"](a=1),
+            model.parameters["k"],
+            _export=False,
+        )
+    )
+
+    def event(target):
+        return Event(
+            symbol=symbol_with_assumptions("event1"),
+            name="event1",
+            value=amici_time_symbol - 5,
+            assignments={target: 2},
+            use_values_from_trigger_time=False,
+        )
+
+    # without events, total A and total B are conserved
+    ode = ode_model_from_pysb_importer(model)
+    assert ode.num_cons_law() == 2
+
+    with caplog.at_level(logging.WARNING, logger="amici.importers.pysb"):
+        ode = ode_model_from_pysb_importer(
+            model, _events=[event(symbol_with_assumptions("__s0"))]
+        )
+    assert ode.num_cons_law() == 0
+    assert "Conservation laws are currently not supported" in caplog.text
+
+    with pytest.raises(ValueError, match=r"\['foo'\].*not \(solver\) state"):
+        ode_model_from_pysb_importer(
+            model, _events=[event(symbol_with_assumptions("foo"))]
+        )
