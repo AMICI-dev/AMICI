@@ -172,7 +172,11 @@ def write_passed_tags(out=sys.stdout):
 
 def pytest_runtest_logreport(report: "TestReport") -> None:
     """Collect test case IDs of passed SBML semantic test suite cases"""
-    if report.when != "call":
+    # Failures and skips during setup (e.g., model import) have no "call"
+    # report.
+    if not (
+        report.when == "call" or (report.when == "setup" and not report.passed)
+    ):
         return
     match = re.search(
         r"::(test_sbml_testsuite_case"
