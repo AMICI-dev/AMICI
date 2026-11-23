@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+from dataclasses import dataclass
 from pathlib import Path
 
 import amici.sim.sundials as asd
@@ -7,49 +9,136 @@ import libsbml as sbml
 import numpy as np
 import pandas as pd
 from amici.constants import SymbolId
+from amici.importers.sbml import SbmlImporter
 from numpy.testing import assert_allclose
 
 
-def verify_results(
-    settings,
-    rdata: asd.ReturnData,
-    expected,
-    wrapper,
-    model: asd.Model,
-    atol,
-    rtol,
-):
-    """Verify test results"""
-    amount_species, variables = get_amount_and_variables(settings)
+def _parse_list(value: str) -> list[str]:
+    """Parse a comma-separated settings value."""
+    return [item for item in value.replace(" ", "").split(",") if item]
 
+
+@dataclass
+class CaseSettings:
+    """Settings of an SBML semantic test suite case.
+
+    See the `<case>-settings.txt` files.
+    """
+
+    start: float
+    duration: float
+    steps: int
+    #: IDs of all variables for which results are expected
+    variables: list[str]
+    #: Absolute tolerance for comparing against the expected results
+    atol: float
+    #: Relative tolerance for comparing against the expected results
+    rtol: float
+    #: Species for which results are expected as amounts
+    amounts: list[str]
+    #: Species for which results are expected as concentrations
+    concentrations: list[str]
+
+    @classmethod
+    def from_file(cls, case_dir: Path, test_id: str) -> CaseSettings:
+        """Read the settings file of the given test case."""
+        raw = {}
+        with open(case_dir / f"{test_id}-settings.txt") as f:
+            for line in f:
+                if line.strip():
+                    key, value = line.split(":")
+                    raw[key] = value.strip()
+        # start/duration/steps may be empty
+        return cls(
+            start=float(raw["start"] or 0),
+            duration=float(raw["duration"] or 0),
+            steps=int(raw["steps"] or 0),
+            variables=_parse_list(raw["variables"]),
+            atol=float(raw["absolute"]),
+            rtol=float(raw["relative"]),
+            amounts=_parse_list(raw["amount"]),
+            concentrations=_parse_list(raw["concentration"]),
+        )
+
+    @property
+    def timepoints(self) -> np.ndarray:
+        """The output timepoints."""
+        return np.linspace(
+            self.start, self.start + self.duration, self.steps + 1
+        )
+
+
+def read_expected_results(case_dir: Path, test_id: str) -> pd.DataFrame:
+    """Read the expected results of the given test case."""
+    results = pd.read_csv(case_dir / f"{test_id}-results.csv", delimiter=",")
+    return results.rename(
+        columns={c: c.replace(" ", "") for c in results.columns},
+    )
+
+
+def read_tags(case_dir: Path, test_id: str) -> tuple[set[str], set[str]]:
+    """Read the component tags and test tags of the given test case."""
+    component_tags = set()
+    test_tags = set()
+    with open(case_dir / f"{test_id}-model.m") as f:
+        for line in f:
+            if line.startswith("testTags:"):
+                test_tags = set(
+                    re.split(r"[ ,:]", line[len("testTags:") :].strip())
+                )
+                test_tags.discard("")
+            if line.startswith("componentTags:"):
+                component_tags = set(
+                    re.split(r"[ ,:]", line[len("componentTags:") :].strip())
+                )
+                component_tags.discard("")
+            if test_tags and component_tags:
+                return component_tags, test_tags
+    print(f"No componentTags or testTags found for test case {test_id}.")
+    return component_tags, test_tags
+
+
+def verify_results(
+    settings: CaseSettings,
+    rdata,
+    expected: pd.DataFrame,
+    importer: SbmlImporter,
+    parameters: dict[str, float],
+    expression_ids: list[str],
+) -> pd.DataFrame:
+    """Verify simulation results against the expected results.
+
+    :param rdata: The simulation results (`ts`, `y`, `w`).
+    :param importer: The importer the simulated model was created with.
+    :param parameters: Parameter ID -> value of the simulated model.
+    :param expression_ids: Expression IDs of the simulated model.
+    :return: The simulated values of `settings.variables` and time.
+    """
     # collect states
     simulated = pd.DataFrame(
         rdata["y"],
         columns=[
             obs["name"]
-            for obs in wrapper._symbols[SymbolId.OBSERVABLE].values()
+            for obs in importer._symbols[SymbolId.OBSERVABLE].values()
         ],
     )
     simulated["time"] = rdata["ts"]
 
-    parameter_data = {}
-
     # collect parameters
-    for par in model.get_free_parameter_ids():
-        parameter_data[par] = rdata["ts"] * 0 + model.get_free_parameter_by_id(
-            par
-        )
+    parameter_data = {
+        par_id: rdata["ts"] * 0 + value for par_id, value in parameters.items()
+    }
 
     expression_data = {}
 
-    for expr_idx, expr_id in enumerate(model.get_expression_ids()):
+    for expr_idx, expr_id in enumerate(expression_ids):
         if expr_id.startswith("flux_"):
             new_key = expr_id.removeprefix("flux_")
         else:
             new_key = expr_id
             if expr_id in simulated.columns:
                 continue  # skip if already present
-        expression_data[new_key] = rdata.w[:, expr_idx]
+        expression_data[new_key] = rdata["w"][:, expr_idx]
 
     # consolidated concatenation instead of columnwise insert to avoid data fragmentation in test 01395
     simulated = pd.concat(
@@ -63,35 +152,27 @@ def verify_results(
 
     # SBML test suite case 01308 defines species with initialAmount and
     # hasOnlySubstanceUnits="true", but then request results as concentrations.
-    requested_concentrations = [
-        s
-        for s in settings["concentration"]
-        .replace(" ", "")
-        .replace("\n", "")
-        .split(",")
-        if s
-    ]
     # We only need to convert species that have only substance units
     concentration_species = [
         str(state_id)
         for state_id, state in {
-            **wrapper._symbols[SymbolId.SPECIES],
-            **wrapper._symbols[SymbolId.ALGEBRAIC_STATE],
+            **importer._symbols[SymbolId.SPECIES],
+            **importer._symbols[SymbolId.ALGEBRAIC_STATE],
         }.items()
-        if str(state_id) in requested_concentrations
+        if str(state_id) in settings.concentrations
         and state.get("amount", False)
     ]
     amounts_to_concentrations(
-        concentration_species, wrapper, simulated, requested_concentrations
+        concentration_species, importer, simulated, settings.concentrations
     )
 
     concentrations_to_amounts(
-        amount_species, wrapper, simulated, requested_concentrations
+        settings.amounts, importer, simulated, settings.concentrations
     )
 
     # simulated may contain `object` dtype columns and `expected` may
     # contain `np.int64` columns, so we cast everything to `np.float64`.
-    for variable in variables:
+    for variable in settings.variables:
         expectation = expected[variable].astype(np.float64).values
         try:
             actual = simulated[variable].astype(np.float64).values
@@ -100,13 +181,13 @@ def verify_results(
         assert_allclose(
             actual,
             expectation,
-            atol,
-            rtol,
+            settings.atol,
+            settings.rtol,
             equal_nan=True,
             err_msg=f"Mismatch for {variable}",
         )
 
-    return simulated[variables + ["time"]]
+    return simulated[settings.variables + ["time"]]
 
 
 def amounts_to_concentrations(
@@ -126,12 +207,11 @@ def amounts_to_concentrations(
     This allows for the reuse of the concentrations_to_amounts method...
     """
     for species in amount_species:
-        if species != "":
-            simulated.loc[:, species] = 1 / simulated.loc[:, species]
-            concentrations_to_amounts(
-                [species], wrapper, simulated, requested_concentrations
-            )
-            simulated.loc[:, species] = 1 / simulated.loc[:, species]
+        simulated.loc[:, species] = 1 / simulated.loc[:, species]
+        concentrations_to_amounts(
+            [species], wrapper, simulated, requested_concentrations
+        )
+        simulated.loc[:, species] = 1 / simulated.loc[:, species]
 
 
 def concentrations_to_amounts(
@@ -182,45 +262,18 @@ def write_result_file(
     )
 
 
-def get_amount_and_variables(settings):
-    """Read amount and species from settings file"""
-
-    # species for which results are expected as amounts
-    amount_species = (
-        settings["amount"].replace(" ", "").replace("\n", "").split(",")
-    )
-
-    # IDs of all variables for which results are expected/provided
-    variables = (
-        settings["variables"].replace(" ", "").replace("\n", "").split(",")
-    )
-
-    return amount_species, variables
-
-
 def apply_settings(
-    settings, solver: asd.Solver, model: asd.Model, test_id: str
+    settings: CaseSettings, solver: asd.Solver, model: asd.Model, test_id: str
 ):
     """Apply model and solver settings as specified in the test case"""
-    # start/duration/steps may be empty
-    ts = np.linspace(
-        float(settings["start"] or 0),
-        float(settings["start"] or 0) + float(settings["duration"] or 0),
-        int(settings["steps"] or 0) + 1,
-    )
-    atol = float(settings["absolute"])
-    rtol = float(settings["relative"])
-
-    model.set_timepoints(ts)
+    model.set_timepoints(settings.timepoints)
     solver.set_max_steps(int(1e6))
-    solver.set_relative_tolerance(rtol / 1e4)
+    solver.set_relative_tolerance(settings.rtol / 1e4)
 
     if test_id == "01148":
-        solver.set_absolute_tolerance(atol / 1e6)
+        solver.set_absolute_tolerance(settings.atol / 1e6)
     else:
-        solver.set_absolute_tolerance(atol / 1e4)
-
-    return atol, rtol
+        solver.set_absolute_tolerance(settings.atol / 1e4)
 
 
 def find_model_file(current_test_path: Path, test_id: str) -> Path:
@@ -237,15 +290,3 @@ def find_model_file(current_test_path: Path, test_id: str) -> Path:
         sbml_file = current_test_path / f"{test_id}-sbml-l2v5.xml"
 
     return sbml_file
-
-
-def read_settings_file(current_test_path: Path, test_id: str):
-    """Read settings for the given test"""
-    settings_file = current_test_path / f"{test_id}-settings.txt"
-    settings = {}
-    with open(settings_file) as f:
-        for line in f:
-            if line != "\n":
-                (key, val) = line.split(":")
-                settings[key] = val.strip()
-    return settings

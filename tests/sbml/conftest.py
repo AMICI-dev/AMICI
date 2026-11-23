@@ -17,6 +17,8 @@ script_dir = Path(__file__).parent.resolve()
 if str(script_dir) not in sys.path:
     sys.path.insert(0, str(script_dir))
 
+from utils import read_tags  # noqa: E402
+
 # the independently-reported checks per SBML semantic test suite case
 SIMULATION_CHECK = "test_sbml_testsuite_case"
 SENSITIVITY_FORWARD_CHECK = "test_sbml_testsuite_case_sensitivity_forward"
@@ -172,7 +174,9 @@ def write_passed_tags(passed_simulation_ids, out=sys.stdout):
     passed_test_tags = set()
 
     for test_id in passed_simulation_ids:
-        cur_component_tags, cur_test_tags = get_tags_for_test(test_id)
+        cur_component_tags, cur_test_tags = read_tags(
+            SBML_SEMANTIC_CASES_DIR / test_id, test_id
+        )
         passed_component_tags |= cur_component_tags
         passed_test_tags |= cur_test_tags
 
@@ -225,7 +229,9 @@ def pytest_runtest_logreport(report: "TestReport") -> None:
     if check == SIMULATION_CHECK:
         global encountered_tags
 
-        component_tags, test_tags = get_tags_for_test(test_case_id)
+        component_tags, test_tags = read_tags(
+            SBML_SEMANTIC_CASES_DIR / test_case_id, test_case_id
+        )
         encountered_tags |= component_tags
         encountered_tags |= test_tags
 
@@ -233,34 +239,6 @@ def pytest_runtest_logreport(report: "TestReport") -> None:
         passed_ids[check].append(test_case_id)
     else:
         failed_or_skipped_ids[check][test_case_id] = report.longreprtext
-
-
-def get_tags_for_test(test_id: str) -> tuple[set[str], set[str]]:
-    """Get sbml test suite tags for the given test ID
-
-    Returns:
-        Tuple of set of strings for componentTags and testTags
-    """
-    current_test_path = SBML_SEMANTIC_CASES_DIR / test_id
-    info_file = current_test_path / f"{test_id}-model.m"
-    with open(info_file) as f:
-        component_tags = set()
-        test_tags = set()
-        for line in f:
-            if line.startswith("testTags:"):
-                test_tags = set(
-                    re.split(r"[ ,:]", line[len("testTags:") :].strip())
-                )
-                test_tags.discard("")
-            if line.startswith("componentTags:"):
-                component_tags = set(
-                    re.split(r"[ ,:]", line[len("componentTags:") :].strip())
-                )
-                component_tags.discard("")
-            if test_tags and component_tags:
-                return component_tags, test_tags
-    print(f"No componentTags or testTags found for test case {test_id}.")
-    return component_tags, test_tags
 
 
 def format_test_id(test_id) -> str:

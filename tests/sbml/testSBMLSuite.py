@@ -19,6 +19,7 @@ import shutil
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
+from types import ModuleType
 
 import amici
 import diffrax
@@ -26,7 +27,6 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import optimistix
-import pandas as pd
 import pytest
 from amici.adapters.fiddy import run_simulation_to_function_and_derivative
 from amici.sim.jax.petab import (
@@ -45,9 +45,10 @@ from amici.sim.sundials import (
 )
 from fiddy import FunctionEvaluationError, check_gradient, check_jacobian
 from utils import (
+    CaseSettings,
     apply_settings,
     find_model_file,
-    read_settings_file,
+    read_expected_results,
     verify_results,
     write_result_file,
 )
@@ -62,17 +63,28 @@ _JAX_CHECK_CASES = {
 }
 
 
+@dataclass
+class CompiledCase:
+    """A test case with its compiled model."""
+
+    model_module: ModuleType
+    importer: amici.SbmlImporter
+    settings: CaseSettings
+    #: Directory with the test case files
+    case_dir: Path
+
+
 @pytest.fixture(scope="session")
 def compiled_case(test_id, sbml_semantic_cases_dir):
     """Compile a case's model once, reuse simulation and sensitivity tests.
 
     For use with pytest-xdist, see conftest.py.
     """
-    current_test_path = sbml_semantic_cases_dir / test_id
+    case_dir = sbml_semantic_cases_dir / test_id
     model_dir = Path(__file__).parent / "SBMLTestModels" / test_id
     try:
         model_module, sbml_importer = compile_model(
-            current_test_path,
+            case_dir,
             test_id,
             model_dir,
             generate_sensitivity_code=True,
@@ -82,25 +94,28 @@ def compiled_case(test_id, sbml_semantic_cases_dir):
         # SKIPPED to every dependent test, not as a fixture ERROR.
         pytest.skip(str(err))
 
-    settings = read_settings_file(current_test_path, test_id)
-
-    yield model_module, sbml_importer, settings, current_test_path
+    yield CompiledCase(
+        model_module=model_module,
+        importer=sbml_importer,
+        settings=CaseSettings.from_file(case_dir, test_id),
+        case_dir=case_dir,
+    )
 
     shutil.rmtree(model_dir, ignore_errors=True)
 
 
 def _fresh_model_and_solver(
-    model_module, settings: dict, test_id: str
-) -> tuple[Model, Solver, float, float]:
+    compiled_case: CompiledCase, test_id: str
+) -> tuple[Model, Solver]:
     """Build a fresh `Model`/`Solver` and set up for test."""
-    model = model_module.get_model()
+    model = compiled_case.model_module.get_model()
     if test_id in _NON_NEGATIVE_STATES:
         model.set_all_states_non_negative()
     solver = model.create_solver()
-    atol, rtol = apply_settings(settings, solver, model, test_id)
+    apply_settings(compiled_case.settings, solver, model, test_id)
     solver.set_sensitivity_order(SensitivityOrder.first)
     solver.set_sensitivity_method(SensitivityMethod.forward)
-    return model, solver, atol, rtol
+    return model, solver
 
 
 def _check_simulation_status(rdata) -> None:
@@ -110,25 +125,24 @@ def _check_simulation_status(rdata) -> None:
 
 
 def test_sbml_testsuite_case(test_id, compiled_case, result_path):
-    model_module, sbml_importer, settings, current_test_path = compiled_case
-    model, solver, atol, rtol = _fresh_model_and_solver(
-        model_module, settings, test_id
-    )
+    model, solver = _fresh_model_and_solver(compiled_case, test_id)
 
-    # parse expected results
-    results_file = current_test_path / f"{test_id}-results.csv"
-    results = pd.read_csv(results_file, delimiter=",")
-    results = results.rename(
-        columns={c: c.replace(" ", "") for c in results.columns},
-    )
-
-    # simulate model
     rdata = run_simulation(model, solver)
     _check_simulation_status(rdata)
 
-    # verify
     simulated = verify_results(
-        settings, rdata, results, sbml_importer, model, atol, rtol
+        compiled_case.settings,
+        rdata,
+        read_expected_results(compiled_case.case_dir, test_id),
+        compiled_case.importer,
+        parameters=dict(
+            zip(
+                model.get_free_parameter_ids(),
+                model.get_free_parameters(),
+                strict=True,
+            )
+        ),
+        expression_ids=model.get_expression_ids(),
     )
 
     # record results
@@ -171,41 +185,33 @@ class _SensitivityCase:
     """A test case set up for a sensitivity check."""
 
     model: Model
-    settings: dict
+    settings: CaseSettings
     #: Result of the nominal simulation with forward sensitivities
     rdata: ReturnData
     has_events: bool
     #: Synthetic measurements generated from `rdata`
     edata: ExpData
-    #: Tolerances for comparing against the expected results
-    atol: float
-    rtol: float
 
 
 def _setup_sensitivity_case(
-    test_id: str, compiled_case, check: str
+    test_id: str, compiled_case: CompiledCase, check: str
 ) -> _SensitivityCase:
     """Set up a sensitivity check and run the nominal simulation.
 
     Skips if the check isn't meaningful for this case and fails if the
     nominal simulation fails.
     """
-    model_module, sbml_importer, settings, _ = compiled_case
-    model, solver, atol, rtol = _fresh_model_and_solver(
-        model_module, settings, test_id
-    )
+    model, solver = _fresh_model_and_solver(compiled_case, test_id)
     _sensitivity_preflight_checks(model, test_id, check)
     rdata = run_simulation(model, solver)
     _check_simulation_status(rdata)
     return _SensitivityCase(
         model=model,
-        settings=settings,
+        settings=compiled_case.settings,
         rdata=rdata,
-        has_events=sbml_importer.sbml_model.getNumEvents() > 0,
+        has_events=compiled_case.importer.sbml_model.getNumEvents() > 0,
         # `ExpData(rdata, sigma_y, sigma_z, seed)`
         edata=ExpData(rdata, 1.0, 1.0, 42),
-        atol=atol,
-        rtol=rtol,
     )
 
 
@@ -246,12 +252,12 @@ def test_sbml_testsuite_case_sensitivity_forward(test_id, compiled_case):
     # historically tricky cases
     if test_id in _JAX_CHECK_CASES:
         jax_sensitivity_check(
-            compiled_case[3],
+            compiled_case.case_dir,
             test_id,
             case.model,
             case.rdata,
-            case.atol,
-            case.rtol,
+            case.settings.atol,
+            case.settings.rtol,
         )
 
 
