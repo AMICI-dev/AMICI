@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -74,28 +73,6 @@ def read_expected_results(case_dir: Path, test_id: str) -> pd.DataFrame:
     return results.rename(
         columns={c: c.replace(" ", "") for c in results.columns},
     )
-
-
-def read_tags(case_dir: Path, test_id: str) -> tuple[set[str], set[str]]:
-    """Read the component tags and test tags of the given test case."""
-    component_tags = set()
-    test_tags = set()
-    with open(case_dir / f"{test_id}-model.m") as f:
-        for line in f:
-            if line.startswith("testTags:"):
-                test_tags = set(
-                    re.split(r"[ ,:]", line[len("testTags:") :].strip())
-                )
-                test_tags.discard("")
-            if line.startswith("componentTags:"):
-                component_tags = set(
-                    re.split(r"[ ,:]", line[len("componentTags:") :].strip())
-                )
-                component_tags.discard("")
-            if test_tags and component_tags:
-                return component_tags, test_tags
-    print(f"No componentTags or testTags found for test case {test_id}.")
-    return component_tags, test_tags
 
 
 def verify_results(
