@@ -3297,8 +3297,13 @@ int IDAGetQuadDky(void* ida_mem, sunrealtype t, int k, N_Vector dkyQ)
 
   /* Check t for legality.  Here tn - hused is t_{n-1}. */
 
-  tfuzz = HUNDRED * IDA_mem->ida_uround * (IDA_mem->ida_tn + IDA_mem->ida_hh);
-  tp    = IDA_mem->ida_tn - IDA_mem->ida_hused - tfuzz;
+  /* AMICI: Use absolute values and the sign of the step as in IDAGetDky.
+     Otherwise, for backward integration, a last step shorter than tfuzz
+     rejects even t == tn. */
+  tfuzz = HUNDRED * IDA_mem->ida_uround *
+          (SUNRabs(IDA_mem->ida_tn) + SUNRabs(IDA_mem->ida_hh));
+  if (IDA_mem->ida_hh < ZERO) { tfuzz = -tfuzz; }
+  tp = IDA_mem->ida_tn - IDA_mem->ida_hused - tfuzz;
   if ((t - tp) * IDA_mem->ida_hh < ZERO)
   {
     IDAProcessError(IDA_mem, IDA_BAD_T, __LINE__, __func__, __FILE__, MSG_BAD_T,
