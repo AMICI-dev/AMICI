@@ -3058,6 +3058,90 @@ def test_adjoint_sensitivities_outputs_of_repeated_events(tempdir):
 
 
 @skip_on_valgrind
+def test_adjoint_sensitivities_event_outputs_presim_preeq(tempdir):
+    """Adjoint sensitivities for event outputs with pre-simulation and
+    pre-equilibration.
+
+    Events also trigger during pre-simulation and pre-equilibration,
+    which don't have event outputs.
+    """
+    model_name = "test_adjoint_sensitivities_event_outputs_presim_preeq"
+    antimony2amici(
+        """
+        k = 0.3; q = 0.5; u = 0
+        x = 1; y = 1; c = 0
+        x' = -k * x + q * (1 + u)
+        y' = 0.2 * (1 - y)
+        c' = u
+        E1: at c > 1: c = 0, x = x + 1
+        E2: at x > 1.4: y = y + 0.1
+        """,
+        fixed_parameters=["u"],
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[
+            MC("obs_x", formula="x"),
+            MC("z1", formula="x", event_id="E1"),
+            MC("z2", formula="y", event_id="E2"),
+        ],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_steady_state_computation_mode(
+        SteadyStateComputationMode.integrationOnly
+    )
+    model.set_steady_state_sensitivity_mode(
+        SteadyStateSensitivityMode.integrationOnly
+    )
+    model.set_timepoints([0.2, 2.2])
+    model.set_n_max_event(2)
+    # z1 for the first occurrence of E1, z2 for that of E2.
+    # The z2 residual must be nonzero, since in the pre-equilibration case,
+    # only the z2 terms were added twice.
+    edata = _event_output_problem(model, [1.0, 2.0])
+    edata.fixed_parameters = [1.0]
+
+    solver = model.create_solver()
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-12)
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    # tight enough for the steady-state convergence time not to affect the
+    # finite differences
+    solver.set_steady_state_tolerance_factor(1e-2)
+
+    # pre-simulation: E2 triggers at t ~ -0.87 and E1 at t = -0.5.
+    # main simulation: E1 triggers at t = 0.5 and 1.5, E2 doesn't trigger
+    # (z2 is filled in at the last timepoint).
+    edata_presim = ExpData(edata)
+    edata_presim.t_presim = 1.5
+    edata_presim.fixed_parameters_presimulation = [1.0]
+    # pre-equilibration: E2 triggers, E1 doesn't (u = 0).
+    # main simulation: E1 triggers at t = 1 and 2, E2 doesn't trigger.
+    edata_preeq = ExpData(edata)
+    edata_preeq.fixed_parameters_pre_equilibration = [0.0]
+
+    point = np.asarray(model.get_free_parameters())
+    for label, edata in (("presim", edata_presim), ("preeq", edata_preeq)):
+        function, _ = run_simulation_to_function_and_derivative(
+            amici_model=model,
+            amici_solver=solver,
+            amici_edata=edata,
+            derivative_variables=["llh"],
+        )
+        for sensi_meth in (
+            SensitivityMethod.forward,
+            SensitivityMethod.adjoint,
+        ):
+            solver.set_sensitivity_method(sensi_meth)
+            solver.set_sensitivity_method_pre_equilibration(sensi_meth)
+            rdata = run_simulation(model, solver, edata)
+            assert rdata.status == AMICI_SUCCESS, (label, sensi_meth)
+            assert np.all(np.abs(rdata.sllh) > 0.1), (label, sensi_meth)
+            check_gradient(function, point, rdata.sllh).assert_success(
+                always_print=True
+            )
+
+
+@skip_on_valgrind
 def test_event_with_w_dependent_trigger(tempdir):
     """Test sensitivities for events with trigger depending on
     cascading expressions in `w`."""

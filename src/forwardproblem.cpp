@@ -202,7 +202,8 @@ ForwardProblem::ForwardProblem(
     , uses_presimulation_(edata && edata->t_presim > 0)
     , ws_(model, solver)
     , main_simulator_(model, solver, &ws_, &dJzdx_)
-    , pre_simulator_(model, solver, &ws_, &dJzdx_) {}
+    // presimulation has no event outputs
+    , pre_simulator_(model, solver, &ws_, nullptr) {}
 
 void EventHandlingSimulator::run(
     realtype const t0, ExpData const* edata,
@@ -1046,8 +1047,7 @@ void EventHandlingSimulator::store_event(ExpData const* edata) {
             continue;
         }
 
-        if (edata && solver_->computing_asa()) {
-            Expects(dJzdx_ != nullptr);
+        if (edata && dJzdx_ && solver_->computing_asa()) {
             auto& disc_dJzdt = result.discs.back().dJzdt;
             disc_dJzdt.resize(model_->nJ, 0.0);
             std::vector<realtype> dJzdt(model_->nJ, 0.0);
