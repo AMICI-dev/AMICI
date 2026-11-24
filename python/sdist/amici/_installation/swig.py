@@ -29,6 +29,7 @@ class TypeHintFixer(ast.NodeTransformer):
         "amici::Model *": ast.Name("Model"),
         "amici::Model const *": ast.Name("Model"),
         "amici::NewtonDampingFactorMode": ast.Name("NewtonDampingFactorMode"),
+        "amici::NoiseDistribution": ast.Name("NoiseDistribution"),
         "amici::NonlinearSolverIteration": ast.Name(
             "NonlinearSolverIteration"
         ),

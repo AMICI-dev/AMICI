@@ -36,8 +36,13 @@ extern const std::array<std::string_view const, 1> observable_names = {
     "y1", // y[0]
 };
 
-std::array<const ObservableScaling, 1> observable_scalings = {
-    ObservableScaling::lin, // y[0]
+extern const std::array<NoiseDistribution const, 1> noise_distributions = {
+    NoiseDistribution::normal, // y[0]
+};
+
+extern const std::array<NoiseDistribution const, 2> event_noise_distributions = {
+    NoiseDistribution::normal, // z[0]
+NoiseDistribution::normal, // z[1]
 };
 
 extern const std::array<std::string_view const, 0> expression_names = {

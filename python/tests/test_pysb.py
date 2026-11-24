@@ -590,7 +590,7 @@ def test_pysb_named_sigma():
         model,
         observation_model=[
             MeasurementChannel("obs_a", sigma="sd_a"),
-            MeasurementChannel("obs_b"),
+            MeasurementChannel("obs_b", noise_distribution="log-laplace"),
         ],
     )
 
@@ -607,6 +607,7 @@ def test_pysb_named_sigma():
         sp.Float(1.0),
     ]
     assert "sd_a" in {str(w.get_sym()) for w in ode.expressions()}
+    assert ode.get_noise_distributions() == ["normal", "log-laplace"]
     assert list(ode.eq("sigmay")) == [
         2 * symbol_with_assumptions("p_sd") * symbol_with_assumptions("obs_a"),
         sp.Float(1.0),

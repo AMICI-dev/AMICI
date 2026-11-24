@@ -1047,10 +1047,16 @@ class DEExporter:
             "OBSERVABLE_NAMES_INITIALIZER_LIST": self._get_symbol_name_initializer_list(
                 "y"
             ),
-            "OBSERVABLE_TRAFO_INITIALIZER_LIST": "\n".join(
-                f"ObservableScaling::{trafo.value}, // y[{idx}]"
-                for idx, trafo in enumerate(
-                    self.model.get_observable_transformations()
+            "NOISE_DISTRIBUTIONS_INITIALIZER_LIST": "\n".join(
+                f"{_noise_distribution_to_cxx(dist)}, // y[{idx}]"
+                for idx, dist in enumerate(
+                    self.model.get_noise_distributions()
+                )
+            ),
+            "EVENT_NOISE_DISTRIBUTIONS_INITIALIZER_LIST": "\n".join(
+                f"{_noise_distribution_to_cxx(dist)}, // z[{idx}]"
+                for idx, dist in enumerate(
+                    self.model.get_event_noise_distributions()
                 )
             ),
             "EXPRESSION_NAMES_INITIALIZER_LIST": self._get_symbol_name_initializer_list(
@@ -1085,9 +1091,6 @@ class DEExporter:
             "AMICI_VERSION_STRING": __version__,
             "AMICI_COMMIT_STRING": __commit__,
             "W_RECURSION_DEPTH": self.model._w_recursion_depth,
-            "QUADRATIC_LLH": AmiciCxxCodePrinter.print_bool(
-                self.model._has_quadratic_nllh
-            ),
             "EVENT_LIST_INITIALIZER": event_initializer_list(),
             "Z2EVENT": ", ".join(map(str, self.model._z2event)),
             "ID": ", ".join(
@@ -1397,3 +1400,8 @@ def _write_gitignore(dest_dir: Path) -> None:
 
     with open(dest_dir / ".gitignore", "w") as f:
         f.write("**")
+
+
+def _noise_distribution_to_cxx(noise_distribution: str) -> str:
+    """Get the ``amici::NoiseDistribution`` value for a canonical id."""
+    return f"NoiseDistribution::{noise_distribution.replace('-', '_')}"

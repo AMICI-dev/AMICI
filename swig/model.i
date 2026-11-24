@@ -18,6 +18,28 @@ using namespace amici;
         )
 %}
 
+%feature("pythonprepend") amici::Model::get_observable_scaling %{
+    import warnings
+
+    warnings.warn(
+        "`Model.get_observable_scaling` is deprecated, use "
+        "`Model.get_noise_distribution` instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+%}
+
+%feature("pythonprepend") amici::Model::has_quadratic_llh %{
+    import warnings
+
+    warnings.warn(
+        "`Model.has_quadratic_llh` is deprecated, use "
+        "`Model.is_quadratic_llh` instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+%}
+
 // remove functions that use AmiVector(Array) since that class anyways cannot
 // be exposed in swig
 %ignore add_adjoint_event_time_update;
@@ -98,6 +120,20 @@ def _model_clone_impl(self):
     return clone
 
 
+def _model_get_noise_distributions_impl(self):
+    return [
+        NoiseDistribution(self.get_noise_distribution(iy))
+        for iy in range(self.ny)
+    ]
+
+
+def _model_get_event_noise_distributions_impl(self):
+    return [
+        NoiseDistribution(self.get_event_noise_distribution(iz))
+        for iz in range(self.nz)
+    ]
+
+
 def _model_reduce_impl(self):
     from amici.sim.sundials._swig_wrappers import restore_model, get_model_settings, file_checksum
 
@@ -141,6 +177,20 @@ def _model_simulate_impl(
 def clone(self):
     """Clone the model instance."""
     return _model_clone_impl(self)
+
+def get_noise_distributions(self) -> list["NoiseDistribution"]:
+    """Get the noise distributions of the time-resolved observables.
+
+    ``NoiseDistribution.custom`` denotes a user-provided cost function.
+    """
+    return _model_get_noise_distributions_impl(self)
+
+def get_event_noise_distributions(self) -> list["NoiseDistribution"]:
+    """Get the noise distributions of the event-resolved observables.
+
+    See :meth:`get_noise_distributions`.
+    """
+    return _model_get_event_noise_distributions_impl(self)
 
 def __deepcopy__(self, memo):
     return self.clone()
@@ -226,6 +276,20 @@ def simulate(
 def clone(self):
     """Clone the model instance."""
     return _model_clone_impl(self)
+
+def get_noise_distributions(self) -> list["NoiseDistribution"]:
+    """Get the noise distributions of the time-resolved observables.
+
+    ``NoiseDistribution.custom`` denotes a user-provided cost function.
+    """
+    return _model_get_noise_distributions_impl(self)
+
+def get_event_noise_distributions(self) -> list["NoiseDistribution"]:
+    """Get the noise distributions of the event-resolved observables.
+
+    See :meth:`get_noise_distributions`.
+    """
+    return _model_get_event_noise_distributions_impl(self)
 
 def __deepcopy__(self, memo):
     return self.clone()

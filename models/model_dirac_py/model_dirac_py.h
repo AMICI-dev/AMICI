@@ -19,7 +19,8 @@ extern const std::array<std::string_view const, 0> fixed_parameter_names;
 extern const std::array<std::string_view const, 2> state_names;
 extern const std::array<std::string_view const, 2> state_names_solver;
 extern const std::array<std::string_view const, 1> observable_names;
-extern std::array<const ObservableScaling, 1> observable_scalings;
+extern const std::array<NoiseDistribution const, 1> noise_distributions;
+extern const std::array<NoiseDistribution const, 0> event_noise_distributions;
 extern const std::array<std::string_view const, 0> expression_names;
 extern const std::array<std::string_view const, 4> free_parameter_ids;
 extern const std::array<std::string_view const, 0> fixed_parameter_ids;
@@ -572,15 +573,15 @@ class Model_model_dirac_py : public amici::Model_ODE {
      * @return AMICI git commit hash
      */
     std::string get_amici_commit() const override {
-        return "cc5bf93a6c539eeaac3418ce5dd787814c0f6f18";
+        return "309b25ea7cb82cd853b48b52a4d45e68c8668743";
     }
 
-    bool has_quadratic_llh() const override {
-        return true;
+    NoiseDistribution get_noise_distribution(int iy) const override {
+        return noise_distributions.at(iy);
     }
 
-    ObservableScaling get_observable_scaling(int iy) const override {
-        return observable_scalings.at(iy);
+    NoiseDistribution get_event_noise_distribution(int iz) const override {
+        return event_noise_distributions.at(iz);
     }
 };
 

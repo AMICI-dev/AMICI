@@ -5,7 +5,10 @@ from amici import MeasurementChannel, SbmlImporter
 from amici._symbolic.de_model_components import Event, FreeParameter
 from amici.importers.antimony import antimony2sbml
 from amici.importers.sbml.splines import CubicHermiteSpline
-from amici.importers.utils import amici_time_symbol
+from amici.importers.utils import (
+    amici_time_symbol,
+    canonicalize_noise_distribution,
+)
 from amici.testing import skip_on_valgrind
 
 
@@ -452,3 +455,86 @@ def test_event_assignment_to_non_state():
     )
     with pytest.raises(ValueError, match=r"\['k'\].*not \(solver\) state"):
         event.get_state_update(x, x)
+
+
+def test_noise_distributions():
+    """Noise distributions are stored in canonical form for time- and
+    event-resolved observables."""
+    ant_str = r"""
+    model m
+        species x = 1;
+        x' = -x;
+        E1: at (time > 1): x = x + 1;
+    end
+    """
+    sbml_str = antimony2sbml(ant_str)
+    sbml_model = libsbml.SBMLReader().readSBMLFromString(sbml_str).getModel()
+    model = SbmlImporter(sbml_model)._build_ode_model(
+        observation_model=[
+            MeasurementChannel("y1", formula="x"),
+            MeasurementChannel(
+                "y2", formula="x", noise_distribution="lin-laplace"
+            ),
+            MeasurementChannel(
+                "y3", formula="x", noise_distribution="log10-normal"
+            ),
+            MeasurementChannel(
+                "y4",
+                formula="x",
+                noise_distribution=lambda y: f"Abs({y} - m{y})",
+            ),
+            MeasurementChannel(
+                "z1",
+                formula="x",
+                event_id="E1",
+                noise_distribution="log-laplace",
+            ),
+        ],
+    )
+    assert model.get_noise_distributions() == [
+        "normal",
+        "laplace",
+        "log10-normal",
+        "custom",
+    ]
+    assert model.get_event_noise_distributions() == ["log-laplace"]
+
+
+def test_canonicalize_noise_distribution():
+    assert canonicalize_noise_distribution("lin-normal") == "normal"
+    assert canonicalize_noise_distribution("log-normal") == "log-normal"
+    assert (
+        canonicalize_noise_distribution("lin-negative-binomial")
+        == "negative-binomial"
+    )
+    assert canonicalize_noise_distribution(lambda y: y) == "custom"
+    # "custom" is an output-only identifier
+    for invalid in (
+        "custom",
+        "lin-custom",
+        "lin-log-normal",
+        "log-binomial",
+        "nörmal",
+    ):
+        with pytest.raises(ValueError, match="not recognized"):
+            canonicalize_noise_distribution(invalid)
+    with pytest.raises(TypeError):
+        canonicalize_noise_distribution(None)
+
+
+def test_noise_distribution_ids_match_enum():
+    """The canonical ids, the C++ enum, and the generated code agree."""
+    from amici.constants import NOISE_DISTRIBUTIONS
+    from amici.exporters.sundials.de_export import (
+        _noise_distribution_to_cxx,
+    )
+    from amici.sim.sundials import NoiseDistribution
+
+    assert {
+        value.name.replace("_", "-") for value in NoiseDistribution
+    } == set(NOISE_DISTRIBUTIONS)
+    for id_ in NOISE_DISTRIBUTIONS:
+        name = _noise_distribution_to_cxx(id_).removeprefix(
+            "NoiseDistribution::"
+        )
+        assert NoiseDistribution[name].name.replace("_", "-") == id_

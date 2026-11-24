@@ -35,6 +35,7 @@ nonstandard type conversions.
 %typemap(doctype) amici::Model * "Model";
 %typemap(doctype) amici::Model const * "Model";
 %typemap(doctype) amici::NewtonDampingFactorMode "NewtonDampingFactorMode";
+%typemap(doctype) amici::NoiseDistribution "NoiseDistribution";
 %typemap(doctype) amici::NonlinearSolverIteration "NonlinearSolverIteration";
 %typemap(doctype) amici::RDataReporting "RDataReporting";
 %typemap(doctype) amici::SensitivityMethod "SensitivityMethod";
@@ -273,6 +274,9 @@ wrap_unique_ptr(ExpDataPtr, amici::ExpData)
 %ignore amici::SolutionState;
 %ignore amici::ModelQuantity;
 
+%ignore amici::has_quadratic_residual_llh;
+%ignore amici::to_observable_scaling;
+
 // Include before any other header which uses enums defined there
 %include "amici/defines.h"
 
@@ -402,6 +406,7 @@ def enum(prefix):
     return IntEnum(prefix, values)
 ParameterScaling = enum('ParameterScaling')
 ObservableScaling = enum('ObservableScaling')
+NoiseDistribution = enum('NoiseDistribution')
 SecondOrderMode = enum('SecondOrderMode')
 SensitivityOrder = enum('SensitivityOrder')
 SensitivityMethod = enum('SensitivityMethod')

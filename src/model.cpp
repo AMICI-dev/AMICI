@@ -979,7 +979,23 @@ std::span<std::string_view const> Model::get_expression_ids() const {
     return {};
 }
 
-bool Model::has_quadratic_llh() const { return true; }
+NoiseDistribution Model::get_noise_distribution(int /*iy*/) const {
+    return NoiseDistribution::normal;
+}
+
+NoiseDistribution Model::get_event_noise_distribution(int /*iz*/) const {
+    return NoiseDistribution::normal;
+}
+
+bool Model::is_quadratic_llh(ExpData const* /*edata*/) const {
+    for (int iy = 0; iy < nytrue; ++iy) {
+        if (!has_quadratic_residual_llh(get_noise_distribution(iy)))
+            return false;
+    }
+    return true;
+}
+
+bool Model::has_quadratic_llh() const { return is_quadratic_llh(nullptr); }
 
 std::vector<realtype> const& Model::get_timepoints() const {
     return simulation_parameters_.timepoints;
@@ -1245,8 +1261,8 @@ void Model::get_observable(
     write_slice(derived_state_.y_, y);
 }
 
-ObservableScaling Model::get_observable_scaling(int /*iy*/) const {
-    return ObservableScaling::lin;
+ObservableScaling Model::get_observable_scaling(int iy) const {
+    return to_observable_scaling(get_noise_distribution(iy));
 }
 
 void Model::get_observable_sensitivity(
