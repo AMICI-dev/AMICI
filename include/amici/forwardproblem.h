@@ -322,7 +322,9 @@ class EventHandlingSimulator {
      * @param solver The solver to use for the simulation.
      * @param ws The workspace to use for the simulation.
      * @param dJzdx State-derivative of event likelihood
-     * (dimension nJ x nx_solver x n_max_event x ne, column-major)
+     * (dimension nJ x nx_solver x n_max_event x ne, column-major), or
+     * `nullptr` for periods without event outputs (all but the main
+     * simulation).
      */
     EventHandlingSimulator(
         gsl::not_null<Model*> model, gsl::not_null<Solver const*> solver,

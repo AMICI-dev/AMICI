@@ -85,8 +85,8 @@ class EventHandlingBwdSimulator {
      * period.
      * @param dJydx State-derivative of data likelihood. Must be non-null if
      * there are any data points in this period.
-     * @param dJzdx State-derivative of event likelihood. Must be non-null if
-     * the model has any event-observables.
+     * @param dJzdx State-derivative of event likelihood, or `nullptr` for
+     * periods without event outputs (all but the main simulation).
      */
     void
     run(realtype t_start, realtype t_end, realtype it,
@@ -98,7 +98,7 @@ class EventHandlingBwdSimulator {
      * @brief Execute everything necessary for the handling of events
      * for the backward problem
      * @param disc The discontinuity to handle
-     * @param dJzdx State-derivative of event likelihood
+     * @param dJzdx State-derivative of event likelihood, or `nullptr`
      */
     void handle_event_b(
         Discontinuity const& disc, std::vector<realtype> const* dJzdx

@@ -80,7 +80,7 @@ void BackwardProblem::workBackwardProblem() {
         ws_.nroots_ = compute_nroots(ws_.discs_, model_->ne);
         simulator_.run(
             model_->t0(), model_->t0() - edata_->t_presim, -1, {}, &dJydx_,
-            &dJzdx_
+            nullptr
         );
     }
 
@@ -127,7 +127,7 @@ void BackwardProblem::workBackwardProblem() {
             );
             preeq_simulator.run(
                 preeq_result.final_state_.sol.t,
-                preeq_result.initial_state_.sol.t, -1, {}, &dJydx_, &dJzdx_
+                preeq_result.initial_state_.sol.t, -1, {}, &dJydx_, nullptr
             );
         } else {
             Expects(
@@ -181,7 +181,7 @@ void BackwardProblem::handle_postequilibration() {
         EventHandlingBwdSimulator posteq_simulator(model_, solver_, &ws_);
         posteq_simulator.run(
             posteq_result.final_state_.sol.t,
-            posteq_result.initial_state_.sol.t, -1, {}, &dJydx_, &dJzdx_
+            posteq_result.initial_state_.sol.t, -1, {}, &dJydx_, nullptr
         );
     } else {
         Expects(
@@ -271,7 +271,7 @@ void EventHandlingBwdSimulator::handle_event_b(
 
         auto const iroot = --ws_->nroots_[ie];
         Expects(iroot >= 0);
-        if (model_->nz == 0 || iroot >= model_->n_max_event())
+        if (!dJzdx || model_->nz == 0 || iroot >= model_->n_max_event())
             continue;
 
         auto const offset = (ie * model_->n_max_event() + iroot)
@@ -359,7 +359,6 @@ void EventHandlingBwdSimulator::run(
     std::vector<realtype> const& timepoints, std::vector<realtype> const* dJydx,
     std::vector<realtype> const* dJzdx
 ) {
-    Expects(model_->nz == 0 || dJzdx != nullptr);
     Expects(t_start >= t_end);
     Expects(it < 0 || t_start >= timepoints[it]);
     Expects(it < 0 || t_end <= timepoints.front());
