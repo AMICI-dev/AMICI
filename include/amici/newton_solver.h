@@ -157,7 +157,7 @@ class NewtonSolver {
      * JB */
     AmiVector dxB_;
 
-    /** linear solver */
+    /** linear solver, `nullptr` if there are no state variables */
     std::unique_ptr<SUNLinSolWrapper> linsol_;
 };
 

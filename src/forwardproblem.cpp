@@ -1796,8 +1796,10 @@ bool SteadyStateProblem::check_steady_state_success() const {
 }
 
 void SteadyStateProblem::run_steadystate_simulation_fwd() {
-    if (model_->nx_solver == 0)
+    if (model_->nx_solver == 0) {
+        wrms_ = 0.0;
         return;
+    }
 
     // Do we also have to check for convergence of sensitivities?
     auto sensitivity_method = SensitivityMethod::none;

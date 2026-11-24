@@ -18,6 +18,11 @@ NewtonSolver::NewtonSolver(
     , x_(model.nx_solver, sunctx)
     , xB_(model.nJ * model.nx_solver, sunctx)
     , dxB_(model.nJ * model.nx_solver, sunctx) {
+    // Without state variables, there is no linear system to solve.
+    // SUNDIALS cannot create linear solvers for 0-length vectors.
+    if (model.nx_solver == 0)
+        return;
+
     try {
         // NOTE: when adding new linear solvers, make sure to also add them to
         // NewtonSolver::reinitialize and NewtonSolver::is_singular
@@ -78,6 +83,9 @@ void NewtonSolver::compute_newton_sensis(
 void NewtonSolver::prepare_linear_system(
     Model& model, DEStateView const& state
 ) {
+    if (!linsol_)
+        return;
+
     auto& J = linsol_->getMatrix();
     if (J.matrix_id() == SUNMATRIX_SPARSE) {
         model.fJSparse(state.t, 0.0, state.x, state.dx, xdot_, J);
@@ -95,6 +103,9 @@ void NewtonSolver::prepare_linear_system(
 void NewtonSolver::prepare_linear_system_b(
     Model& model, DEStateView const& state
 ) {
+    if (!linsol_)
+        return;
+
     auto& J = linsol_->getMatrix();
     if (J.matrix_id() == SUNMATRIX_SPARSE) {
         model.fJSparseB(state.t, 0.0, state.x, state.dx, xB_, dxB_, xdot_, J);
@@ -110,6 +121,9 @@ void NewtonSolver::prepare_linear_system_b(
 }
 
 void NewtonSolver::solve_linear_system(AmiVector& rhs) {
+    if (!linsol_)
+        return;
+
     // last argument is tolerance and does not have any influence on result
     auto status = linsol_->solve(rhs.get_nvector(), rhs.get_nvector(), 0.0);
     if (status != SUN_SUCCESS)
@@ -117,6 +131,9 @@ void NewtonSolver::solve_linear_system(AmiVector& rhs) {
 }
 
 void NewtonSolver::reinitialize() {
+    if (!linsol_)
+        return;
+
     // direct solvers do not need reinitialization
     if (dynamic_cast<SUNLinSolDense*>(linsol_.get())) {
         return;
@@ -137,6 +154,9 @@ void NewtonSolver::reinitialize() {
 }
 
 bool NewtonSolver::is_singular(Model& model, DEStateView const& state) const {
+    if (!linsol_)
+        return false;
+
     if (auto s = dynamic_cast<SUNLinSolKLU const*>(linsol_.get())) {
         return s->is_singular();
     }
