@@ -223,6 +223,19 @@ functions = {
         assume_pow_positivity=True,
         sparse=True,
     ),
+    "dxdotdt_explicit": _FunctionInfo(
+        "realtype *dxdotdt_explicit, const realtype t, "
+        "const realtype *x, const realtype *p, const realtype *k, "
+        "const realtype *h, const realtype *dx, const realtype *w",
+        assume_pow_positivity=True,
+    ),
+    "dwdt": _FunctionInfo(
+        "realtype *dwdt, const realtype t, const realtype *x, "
+        "const realtype *p, const realtype *k, const realtype *h, "
+        "const realtype *w, const realtype *tcl, const realtype *spl, "
+        "const realtype *dspl",
+        assume_pow_positivity=True,
+    ),
     "dydx": _FunctionInfo(
         "realtype *dydx, const realtype t, const realtype *x, "
         "const realtype *p, const realtype *k, const realtype *h, "

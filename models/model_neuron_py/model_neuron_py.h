@@ -56,6 +56,8 @@ extern void root_model_neuron_py(realtype *root, const realtype t, const realtyp
 extern void dxdotdp_explicit_model_neuron_py(realtype *dxdotdp_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
 extern void dxdotdp_explicit_colptrs_model_neuron_py(SUNMatrixWrapper &colptrs);
 extern void dxdotdp_explicit_rowvals_model_neuron_py(SUNMatrixWrapper &rowvals);
+
+
 extern void dxdotdx_explicit_model_neuron_py(realtype *dxdotdx_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
 extern void dxdotdx_explicit_colptrs_model_neuron_py(SUNMatrixWrapper &colptrs);
 extern void dxdotdx_explicit_rowvals_model_neuron_py(SUNMatrixWrapper &rowvals);
@@ -324,6 +326,12 @@ class Model_model_neuron_py : public amici::Model_ODE {
     void fdxdotdp_explicit_rowvals(SUNMatrixWrapper &rowvals) override {
         dxdotdp_explicit_rowvals_model_neuron_py(rowvals);
     }
+
+
+    void fdxdotdt_explicit(realtype *dxdotdt_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const realtype *w) override {}
+
+
+    void fdwdt(realtype *dwdt, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl, const realtype *spl, const realtype *dspl) override {}
 
 
     void fdxdotdx_explicit(realtype *dxdotdx_explicit, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w) override {
