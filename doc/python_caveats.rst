@@ -25,6 +25,12 @@ models. However, there are some limitations to be aware of:
 * Sensitivities w.r.t. event trigger parameters may be incorrect for models
   with simultaneous events.
 
+* For :term:`DAE` models, the default simultaneous corrector doesn't include
+  forward sensitivities in the local error test
+  (`SUNDIALS#1065 <https://github.com/LLNL/sundials/pull/1065>`__);
+  use ``InternalSensitivityMethod.staggered`` for error-controlled forward
+  sensitivities.
+
 When working with a new model, it is recommended to check the sensitivities
 against finite differences. This is demonstrated in the example notebooks.
 This applies in particular to models with special features such as
