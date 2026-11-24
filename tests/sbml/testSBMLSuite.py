@@ -16,40 +16,46 @@ Usage:
 from __future__ import annotations
 
 import shutil
-from collections.abc import Callable
+from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from types import ModuleType
 
 import amici
-import diffrax
 import jax
 import jax.numpy as jnp
 import numpy as np
-import optimistix
-import pandas as pd
 import pytest
 from amici.adapters.fiddy import run_simulation_to_function_and_derivative
-from amici.sim.jax.petab import (
-    DEFAULT_CONTROLLER_SETTINGS,
-    DEFAULT_ROOT_FINDER_SETTINGS,
-)
 from amici.sim.sundials import (
     AMICI_SUCCESS,
     ExpData,
     Model,
-    ReturnData,
+    ReturnDataView,
     SensitivityMethod,
     SensitivityOrder,
     Solver,
     run_simulation,
 )
-from fiddy import FunctionEvaluationError, check_gradient, check_jacobian
+from fiddy import (
+    DirectionCheckResult,
+    FunctionEvaluationError,
+    GradientCheckResult,
+    JacobianCheckResult,
+    check_gradient,
+    check_jacobian,
+)
+from sbml_cases import (
+    CaseSettings,
+    find_model_file,
+    read_expected_results,
+    write_result_file,
+)
 from utils import (
     apply_settings,
-    find_model_file,
-    read_settings_file,
+    compile_model_jax,
+    simulate_jax,
     verify_results,
-    write_result_file,
 )
 
 # test cases for which the separate, autodiff-based JAX sensitivity
@@ -62,17 +68,30 @@ _JAX_CHECK_CASES = {
 }
 
 
+@dataclass
+class CompiledCase:
+    """A test case with its compiled model."""
+
+    model_module: ModuleType
+    importer: amici.SbmlImporter
+    settings: CaseSettings
+    #: Directory with the test case files
+    case_dir: Path
+
+
 @pytest.fixture(scope="session")
-def compiled_case(test_id, sbml_semantic_cases_dir):
+def compiled_case(
+    test_id: str, sbml_semantic_cases_dir: Path
+) -> Iterator[CompiledCase]:
     """Compile a case's model once, reuse simulation and sensitivity tests.
 
     For use with pytest-xdist, see conftest.py.
     """
-    current_test_path = sbml_semantic_cases_dir / test_id
+    case_dir = sbml_semantic_cases_dir / test_id
     model_dir = Path(__file__).parent / "SBMLTestModels" / test_id
     try:
         model_module, sbml_importer = compile_model(
-            current_test_path,
+            case_dir,
             test_id,
             model_dir,
             generate_sensitivity_code=True,
@@ -82,53 +101,57 @@ def compiled_case(test_id, sbml_semantic_cases_dir):
         # SKIPPED to every dependent test, not as a fixture ERROR.
         pytest.skip(str(err))
 
-    settings = read_settings_file(current_test_path, test_id)
-
-    yield model_module, sbml_importer, settings, current_test_path
+    yield CompiledCase(
+        model_module=model_module,
+        importer=sbml_importer,
+        settings=CaseSettings.from_file(case_dir, test_id),
+        case_dir=case_dir,
+    )
 
     shutil.rmtree(model_dir, ignore_errors=True)
 
 
 def _fresh_model_and_solver(
-    model_module, settings: dict, test_id: str
-) -> tuple[Model, Solver, float, float]:
+    compiled_case: CompiledCase, test_id: str
+) -> tuple[Model, Solver]:
     """Build a fresh `Model`/`Solver` and set up for test."""
-    model = model_module.get_model()
+    model = compiled_case.model_module.get_model()
     if test_id in _NON_NEGATIVE_STATES:
         model.set_all_states_non_negative()
     solver = model.create_solver()
-    atol, rtol = apply_settings(settings, solver, model, test_id)
+    apply_settings(compiled_case.settings, solver, model, test_id)
     solver.set_sensitivity_order(SensitivityOrder.first)
     solver.set_sensitivity_method(SensitivityMethod.forward)
-    return model, solver, atol, rtol
+    return model, solver
 
 
-def _check_simulation_status(rdata) -> None:
+def _check_simulation_status(rdata: ReturnDataView) -> None:
     """Fail on an unsuccessful base simulation."""
     if rdata["status"] != AMICI_SUCCESS:
         raise RuntimeError("Simulation failed unexpectedly")
 
 
-def test_sbml_testsuite_case(test_id, compiled_case, result_path):
-    model_module, sbml_importer, settings, current_test_path = compiled_case
-    model, solver, atol, rtol = _fresh_model_and_solver(
-        model_module, settings, test_id
-    )
+def test_sbml_testsuite_case(
+    test_id: str, compiled_case: CompiledCase, result_path: Path
+) -> None:
+    model, solver = _fresh_model_and_solver(compiled_case, test_id)
 
-    # parse expected results
-    results_file = current_test_path / f"{test_id}-results.csv"
-    results = pd.read_csv(results_file, delimiter=",")
-    results = results.rename(
-        columns={c: c.replace(" ", "") for c in results.columns},
-    )
-
-    # simulate model
     rdata = run_simulation(model, solver)
     _check_simulation_status(rdata)
 
-    # verify
     simulated = verify_results(
-        settings, rdata, results, sbml_importer, model, atol, rtol
+        compiled_case.settings,
+        rdata,
+        read_expected_results(compiled_case.case_dir, test_id),
+        compiled_case.importer,
+        parameters=dict(
+            zip(
+                model.get_free_parameter_ids(),
+                model.get_free_parameters(),
+                strict=True,
+            )
+        ),
+        expression_ids=model.get_expression_ids(),
     )
 
     # record results
@@ -145,7 +168,9 @@ _KNOWN_SENSITIVITY_CHECK_ISSUES = {
 }
 
 
-def _sensitivity_preflight_checks(model: Model, test_id: str, check: str):
+def _sensitivity_preflight_checks(
+    model: Model, test_id: str, check: str
+) -> None:
     """Skip if a sensitivity check wouldn't be meaningful for this case.
 
     :param check: The calling check: "forward", "adjoint", or "consistency".
@@ -171,45 +196,39 @@ class _SensitivityCase:
     """A test case set up for a sensitivity check."""
 
     model: Model
-    settings: dict
+    settings: CaseSettings
     #: Result of the nominal simulation with forward sensitivities
-    rdata: ReturnData
+    rdata: ReturnDataView
     has_events: bool
     #: Synthetic measurements generated from `rdata`
     edata: ExpData
-    #: Tolerances for comparing against the expected results
-    atol: float
-    rtol: float
 
 
 def _setup_sensitivity_case(
-    test_id: str, compiled_case, check: str
+    test_id: str, compiled_case: CompiledCase, check: str
 ) -> _SensitivityCase:
     """Set up a sensitivity check and run the nominal simulation.
 
     Skips if the check isn't meaningful for this case and fails if the
     nominal simulation fails.
     """
-    model_module, sbml_importer, settings, _ = compiled_case
-    model, solver, atol, rtol = _fresh_model_and_solver(
-        model_module, settings, test_id
-    )
+    model, solver = _fresh_model_and_solver(compiled_case, test_id)
     _sensitivity_preflight_checks(model, test_id, check)
     rdata = run_simulation(model, solver)
     _check_simulation_status(rdata)
     return _SensitivityCase(
         model=model,
-        settings=settings,
+        settings=compiled_case.settings,
         rdata=rdata,
-        has_events=sbml_importer.sbml_model.getNumEvents() > 0,
+        has_events=compiled_case.importer.sbml_model.getNumEvents() > 0,
         # `ExpData(rdata, sigma_y, sigma_z, seed)`
         edata=ExpData(rdata, 1.0, 1.0, 42),
-        atol=atol,
-        rtol=rtol,
     )
 
 
-def _llh_gradient(model: Model, solver: Solver, edata: ExpData, point):
+def _llh_gradient(
+    model: Model, solver: Solver, edata: ExpData, point: np.ndarray
+) -> tuple[Callable[[np.ndarray], dict[str, np.ndarray]], np.ndarray]:
     """Return the log-likelihood function and its gradient at `point`."""
     function, derivative = run_simulation_to_function_and_derivative(
         amici_model=model,
@@ -223,11 +242,17 @@ def _llh_gradient(model: Model, solver: Solver, edata: ExpData, point):
     return function, gradient
 
 
-def test_sbml_testsuite_case_sensitivity_forward(test_id, compiled_case):
+def test_sbml_testsuite_case_sensitivity_forward(
+    test_id: str, compiled_case: CompiledCase
+) -> None:
     """Finite-difference-check the model's forward sensitivities."""
     case = _setup_sensitivity_case(test_id, compiled_case, check="forward")
 
-    def check(sensi_solver, point, bounds):
+    def check(
+        sensi_solver: Solver,
+        point: np.ndarray,
+        bounds: tuple[np.ndarray, np.ndarray],
+    ) -> None:
         sensi_solver.set_sensitivity_method(SensitivityMethod.forward)
         function, derivative = run_simulation_to_function_and_derivative(
             amici_model=case.model,
@@ -246,12 +271,12 @@ def test_sbml_testsuite_case_sensitivity_forward(test_id, compiled_case):
     # historically tricky cases
     if test_id in _JAX_CHECK_CASES:
         jax_sensitivity_check(
-            compiled_case[3],
+            compiled_case.case_dir,
             test_id,
             case.model,
             case.rdata,
-            case.atol,
-            case.rtol,
+            case.settings.atol,
+            case.settings.rtol,
         )
 
 
@@ -260,11 +285,17 @@ def test_sbml_testsuite_case_sensitivity_forward(test_id, compiled_case):
     "ignore:Adjoint sensitivity analysis for models with discontinuous "
     "right hand sides .*:UserWarning",
 )
-def test_sbml_testsuite_case_sensitivity_adjoint(test_id, compiled_case):
+def test_sbml_testsuite_case_sensitivity_adjoint(
+    test_id: str, compiled_case: CompiledCase
+) -> None:
     """Finite-difference-check the model's adjoint sensitivities."""
     case = _setup_sensitivity_case(test_id, compiled_case, check="adjoint")
 
-    def check(sensi_solver, point, bounds):
+    def check(
+        sensi_solver: Solver,
+        point: np.ndarray,
+        bounds: tuple[np.ndarray, np.ndarray],
+    ) -> None:
         sensi_solver.set_sensitivity_method(SensitivityMethod.adjoint)
         function, gradient = _llh_gradient(
             case.model, sensi_solver, case.edata, point
@@ -281,11 +312,17 @@ def test_sbml_testsuite_case_sensitivity_adjoint(test_id, compiled_case):
     "ignore:Adjoint sensitivity analysis for models with discontinuous "
     "right hand sides .*:UserWarning",
 )
-def test_sbml_testsuite_case_sensitivity_consistency(test_id, compiled_case):
+def test_sbml_testsuite_case_sensitivity_consistency(
+    test_id: str, compiled_case: CompiledCase
+) -> None:
     """Compare forward and adjoint sensitivities (`sllh`)."""
     case = _setup_sensitivity_case(test_id, compiled_case, check="consistency")
 
-    def check(sensi_solver, point, bounds):
+    def check(
+        sensi_solver: Solver,
+        point: np.ndarray,
+        bounds: tuple[np.ndarray, np.ndarray],
+    ) -> None:
         asa_solver = sensi_solver.clone()
         sensi_solver.set_sensitivity_method(SensitivityMethod.forward)
         asa_solver.set_sensitivity_method(SensitivityMethod.adjoint)
@@ -309,7 +346,7 @@ def compile_model(
     test_id: str,
     model_dir: Path,
     generate_sensitivity_code: bool = False,
-):
+) -> tuple[ModuleType, amici.SbmlImporter]:
     """Import the given test model."""
     model_dir.mkdir(parents=True, exist_ok=True)
 
@@ -364,7 +401,7 @@ _NON_NEGATIVE_STATES = {"01395"}
 
 
 def _derive_generic_bounds(
-    point: np.ndarray, param_ids: tuple[str, ...], test_id: str
+    point: np.ndarray, param_ids: Sequence[str], test_id: str
 ) -> tuple[np.ndarray, np.ndarray]:
     """Derive per-parameter bounds for finite differences.
 
@@ -406,7 +443,7 @@ def _derive_generic_bounds(
 _AGREEMENT_RTOL = 1e-6
 
 
-def _agrees_closely(direction_result) -> bool:
+def _agrees_closely(direction_result: DirectionCheckResult) -> bool:
     """Check whether a direction's finite difference and sensitivity agree.
 
     Exactly matching zeros don't count.
@@ -418,7 +455,9 @@ def _agrees_closely(direction_result) -> bool:
     )
 
 
-def _assert_check_confirms_something(result, has_events: bool) -> None:
+def _assert_check_confirms_something(
+    result: JacobianCheckResult | GradientCheckResult, has_events: bool
+) -> None:
     """`check_jacobian`/`check_gradient`'s `success` is `True` as long as no
     direction is confidently *wrong* -- a check where every direction came
     back "inconclusive" (noise-dominated/discontinuity-suspected) would
@@ -517,26 +556,14 @@ def _run_sensitivity_check(
     raise error
 
 
-def compile_model_jax(sbml_dir: Path, test_id: str, model_dir: Path):
-    """Import the given test model as JAX model"""
-    model_dir.mkdir(parents=True, exist_ok=True)
-    sbml_file = find_model_file(sbml_dir, test_id)
-    sbml_importer = amici.SbmlImporter(sbml_file)
-    model_name = f"SBMLTest{test_id}_jax"
-    sbml_importer.sbml2jax(model_name, output_dir=model_dir)
-    model_module = amici.import_model_module(model_dir.name, model_dir.parent)
-    jax_model = model_module.Model()
-    return jax_model, sbml_importer
-
-
 def jax_sensitivity_check(
     sbml_dir: Path,
     test_id: str,
     amici_model: Model,
-    rdata: dict,
+    rdata: ReturnDataView,
     atol: float,
     rtol: float,
-):
+) -> None:
     """Compare AMICI forward sensitivities against JAX autodiff"""
     model_dir = Path(__file__).parent / "SBMLTestModelsJaxGrad" / test_id
     try:
@@ -547,39 +574,10 @@ def jax_sensitivity_check(
         raise
 
     try:
-        ts = rdata["ts"]
         p = jax_model.parameters
-        ts_jnp = jnp.asarray(ts, dtype=float)
-        zeros = jnp.zeros_like(ts_jnp)
-        tol_factor = 1e2
-        solver = diffrax.Kvaerno5()
-        controller = diffrax.PIDController(
-            rtol=rtol / tol_factor,
-            atol=atol / tol_factor,
-            pcoeff=DEFAULT_CONTROLLER_SETTINGS["pcoeff"],
-            icoeff=DEFAULT_CONTROLLER_SETTINGS["icoeff"],
-            dcoeff=DEFAULT_CONTROLLER_SETTINGS["dcoeff"],
-        )
-        root_finder = optimistix.Newton(**DEFAULT_ROOT_FINDER_SETTINGS)
 
-        def simulate(pars):
-            x, _ = jax_model.simulate_condition(
-                pars,
-                ts_jnp,
-                jnp.array([]),
-                zeros,
-                jnp.zeros_like(ts_jnp, dtype=int),
-                jnp.zeros_like(ts_jnp, dtype=int),
-                jnp.zeros((ts_jnp.shape[0], 0)),
-                jnp.zeros((ts_jnp.shape[0], 0)),
-                solver,
-                controller,
-                root_finder,
-                diffrax.DirectAdjoint(),
-                diffrax.SteadyStateEvent(),
-                2**10,
-                ret=amici.sim.jax.ReturnValue.x,
-            )
+        def simulate(pars: jnp.ndarray) -> jnp.ndarray:
+            x, _ = simulate_jax(jax_model, pars, rdata["ts"], atol, rtol)
             return x
 
         x = simulate(p)

@@ -1,55 +1,70 @@
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from pathlib import Path
+from typing import Any
 
+import amici
+import amici.sim.jax
 import amici.sim.sundials as asd
+import diffrax
+import jax.numpy as jnp
 import libsbml as sbml
 import numpy as np
+import optimistix
 import pandas as pd
 from amici.constants import SymbolId
+from amici.importers.sbml import SbmlImporter
+from amici.sim.jax import JAXModel
+from amici.sim.jax.petab import (
+    DEFAULT_CONTROLLER_SETTINGS,
+    DEFAULT_ROOT_FINDER_SETTINGS,
+)
 from numpy.testing import assert_allclose
+from sbml_cases import CaseSettings, find_model_file
 
 
 def verify_results(
-    settings,
-    rdata: asd.ReturnData,
-    expected,
-    wrapper,
-    model: asd.Model,
-    atol,
-    rtol,
-):
-    """Verify test results"""
-    amount_species, variables = get_amount_and_variables(settings)
+    settings: CaseSettings,
+    rdata: Mapping[str, Any],
+    expected: pd.DataFrame,
+    importer: SbmlImporter,
+    parameters: dict[str, float],
+    expression_ids: Sequence[str],
+) -> pd.DataFrame:
+    """Verify simulation results against the expected results.
 
+    :param rdata: The simulation results (`ts`, `y`, `w`).
+    :param importer: The importer the simulated model was created with.
+    :param parameters: Parameter ID -> value of the simulated model.
+    :param expression_ids: Expression IDs of the simulated model.
+    :return: The simulated values of `settings.variables` and time.
+    """
     # collect states
     simulated = pd.DataFrame(
         rdata["y"],
         columns=[
             obs["name"]
-            for obs in wrapper._symbols[SymbolId.OBSERVABLE].values()
+            for obs in importer._symbols[SymbolId.OBSERVABLE].values()
         ],
     )
     simulated["time"] = rdata["ts"]
 
-    parameter_data = {}
-
     # collect parameters
-    for par in model.get_free_parameter_ids():
-        parameter_data[par] = rdata["ts"] * 0 + model.get_free_parameter_by_id(
-            par
-        )
+    parameter_data = {
+        par_id: rdata["ts"] * 0 + value for par_id, value in parameters.items()
+    }
 
     expression_data = {}
 
-    for expr_idx, expr_id in enumerate(model.get_expression_ids()):
+    for expr_idx, expr_id in enumerate(expression_ids):
         if expr_id.startswith("flux_"):
             new_key = expr_id.removeprefix("flux_")
         else:
             new_key = expr_id
             if expr_id in simulated.columns:
                 continue  # skip if already present
-        expression_data[new_key] = rdata.w[:, expr_idx]
+        expression_data[new_key] = rdata["w"][:, expr_idx]
 
     # consolidated concatenation instead of columnwise insert to avoid data fragmentation in test 01395
     simulated = pd.concat(
@@ -63,35 +78,27 @@ def verify_results(
 
     # SBML test suite case 01308 defines species with initialAmount and
     # hasOnlySubstanceUnits="true", but then request results as concentrations.
-    requested_concentrations = [
-        s
-        for s in settings["concentration"]
-        .replace(" ", "")
-        .replace("\n", "")
-        .split(",")
-        if s
-    ]
     # We only need to convert species that have only substance units
     concentration_species = [
         str(state_id)
         for state_id, state in {
-            **wrapper._symbols[SymbolId.SPECIES],
-            **wrapper._symbols[SymbolId.ALGEBRAIC_STATE],
+            **importer._symbols[SymbolId.SPECIES],
+            **importer._symbols[SymbolId.ALGEBRAIC_STATE],
         }.items()
-        if str(state_id) in requested_concentrations
+        if str(state_id) in settings.concentrations
         and state.get("amount", False)
     ]
     amounts_to_concentrations(
-        concentration_species, wrapper, simulated, requested_concentrations
+        concentration_species, importer, simulated, settings.concentrations
     )
 
     concentrations_to_amounts(
-        amount_species, wrapper, simulated, requested_concentrations
+        settings.amounts, importer, simulated, settings.concentrations
     )
 
     # simulated may contain `object` dtype columns and `expected` may
     # contain `np.int64` columns, so we cast everything to `np.float64`.
-    for variable in variables:
+    for variable in settings.variables:
         expectation = expected[variable].astype(np.float64).values
         try:
             actual = simulated[variable].astype(np.float64).values
@@ -100,18 +107,21 @@ def verify_results(
         assert_allclose(
             actual,
             expectation,
-            atol,
-            rtol,
+            settings.atol,
+            settings.rtol,
             equal_nan=True,
             err_msg=f"Mismatch for {variable}",
         )
 
-    return simulated[variables + ["time"]]
+    return simulated[settings.variables + ["time"]]
 
 
 def amounts_to_concentrations(
-    amount_species, wrapper, simulated, requested_concentrations
-):
+    amount_species: list[str],
+    wrapper: SbmlImporter,
+    simulated: pd.DataFrame,
+    requested_concentrations: list[str],
+) -> None:
     """
     Convert AMICI simulated amounts to concentrations
 
@@ -126,17 +136,19 @@ def amounts_to_concentrations(
     This allows for the reuse of the concentrations_to_amounts method...
     """
     for species in amount_species:
-        if species != "":
-            simulated.loc[:, species] = 1 / simulated.loc[:, species]
-            concentrations_to_amounts(
-                [species], wrapper, simulated, requested_concentrations
-            )
-            simulated.loc[:, species] = 1 / simulated.loc[:, species]
+        simulated.loc[:, species] = 1 / simulated.loc[:, species]
+        concentrations_to_amounts(
+            [species], wrapper, simulated, requested_concentrations
+        )
+        simulated.loc[:, species] = 1 / simulated.loc[:, species]
 
 
 def concentrations_to_amounts(
-    amount_species, wrapper, simulated, requested_concentrations
-):
+    amount_species: list[str],
+    wrapper: SbmlImporter,
+    simulated: pd.DataFrame,
+    requested_concentrations: list[str],
+) -> None:
     """Convert AMICI simulated concentrations to amounts"""
     for species in amount_species:
         s = wrapper.sbml_model.getElementBySId(species)
@@ -160,92 +172,78 @@ def concentrations_to_amounts(
         simulated.loc[:, species] *= simulated.loc[:, comp]
 
 
-def write_result_file(
-    simulated: pd.DataFrame, test_id: str, result_path: Path
-):
-    """
-    Create test result file for upload to
-    http://raterule.caltech.edu/Facilities/Database
-
-    Requires csv file with test ID in name and content of [time, Species, ...]
-    """
-    # TODO: only states are reported here, not compartments or parameters
-
-    result_path.mkdir(parents=True, exist_ok=True)
-    filename = result_path / f"{test_id}.csv"
-    (
-        simulated
-        # see https://github.com/sbmlteam/sbml-test-suite/blob/473e119dd57226c3a7a729d598f9007f06f781c3/cases/semantic/README.md?plain=1#L211-L215
-        .replace({np.nan: "NaN", np.inf: "INF", -np.inf: "-INF"}).to_csv(
-            filename, index=False
-        )
-    )
-
-
-def get_amount_and_variables(settings):
-    """Read amount and species from settings file"""
-
-    # species for which results are expected as amounts
-    amount_species = (
-        settings["amount"].replace(" ", "").replace("\n", "").split(",")
-    )
-
-    # IDs of all variables for which results are expected/provided
-    variables = (
-        settings["variables"].replace(" ", "").replace("\n", "").split(",")
-    )
-
-    return amount_species, variables
-
-
 def apply_settings(
-    settings, solver: asd.Solver, model: asd.Model, test_id: str
-):
+    settings: CaseSettings, solver: asd.Solver, model: asd.Model, test_id: str
+) -> None:
     """Apply model and solver settings as specified in the test case"""
-    # start/duration/steps may be empty
-    ts = np.linspace(
-        float(settings["start"] or 0),
-        float(settings["start"] or 0) + float(settings["duration"] or 0),
-        int(settings["steps"] or 0) + 1,
-    )
-    atol = float(settings["absolute"])
-    rtol = float(settings["relative"])
-
-    model.set_timepoints(ts)
+    model.set_timepoints(settings.timepoints)
     solver.set_max_steps(int(1e6))
-    solver.set_relative_tolerance(rtol / 1e4)
+    solver.set_relative_tolerance(settings.rtol / 1e4)
 
     if test_id == "01148":
-        solver.set_absolute_tolerance(atol / 1e6)
+        solver.set_absolute_tolerance(settings.atol / 1e6)
     else:
-        solver.set_absolute_tolerance(atol / 1e4)
-
-    return atol, rtol
+        solver.set_absolute_tolerance(settings.atol / 1e4)
 
 
-def find_model_file(current_test_path: Path, test_id: str) -> Path:
-    """Find model file for the given test (guess filename extension)"""
+def compile_model_jax(
+    case_dir: Path, test_id: str, model_dir: Path
+) -> tuple[JAXModel, SbmlImporter]:
+    """Import the given test model as JAX model.
 
-    sbml_file = current_test_path / f"{test_id}-sbml-l3v2.xml"
-
-    if not sbml_file.is_file():
-        # fallback l3v1
-        sbml_file = current_test_path / f"{test_id}-sbml-l3v1.xml"
-
-    if not sbml_file.is_file():
-        # fallback l2v5
-        sbml_file = current_test_path / f"{test_id}-sbml-l2v5.xml"
-
-    return sbml_file
+    :return: The JAX model and the importer.
+    """
+    model_dir.mkdir(parents=True, exist_ok=True)
+    importer = SbmlImporter(find_model_file(case_dir, test_id), jax=True)
+    importer.sbml2jax(f"SBMLTest{test_id}_jax", output_dir=model_dir)
+    model_module = amici.import_model_module(model_dir.name, model_dir.parent)
+    return model_module.Model(), importer
 
 
-def read_settings_file(current_test_path: Path, test_id: str):
-    """Read settings for the given test"""
-    settings_file = current_test_path / f"{test_id}-settings.txt"
-    settings = {}
-    with open(settings_file) as f:
-        for line in f:
-            if line != "\n":
-                (key, val) = line.split(":")
-                settings[key] = val.strip()
-    return settings
+def simulate_jax(
+    model: JAXModel,
+    parameters: jnp.ndarray,
+    ts: np.ndarray | jnp.ndarray,
+    atol: float,
+    rtol: float,
+    tol_factor: float = 1e2,
+    root_finder: optimistix.AbstractRootFinder | None = None,
+) -> tuple[jnp.ndarray, dict]:
+    """Simulate a JAX model without data.
+
+    :param parameters: The parameter values (`model.parameters` order).
+    :param atol: The absolute tolerance for comparing against the expected
+        results; the integration tolerance is `atol / tol_factor`.
+    :param rtol: The relative tolerance, analogous to `atol`.
+    :param root_finder: The root finder for events; defaults to
+        `optimistix.Newton` with `DEFAULT_ROOT_FINDER_SETTINGS`.
+    :return: The state trajectory and the simulation statistics, see
+        `amici.sim.jax.JAXModel.simulate_condition`.
+    """
+    ts = jnp.asarray(ts, dtype=float)
+    controller = diffrax.PIDController(
+        rtol=rtol / tol_factor,
+        atol=atol / tol_factor,
+        pcoeff=DEFAULT_CONTROLLER_SETTINGS["pcoeff"],
+        icoeff=DEFAULT_CONTROLLER_SETTINGS["icoeff"],
+        dcoeff=DEFAULT_CONTROLLER_SETTINGS["dcoeff"],
+    )
+    if root_finder is None:
+        root_finder = optimistix.Newton(**DEFAULT_ROOT_FINDER_SETTINGS)
+    return model.simulate_condition(
+        parameters,
+        ts,
+        jnp.array([]),
+        jnp.zeros_like(ts),
+        jnp.zeros_like(ts, dtype=int),
+        jnp.zeros_like(ts, dtype=int),
+        jnp.zeros((ts.shape[0], 0)),
+        jnp.zeros((ts.shape[0], 0)),
+        diffrax.Kvaerno5(),
+        controller,
+        root_finder,
+        diffrax.DirectAdjoint(),
+        diffrax.SteadyStateEvent(),
+        2**10,
+        ret=amici.sim.jax.ReturnValue.x,
+    )

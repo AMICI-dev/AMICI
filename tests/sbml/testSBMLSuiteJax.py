@@ -3,22 +3,25 @@
 
 import shutil
 from pathlib import Path
+from typing import Any
 
 import amici
-import diffrax
 import jax
 import jax.numpy as jnp
 import numpy as np
 import optimistix
-import pandas as pd
 import pytest
-from amici.sim.jax.petab import DEFAULT_CONTROLLER_SETTINGS
+from amici.sim.jax import JAXModel
 from amici.sim.sundials import AMICI_SUCCESS
-from utils import (
-    find_model_file,
-    read_settings_file,
-    verify_results,
+from sbml_cases import (
+    CaseSettings,
+    read_expected_results,
     write_result_file,
+)
+from utils import (
+    compile_model_jax,
+    simulate_jax,
+    verify_results,
 )
 
 jax.config.update("jax_enable_x64", True)
@@ -29,65 +32,23 @@ def result_path_jax() -> Path:
     return Path(__file__).parent / "amici-semantic-results-jax"
 
 
-class DummyModel:
-    def __init__(self, jax_model: object, importer: amici.SbmlImporter):
-        self.jax_model = jax_model
-        self.importer = importer
-
-    def get_free_parameter_ids(self):
-        return list(self.jax_model.parameter_ids)
-
-    def get_free_parameter_by_id(self, pid: str):
-        return float(
-            self.jax_model.parameters[
-                list(self.jax_model.parameter_ids).index(pid)
-            ]
-        )
-
-    def get_expression_ids(self):
-        return list(self.jax_model.expression_ids)
-
-
-def compile_model_jax(sbml_dir: Path, test_id: str, model_dir: Path):
-    model_dir.mkdir(parents=True, exist_ok=True)
-    sbml_file = find_model_file(sbml_dir, test_id)
-    sbml_importer = amici.SbmlImporter(sbml_file, jax=True)
-    model_name = f"SBMLTest{test_id}_jax"
-    sbml_importer.sbml2jax(model_name, output_dir=model_dir)
-    model_module = amici.import_model_module(model_dir.name, model_dir.parent)
-    jax_model = model_module.Model()
-    return jax_model, sbml_importer
-
-
-def run_jax_simulation(model, importer, ts, atol, rtol, tol_factor=1e2):
+def run_jax_simulation(
+    model: JAXModel,
+    ts: np.ndarray,
+    atol: float,
+    rtol: float,
+    tol_factor: float = 1e2,
+) -> dict[str, Any]:
     p = model.parameters
     ts_jnp = jnp.asarray(ts, dtype=float)
-    zeros = jnp.zeros_like(ts_jnp)
-    solver = diffrax.Kvaerno5()
-    controller = diffrax.PIDController(
-        rtol=rtol / tol_factor,
-        atol=atol / tol_factor,
-        pcoeff=DEFAULT_CONTROLLER_SETTINGS["pcoeff"],
-        icoeff=DEFAULT_CONTROLLER_SETTINGS["icoeff"],
-        dcoeff=DEFAULT_CONTROLLER_SETTINGS["dcoeff"],
-    )
-    root_finder = optimistix.Newton(atol=atol, rtol=rtol)
-    x, stats = model.simulate_condition(
+    x, stats = simulate_jax(
+        model,
         p,
         ts_jnp,
-        jnp.array([]),
-        zeros,
-        jnp.zeros_like(ts_jnp, dtype=int),
-        jnp.zeros_like(ts_jnp, dtype=int),
-        jnp.zeros((ts_jnp.shape[0], 0)),
-        jnp.zeros((ts_jnp.shape[0], 0)),
-        solver,
-        controller,
-        root_finder,
-        diffrax.DirectAdjoint(),
-        diffrax.SteadyStateEvent(),
-        2**10,
-        ret=amici.sim.jax.ReturnValue.x,
+        atol,
+        rtol,
+        tol_factor,
+        root_finder=optimistix.Newton(atol=atol, rtol=rtol),
     )
     y = jax.vmap(
         lambda t, x_solver, x_rdata, hs: model._y(
@@ -117,30 +78,13 @@ def run_jax_simulation(model, importer, ts, atol, rtol, tol_factor=1e2):
 
 
 def test_sbml_testsuite_case_jax(
-    test_id, result_path_jax, sbml_semantic_cases_dir
-):
+    test_id: str, result_path_jax: Path, sbml_semantic_cases_dir: Path
+) -> None:
     model_dir = Path(__file__).parent / "SBMLTestModelsJax" / test_id
     try:
-        current_test_path = sbml_semantic_cases_dir / test_id
-        results_file = current_test_path / f"{test_id}-results.csv"
-        results = pd.read_csv(results_file, delimiter=",")
-        results = results.rename(
-            columns={c: c.replace(" ", "") for c in results.columns},
-        )
-
-        model, wrapper = compile_model_jax(
-            current_test_path, test_id, model_dir
-        )
-        settings = read_settings_file(current_test_path, test_id)
-        ts = np.linspace(
-            float(settings["start"] or 0),
-            float(settings["start"] or 0) + float(settings["duration"] or 0),
-            int(settings["steps"] or 0) + 1,
-        )
-        atol = float(settings["absolute"])
-        rtol = float(settings["relative"])
-
-        dummy = DummyModel(model, wrapper)
+        case_dir = sbml_semantic_cases_dir / test_id
+        model, importer = compile_model_jax(case_dir, test_id, model_dir)
+        settings = CaseSettings.from_file(case_dir, test_id)
 
         tol_factor = 1e2
         if int(test_id) in (
@@ -168,9 +112,26 @@ def test_sbml_testsuite_case_jax(
             1395,
         ):
             tol_factor = 1e4
-        rdata = run_jax_simulation(model, wrapper, ts, atol, rtol, tol_factor)
+        rdata = run_jax_simulation(
+            model,
+            settings.timepoints,
+            settings.atol,
+            settings.rtol,
+            tol_factor,
+        )
         simulated = verify_results(
-            settings, rdata, results, wrapper, dummy, atol, rtol
+            settings,
+            rdata,
+            read_expected_results(case_dir, test_id),
+            importer,
+            parameters=dict(
+                zip(
+                    model.parameter_ids,
+                    map(float, model.parameters),
+                    strict=True,
+                )
+            ),
+            expression_ids=list(model.expression_ids),
         )
         write_result_file(simulated, test_id, result_path_jax)
     except amici.importers.sbml.SBMLException as err:
