@@ -43,6 +43,7 @@ from ..utils import (
     _default_simplify,
     _expr_to_amici,
     _parse_special_functions,
+    amici_time_symbol,
     generate_measurement_symbol,
     make_name_unique,
     noise_distribution_to_cost_function,
@@ -61,6 +62,27 @@ CL_Prototype = dict[str, dict[str, Any]]
 ConservationLaw = dict[str, dict | str | sp.Basic]
 
 logger = get_logger(__name__, logging.ERROR)
+
+
+def _pysb_expr_to_amici(
+    expr: sp.Basic | sp.MatrixBase, renames: dict[str, str] | None = None
+) -> sp.Basic | sp.MatrixBase:
+    """Convert a PySB expression to an AMICI-compatible expression.
+
+    Like :func:`amici.importers.utils._expr_to_amici`, but additionally
+    maps PySB's time symbol (:data:`pysb.core.time`) to the AMICI time
+    symbol.
+    """
+    symbol_map = {}
+    for s in expr.free_symbols:
+        if not isinstance(s, pysb.core.SpecialSymbol):
+            continue
+        if s.name != "time":
+            raise NotImplementedError(
+                f"Unsupported PySB special symbol: {s.name}"
+            )
+        symbol_map[s] = amici_time_symbol
+    return _expr_to_amici(expr, renames, symbol_map)
 
 
 def pysb2jax(
@@ -486,6 +508,14 @@ def ode_model_from_pysb_importer(
         )
     observation_model = {channel.id: channel for channel in observation_model}
 
+    # As in SBML import, `time` always refers to the simulation time.
+    # BioNetGen rejects parameters and expressions named `time` itself.
+    if "time" in model.observables.keys():
+        raise ValueError(
+            "PySB observables must not be named `time`, which is reserved "
+            "for the simulation time (`pysb.time`)."
+        )
+
     pysb.bng.generate_equations(model, verbose=verbose)
 
     # species/conservation-law/sigma/log-likelihood symbols are all
@@ -627,7 +657,7 @@ def _process_stoichiometric_matrix(
                 values = dflux_dw_dict
 
             values[(ir, idx)] = sp.diff(
-                _expr_to_amici(rxn["rate"], renames), x_rdata[ix]
+                _pysb_expr_to_amici(rxn["rate"], renames), x_rdata[ix]
             )
 
         # typically <= 3 free symbols in rate, we already account for
@@ -654,7 +684,7 @@ def _process_stoichiometric_matrix(
                 var,
                 idx_cache,
             )
-            values[(ir, idx)] = _expr_to_amici(
+            values[(ir, idx)] = _pysb_expr_to_amici(
                 sp.diff(rxn["rate"], fs), renames
             )
 
@@ -696,7 +726,7 @@ def _process_pysb_species(
         `resolve_reserved_symbol_renames`
     """
     xdot = sp.Matrix(pysb_model.odes)
-    xdot = _expr_to_amici(xdot, renames)
+    xdot = _pysb_expr_to_amici(xdot, renames)
 
     for ix, specie in enumerate(pysb_model.species):
         init = sp.sympify("0.0")
@@ -710,7 +740,7 @@ def _process_pysb_species(
                 else:
                     init = ic.value
 
-        init = _expr_to_amici(init, renames)
+        init = _pysb_expr_to_amici(init, renames)
         ode_model.add_component(
             DifferentialState(
                 symbol_with_assumptions(f"__s{ix}"),
@@ -872,6 +902,7 @@ def _add_expression(
     # `name` stays the original (used for `observation_model` lookups and
     # as the human-readable label); only the identifier is renamed
     sym_name = renames.get(name, name)
+    expr = _parse_special_functions(_pysb_expr_to_amici(expr, renames))
     if not pysb_model_has_obs_and_noise or name not in observation_model:
         # Without `pysb_model_has_obs_and_noise`, sigma expressions stay
         # regular expressions (they may be used elsewhere in the model), and
@@ -883,7 +914,6 @@ def _add_expression(
             component = SigmaY
         else:
             component = Expression
-        expr = _parse_special_functions(_expr_to_amici(expr, renames))
         ode_model.add_component(
             component(symbol_with_assumptions(sym_name), name, expr)
         )
@@ -899,7 +929,6 @@ def _add_expression(
         # If this changes, I would expect symbol redefinition warnings in CPP
         # models and overwriting in JAX models, but as both symbols refer to
         # the same _symbolic entity, this should not be a problem (untested)
-        expr = _parse_special_functions(_expr_to_amici(expr, renames))
         # mint (and, if needed, disambiguate) the measurement symbol up
         # front and pass it into the `Observable` explicitly -- a later,
         # independent call to `Observable.get_measurement_symbol()` (e.g.
@@ -944,7 +973,6 @@ def _add_expression(
         cost_fun_expr = noise_distribution_to_cost_function(noise_dist)(
             y, my, sigma, str_symbol=name
         )
-        cost_fun_expr = _expr_to_amici(cost_fun_expr, renames)
         llh_symbol_name = f"llh_{name}"
         if all_names is not None:
             llh_symbol_name = make_name_unique(llh_symbol_name, all_names)
@@ -997,7 +1025,7 @@ def _get_sigma(
         return symbol_with_assumptions(name)
 
     if sigma_name in pysb_model.expressions.keys():
-        return _expr_to_amici(pysb_model.expressions[sigma_name], renames)
+        return _pysb_expr_to_amici(pysb_model.expressions[sigma_name], renames)
 
     raise ValueError(f"value of sigma {obs_name} is not a valid expression.")
 

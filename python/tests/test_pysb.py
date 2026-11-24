@@ -496,6 +496,85 @@ def test_pysb_reserved_names(tempdir):
 
 
 @skip_on_valgrind
+def test_pysb_time(tempdir):
+    """`pysb.time` is mapped to the simulation time."""
+    pysb.SelfExporter.cleanup()  # reset pysb
+    pysb.SelfExporter.do_export = True
+
+    model = pysb.Model("pysb_time_test")
+    a = pysb.Monomer("A")
+    k = pysb.Parameter("k", 0.5)
+    a0 = pysb.Parameter("a0", 10.0)
+    # collides with AMICI's time symbol and is renamed internally
+    t_par = pysb.Parameter("t", 3.0)
+    pysb.Initial(a(), a0)
+    pysb.Observable("a_obs", a())
+    k_t = pysb.Expression("k_t", k * pysb.time)
+    pysb.Expression("obs_t", pysb.time + t_par)
+    pysb.Rule("deg", a() >> None, k_t)
+
+    outdir = tempdir
+    pysb2amici(
+        model,
+        outdir,
+        observation_model=[
+            MeasurementChannel("obs_t"),
+            MeasurementChannel("a_obs"),
+        ],
+        compute_conservation_laws=False,
+    )
+
+    model_module = import_model_module(
+        module_name=model.name, module_path=outdir
+    )
+    amici_model = model_module.get_model()
+    t = np.linspace(0, 3, 7)
+    amici_model.set_timepoints(t)
+    solver = amici_model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-12)
+    rdata = run_simulation(amici_model, solver)
+    assert rdata.status == amici.sim.sundials.AMICI_SUCCESS
+
+    obs_ids = amici_model.get_observable_ids()
+    iy_t = obs_ids.index("obs_t")
+    iy_a = obs_ids.index("a_obs")
+    # dA/dt = -k * t * A
+    a_expected = a0.value * np.exp(-k.value * t**2 / 2)
+    assert_allclose(rdata.y[:, iy_t], t + t_par.value, rtol=1e-12)
+    assert_allclose(rdata.y[:, iy_a], a_expected, rtol=1e-8)
+
+    par_ids = amici_model.get_free_parameter_ids()
+    ik = par_ids.index("k")
+    it = par_ids.index("t")
+    # d a_obs / d k = -t^2 / 2 * A
+    sy_a_k = rdata.sy[:, ik, iy_a]
+    assert np.any(sy_a_k != 0)
+    assert_allclose(sy_a_k, -(t**2) / 2 * a_expected, rtol=1e-6, atol=1e-10)
+    assert_allclose(rdata.sy[:, it, iy_t], 1.0)
+
+
+def test_pysb_component_named_time():
+    """Observables named `time` are rejected, as in SBML import."""
+    from amici.importers.pysb import ode_model_from_pysb_importer
+
+    model = pysb.Model("pysb_time_name_test", _export=False)
+    a = pysb.Monomer("A", _export=False)
+    model.add_component(a)
+    k = pysb.Parameter("k", 1.0, _export=False)
+    model.add_component(k)
+    model.add_initial(pysb.Initial(a(), k, _export=False))
+    model.add_component(pysb.Rule("deg", a() >> None, k, _export=False))
+    # BioNetGen already rejects parameters and expressions named `time`,
+    # but not observables
+    model.add_component(pysb.Observable("time", a(), _export=False))
+
+    with pytest.raises(ValueError, match="must not be named `time`"):
+        ode_model_from_pysb_importer(model, compute_conservation_laws=False)
+
+
+@skip_on_valgrind
 def test_pysb_derived_name_collisions(tempdir):
     """Model quantities literally named after AMICI-internally-derived
     symbols (a conservation-law total `tcl_s{n}`, or an observable's
