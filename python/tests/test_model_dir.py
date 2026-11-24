@@ -467,30 +467,31 @@ def test_petab_v2_import_module(tmp_path, monkeypatch):
     importer = PetabImporter(_petab_v2_problem(), output_dir=model_dir)
     imports = []
 
-    def do_import_sbml():
-        imports.append(1)
+    def do_import_sbml(skip_if_unchanged):
+        imports.append(skip_if_unchanged)
         prepare_model_dir(model_dir, importer._module_name)
         set_model_dir_status(model_dir, ModelDirStatus.COMPILED)
 
     monkeypatch.setattr(importer, "_do_import_sbml", do_import_sbml)
     monkeypatch.setattr(amici, "import_model_module", lambda *args: None)
 
+    # the input check is delegated to the import functions
     importer.import_module()
-    assert len(imports) == 1
-    # complete model
+    assert imports == [True]
+    # complete model, already checked
     importer.import_module()
-    assert len(imports) == 1
+    assert imports == [True]
     importer.import_module(force_import=True)
-    assert len(imports) == 2
+    assert imports == [True, False]
     # left behind by a failed import
     set_model_dir_status(model_dir, ModelDirStatus.GENERATED)
     importer.import_module()
-    assert len(imports) == 3
+    assert imports == [True, False, True]
     # a different model
     prepare_model_dir(model_dir, "other_model")
     set_model_dir_status(model_dir, ModelDirStatus.COMPILED)
     importer.import_module()
-    assert len(imports) == 4
+    assert imports == [True, False, True, True]
 
 
 @pytest.mark.parametrize("force_import", [False, True])
@@ -507,15 +508,12 @@ def test_petab_v2_foreign_dir(tmp_path, force_import):
     assert (model_dir / "data.csv").exists()
 
 
-@pytest.mark.parametrize("compile_", [None, True])
-def test_petab_v1_foreign_dir(tmp_path, compile_):
-    """Foreign directories are not removed, even with `compile_=True`."""
-    petab = pytest.importorskip("petab.v1")
+def _petab_v1_problem():
     import pandas as pd
-    from amici.importers.petab.v1 import import_petab_problem
+    import petab.v1 as petab
     from petab.v1.models.sbml_model import SbmlModel
 
-    petab_problem = petab.Problem(
+    return petab.Problem(
         model=SbmlModel.from_antimony("x = 1; x' = k; k = 1"),
         condition_df=petab.get_condition_df(
             pd.DataFrame({petab.CONDITION_ID: ["c0"]})
@@ -533,10 +531,18 @@ def test_petab_v1_foreign_dir(tmp_path, compile_):
             )
         ),
     )
+
+
+@pytest.mark.parametrize("compile_", [None, True])
+def test_petab_v1_foreign_dir(tmp_path, compile_):
+    """Foreign directories are not removed, even with `compile_=True`."""
+    pytest.importorskip("petab.v1")
+    from amici.importers.petab.v1 import import_petab_problem
+
     model_dir = tmp_path / "model"
     _make_files(model_dir, "data.csv")
     with pytest.raises(FileExistsError, match="data.csv"):
-        import_petab_problem(petab_problem, model_dir, compile_=compile_)
+        import_petab_problem(_petab_v1_problem(), model_dir, compile_=compile_)
     assert (model_dir / "data.csv").exists()
 
 

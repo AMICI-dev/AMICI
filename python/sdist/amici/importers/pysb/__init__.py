@@ -22,6 +22,8 @@ import pysb.pattern
 import sympy as sp
 
 import amici
+from amici._input_hash import NON_HASHED_ARGS, compute_input_hash
+from amici._model_dir import reuse_model_dir, set_model_dir_inputs
 from amici._symbolic.de_model import DEModel
 from amici._symbolic.de_model_components import (
     DifferentialState,
@@ -76,6 +78,7 @@ def pysb2jax(
     cache_simplify: bool = False,
     model_name: str | None = None,
     pysb_model_has_obs_and_noise: bool = False,
+    skip_if_unchanged: bool = False,
 ):
     r"""
     Generate AMICI jax files for the provided model.
@@ -137,10 +140,41 @@ def pysb2jax(
     :param pysb_model_has_obs_and_noise:
         If set to ``True``, the pysb model is expected to have extra
         observables and noise variables added.
-    """
-    model_name = model_name or model.name
 
+    :param skip_if_unchanged:
+        If ``True``, and ``output_dir`` contains a complete model that was
+        imported from the same inputs, reuse that model instead of importing
+        it again. See :ref:`amici_model_reuse` for the inputs considered and
+        for limitations.
+    """
+    call_args = locals().copy()
+    model_name = model_name or model.name
     set_log_level(logger, verbose)
+
+    from amici.exporters.jax.ode_export import (
+        ODEExporter,
+        get_default_output_dir,
+    )
+
+    output_dir = Path(
+        output_dir or get_default_output_dir(model_name)
+    ).absolute()
+    input_hash, inputs = _compute_input_hash(
+        call_args | {"model_name": model_name}, "pysb2jax", build=False
+    )
+    if (
+        skip_if_unchanged
+        and reuse_model_dir(
+            output_dir,
+            model_name,
+            input_hash,
+            inputs,
+            jax=True,
+            log=logger,
+        )[0]
+    ):
+        return
+
     ode_model = ode_model_from_pysb_importer(
         model,
         observation_model=observation_model,
@@ -152,8 +186,6 @@ def pysb2jax(
         pysb_model_has_obs_and_noise=pysb_model_has_obs_and_noise,
     )
 
-    from amici.exporters.jax.ode_export import ODEExporter
-
     exporter = ODEExporter(
         ode_model,
         output_dir=output_dir,
@@ -161,6 +193,7 @@ def pysb2jax(
         verbose=verbose,
     )
     exporter.generate_model_code()
+    set_model_dir_inputs(exporter.model_path, input_hash, inputs)
 
 
 def pysb2amici(
@@ -182,6 +215,7 @@ def pysb2amici(
     model_name: str | None = None,
     pysb_model_has_obs_and_noise: bool = False,
     _events: list[Event] = None,
+    skip_if_unchanged: bool = False,
 ) -> amici.sim.sundials.Model | None:
     r"""
     Generate AMICI C++ files for the provided model.
@@ -266,18 +300,41 @@ def pysb2amici(
         if set to ``True``, the pysb model is expected to have extra
         observables and noise variables added
 
+    :param skip_if_unchanged:
+        If ``True``, and ``output_dir`` contains a complete model that was
+        imported from the same inputs, reuse that model instead of importing
+        it again. See :ref:`amici_model_reuse` for the inputs considered and
+        for limitations.
+
     :return:
         If `compile` is `True` and compilation was successful, an instance
         of the generated model class, otherwise `None`.
     """
+    call_args = locals().copy()
     if observation_model is None:
         observation_model = []
     if fixed_parameters is None:
         fixed_parameters = []
 
     model_name = model_name or model.name
-    output_dir = output_dir or amici.get_model_dir(model_name)
+    output_dir = Path(output_dir or amici.get_model_dir(model_name)).absolute()
     set_log_level(logger, verbose)
+
+    input_hash, inputs = _compute_input_hash(
+        call_args | {"model_name": model_name}, "pysb2amici", build=True
+    )
+    if skip_if_unchanged:
+        reused, amici_model = reuse_model_dir(
+            output_dir,
+            model_name,
+            input_hash,
+            inputs,
+            compile=compile,
+            log=logger,
+        )
+        if reused:
+            return amici_model
+
     ode_model = ode_model_from_pysb_importer(
         model,
         fixed_parameters=fixed_parameters,
@@ -309,6 +366,7 @@ def pysb2amici(
     #  `sympy.Basic.match()`, breaking `sympy.codegen.rewriting.optimize`.
     exporter._code_printer._fpoptimizer = None
     exporter.generate_model_code()
+    set_model_dir_inputs(exporter.model_path, input_hash, inputs)
 
     if compile:
         exporter.compile_model()
@@ -320,6 +378,41 @@ def pysb2amici(
         ).get_model()
 
     return None
+
+
+def _compute_input_hash(
+    call_args: dict[str, Any], entry_point: str, build: bool
+) -> tuple[str | None, dict[str, Any]]:
+    """Compute the hash of the inputs of a PySB import.
+
+    See :func:`amici._input_hash.compute_input_hash`.
+
+    :param call_args:
+        The arguments of the import function.
+    :param entry_point:
+        Name of the import function.
+    :param build:
+        Whether the build configuration is relevant (SUNDIALS models).
+    """
+    import pysb.export
+
+    options = {
+        key: value
+        for key, value in call_args.items()
+        if key not in NON_HASHED_ARGS and key != "model"
+    }
+    options["entry_point"] = entry_point
+    try:
+        model = pysb.export.export(call_args["model"], "pysb_flat")
+    except Exception as e:
+        logger.debug(f"Cannot hash PySB model: {e}")
+        model = None
+    return compute_input_hash(
+        model,
+        options,
+        packages=("pysb",),
+        build=build,
+    )
 
 
 @log_execution_time("creating ODE model", logger)
