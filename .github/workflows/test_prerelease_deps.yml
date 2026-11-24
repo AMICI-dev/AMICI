@@ -1,0 +1,88 @@
+name: Prerelease dependencies
+# Detect upcoming incompatibilities with sympy pre-releases / sympy master
+on:
+  workflow_dispatch:
+  schedule:
+    - cron:  '17 5 * * 1'
+  push:
+    paths:
+      - .github/workflows/test_prerelease_deps.yml
+  pull_request:
+    paths:
+      - .github/workflows/test_prerelease_deps.yml
+
+jobs:
+  build:
+    name: Python tests (${{ matrix.deps }})
+    # don't run cron job on forks
+    if: github.repository == 'AMICI-dev/AMICI' ||
+        github.event_name != 'schedule'
+
+    runs-on: ubuntu-26.04
+    env:
+      AMICI_SKIP_CMAKE_TESTS: "TRUE"
+      AMICI_PARALLEL_COMPILE: ""
+
+    strategy:
+      fail-fast: false
+      matrix:
+        deps: ["sympy-pre", "sympy-master"]
+        python-version: ["3.14"]
+
+    steps:
+    - uses: dweindl/gha-runner-diagnostics@v1
+
+    - run: echo "AMICI_DIR=$(pwd)" >> $GITHUB_ENV
+    - run: echo "BNGPATH=${AMICI_DIR}/ThirdParty/BioNetGen-2.9.2" >> $GITHUB_ENV
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v7
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 20
+        lfs: true
+
+    - name: Install apt dependencies
+      uses: ./.github/actions/install-apt-dependencies
+
+    - name: Build BNGL
+      run: scripts/buildBNGL.sh
+
+    - name: Install python package
+      run: scripts/installAmiciSource.sh
+
+    - name: Install sympy pre-release
+      if: matrix.deps == 'sympy-pre'
+      run: source venv/bin/activate && pip install --upgrade --pre sympy
+
+    - name: Install sympy master
+      if: matrix.deps == 'sympy-master'
+      run: |
+        source venv/bin/activate \
+          && pip install --upgrade "sympy @ git+https://github.com/sympy/sympy@master"
+
+    - name: Show installed versions
+      run: source venv/bin/activate && pip list
+
+    - name: Get Pooch Cache Directory
+      id: get-pooch-cache
+      run: |
+        echo "pooch-cache=$(source venv/bin/activate && python -c 'import pooch; print(pooch.os_cache("pooch"))')" >> $GITHUB_ENV
+
+    - name: Cache Pooch Directory
+      uses: actions/cache@v6
+      with:
+        path: ${{ env.pooch-cache }}
+        key: ${{ runner.os }}-py${{ matrix.python-version }}-${{ github.job }}
+
+    # warnings, including sympy deprecation warnings, are errors (pytest.ini)
+    - name: Python tests
+      run: |
+        source venv/bin/activate \
+          && python3 -m pytest \
+            --durations=10 \
+            --ignore-glob=*petab* \
+            --ignore-glob=*test_splines.py ${AMICI_DIR}/python/tests
