@@ -5303,3 +5303,55 @@ def test_dae_event_algebraic_equation_with_time_varying_spline(tempdir):
     assert rdata.by_id("w")[-1] == pytest.approx(
         rdata.by_id("v")[-1] + 1, rel=1e-8
     )
+
+
+@skip_on_valgrind
+def test_dae_adjoint_event_output_algebraic_state(tempdir):
+    """Adjoint sensitivities for event outputs of an algebraic state, for
+    a time-dependent and a state-dependent trigger."""
+    model_name = "test_dae_adjoint_event_output_algebraic_state"
+    antimony2amici(
+        """
+        const k = 0.5, p = 2
+        x = 1; y = 2; c = 0
+        x' = -k * x
+        c' = 1
+        0 = y - p * x^2
+        E1: at time > 1: c = c + 1
+        E2: at x < 0.5: c = c + 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[
+            MC("obs_x", formula="x"),
+            MC("z1", formula="y", event_id="E1"),
+            MC("z2", formula="y", event_id="E2"),
+        ],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    assert model.get_free_parameter_ids() == ("k", "p")
+    model.set_timepoints([0, 2, 3])
+    edata = _event_output_problem(model, [0.1, 0.1])
+
+    # z1 = y(1) = p * exp(-2 * k)
+    k, p = 0.5, 2.0
+    z1 = p * np.exp(-2 * k)
+    dz1 = np.array([-2 * z1, z1 / p])
+    # z2 = y(tau) = p / 4: independent of k, the dependence via y(t) and
+    # the event time tau = ln(2) / k cancel
+    z2 = p / 4
+    dz2 = np.array([0.0, 1 / 4])
+    sllh_expected = -(z1 - 0.1) * dz1 - (z2 - 0.1) * dz2
+    assert np.all(np.abs(sllh_expected) > 0.1)
+
+    solver = model.create_solver()
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-12)
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    for method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver.set_sensitivity_method(method)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS, method
+        assert_allclose(
+            rdata.sllh, sllh_expected, rtol=1e-6, err_msg=method.name
+        )
