@@ -1605,6 +1605,7 @@ void Model::get_adjoint_state_event_update(
     ExpData const& edata
 ) {
     fdJzdx(ie, nroots, t, x, edata);
+    project_algebraic_objective_derivatives(t, x, derived_state_.dJzdx_, {});
     write_slice(derived_state_.dJzdx_, dJzdx);
     fdJzdt(ie, nroots, t, x, dx, edata);
     write_slice(derived_state_.dJzdt_, dJzdt);
@@ -1618,6 +1619,14 @@ void Model::add_partial_event_objective_sensitivity(
         return;
 
     fdJzdp(ie, nroots, t, x, edata);
+    if (has_algebraic_states()) {
+        // DAEs: event outputs of algebraic states depend on the parameters
+        // via the algebraic equations
+        fdJzdx(ie, nroots, t, x, edata);
+        project_algebraic_objective_derivatives(
+            t, x, derived_state_.dJzdx_, derived_state_.dJzdp_
+        );
+    }
 
     write_llh_sensitivity_slice(derived_state_.dJzdp_, sllh, s2llh);
 }
