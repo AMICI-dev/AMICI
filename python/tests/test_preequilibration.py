@@ -1138,6 +1138,140 @@ def test_preequilibration_reinit_adjoint_sensitivities_variants(
     )
 
 
+@pytest.fixture(scope="module")
+def reinit_cl_model_module(tmp_path_factory):
+    """Model with conservation laws and fixed-parameter-dependent initial
+    states.
+
+    `E` is a constant species (eliminated via a conservation law of its own),
+    `A + B` is conserved, `X` is not part of any conservation law. The
+    initial values of `E` and `B` depend on free parameters, so the
+    conserved totals have nonzero sensitivities.
+    """
+    ant_str = """
+    model test_preequilibration_reinit_adjoint_cl
+        kinit = 5
+        einit = 1
+        ainit = 2
+        kdecay = 0.7
+        ksyn = 2
+        scale = 1.5
+        c = 0.4
+        kf = 0.3
+        kr = 0.2
+        escale = 1.3
+        b0 = 1
+        species $E = einit * escale
+        species A = ainit
+        species B = b0
+        species X = kinit * scale
+        R1: A -> B; kf * A
+        R2: B -> A; kr * B
+        R3: -> X; ksyn * E + c * B
+        R4: X -> ; kdecay * X
+    end
+    """
+    module_name = "test_preequilibration_reinit_adjoint_cl"
+    output_dir = tmp_path_factory.mktemp(module_name)
+    with pytest.MonkeyPatch.context() as mp:
+        # conservation laws for non-constant species (`A + B`)
+        mp.setenv("AMICI_EXPERIMENTAL_SBML_NONCONST_CLS", "1")
+        antimony2amici(
+            ant_str,
+            model_name=module_name,
+            output_dir=output_dir,
+            fixed_parameters=["kinit", "einit", "ainit"],
+        )
+    return amici.import_model_module(
+        module_name=module_name, module_path=output_dir
+    )
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize(
+    "reinit_states", [["X"], ["E", "X"], ["B", "X"], ["A", "X"]]
+)
+def test_preequilibration_reinit_adjoint_sensitivities_cl(
+    reinit_cl_model_module, reinit_states
+):
+    """Adjoint pre-equilibration with reinitialization for a model with
+    conservation laws.
+
+    Reinitializing states that are not part of a conservation law, or
+    constant species, is supported. Reinitializing a state that shares a
+    conservation law with other states is not supported. `B` shares a
+    conservation law with `A`, but its initial value does not depend on the
+    fixed parameters, so it is not actually reinitialized.
+    """
+    model = reinit_cl_model_module.get_model()
+    # `E` and `A + B`
+    assert model.ncl() == 2
+    assert model.nx_solver == model.nx_rdata - 2
+    model.set_timepoints([0.0, 1.0, 2.0])
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_relative_tolerance(1e-10)
+    solver.set_absolute_tolerance(1e-14)
+    solver.set_relative_tolerance_quadratures(1e-10)
+    solver.set_absolute_tolerance_quadratures(1e-14)
+
+    def fixed_parameters(**kwargs):
+        return [kwargs[id_] for id_ in model.get_fixed_parameter_ids()]
+
+    edata = ExpData(model)
+    edata.fixed_parameters = fixed_parameters(kinit=10.0, einit=2.0, ainit=5.0)
+    edata.fixed_parameters_pre_equilibration = fixed_parameters(
+        kinit=3.0, einit=1.0, ainit=2.0
+    )
+    edata.reinitialization_state_idxs_sim = [
+        model.get_state_ids().index(id_) for id_ in reinit_states
+    ]
+    edata.set_measurements(np.full(model.nt() * model.ny, 1.0))
+    edata.set_noise_scales(np.full(model.nt() * model.ny, 0.1))
+
+    sllh = {}
+    for sensi_meth, sensi_meth_preeq in (
+        (SensitivityMethod.forward, SensitivityMethod.forward),
+        (SensitivityMethod.adjoint, SensitivityMethod.forward),
+        (SensitivityMethod.adjoint, SensitivityMethod.adjoint),
+    ):
+        solver.set_sensitivity_method(sensi_meth)
+        solver.set_sensitivity_method_pre_equilibration(sensi_meth_preeq)
+        rdata = run_simulation(model, solver, edata)
+        if "A" in reinit_states and sensi_meth_preeq == (
+            SensitivityMethod.adjoint
+        ):
+            assert rdata.status == AMICI_ERROR
+            assert any(
+                "share a conservation law" in msg.message
+                for msg in rdata.messages
+            )
+            continue
+        assert rdata.status == AMICI_SUCCESS, (sensi_meth, sensi_meth_preeq)
+        sllh[sensi_meth, sensi_meth_preeq] = np.array(rdata.sllh)
+
+    expected = sllh[SensitivityMethod.forward, SensitivityMethod.forward]
+    # `escale` and `b0` only enter via the conserved totals, `scale` only via
+    # the initial value of `X`
+    assert np.all(np.abs(expected) > 1e-2)
+    for key, actual in sllh.items():
+        assert_allclose(actual, expected, rtol=1e-6, atol=1e-5, err_msg=key)
+
+    if "A" in reinit_states:
+        return
+
+    function, derivative = run_simulation_to_function_and_derivative(
+        amici_model=model,
+        amici_solver=solver,
+        amici_edata=edata,
+        derivative_variables=["llh"],
+    )
+    point = np.array(model.get_free_parameters())
+    check_gradient(function, point, derivative(point)["llh"]).assert_success(
+        always_print=True
+    )
+
+
 @skip_on_valgrind
 @pytest.mark.parametrize(
     "period", ["preeq_switch", "preeq_no_switch", "presimulation"]
