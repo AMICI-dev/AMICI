@@ -5,13 +5,12 @@ package.
 
 import os
 import re
-import shutil
 import subprocess
 import sys
-import sysconfig
 import warnings
 from pathlib import Path
 
+from ..._installation.build_tools import get_env_swig
 from ..._model_dir import (
     ModelDirStatus,
     get_model_dir_status,
@@ -28,9 +27,10 @@ def build_model_extension(
     """
     Compile the model extension of an amici-created model package.
 
-    The SWIG executable is taken from the ``SWIG`` environment variable,
-    if set, otherwise from the scripts directory of the current Python
-    environment, if available, otherwise from ``PATH``.
+    CMake, Ninja, and SWIG are taken from the Python environment of the
+    running interpreter, even if it is not activated, falling back to
+    ``PATH``. The ``SWIG`` environment variable overrides the SWIG
+    executable.
 
     :param package_dir:
         Directory of the model package to be compiled. I.e., the directory
@@ -75,7 +75,7 @@ def build_model_extension(
         # CMake will use the compiler specified in the CXX environment variable
         env["CXX"] = compiler
 
-    if "SWIG" not in env and (swig := _get_env_swig()):
+    if "SWIG" not in env and (swig := get_env_swig()):
         # Use the SWIG of the current Python environment, which is most
         # likely the one used for building amici, instead of the first one
         # on PATH
@@ -110,15 +110,6 @@ def build_model_extension(
 
     if get_model_dir_status(package_dir) == ModelDirStatus.GENERATED:
         set_model_dir_status(package_dir, ModelDirStatus.COMPILED)
-
-
-def _get_env_swig() -> str | None:
-    """Get the path to the SWIG executable of the current Python environment.
-
-    :returns: The path to the ``swig`` executable in the scripts directory of
-        the running interpreter, or ``None`` if there is none.
-    """
-    return shutil.which("swig", path=sysconfig.get_path("scripts"))
 
 
 def _check_swig_version(swig: str) -> None:
