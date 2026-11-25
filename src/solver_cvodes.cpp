@@ -144,6 +144,12 @@ void CVodeSolver::init(
     }
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeInit");
+    // CVodeReInit keeps a stop time that was not reached, e.g., after an
+    // aborted integration. `Solver::run` sets the stop time again,
+    // but `Solver::step` does not.
+    status = CVodeClearStopTime(solver_memory_.get());
+    if (status != CV_SUCCESS)
+        throw CvodeException(status, "CVodeClearStopTime");
 }
 
 void CVodeSolver::init_steady_state(

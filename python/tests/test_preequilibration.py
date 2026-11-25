@@ -12,6 +12,7 @@ from amici.importers.utils import MeasurementChannel
 from amici.sim.sundials import (
     AMICI_ERROR,
     AMICI_SUCCESS,
+    AMICI_TOO_MUCH_WORK,
     ExpData,
     LogSeverity,
     ParameterScaling,
@@ -1785,3 +1786,49 @@ def test_expdata_from_model_reinitialization_presim(tempdir):
             rtol=1e-6,
         )
         assert_allclose(x_model_setting, x_edata_setting, rtol=1e-6)
+
+
+@skip_on_valgrind
+@pytest.mark.parametrize(
+    "model_module", ["reinit_model_module", "dae_posteq_event_module"]
+)
+def test_posteq_only_after_aborted_simulation(request, model_module):
+    """A stop time left over from an aborted simulation is cleared.
+
+    Post-equilibration-only simulations integrate without a stop time.
+    A stale stop time before the new ``t0`` would make the solver fail.
+    See https://github.com/AMICI-dev/AMICI/issues/3569.
+    """
+    model = request.getfixturevalue(model_module).get_model()
+    if model_module == "dae_posteq_event_module":
+        # x = p / (k - q), y = q * x
+        x_ss = {"x": 10.0, "y": 3.0}
+        # no event during post-equilibration
+        model.set_fixed_parameters([1e6])
+    else:
+        # x1 = ksyn / kdecay, x2 = c * x1 / kdecay
+        x_ss = {"x1": 2 / 0.7, "x2": 0.4 * 2 / 0.7**2}
+    model.set_steady_state_computation_mode(
+        SteadyStateComputationMode.integrationOnly
+    )
+    solver = model.create_solver()
+
+    # aborted simulation, leaving the stop time at 10
+    solver.set_max_steps(2)
+    model.set_timepoints([0.0, 10.0])
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_TOO_MUCH_WORK
+
+    # post-equilibration only, starting after the previous stop time
+    solver.set_max_steps(10000)
+    model.set_t0(20.0)
+    model.set_timepoints([np.inf])
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+    assert rdata.posteq_status[1] == SteadyStateStatus.success  # integration
+    assert rdata.posteq_t > 20.0
+    state_ids = model.get_state_ids()
+    for state_id, expected in x_ss.items():
+        assert_allclose(
+            rdata.x[0, state_ids.index(state_id)], expected, rtol=1e-5
+        )
