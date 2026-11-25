@@ -179,6 +179,9 @@ class SbmlImporter:
         # initial assignments for parameters, these parameters are not
         # permissible for sensitivity analysis
         self._initial_assignments: SymbolicFormula = {}
+        # IDs of parameters and compartments that are targets of event
+        # assignments, see `_collect_event_assignment_targets`
+        self._event_assignment_targets: set[str] = set()
         self._splines: list[AbstractSpline] = []
         # stoichiometric matrix of the model
         self._stoichiometric_matrix: sp.Matrix | None = None
@@ -869,6 +872,10 @@ class SbmlImporter:
         if not self._discard_annotations:
             self._process_annotations()
         self._check_support()
+        # must be set before `_gather_locals`, which calls `_make_initial`
+        self._event_assignment_targets = (
+            self._collect_event_assignment_targets()
+        )
         self._gather_locals(hardcode_symbols=hardcode_symbols)
         self._process_parameters(
             fixed_parameter_ids=fixed_parameters,
@@ -1384,6 +1391,18 @@ class SbmlImporter:
             if (ia := self._get_element_initial_assignment(par.getId()))
             is not None
         }
+        # Parameters with initial assignments that can be handled as
+        #  (free or fixed) parameters: those whose initial assignment evaluates
+        #  to a number. Excluded are those that depend on event-assignment
+        #  targets, which `_make_initial` resolves to their initial values.
+        #  Otherwise, they would become free parameters independent of the
+        #  event targets' initial values (cf. #3626).
+        numeric_ia_par_ids = {
+            par_id
+            for par_id, ia in par_id_to_ia.items()
+            if ia.is_Number
+            and not self._initial_assignment_depends_on_event_target(par_id)
+        }
 
         fixed_parameters = [
             parameter
@@ -1391,9 +1410,11 @@ class SbmlImporter:
             if parameter.getId() in fixed_parameter_ids
         ]
         for parameter in fixed_parameters:
-            ia_math = par_id_to_ia.get(parameter.getId())
             if (
-                (ia_math is not None and not ia_math.is_Number)
+                (
+                    parameter.getId() in par_id_to_ia
+                    and parameter.getId() not in numeric_ia_par_ids
+                )
                 or self._is_assignment_rule_target(parameter)
                 or self._is_rate_rule_target(parameter)
             ):
@@ -1409,8 +1430,8 @@ class SbmlImporter:
             for parameter in self.sbml_model.getListOfParameters()
             if parameter.getId() not in fixed_parameter_ids
             and (
-                (ia_math := par_id_to_ia.get(parameter.getId())) is None
-                or ia_math.is_Number
+                parameter.getId() not in par_id_to_ia
+                or parameter.getId() in numeric_ia_par_ids
             )
             and not self._is_assignment_rule_target(parameter)
             and parameter.getId() not in hardcode_symbols
@@ -1447,7 +1468,7 @@ class SbmlImporter:
             (par, ia)
             for par in self.sbml_model.getListOfParameters()
             if (ia := par_id_to_ia.get(par.getId())) is not None
-            and not ia.is_Number
+            and par.getId() not in numeric_ia_par_ids
             and not self._is_rate_rule_target(par)
         ]
 
@@ -1896,6 +1917,86 @@ class SbmlImporter:
         Convert time_symbol into cpp variable.
         """
         self._replace_in_all_expressions(sbml_time_symbol, amici_time_symbol)
+
+    def _collect_event_assignment_targets(self) -> set[str]:
+        """Collect parameters and compartments changed by event assignments.
+
+        Rate-rule targets are excluded, since they are states anyway.
+        """
+        targets = {
+            str(target)
+            for target in _collect_event_assignment_parameter_targets(
+                self.sbml_model
+            )
+        }
+        for event in self.sbml_model.getListOfEvents():
+            for event_assignment in event.getListOfEventAssignments():
+                if (
+                    event_assignment.getMath() is not None
+                    and self.sbml_model.getCompartment(
+                        event_assignment.getVariable()
+                    )
+                    is not None
+                ):
+                    targets.add(event_assignment.getVariable())
+        return {
+            target
+            for target in targets
+            if not self._is_rate_rule_target(
+                self.sbml_model.getElementBySId(target)
+            )
+        }
+
+    def _initial_assignment_depends_on_event_target(
+        self, element_id: str
+    ) -> bool:
+        """Check whether an initial assignment depends on event targets.
+
+        Checks whether the initial assignment of the given element references
+        any parameter or compartment that is the target of an event
+        assignment, directly or via initial values or kinetic laws of
+        referenced elements.
+        """
+        if not self._event_assignment_targets:
+            return False
+
+        visited: set[str] = set()
+        to_visit = [element_id]
+        while to_visit:
+            cur_id = to_visit.pop()
+            if cur_id in visited:
+                continue
+            visited.add(cur_id)
+            if (
+                species := self.sbml_model.getSpecies(cur_id)
+            ) is not None and not self.sbml_model.getInitialAssignmentBySymbol(
+                cur_id
+            ):
+                # e.g., the compartment, for an initial concentration of an
+                #  amount-based species
+                names = {
+                    str(sym)
+                    for sym in get_species_initial(species).free_symbols
+                }
+                if names & self._event_assignment_targets:
+                    return True
+                to_visit.extend(names)
+            reaction = self.sbml_model.getReaction(cur_id)
+            for definition in (
+                self.sbml_model.getInitialAssignmentBySymbol(cur_id),
+                reaction.getKineticLaw() if reaction is not None else None,
+            ):
+                if definition is None or definition.getMath() is None:
+                    continue
+                names = {
+                    node.getName()
+                    for node in _ast_nodes(definition.getMath())
+                    if node.isName()
+                }
+                if names & self._event_assignment_targets:
+                    return True
+                to_visit.extend(names)
+        return False
 
     def _convert_event_assignment_parameter_targets_to_species(self):
         """
@@ -2380,6 +2481,7 @@ class SbmlImporter:
             if (
                 var not in self._symbols[SymbolId.SPECIES]
                 and var not in self._symbols[SymbolId.ALGEBRAIC_STATE]
+                and element_id not in self._event_assignment_targets
                 and (
                     var in self._symbols[SymbolId.FREE_PARAMETER]
                     or var in self._symbols[SymbolId.FIXED_PARAMETER]
@@ -2404,8 +2506,9 @@ class SbmlImporter:
                 # populated while parameters are still being classified in
                 # `_process_parameters`, so also recognize a parameter from the
                 # SBML model directly. Parameters that become states (rate-rule
-                # targets, or parameters converted to species) are excluded
-                # above and handled by the state branches below. See #3214.
+                # or event-assignment targets, possibly not yet converted to
+                # species) are excluded above and handled by the state
+                # branches below. See #3214.
                 continue
             # already recursive since _get_element_initial_assignment calls _make_initial
             if (
@@ -2426,11 +2529,23 @@ class SbmlImporter:
                 sym_math = sym_math.subs(
                     var, self._symbols[SymbolId.ALGEBRAIC_STATE][var]["init"]
                 )
-            elif (
-                element := self.sbml_model.getElementBySId(element_id)
-            ) and self._is_rate_rule_target(element):
-                # no need to recurse here, as value is numeric
-                init = sp.Float(element.getValue())
+            elif (element := self.sbml_model.getElementBySId(element_id)) and (
+                self._is_rate_rule_target(element)
+                or element_id in self._event_assignment_targets
+            ):
+                # A parameter or compartment that becomes a state, but has
+                # not been converted to one yet. Its initial value is its
+                # value attribute, since it has no initial assignment (handled
+                # above). The value must not be kept symbolic here, since the
+                # initial assignment must not follow later changes (#3506).
+                if element.getTypeCode() == libsbml.SBML_COMPARTMENT:
+                    init = (
+                        self._sympify(element.getVolume())
+                        if element.isSetVolume()
+                        else sp.Float(1.0)
+                    )
+                else:
+                    init = sp.Float(element.getValue())
                 sym_math = sym_math.subs(var, init)
             elif spline := [
                 spl for spl in self._splines if spl.sbml_id == var
@@ -3627,6 +3742,15 @@ def get_species_initial(species: libsbml.Species) -> sp.Expr:
             return sp.Float(amt) / _get_species_compartment_symbol(species)
 
     return sp.Float(0.0)
+
+
+def _ast_nodes(ast: libsbml.ASTNode) -> Iterable[libsbml.ASTNode]:
+    """Iterate over all nodes of a libsbml AST."""
+    to_visit = [ast]
+    while to_visit:
+        node = to_visit.pop()
+        yield node
+        to_visit.extend(node.getChild(i) for i in range(node.getNumChildren()))
 
 
 def _get_list_of_species_references(
