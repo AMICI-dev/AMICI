@@ -40,6 +40,41 @@ __all__ = [
 ]
 
 
+@dataclass(frozen=True, slots=True)
+class _ExperimentParameterMapping:
+    """The parameter mapping for a single experiment.
+
+    The part of the mapping from problem parameters to model parameters that
+    depends only on the model and the PEtab problem, but not on the parameter
+    values.
+
+    Unlike ``amici.sim._parameter_mapping.ParameterMappingForCondition``
+    (used for PEtab v1), this is an internal, index-based cache for
+    :class:`ExperimentManager`. It only covers free model parameters;
+    condition-specific values are applied via fixed parameters and events.
+    """
+
+    #: The model parameter indices for which sensitivities are computed
+    #: (``ExpData.plist``), in ascending order.
+    plist: tuple[int, ...]
+    #: Model parameter IDs of placeholders with symbolic overrides, mapped to
+    #: the IDs of the overriding problem parameters. Must not be modified.
+    placeholder_to_problem_par: dict[str, str]
+    #: The IDs of the problem parameters whose values are assigned to free
+    #: model parameters, including placeholders.
+    problem_par_ids: tuple[str, ...]
+    #: The indices of the model parameters corresponding to
+    #: :attr:`problem_par_ids`.
+    problem_par_model_idxs: np.ndarray
+    #: The indices of the placeholder model parameters with numeric
+    #: overrides.
+    numeric_override_idxs: np.ndarray
+    #: The numeric overrides corresponding to :attr:`numeric_override_idxs`.
+    numeric_override_values: np.ndarray
+    #: The scales of all free model parameters.
+    pscale: tuple[ParameterScaling, ...]
+
+
 class ExperimentManager:
     """
     Handles the creation of :class:`ExpData` objects for a given model and
@@ -177,6 +212,8 @@ class ExperimentManager:
             for pid in self._petab_problem.x_ids
             if (idx := self._fixed_pid_to_idx.get(pid)) is not None
         ]
+        # experiment ID to parameter mapping, see `_get_experiment_mapping`
+        self._experiment_mappings: dict[str, _ExperimentParameterMapping] = {}
 
         # create a new model instance from the model module from which
         #  we can get the default parameters
@@ -457,30 +494,12 @@ class ExperimentManager:
                 "PEtab problem parameters: " + "; ".join(msg_parts)
             )
 
-        # get the original parameter values
-        #  (model parameters set during model creation)
-        par_vals = np.array(self._original_p)
-        pid_to_idx = self._pid_to_idx
-        experiment_id = edata.id
-        experiment = self._id_to_experiment[experiment_id]
+        mapping = self._get_experiment_mapping(edata.id)
 
         # plist -- estimated parameters + those mapped via placeholders
         # TODO sufficient to set them during creation of edata
         #   or allow dynamic fixing of parameters?
-        plist = list(self._model_par_idx_to_x_free_idx)
-        placeholder_mappings = self._get_placeholder_mapping(experiment)
-        # placeholders mapped to estimated parameters
-        estimated_placeholder_idxs = {
-            model_par_idx
-            for model_par_id, maps_to in placeholder_mappings.items()
-            if maps_to in self._x_free_id_to_idx
-            and (model_par_idx := pid_to_idx.get(model_par_id)) is not None
-            and model_par_idx not in self._model_par_idx_to_x_free_idx
-        }
-        if estimated_placeholder_idxs:
-            plist.extend(estimated_placeholder_idxs)
-            plist.sort()
-        edata.plist = plist
+        edata.plist = mapping.plist
 
         # Update fixed parameters in case they are affected by problem
         #  parameters (i.e., parameter table parameters).
@@ -502,93 +521,23 @@ class ExperimentManager:
                 fixed_par_vals[p_idx] = p_val
             edata.fixed_parameters_pre_equilibration = fixed_par_vals
 
-        # Scales of the model parameters. Each model parameter takes the
-        #  scale of the problem parameter it is mapped to, all others
-        #  (model defaults, numeric overrides) are on linear scale.
-        pscale = [ParameterScaling.none] * len(par_vals)
-
-        # Apply problem parameter values to identical model parameters.
-        #  Any other parameter mapping, except for output parameter
-        #  placeholders, is handled by events.
-        for p_id, idx in self._problem_par_to_free_model_par:
-            par_vals[idx] = problem_parameters[p_id]
-            pscale[idx] = self._amici_scales[p_id]
-
-        # Handle measurement-specific mappings to placeholders
-        measurements = self._get_measurements(experiment_id)
-
-        def apply_override(placeholder: str, override: sp.Basic):
-            """Apply a single placeholder override."""
-            if (idx := pid_to_idx.get(placeholder)) is not None:
-                if override.is_Number:
-                    par_vals[idx] = float(override)
-                    pscale[idx] = ParameterScaling.none
-                elif override.is_Symbol:
-                    par_vals[idx] = problem_parameters[str(override)]
-                    pscale[idx] = self._amici_scales[str(override)]
-                else:
-                    raise AssertionError(
-                        f"Unexpected override type: {override} for {placeholder} in experiment {experiment_id}"
-                    )
-            else:
-                raise NotImplementedError(
-                    f"Cannot handle override `{placeholder}' => '{override}'"
-                )
-
-        # tracks encountered placeholders and their overrides
-        #  (across all observables -- placeholders IDs are globally unique)
-        #  to check that all measurements use the same overrides
-        overrides: dict[str, sp.Basic] = {}
-        # Numeric overrides of bare noise placeholders, which are passed as
-        #  sigmas and may vary across measurements. They are only applied
-        #  to the placeholder parameter to get finite sigmas at unmeasured
-        #  points.
-        numeric_sigmas: dict[str, sp.Basic] = {}
-
-        def check_and_apply_override(placeholder: str, override: sp.Basic):
-            """Apply an override if consistent with previous ones."""
-            if (
-                prev_override := overrides.setdefault(placeholder, override)
-            ) != override:
-                raise NotImplementedError(
-                    "Timepoint-specific placeholder overrides are not "
-                    f"supported: `{placeholder}' is overridden by both "
-                    f"`{prev_override}' and `{override}' in experiment "
-                    f"`{experiment_id}'."
-                )
-            apply_override(placeholder, override)
-
-        for m in measurements:
-            obs = self._petab_id_to_obs[m.observable_id]
-            for placeholder, override in zip(
-                obs.observable_placeholders,
-                m.observable_parameters,
-                strict=True,
-            ):
-                check_and_apply_override(str(placeholder), override)
-
-            if (
-                m.observable_id in self._obs_ids_bare_noise_placeholder
-                and len(m.noise_parameters) == 1
-                and m.noise_parameters[0].is_Number
-            ):
-                # numeric sigma, already set in `create_edata`
-                numeric_sigmas[str(obs.noise_placeholders[0])] = (
-                    m.noise_parameters[0]
-                )
-                continue
-            for placeholder, override in zip(
-                obs.noise_placeholders, m.noise_parameters, strict=True
-            ):
-                check_and_apply_override(str(placeholder), override)
-
-        for placeholder, override in numeric_sigmas.items():
-            if placeholder not in overrides:
-                apply_override(placeholder, override)
-
+        # Start from the original parameter values (model parameters set
+        #  during model creation). Apply problem parameter values to
+        #  identical model parameters and to placeholders, and numeric
+        #  placeholder overrides. Any other parameter mapping is handled by
+        #  events.
         # TODO: set all unused placeholders to NaN to make it easier to spot problems?
+        par_vals = self._original_p.copy()
+        par_vals[mapping.problem_par_model_idxs] = np.fromiter(
+            (problem_parameters[p_id] for p_id in mapping.problem_par_ids),
+            dtype=float,
+            count=len(mapping.problem_par_ids),
+        )
+        par_vals[mapping.numeric_override_idxs] = (
+            mapping.numeric_override_values
+        )
         edata.free_parameters = par_vals
-        edata.pscale = parameter_scaling_from_int_vector(pscale)
+        edata.pscale = parameter_scaling_from_int_vector(mapping.pscale)
 
         if self._debug:
             logger.debug("ExperimentManager.apply_parameters:")
@@ -675,28 +624,149 @@ class ExperimentManager:
 
         :param experiment: The experiment to get the mapping for.
         :return: The mapping from model parameter IDs to problem parameter IDs.
+            The result must not be modified.
         """
-        mapping = {}
-        for measurement in self._get_measurements(experiment.id):
-            observable = self._petab_id_to_obs[measurement.observable_id]
-            for placeholder, override in zip(
-                observable.observable_placeholders,
-                measurement.observable_parameters,
-                strict=True,
-            ):
-                # we don't care about numeric overrides here
-                if isinstance(override, sp.Symbol):
-                    mapping[str(placeholder)] = str(override)
+        return self._get_experiment_mapping(
+            experiment.id
+        ).placeholder_to_problem_par
 
+    def _get_experiment_mapping(
+        self, experiment_id: str
+    ) -> _ExperimentParameterMapping:
+        """Get the parameter mapping for the given experiment.
+
+        The mapping only depends on the model and the (immutable) PEtab
+        problem. It is computed on first use and cached.
+
+        :param experiment_id: The ID of the experiment.
+        :return: The parameter mapping for the given experiment.
+        """
+        if (mapping := self._experiment_mappings.get(experiment_id)) is None:
+            mapping = self._create_experiment_mapping(experiment_id)
+            self._experiment_mappings[experiment_id] = mapping
+        return mapping
+
+    def _create_experiment_mapping(
+        self, experiment_id: str
+    ) -> _ExperimentParameterMapping:
+        """Create the parameter mapping for the given experiment.
+
+        See :meth:`_get_experiment_mapping`.
+        """
+        if experiment_id not in self._id_to_experiment:
+            raise KeyError(f"Unknown experiment ID: {experiment_id}")
+
+        # placeholder ID to override, for all placeholders across all
+        #  observables (placeholder IDs are globally unique), to check that
+        #  all measurements use the same overrides
+        overrides: dict[str, sp.Basic] = {}
+        # Numeric overrides of bare noise placeholders, which are passed as
+        #  sigmas and may vary across measurements. They are only applied
+        #  to the placeholder parameter to get finite sigmas at unmeasured
+        #  points.
+        numeric_sigmas: dict[str, sp.Basic] = {}
+
+        def check_override(placeholder: str, override: sp.Basic):
+            """Check that an override is consistent with previous ones."""
+            if (
+                prev_override := overrides.setdefault(placeholder, override)
+            ) != override:
+                raise NotImplementedError(
+                    "Timepoint-specific placeholder overrides are not "
+                    f"supported: `{placeholder}' is overridden by both "
+                    f"`{prev_override}' and `{override}' in experiment "
+                    f"`{experiment_id}'."
+                )
+
+        for m in self._get_measurements(experiment_id):
+            obs = self._petab_id_to_obs[m.observable_id]
             for placeholder, override in zip(
-                observable.noise_placeholders,
-                measurement.noise_parameters,
+                obs.observable_placeholders,
+                m.observable_parameters,
                 strict=True,
             ):
-                # we don't care about numeric overrides here
-                if isinstance(override, sp.Symbol):
-                    mapping[str(placeholder)] = str(override)
-        return mapping
+                check_override(str(placeholder), override)
+
+            if (
+                m.observable_id in self._obs_ids_bare_noise_placeholder
+                and len(m.noise_parameters) == 1
+                and m.noise_parameters[0].is_Number
+            ):
+                # numeric sigma, already set in `create_edata`
+                numeric_sigmas[str(obs.noise_placeholders[0])] = (
+                    m.noise_parameters[0]
+                )
+                continue
+            for placeholder, override in zip(
+                obs.noise_placeholders, m.noise_parameters, strict=True
+            ):
+                check_override(str(placeholder), override)
+
+        for placeholder, override in numeric_sigmas.items():
+            overrides.setdefault(placeholder, override)
+
+        # Each model parameter takes the scale of the problem parameter it
+        #  is mapped to, all others (model defaults, numeric overrides) are
+        #  on linear scale.
+        pscale = [ParameterScaling.none] * len(self._free_parameter_ids)
+        problem_par_ids = []
+        problem_par_model_idxs = []
+        for p_id, idx in self._problem_par_to_free_model_par:
+            problem_par_ids.append(p_id)
+            problem_par_model_idxs.append(idx)
+            pscale[idx] = self._amici_scales[p_id]
+
+        placeholder_to_problem_par = {}
+        numeric_override_idxs = []
+        numeric_override_values = []
+        for placeholder, override in overrides.items():
+            if (idx := self._pid_to_idx.get(placeholder)) is None:
+                raise NotImplementedError(
+                    f"Cannot handle override `{placeholder}' => '{override}'"
+                )
+            if override.is_Number:
+                numeric_override_idxs.append(idx)
+                numeric_override_values.append(float(override))
+                pscale[idx] = ParameterScaling.none
+            elif override.is_Symbol:
+                p_id = str(override)
+                placeholder_to_problem_par[placeholder] = p_id
+                problem_par_ids.append(p_id)
+                problem_par_model_idxs.append(idx)
+                pscale[idx] = self._amici_scales[p_id]
+            else:
+                raise AssertionError(
+                    f"Unexpected override type: {override} for "
+                    f"{placeholder} in experiment {experiment_id}"
+                )
+
+        # estimated parameters + placeholders mapped to estimated parameters
+        plist = set(self._model_par_idx_to_x_free_idx)
+        plist.update(
+            self._pid_to_idx[placeholder]
+            for placeholder, p_id in placeholder_to_problem_par.items()
+            if p_id in self._x_free_id_to_idx
+        )
+
+        def read_only(a: np.ndarray) -> np.ndarray:
+            a.flags.writeable = False
+            return a
+
+        return _ExperimentParameterMapping(
+            plist=tuple(sorted(plist)),
+            placeholder_to_problem_par=placeholder_to_problem_par,
+            problem_par_ids=tuple(problem_par_ids),
+            problem_par_model_idxs=read_only(
+                np.array(problem_par_model_idxs, dtype=int)
+            ),
+            numeric_override_idxs=read_only(
+                np.array(numeric_override_idxs, dtype=int)
+            ),
+            numeric_override_values=read_only(
+                np.array(numeric_override_values, dtype=float)
+            ),
+            pscale=tuple(pscale),
+        )
 
 
 def _has_timepoints(rdata: amici.sim.sundials.ReturnDataView) -> bool:
@@ -920,8 +990,6 @@ class PetabSimulator:
         ):
             return None
 
-        sllh_total: dict[str, float] = {}
-
         # Check for issues in all condition simulation results.
         for rdata in rdatas:
             # Condition failed during simulation.
@@ -934,27 +1002,27 @@ class PetabSimulator:
                     f"{rdata.id} were not computed."
                 )
 
-        free_parameter_ids = self._model.get_free_parameter_ids()
-
-        # still needs parameter mapping for placeholders
+        # sensitivities w.r.t. the estimated problem parameters
+        #  (`Problem.x_free_ids`)
+        x_free_ids = self._petab_problem.x_free_ids
+        sllh_total = np.zeros(len(x_free_ids))
+        # whether any experiment has sensitivities w.r.t. the respective
+        #  parameter
+        has_sllh = np.zeros(len(x_free_ids), dtype=bool)
         for rdata in rdatas:
-            experiment = self._exp_man._id_to_experiment[rdata.id]
-            placeholder_mappings = self._exp_man._get_placeholder_mapping(
-                experiment
-            )
-            for model_par_idx, sllh in zip(
-                rdata.plist, rdata.sllh, strict=True
-            ):
-                model_par_id = problem_par_id = free_parameter_ids[
-                    model_par_idx
-                ]
-                if maps_to := placeholder_mappings.get(model_par_id):
-                    problem_par_id = maps_to
+            ix_map = self._get_plist_to_problem_par_ix(rdata)
+            plist_slice = np.fromiter(ix_map.keys(), dtype=int)
+            problem_par_slice = np.fromiter(ix_map.values(), dtype=int)
+            # `np.add.at` to handle non-unique indices in `problem_par_slice`
+            #  (i.e. multiple model parameters mapping to the same problem
+            #  parameter)
+            np.add.at(sllh_total, problem_par_slice, rdata.sllh[plist_slice])
+            has_sllh[problem_par_slice] = True
 
-                sllh_total[problem_par_id] = (
-                    sllh_total.get(problem_par_id, 0.0) + sllh
-                )
-        return sllh_total
+        return {
+            x_free_ids[ix]: float(sllh_total[ix])
+            for ix in np.flatnonzero(has_sllh)
+        }
 
     def _get_plist_to_problem_par_ix(
         self, rdata: amici.sim.sundials.ReturnDataView
