@@ -153,6 +153,7 @@ class Model_model_calvetti_py : public amici::Model_DAE {
                   .ndxdotdp_explicit = 0,
                   .ndxdotdx_explicit = 5,
                   .w_recursion_depth = 2,
+                  .w_recursion_depth_dynamic = 1,
               },
               amici::SimulationParameters(
                   std::vector<realtype>{0.28999999999999998, 0.73999999999999999, 0.44, 0.080000000000000002, 0.27000000000000002, 0.17999999999999999}, // fixedParameters

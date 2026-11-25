@@ -1091,6 +1091,7 @@ class DEExporter:
             "AMICI_VERSION_STRING": __version__,
             "AMICI_COMMIT_STRING": __commit__,
             "W_RECURSION_DEPTH": self.model._w_recursion_depth,
+            "W_RECURSION_DEPTH_DYNAMIC": self.model.w_recursion_depth_dynamic,
             "EVENT_LIST_INITIALIZER": event_initializer_list(),
             "Z2EVENT": ", ".join(map(str, self.model._z2event)),
             "ID": ", ".join(

@@ -442,7 +442,9 @@ void Model_DAE::fdxdotdt(
         );
         auto dwdt = dwdt_k;
         std::vector<realtype> tmp(nw);
-        for (int irecursion = 1; irecursion <= w_recursion_depth;
+        // static expressions don't depend on t, and only depend on other
+        // static expressions
+        for (int irecursion = 1; irecursion <= dwdx_recursion_depth();
              irecursion++) {
             std::ranges::fill(tmp, 0.0);
             derived_state_.dwdw_.multiply(tmp, dwdt_k);

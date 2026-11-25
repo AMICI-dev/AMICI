@@ -153,6 +153,7 @@ class Model_model_robertson_py : public amici::Model_DAE {
                   .ndxdotdp_explicit = 5,
                   .ndxdotdx_explicit = 9,
                   .w_recursion_depth = 0,
+                  .w_recursion_depth_dynamic = 0,
               },
               amici::SimulationParameters(
                   std::vector<realtype>{0.90000000000000002}, // fixedParameters

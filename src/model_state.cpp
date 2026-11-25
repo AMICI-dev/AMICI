@@ -27,12 +27,15 @@ ModelStateDerived::ModelStateDerived(ModelDimensions const& dim)
     dwdx_ = SUNMatrixWrapper(dim.nw, dim.nx_solver, 0, CSC_MAT, sunctx_);
     dwdp_ = SUNMatrixWrapper(dim.nw, dim.np, 0, CSC_MAT, sunctx_);
 
+    /* for the first element we know the exact size, while for all
+       others we guess the size*/
     for (int irec = 0; irec <= dim.w_recursion_depth; ++irec) {
-        /* for the first element we know the exact size, while for all
-           others we guess the size*/
         dwdp_hierarchical_.emplace_back(
             dim.nw, dim.np, irec * dim.ndwdw + dim.ndwdp, CSC_MAT, sunctx_
         );
+    }
+    // only expressions depending on x contribute to dwdx
+    for (int irec = 0; irec <= dim.dwdx_recursion_depth(); ++irec) {
         dwdx_hierarchical_.emplace_back(
             dim.nw, dim.nx_solver, irec * dim.ndwdw + dim.ndwdx, CSC_MAT,
             sunctx_
@@ -42,7 +45,8 @@ ModelStateDerived::ModelStateDerived(ModelDimensions const& dim)
         gsl::narrow<int>(dwdp_hierarchical_.size()) == dim.w_recursion_depth + 1
     );
     assert(
-        gsl::narrow<int>(dwdx_hierarchical_.size()) == dim.w_recursion_depth + 1
+        gsl::narrow<int>(dwdx_hierarchical_.size())
+        == dim.dwdx_recursion_depth() + 1
     );
 
     dxdotdp_explicit = SUNMatrixWrapper(
