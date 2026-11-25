@@ -536,44 +536,55 @@ class ExperimentManager:
                 )
 
         # tracks encountered placeholders and their overrides
-        # (across all observables -- placeholders IDs are globally unique)
-        #  and check that all periods use the same overrides
-        #  (except for numeric sigmas)
-        # TODO: this can be simplified. we only need to process overrides
-        #  that are parameters. the rest was handled during create_edata
-        overrides = {}
+        #  (across all observables -- placeholders IDs are globally unique)
+        #  to check that all measurements use the same overrides
+        overrides: dict[str, sp.Basic] = {}
+        # Numeric overrides of bare noise placeholders, which are passed as
+        #  sigmas and may vary across measurements. They are only applied
+        #  to the placeholder parameter to get finite sigmas at unmeasured
+        #  points.
+        numeric_sigmas: dict[str, sp.Basic] = {}
+
+        def check_and_apply_override(placeholder: str, override: sp.Basic):
+            """Apply an override if consistent with previous ones."""
+            if (
+                prev_override := overrides.setdefault(placeholder, override)
+            ) != override:
+                raise NotImplementedError(
+                    "Timepoint-specific placeholder overrides are not "
+                    f"supported: `{placeholder}' is overridden by both "
+                    f"`{prev_override}' and `{override}' in experiment "
+                    f"`{experiment_id}'."
+                )
+            apply_override(placeholder, override)
+
         for m in measurements:
             obs = self._petab_id_to_obs[m.observable_id]
-            if obs.observable_placeholders:
-                for placeholder, override in zip(
-                    obs.observable_placeholders,
-                    m.observable_parameters,
-                    strict=True,
-                ):
-                    placeholder = str(placeholder)
-                    if (
-                        prev_override := overrides.get(placeholder)
-                    ) is not None and prev_override != override:
-                        raise NotImplementedError(
-                            "Timepoint-specific observable placeholder "
-                            "overrides are not supported"
-                        )
-                    apply_override(placeholder, override)
-            if obs.noise_placeholders:
-                for placeholder, override in zip(
-                    obs.noise_placeholders, m.noise_parameters, strict=True
-                ):
-                    placeholder = str(placeholder)
-                    if (
-                        prev_override := overrides.get(placeholder)
-                    ) is not None and prev_override != override:
-                        # TODO: this might have been handled
-                        #  via .sigmay if numeric
-                        raise NotImplementedError(
-                            "Timepoint-specific observable placeholder "
-                            "overrides are not supported"
-                        )
-                    apply_override(placeholder, override)
+            for placeholder, override in zip(
+                obs.observable_placeholders,
+                m.observable_parameters,
+                strict=True,
+            ):
+                check_and_apply_override(str(placeholder), override)
+
+            if (
+                m.observable_id in self._obs_ids_bare_noise_placeholder
+                and len(m.noise_parameters) == 1
+                and m.noise_parameters[0].is_Number
+            ):
+                # numeric sigma, already set in `create_edata`
+                numeric_sigmas[str(obs.noise_placeholders[0])] = (
+                    m.noise_parameters[0]
+                )
+                continue
+            for placeholder, override in zip(
+                obs.noise_placeholders, m.noise_parameters, strict=True
+            ):
+                check_and_apply_override(str(placeholder), override)
+
+        for placeholder, override in numeric_sigmas.items():
+            if placeholder not in overrides:
+                apply_override(placeholder, override)
 
         # TODO: set all unused placeholders to NaN to make it easier to spot problems?
         edata.free_parameters = par_vals
