@@ -620,10 +620,9 @@ def test_condition_table_initial_value_with_renamed_conditions(tmp_path):
     ``JAXProblem._condition_reinit_target_value`` only looked the (converted)
     ids up in the converted condition table -- which merely sets the indicator
     parameters -- so the state was reported as not needing reinitialisation.
-    ``_eval_nn`` already resolved the ids back to the original ones via
-    ``_resolve_original_condition_id``; the reinitialisation lookup must do the
-    same, while still returning the *raw* target value so that the caller can
-    resolve it against the traced ``JAXProblem.parameters``.
+    The reinitialisation lookup must consider the original conditions, while
+    still returning the *raw* target value so that the caller can resolve it
+    against the traced ``JAXProblem.parameters``.
     """
     import equinox as eqx
     from amici.importers.petab import PetabImporter
@@ -664,7 +663,7 @@ def test_condition_table_initial_value_with_renamed_conditions(tmp_path):
     ).create_simulator(force_import=True)
 
     (condition_id,) = jax_problem.simulation_conditions
-    sc = (condition_id,)
+    (experiment,) = jax_problem._petab_problem.experiments
     # The import must actually have renamed the condition, otherwise the
     # resolution under test is never exercised.
     assert condition_id != "c0"
@@ -672,13 +671,19 @@ def test_condition_table_initial_value_with_renamed_conditions(tmp_path):
     assert "c0" in {c.id for c in jax_problem._unconverted_problem.conditions}
 
     # the raw (unresolved) target value is looked up under the original id
-    assert str(jax_problem._condition_reinit_target_value(sc, "A")) == "a0"
-    assert jax_problem._condition_reinit_target_value(sc, "B") is None
+    assert (
+        str(jax_problem._condition_reinit_target_value(experiment, False, "A"))
+        == "a0"
+    )
+    assert (
+        jax_problem._condition_reinit_target_value(experiment, False, "B")
+        is None
+    )
 
     ix = jax_problem.model.state_ids.index("A")
     ia = jax_problem.parameter_ids.index("a0")
 
-    mask, reinit_x = jax_problem.load_reinitialisation(sc)
+    mask, reinit_x = jax_problem.load_reinitialisation(experiment, False)
     assert bool(mask[ix]), "state reinitialisation was not detected"
     assert not bool(mask[jax_problem.model.state_ids.index("B")])
     assert_allclose(float(reinit_x[ix]), 2.0)
@@ -687,13 +692,13 @@ def test_condition_table_initial_value_with_renamed_conditions(tmp_path):
     p0 = jax_problem.parameters
     _, reinit_x = jax_problem.update_parameters(
         p0.at[ia].set(5.0)
-    ).load_reinitialisation(sc)
+    ).load_reinitialisation(experiment, False)
     assert_allclose(float(reinit_x[ix]), 5.0)
 
     # ... and stays differentiable w.r.t. `JAXProblem.parameters`
-    grad = eqx.filter_grad(lambda m: m.load_reinitialisation(sc)[1][ix])(
-        jax_problem
-    )
+    grad = eqx.filter_grad(
+        lambda m: m.load_reinitialisation(experiment, False)[1][ix]
+    )(jax_problem)
     assert_allclose(float(grad.parameters[ia]), 1.0)
 
     # the reinitialised initial value is reflected in the likelihood
@@ -724,7 +729,6 @@ def test_renamed_conditions_reinitialisation_respects_period_start(tmp_path):
     change too early (PEtab test suite cases 0017/0018).
     """
     from amici.importers.petab import PetabImporter
-    from amici.sim.jax.petab import _get_period_condition_ids
     from petab.v2 import Problem
     from petab.v2.core import ProblemConfig
     from petab.v2.models.sbml_model import SbmlModel
@@ -760,24 +764,15 @@ def test_renamed_conditions_reinitialisation_respects_period_start(tmp_path):
     ).create_simulator(force_import=True)
 
     (experiment,) = jax_problem._petab_problem.experiments
-    preeq_conditions = _get_period_condition_ids(
-        experiment, is_preequilibration=True
-    )
-    dyn_conditions = _get_period_condition_ids(
-        experiment, is_preequilibration=False
-    )
-    # both periods carry the same experiment indicator condition, so a single
-    # condition id does not identify the period
-    assert set(preeq_conditions) & set(dyn_conditions)
 
     # the preequilibration period starts at the preequilibration's t0 ...
     assert (
         float(
-            jax_problem._condition_reinit_target_value(preeq_conditions, "B")
+            jax_problem._condition_reinit_target_value(experiment, True, "B")
         )
         == 2.0
     )
-    mask, reinit_x = jax_problem.load_reinitialisation(preeq_conditions)
+    mask, reinit_x = jax_problem.load_reinitialisation(experiment, True)
     ib = jax_problem.model.state_ids.index("B")
     assert bool(mask[ib])
     assert_allclose(float(reinit_x[ib]), 2.0)
@@ -785,9 +780,10 @@ def test_renamed_conditions_reinitialisation_respects_period_start(tmp_path):
     # ... whereas the dynamic period starts at t=10, so `A = 1` must be left to
     # the event and not be applied at t0
     assert (
-        jax_problem._condition_reinit_target_value(dyn_conditions, "A") is None
+        jax_problem._condition_reinit_target_value(experiment, False, "A")
+        is None
     )
-    mask, _ = jax_problem.load_reinitialisation(dyn_conditions)
+    mask, _ = jax_problem.load_reinitialisation(experiment, False)
     assert not bool(mask[jax_problem.model.state_ids.index("A")])
 
 
@@ -798,7 +794,6 @@ def test_prepare_experiments_numeric_overrides_without_parameters(tmp_path):
     arrays when the problem has no estimated scalar parameters.
     """
     import petab.v1 as petab
-    from amici.sim.jax.petab import _get_period_condition_ids
     from petab.v1.models.sbml_model import SbmlModel
 
     problem = petab.Problem()
@@ -828,16 +823,11 @@ def test_prepare_experiments_numeric_overrides_without_parameters(tmp_path):
     assert jax_problem._np_numeric.size
 
     experiments = jax_problem._petab_problem.experiments
-    conditions = [
-        _get_period_condition_ids(exp, is_preequilibration=False)
-        for exp in experiments
-    ]
     ei = jax_problem._experiment_indices(experiments)
     np_numeric = jax_problem._np_numeric[ei]
 
     (*_, np_array, _, _) = jax_problem._prepare_experiments(
         experiments,
-        conditions,
         False,
         jax_problem._op_numeric[ei],
         jax_problem._op_mask[ei],
@@ -849,6 +839,59 @@ def test_prepare_experiments_numeric_overrides_without_parameters(tmp_path):
 
     assert np_array.shape == np_numeric.shape
     assert_allclose(np.asarray(np_array), np.asarray(np_numeric))
+
+
+def test_find_unconverted_period_by_experiment_id():
+    """Converted periods are matched to the original ones by experiment id.
+
+    The converted periods may have no experiment-specific condition ids, so
+    the condition ids don't identify the original period.
+    """
+    from petab import v2 as petabv2
+
+    class _Stub:
+        _find_unconverted_period = JAXProblem._find_unconverted_period
+        _original_condition_ids = JAXProblem._original_condition_ids
+
+    original = petabv2.Problem()
+    original.add_experiment("e1", -float("inf"), "pre1", 0, "c1", 5, "c1b")
+    original.add_experiment("e2", 0, "c2")
+    converted = petabv2.Problem()
+    converted.add_experiment(
+        "e1",
+        -float("inf"),
+        "_petab_preequilibration_on",
+        0,
+        "_petab_preequilibration_off",
+    )
+    converted.add_experiment("e2", 0, "_petab_preequilibration_off")
+
+    stub = _Stub()
+    stub._unconverted_problem = original
+    e1, e2 = converted.experiments
+    assert stub._original_condition_ids(e1, is_preeq=True) == ("pre1",)
+    assert stub._original_condition_ids(e1, is_preeq=False) == ("c1",)
+    assert stub._original_condition_ids(e2, is_preeq=False) == ("c2",)
+    assert stub._find_unconverted_period(e2, is_preeq=True) is None
+
+    with pytest.raises(ValueError, match="e3"):
+        stub._find_unconverted_period(
+            petabv2.Experiment(
+                id="e3",
+                periods=[
+                    petabv2.ExperimentPeriod(
+                        time=0, condition_ids=["_petab_preequilibration_off"]
+                    )
+                ],
+            ),
+            is_preeq=False,
+        )
+
+    # not converted: the experiment's own condition ids
+    stub._unconverted_problem = None
+    assert stub._original_condition_ids(
+        original.experiments[0], is_preeq=False
+    ) == ("c1",)
 
 
 @skip_on_valgrind

@@ -121,10 +121,33 @@ def jax_unscale(
     raise ValueError(f"Invalid parameter scaling: {scale_str}")
 
 
+def _get_period(
+    exp: petabv2.Experiment, is_preequilibration: bool
+) -> petabv2.ExperimentPeriod | None:
+    """Get the preequilibration or the first dynamic period of an experiment.
+
+    :param exp:
+        PEtab v2 experiment.
+    :param is_preequilibration:
+        If ``True``, look for the preequilibration period
+        (:attr:`petabv2.ExperimentPeriod.is_preequilibration`, i.e.
+        ``time == -inf``). If ``False``, look for the first dynamic
+        (non-preequilibration) period.
+    :return:
+        The matching period, or ``None`` if there is none.
+    """
+    for period in exp.sorted_periods:
+        if period.is_preequilibration == is_preequilibration:
+            return period
+    return None
+
+
 def _get_period_condition_ids(
     exp: petabv2.Experiment, is_preequilibration: bool
 ) -> tuple[str, ...]:
-    """Get the condition ids of an experiment's (pre)equilibration period.
+    """Get the condition ids of a period of an experiment.
+
+    The period is the preequilibration or the first dynamic period.
 
     A period may reference multiple condition ids applied simultaneously
     (PEtab v2 requires their targets to be disjoint); all of them are
@@ -132,29 +155,23 @@ def _get_period_condition_ids(
     into a single id that would not correspond to any row of
     :attr:`petab.v2.Problem.condition_df`.
 
+    The condition ids don't necessarily identify the period: a period may
+    have no condition ids, and periods of different experiments may refer
+    to the same conditions.
+
     :param exp:
         PEtab v2 experiment.
     :param is_preequilibration:
-        If ``True``, look for the preequilibration period
-        (:attr:`petabv2.ExperimentPeriod.is_preequilibration`, i.e.
-        ``time == -inf``). If ``False``, look for the dynamic
-        (non-preequilibration) period.
+        See :func:`_get_period`.
     :return:
         The condition ids of the matching period, in period order.
     :raises ValueError:
-        If ``exp`` has no matching period with a non-empty
-        ``condition_ids``.
+        If ``exp`` has no matching period.
     """
-    for period in exp.periods:
-        if period.is_preequilibration != is_preequilibration:
-            continue
-        if period.condition_ids:
-            return tuple(period.condition_ids)
-
-    kind = "preequilibration" if is_preequilibration else "dynamic"
-    raise ValueError(
-        f"Experiment {exp.id!r} has no {kind} period with a condition id."
-    )
+    if (period := _get_period(exp, is_preequilibration)) is None:
+        kind = "preequilibration" if is_preequilibration else "dynamic"
+        raise ValueError(f"Experiment {exp.id!r} has no {kind} period.")
+    return tuple(period.condition_ids)
 
 
 class JAXProblem(eqx.Module):
@@ -1105,70 +1122,84 @@ class JAXProblem(eqx.Module):
         )
 
     def _find_unconverted_period(
-        self, condition_ids: tuple[str, ...]
+        self, experiment: petabv2.Experiment, is_preeq: bool
     ) -> petabv2.ExperimentPeriod | None:
-        """Locate the unconverted period the given converted condition ids belong to
-        using the stored _unconverted_problem.
+        """Find the original period of a period of a converted experiment.
 
-        Note that this relies on the ordering of experiments being consistent between the converted and unconverted problems.
+        The original period is taken from ``_unconverted_problem``. The
+        experiment conversion keeps the experiment ids, the
+        preequilibration period, and the first dynamic period. The converted
+        condition ids don't identify the period: periods may share
+        conditions, or have none.
 
+        :param experiment:
+            (Converted) experiment.
+        :param is_preeq:
+            Whether to locate the preequilibration period or the first dynamic
+            period.
         :return:
             The corresponding original (unconverted) period, or ``None`` if the
-            problem was not converted, or if no corresponding original period
-            was found.
+            problem was not converted, or if the original experiment has no
+            such period.
+        :raises ValueError:
+            If the problem was converted, but the original problem has no
+            experiment with the given id.
         """
-        if self._unconverted_problem is None or not condition_ids:
+        if self._unconverted_problem is None:
             return None
-        wanted = set(condition_ids)
-        for orig_exp, conv_exp in zip(
-            self._unconverted_problem.experiments,
-            self._petab_problem.experiments,
-        ):
-            for orig_period, conv_period in zip(
-                orig_exp.sorted_periods, conv_exp.sorted_periods
-            ):
-                if (
-                    wanted.issubset(conv_period.condition_ids)
-                    and orig_period.condition_ids
-                ):
-                    return orig_period
-        return None
+        for orig_exp in self._unconverted_problem.experiments:
+            if orig_exp.id == experiment.id:
+                return _get_period(orig_exp, is_preeq)
+        raise ValueError(
+            f"Experiment '{experiment.id}' not found in the unconverted "
+            "PEtab problem."
+        )
 
-    def _resolve_unconverted_condition_ids(
-        self, condition_ids: tuple[str, ...]
+    def _original_condition_ids(
+        self, experiment: petabv2.Experiment, is_preeq: bool
     ) -> tuple[str, ...]:
-        """Map converted condition IDs back to their original unconverted IDs.
+        """Get the original condition ids of a period of an experiment.
 
-        Returns ``condition_ids`` unchanged if no original period was found.
+        Falls back to the condition ids of the given experiment's period if
+        the problem was not converted or the original experiment has no such
+        period.
         """
-        orig_period = self._find_unconverted_period(condition_ids)
-        if orig_period is None:
-            return tuple(condition_ids)
-        return tuple(orig_period.condition_ids)
+        period = self._find_unconverted_period(experiment, is_preeq)
+        if period is None:
+            period = _get_period(experiment, is_preeq)
+        return tuple(period.condition_ids) if period is not None else ()
 
     def _conditions_defining_changes(
-        self, condition_ids: tuple[str, ...]
+        self, experiment: petabv2.Experiment, is_preeq: bool
     ) -> list[tuple[petabv2.Condition, bool]]:
-        """The condition-table entries holding the changes of ``condition_ids``.
+        """The condition-table entries holding the changes of the given period.
 
         For a converted SBML problem (see :meth:`_find_unconverted_period`), condition
         changes are implemented as model events and removed from the conditions table,
         so the entries of the *unconverted* problem are considered as well for
         reinitialization.
 
+        :param experiment:
+            (Converted) experiment.
+        :param is_preeq:
+            Whether to consider the preequilibration period or the first
+            dynamic period.
         :return:
             One ``(condition, is_unconverted)`` tuple per matching entry, in
             lookup order, where ``is_unconverted`` flags entries taken from the
             unconverted problem (whose changes are already encoded in the
             model).
         """
+        condition_ids = _get_period_condition_ids(experiment, is_preeq)
         conditions = [
             (c, False)
             for condition_id in condition_ids
             for c in self._petab_problem.conditions
             if c.id == condition_id
         ]
-        unconverted_period = self._find_unconverted_period(condition_ids)
+        unconverted_period = self._find_unconverted_period(
+            experiment, is_preeq
+        )
         if unconverted_period is not None and (
             unconverted_period.is_preequilibration
             or unconverted_period.time == 0.0
@@ -1191,16 +1222,22 @@ class JAXProblem(eqx.Module):
             param.id for param in self._petab_problem.parameters
         }
 
-    def _eval_nn(self, output_par: str, condition_id: str):
+    def _eval_nn(
+        self,
+        output_par: str,
+        experiment: petabv2.Experiment,
+        is_preeq: bool,
+    ):
         entity_id = self._petab_problem.mapping_df.loc[
             output_par, petabv2.C.MODEL_ENTITY_ID
         ]
         net_id = entity_id.split(".")[0]
         ind = int(re.search(r"\[\d+\]\[(\d+)\]", entity_id).group(1))
         nn = self.model.nns[net_id]
-        unconverted_condition_id = self._resolve_unconverted_condition_ids(
-            (condition_id,)
-        )[0]
+        # array inputs are specified per original condition id
+        original_condition_ids = self._original_condition_ids(
+            experiment, is_preeq
+        )
 
         def _is_net_input(model_id):
             comps = model_id.split(".")
@@ -1249,11 +1286,17 @@ class JAXProblem(eqx.Module):
         for model_id, petab_id in model_id_map.items():
             if petab_id in condition_input_map:
                 val = condition_input_map[petab_id]
-            elif (
-                petab_id in nn_inputs
-                and unconverted_condition_id in nn_inputs[petab_id]
+            elif petab_id in nn_inputs and (
+                condition_id := next(
+                    (
+                        cid
+                        for cid in original_condition_ids
+                        if cid in nn_inputs[petab_id]
+                    ),
+                    None,
+                )
             ):
-                val = nn_inputs[petab_id][unconverted_condition_id]
+                val = nn_inputs[petab_id][condition_id]
             else:
                 val = nn_inputs[petab_id]["0"]
 
@@ -1317,12 +1360,8 @@ class JAXProblem(eqx.Module):
         :param is_preeq: Whether to get preequilibration or simulation parameter value
         :return: Linear-scale value of the parameter
         """
-        # Find the first period matching the requested phase (preeq vs. sim)
-        condition_ids = []
-        for period in experiment.sorted_periods:
-            if period.is_preequilibration == is_preeq:
-                condition_ids = period.condition_ids
-                break
+        period = _get_period(experiment, is_preeq)
+        condition_ids = period.condition_ids if period is not None else []
 
         _petab_param_map = {
             param.id: param.nominal_value
@@ -1359,7 +1398,8 @@ class JAXProblem(eqx.Module):
             return jnp.asarray(
                 self._eval_nn(
                     self._parameter_mappings["hybrid_map"][pname],
-                    condition_ids[0],
+                    experiment,
+                    is_preeq,
                 ),
                 dtype=self.model.parameters.dtype,
             )
@@ -1394,16 +1434,18 @@ class JAXProblem(eqx.Module):
 
     def _state_needs_reinitialisation(
         self,
-        simulation_conditions: tuple[str, ...],
+        experiment: petabv2.Experiment,
+        is_preeq: bool,
         state_id: str,
     ) -> bool:
         """
-        Check if a state needs reinitialisation for a simulation condition.
+        Check if a state needs reinitialisation for a period of an experiment.
 
-        :param simulation_conditions:
-            condition ids simultaneously active for the simulation condition
-            to check reinitialisation for (PEtab v2 requires their targets
-            to be disjoint, so at most one of them defines ``state_id``)
+        :param experiment:
+            experiment to check reinitialisation for
+        :param is_preeq:
+            whether to check the preequilibration period or the first dynamic
+            period
         :param state_id:
             state id to check reinitialisation for
         :return:
@@ -1416,19 +1458,17 @@ class JAXProblem(eqx.Module):
             return True
 
         return (
-            self._condition_reinit_target_value(
-                simulation_conditions, state_id
-            )
+            self._condition_reinit_target_value(experiment, is_preeq, state_id)
             is not None
         )
 
     def _condition_reinit_target_value(
-        self, simulation_conditions: tuple[str, ...], state_id: str
+        self, experiment: petabv2.Experiment, is_preeq: bool, state_id: str
     ):
         """Return the *raw* condition-table target value initialising a state.
 
         Looks up the (unresolved) ``target_value`` that (re)initialises
-        ``state_id`` for the given simultaneously-active conditions, reading
+        ``state_id`` for the given period of ``experiment``, reading
         it straight from the condition-table changes. Returns ``None`` if no
         active condition sets ``state_id`` (PEtab v2 requires the targets of
         simultaneously-active conditions to be disjoint, so at most one does).
@@ -1440,7 +1480,7 @@ class JAXProblem(eqx.Module):
         w.r.t. parameters used as initial values are not silently dropped.
         """
         for c, is_original in self._conditions_defining_changes(
-            simulation_conditions
+            experiment, is_preeq
         ):
             for change in c.changes:
                 if change.target_id != state_id:
@@ -1464,33 +1504,35 @@ class JAXProblem(eqx.Module):
 
     def _state_reinitialisation_value(
         self,
-        simulation_conditions: tuple[str, ...],
+        experiment: petabv2.Experiment,
+        is_preeq: bool,
         state_id: str,
     ) -> jt.Float[jt.Scalar, ""] | float:  # noqa: F722
         """
         Get the reinitialisation value for a state.
 
-        :param simulation_conditions:
-            condition ids simultaneously active for the simulation condition
-            to get the reinitialisation value for (PEtab v2 requires their
-            targets to be disjoint, so at most one of them defines
-            ``state_id``)
+        :param experiment:
+            experiment to get the reinitialisation value for
+        :param is_preeq:
+            whether to use the preequilibration period or the first dynamic
+            period
         :param state_id:
             state id to get reinitialisation value for
         :return:
             reinitialisation value for the state
         """
         if state_id in self.nn_output_ids:
-            return self._eval_nn(state_id, simulation_conditions[0])
+            return self._eval_nn(state_id, experiment, is_preeq)
 
         if state_id in self._parameter_mappings["hybrid_map"]:
             return self._eval_nn(
                 self._parameter_mappings["hybrid_map"][state_id],
-                simulation_conditions[0],
+                experiment,
+                is_preeq,
             )
 
         target_value = self._condition_reinit_target_value(
-            simulation_conditions, state_id
+            experiment, is_preeq, state_id
         )
         if target_value is not None:
             # Resolve *live* against ``self.parameters`` (not via the
@@ -1505,22 +1547,23 @@ class JAXProblem(eqx.Module):
 
     def load_reinitialisation(
         self,
-        simulation_conditions: str | tuple[str, ...],
+        experiment: petabv2.Experiment,
+        is_preeq: bool,
     ) -> tuple[jt.Bool[jt.Array, "nx"], jt.Float[jt.Array, "nx"]]:  # noqa: F821
         """
-        Load reinitialisation values and mask for the state vector for a simulation condition.
+        Load reinitialisation values and mask for the state vector for a
+        period of an experiment.
 
-        :param simulation_conditions:
-            Condition id(s) simultaneously active for the simulation
-            condition to load reinitialisation for.
+        :param experiment:
+            Experiment to load reinitialisation for.
+        :param is_preeq:
+            Whether to load the reinitialisation for the preequilibration
+            period or for the first dynamic period.
         :return:
             Tuple of reinitialisation mask and value for states.
         """
-        if isinstance(simulation_conditions, str):
-            simulation_conditions = (simulation_conditions,)
-
         needs_reinit = [
-            self._state_needs_reinitialisation(simulation_conditions, x_id)
+            self._state_needs_reinitialisation(experiment, is_preeq, x_id)
             for x_id in self.model.state_ids
         ]
         # Always return full-length arrays per condition; callers stack/vmap across conditions and require consistent shapes.
@@ -1528,7 +1571,7 @@ class JAXProblem(eqx.Module):
         mask = jnp.array(needs_reinit)
         reinit_x = jnp.array(
             [
-                self._state_reinitialisation_value(simulation_conditions, x_id)
+                self._state_reinitialisation_value(experiment, is_preeq, x_id)
                 for x_id in self.model.state_ids
             ]
         )
@@ -1561,7 +1604,6 @@ class JAXProblem(eqx.Module):
     def _prepare_experiments(
         self,
         experiments: list[petabv2.Experiment],
-        conditions: list[str],
         is_preeq: bool,
         op_numeric: np.ndarray | None = None,
         op_mask: np.ndarray | None = None,
@@ -1581,8 +1623,6 @@ class JAXProblem(eqx.Module):
 
         :param experiments:
             Experiments to prepare simulation arrays for.
-        :param conditions:
-            Simulation conditions to prepare.
         :param is_preeq:
             Whether to load preequilibration or simulation parameters.
         :param op_numeric:
@@ -1660,7 +1700,9 @@ class JAXProblem(eqx.Module):
                 (len(experiments), self._ts_masks.shape[1], 0)
             )
 
-        reinit_arrays = [self.load_reinitialisation(sc) for sc in conditions]
+        reinit_arrays = [
+            self.load_reinitialisation(exp, is_preeq) for exp in experiments
+        ]
         mask_reinit_array = jnp.stack([m for m, _ in reinit_arrays])
         x_reinit_array = jnp.stack([x for _, x in reinit_arrays])
         return (
@@ -1844,14 +1886,6 @@ class JAXProblem(eqx.Module):
             Output value and condition specific results and statistics. Results and statistics are returned as a dict
             with arrays with the leading dimension corresponding to the simulation conditions.
         """
-        # one entry per experiment, aligned with `experiments` (and thus with
-        # `p_array` built from it in `_prepare_experiments`), not a
-        # deduplicated set of condition names.
-        dynamic_conditions = [
-            _get_period_condition_ids(exp, is_preequilibration=False)
-            for exp in experiments
-        ]
-
         # Positions of the requested experiments within the full, __init__-time
         # ordering that all `self._*` per-experiment arrays are keyed by. When a
         # subset is simulated (``simulation_experiments``), every per-experiment
@@ -1869,7 +1903,6 @@ class JAXProblem(eqx.Module):
             t_zeros,
         ) = self._prepare_experiments(
             experiments,
-            dynamic_conditions,
             False,
             self._op_numeric[ei],
             self._op_mask[ei],
@@ -1895,7 +1928,7 @@ class JAXProblem(eqx.Module):
                 jnp.array(
                     [
                         self._eval_nn(
-                            p, exp.periods[-1].condition_ids[0]
+                            p, exp, is_preeq=False
                         )  # TODO: Add mapping of p to eval_nn?
                         if p in set(self.model.parameter_ids)
                         else 1.0
@@ -2000,18 +2033,8 @@ class JAXProblem(eqx.Module):
         ],
         max_steps: jnp.int_,
     ):
-        # one entry per experiment, aligned with `experiments` (and thus with
-        # `p_array` built from it in `_prepare_experiments`), not a
-        # deduplicated set of condition names.
-        preequilibration_conditions = [
-            _get_period_condition_ids(exp, is_preequilibration=True)
-            for exp in experiments
-        ]
-
         p_array, mask_reinit_array, x_reinit_array, _, _, h_mask, _ = (
-            self._prepare_experiments(
-                experiments, preequilibration_conditions, True, None, None
-            )
+            self._prepare_experiments(experiments, True, None, None)
         )
         return self.run_preequilibration(
             p_array,
@@ -2073,7 +2096,10 @@ def run_simulations(
         (e.g. long/stiff dynamics where the step count greatly exceeds the
         default), at the cost of higher memory use and compilation time.
     :return:
-        Overall output value and condition specific results and statistics.
+        Overall output value and experiment-specific results and statistics.
+        Use ``experiment_ids`` to identify the experiments. For converted
+        PEtab v2 problems, ``dynamic_conditions`` contains the converted
+        condition ids, which don't necessarily identify an experiment.
     """
     if isinstance(problem._petab_problem, petabv1.Problem):
         raise TypeError(
