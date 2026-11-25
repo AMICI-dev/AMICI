@@ -1461,14 +1461,18 @@ def test_event_output_sensitivities(tempdir):
         assert_allclose(rdata.sllh, sllh_expected, rtol=1e-6)
 
 
-@pytest.mark.parametrize("spline_in", ["event_observable", "trigger"])
-def test_event_outputs_splines_unsupported(spline_in):
+@pytest.mark.parametrize(
+    "spline_in", ["event_observable", "trigger", "other_trigger"]
+)
+def test_event_outputs_splines(spline_in):
     """Event observables, and triggers of events with event observables,
-    that depend on splines raise an informative error during import."""
-    trigger = "spl > 4.5" if spline_in == "trigger" else "x < 0.5"
+    that depend on splines raise an informative error during import.
+    Spline-dependent triggers of other events are supported."""
+    trigger = "x < 0.5" if spline_in == "event_observable" else "spl > 4.5"
     sbml_doc = libsbml.SBMLReader().readSBMLFromString(
         antimony2sbml(
-            f"p = 3; x = 1; x' = -x; spl = 0; E1: at {trigger}: x = 1"
+            "p = 3; x = 1; x' = -x; spl = 0; "
+            f"E1: at {trigger}: x = 1; E2: at x < 0.2: x = 1"
         )
     )
     sbml_model = sbml_doc.getModel()
@@ -1483,11 +1487,15 @@ def test_event_outputs_splines_unsupported(spline_in):
             MC(
                 "z1",
                 formula="spl" if spline_in == "event_observable" else "x",
-                event_id="E1",
+                event_id="E2" if spline_in == "other_trigger" else "E1",
             )
         ],
     )
     de_model.generate_basic_variables()
+    if spline_in == "other_trigger":
+        de_model.eq("z")
+        de_model.eq("rz")
+        return
     with pytest.raises(NotImplementedError, match="depend.* on splines"):
         de_model.eq("rz" if spline_in == "trigger" else "z")
 
