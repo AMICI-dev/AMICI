@@ -1461,6 +1461,37 @@ def test_event_output_sensitivities(tempdir):
         assert_allclose(rdata.sllh, sllh_expected, rtol=1e-6)
 
 
+@pytest.mark.parametrize("spline_in", ["event_observable", "trigger"])
+def test_event_outputs_splines_unsupported(spline_in):
+    """Event observables, and triggers of events with event observables,
+    that depend on splines raise an informative error during import."""
+    trigger = "spl > 4.5" if spline_in == "trigger" else "x < 0.5"
+    sbml_doc = libsbml.SBMLReader().readSBMLFromString(
+        antimony2sbml(
+            f"p = 3; x = 1; x' = -x; spl = 0; E1: at {trigger}: x = 1"
+        )
+    )
+    sbml_model = sbml_doc.getModel()
+    CubicHermiteSpline(
+        sbml_id="spl",
+        nodes=[0, 1, 2],
+        values_at_nodes=[sp.Symbol("p"), 4, 5],
+    ).add_to_sbml_model(sbml_model)
+    sbml_model.getElementBySId("spl").setConstant(False)
+    de_model = SbmlImporter(sbml_model, from_file=False)._build_ode_model(
+        observation_model=[
+            MC(
+                "z1",
+                formula="spl" if spline_in == "event_observable" else "x",
+                event_id="E1",
+            )
+        ],
+    )
+    de_model.generate_basic_variables()
+    with pytest.raises(NotImplementedError, match="depend.* on splines"):
+        de_model.eq("rz" if spline_in == "trigger" else "z")
+
+
 @skip_on_valgrind
 def test_random_event_ordering(tempdir):
     """For simultaneously executed events, the order of execution

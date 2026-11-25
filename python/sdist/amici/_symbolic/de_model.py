@@ -1830,6 +1830,15 @@ class DEModel:
                 enumerate(z2event), self._event_observables, strict=True
             ):
                 event_observables[ie][iz] = substitute_w(event_obs.get_val())
+                if syms_spl := (
+                    event_observables[ie][iz].free_symbols
+                    & set(self.sym("spl"))
+                ):
+                    raise NotImplementedError(
+                        "Event observables that depend on splines are not "
+                        f"supported. However, {event_obs.get_id()} depends "
+                        f"on {', '.join(sorted(map(str, syms_spl)))}."
+                    )
 
             self._eqs[name] = event_observables
             self._z2event = z2event
@@ -1861,6 +1870,8 @@ class DEModel:
             # rz is evaluated without access to `w`
             substitute_w = self._get_expression_substituter()
             root = self.eq("root")
+            # sets `_z2event`
+            self.eq("z")
             eq_events = []
             for ie in range(self.num_events()):
                 val = sp.zeros(self.num_eventobs(), 1)
@@ -1868,6 +1879,13 @@ class DEModel:
                 for iz in range(self.num_eventobs()):
                     if ie == self._z2event[iz]:
                         val[iz] = substitute_w(root[ie])
+                if syms_spl := val.free_symbols & set(self.sym("spl")):
+                    raise NotImplementedError(
+                        "Triggers of events with event observables that "
+                        "depend on splines are not supported. However, the "
+                        f"trigger of {self._events[ie].get_id()} depends on "
+                        f"{', '.join(sorted(map(str, syms_spl)))}."
+                    )
                 eq_events.append(val)
 
             self._eqs[name] = eq_events
