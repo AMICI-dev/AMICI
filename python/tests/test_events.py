@@ -1364,8 +1364,9 @@ def test_event_output_sensitivities(tempdir):
 
     Covers the explicit parameter dependence of event outputs, the
     dependence on the event time for parameter-dependent time triggers,
-    state-dependent triggers, and secondary events, and a model without
-    (non-event) observables.
+    state-dependent triggers, and secondary events, event outputs and
+    triggers that refer to expressions (assignment rules), and a model
+    without (non-event) observables.
     """
     from amici.sim.sundials import ParameterScaling
 
@@ -1376,9 +1377,13 @@ def test_event_output_sensitivities(tempdir):
         x = 1; w = 0
         x' = -k * x
         w' = 0
+        # expressions
+        pt := p * time
+        kx := k * x
+        xe := x
         E1: at time > q: w = w + 2
         # does not trigger
-        E2: at x < p: x = x + 1
+        E2: at xe < p: x = x + 1
         # c only enters via the trigger
         E3: at x < c: w = w + 1
         # secondary event, triggered by E3
@@ -1393,6 +1398,8 @@ def test_event_output_sensitivities(tempdir):
             MC("z3_t", formula="time", event_id="E3"),
             MC("z3_kx", formula="k * x", event_id="E3"),
             MC("z4", formula="time + x", event_id="E4"),
+            MC("z1_pt_expr", formula="pt", event_id="E1"),
+            MC("z3_kx_expr", formula="kx", event_id="E3"),
         ],
     )
     model.set_parameter_scale(ParameterScaling.none)
@@ -1409,7 +1416,7 @@ def test_event_output_sensitivities(tempdir):
     t3 = np.log(1 / c) / k
     dt3 = np.array([-t3 / k, 0, -1 / (k * c), 0])
     assert t3 < q
-    z_expected = [p * x1, p * q, T, t3, k * c, t3 + c]
+    z_expected = [p * x1, p * q, T, t3, k * c, t3 + c, p * q, k * c]
     sz_expected = np.array(
         [
             [-p * q * x1, x1, 0, -k * p * x1],
@@ -1418,6 +1425,8 @@ def test_event_output_sensitivities(tempdir):
             dt3,
             [c, 0, k, 0],
             dt3 + [0, 0, 1, 0],
+            [0, q, 0, p],
+            [c, 0, k, 0],
         ]
     ).T
     rz2 = p - xT
@@ -1425,7 +1434,7 @@ def test_event_output_sensitivities(tempdir):
 
     edata = ExpData(model)
     mz = np.full((model.n_max_event(), model.nztrue), np.nan)
-    mz[0] = [1.0, 2.0, 3.0, 0.0, 0.0, 0.0]
+    mz[0] = [1.0, 2.0, 3.0, 0.0, 0.0, 0.0, 1.0, 2.0]
     edata.set_event_measurements(mz.flatten())
     edata.set_event_noise_scales(np.ones(mz.size))
     # Jz(z2) does not depend on the parameters (z2 = T), only Jrz(rz2)
