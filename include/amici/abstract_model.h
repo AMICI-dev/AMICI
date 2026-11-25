@@ -322,6 +322,8 @@ class AbstractModel {
      * @param w vector with helper variables
      * @param dx time derivative of state (DAE only)
      * @param tcl total abundances for conservation laws
+     * @param dtcldp sensitivities of the total abundances for conservation
+     * laws w.r.t. all parameters (dimension: np * ncl)
      * @param sx current state sensitivity
      * @param ip sensitivity index
      * @param ie event index
@@ -329,8 +331,8 @@ class AbstractModel {
     virtual void fstau(
         realtype* stau, realtype t, realtype const* x, realtype const* p,
         realtype const* k, realtype const* h, realtype const* w,
-        realtype const* dx, realtype const* tcl, realtype const* sx, int ip,
-        int ie
+        realtype const* dx, realtype const* tcl, realtype const* dtcldp,
+        realtype const* sx, int ip, int ie
     );
 
     /**
@@ -726,13 +728,16 @@ class AbstractModel {
      * @param w vector with helper variables
      * @param dx time derivative of state (DAE only)
      * @param tcl total abundances for conservation laws
+     * @param dtcldp sensitivities of the total abundances for conservation
+     * laws w.r.t. all parameters (dimension: np * ncl)
      * @param ip sensitivity index
      * @param ie event index
      */
     virtual void fdtaudp(
         realtype* dtaudp, realtype t, realtype const* x, realtype const* p,
         realtype const* k, realtype const* h, realtype const* w,
-        realtype const* dx, realtype const* tcl, int ip, int ie
+        realtype const* dx, realtype const* tcl, realtype const* dtcldp,
+        int ip, int ie
     );
 
     /**

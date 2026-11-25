@@ -60,7 +60,8 @@ void AbstractModel::fstau(
     realtype* /*stau*/, realtype const /*t*/, realtype const* /*x*/,
     realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
     realtype const* /*w*/, realtype const* /*dx*/, realtype const* /*tcl*/,
-    realtype const* /*sx*/, int const /*ip*/, int const /*ie*/
+    realtype const* /*dtcldp*/, realtype const* /*sx*/, int const /*ip*/,
+    int const /*ie*/
 ) {
     throw AmiException(
         "Requested functionality is not supported as %s is "
@@ -310,7 +311,7 @@ void AbstractModel::fdtaudp(
     realtype* /*dtaudp*/, realtype const /*t*/, realtype const* /*x*/,
     realtype const* /*p*/, realtype const* /*k*/, realtype const* /*h*/,
     realtype const* /*w*/, realtype const* /*dx*/, realtype const* /*tcl*/,
-    int const /*ip*/, int const /*ie*/
+    realtype const* /*dtcldp*/, int const /*ip*/, int const /*ie*/
 ) {
     throw AmiException(
         "Requested functionality is not supported as %s is "

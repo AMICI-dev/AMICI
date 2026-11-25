@@ -82,7 +82,7 @@ extern void xdot_model_neuron_py(realtype *xdot, const realtype t, const realtyp
 extern void y_model_neuron_py(realtype *y, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
 extern void z_model_neuron_py(realtype *z, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
 extern void rz_model_neuron_py(realtype *rz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
-extern void stau_model_neuron_py(realtype *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const realtype *sx, const int ip, const int ie);
+extern void stau_model_neuron_py(realtype *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const realtype *dtcldp, const realtype *sx, const int ip, const int ie);
 extern void deltax_model_neuron_py(double *deltax, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ie, const realtype *xdot, const realtype *xdot_eval, const realtype *x_eval);
 extern void deltasx_model_neuron_py(realtype *deltasx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const int ip, const int ie, const realtype *xdot, const realtype *xdot_eval, const realtype *xdot_pre, const realtype *sx, const realtype *sx_eval, const realtype *stau, const realtype *tcl, const realtype *x_eval);
 extern void deltaxB_model_neuron_py(realtype *deltaxB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const int ie, const realtype *x_eval, const realtype *xB, const realtype *tcl);
@@ -245,7 +245,7 @@ class Model_model_neuron_py : public amici::Model_ODE {
     }
 
 
-    void fdtaudp(realtype *dtaudp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const int ip, const int ie) override {}
+    void fdtaudp(realtype *dtaudp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const realtype *dtcldp, const int ip, const int ie) override {}
 
 
     void fdrzdp(realtype *drzdp, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip) override {}
@@ -386,8 +386,8 @@ class Model_model_neuron_py : public amici::Model_ODE {
     }
 
 
-    void fstau(realtype *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const realtype *sx, const int ip, const int ie) override {
-        stau_model_neuron_py(stau, t, x, p, k, h, w, dx, tcl, sx, ip, ie);
+    void fstau(realtype *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const realtype *dtcldp, const realtype *sx, const int ip, const int ie) override {
+        stau_model_neuron_py(stau, t, x, p, k, h, w, dx, tcl, dtcldp, sx, ip, ie);
     }
 
     void fsx0(realtype *sx0, const realtype t, const realtype *x, const realtype *p, const realtype *k, const int ip) override {
@@ -590,7 +590,7 @@ class Model_model_neuron_py : public amici::Model_ODE {
      * @return AMICI git commit hash
      */
     std::string get_amici_commit() const override {
-        return "7cb3c096d8a57127a4f6e7b46a29698f850bc01c";
+        return "208ed2c717010260b89cb8673cf32b55433280df";
     }
 
     bool has_quadratic_llh() const override {

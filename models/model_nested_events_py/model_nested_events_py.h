@@ -82,7 +82,7 @@ extern void xdot_model_nested_events_py(realtype *xdot, const realtype t, const 
 extern void y_model_nested_events_py(realtype *y, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
 
 
-extern void stau_model_nested_events_py(realtype *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const realtype *sx, const int ip, const int ie);
+extern void stau_model_nested_events_py(realtype *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const realtype *dtcldp, const realtype *sx, const int ip, const int ie);
 extern void deltax_model_nested_events_py(double *deltax, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ie, const realtype *xdot, const realtype *xdot_eval, const realtype *x_eval);
 extern void deltasx_model_nested_events_py(realtype *deltasx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const int ip, const int ie, const realtype *xdot, const realtype *xdot_eval, const realtype *xdot_pre, const realtype *sx, const realtype *sx_eval, const realtype *stau, const realtype *tcl, const realtype *x_eval);
 extern void deltaxB_model_nested_events_py(realtype *deltaxB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const int ie, const realtype *x_eval, const realtype *xB, const realtype *tcl);
@@ -90,7 +90,7 @@ extern void deltaxB_at_trigger_model_nested_events_py(realtype *deltaxB_at_trigg
 extern void stauB_model_nested_events_py(realtype *stauB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const int ie, const realtype *xdot, const realtype *xdot_eval, const realtype *xdot_pre, const realtype *x_eval, const realtype *xB, const realtype *tcl);
 extern void deltaqB_model_nested_events_py(realtype *deltaqB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *dx, const int ip, const int ie, const realtype *x_eval, const realtype *xB);
 extern void dtaudx_model_nested_events_py(realtype *dtaudx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const int ie);
-extern void dtaudp_model_nested_events_py(realtype *dtaudp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const int ip, const int ie);
+extern void dtaudp_model_nested_events_py(realtype *dtaudp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const realtype *dtcldp, const int ip, const int ie);
 
 extern void x_solver_model_nested_events_py(realtype *x_solver, const realtype *x_rdata);
 
@@ -237,8 +237,8 @@ class Model_model_nested_events_py : public amici::Model_ODE {
     }
 
 
-    void fdtaudp(realtype *dtaudp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const int ip, const int ie) override {
-        dtaudp_model_nested_events_py(dtaudp, t, x, p, k, h, w, dx, tcl, ip, ie);
+    void fdtaudp(realtype *dtaudp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const realtype *dtcldp, const int ip, const int ie) override {
+        dtaudp_model_nested_events_py(dtaudp, t, x, p, k, h, w, dx, tcl, dtcldp, ip, ie);
     }
 
 
@@ -372,8 +372,8 @@ class Model_model_nested_events_py : public amici::Model_ODE {
     void fsigmaz(realtype *sigmaz, const realtype t, const realtype *p, const realtype *k) override {}
 
 
-    void fstau(realtype *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const realtype *sx, const int ip, const int ie) override {
-        stau_model_nested_events_py(stau, t, x, p, k, h, w, dx, tcl, sx, ip, ie);
+    void fstau(realtype *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dx, const realtype *tcl, const realtype *dtcldp, const realtype *sx, const int ip, const int ie) override {
+        stau_model_nested_events_py(stau, t, x, p, k, h, w, dx, tcl, dtcldp, sx, ip, ie);
     }
 
     void fsx0(realtype *sx0, const realtype t, const realtype *x, const realtype *p, const realtype *k, const int ip) override {
@@ -572,7 +572,7 @@ class Model_model_nested_events_py : public amici::Model_ODE {
      * @return AMICI git commit hash
      */
     std::string get_amici_commit() const override {
-        return "7cb3c096d8a57127a4f6e7b46a29698f850bc01c";
+        return "208ed2c717010260b89cb8673cf32b55433280df";
     }
 
     bool has_quadratic_llh() const override {

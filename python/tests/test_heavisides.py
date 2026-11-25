@@ -475,3 +475,64 @@ def test_adjoint_sensitivities_heaviside_dependent_observable(tempdir):
         assert_allclose(
             rdata.sllh, sllh_expected, rtol=1e-8, err_msg=sensi_meth
         )
+
+
+@skip_on_valgrind
+def test_piecewise_sensitivities_with_conservation_law(tempdir):
+    """Sensitivities at a switch of a condition on a model expression,
+    for a model with a conservation law."""
+    from amici import MeasurementChannel as MC
+    from amici.sim.sundials import (
+        ExpData,
+        SensitivityMethod,
+        SensitivityOrder,
+    )
+
+    model_name = "piecewise_conservation_law"
+    # The piecewise function only occurs in a rate rule, so the conservation
+    # law for the constant species `B` is kept.
+    antimony2amici(
+        """
+        b0 = 1
+        species A = 2; species $B = b0
+        k1 = 1
+        A -> ; k1 * A
+        ab := 2 * A * B
+        x = 0
+        x' = piecewise(1, ab < 0.8, 0)
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[MC("obs_x", formula="x")],
+        compute_conservation_laws=True,
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    assert model.nx_solver < model.nx_rdata
+    t_end = 5.0
+    model.set_timepoints([0.0, t_end])
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-12)
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+
+    # switch at t = log(5 * b0) / k1, with k1 = b0 = 1
+    ix = list(model.get_state_ids()).index("x")
+    par_ids = list(model.get_free_parameter_ids())
+    assert_allclose(rdata.x[-1, ix], t_end - np.log(5), rtol=1e-8)
+    assert_allclose(
+        rdata.sx[-1, par_ids.index("k1"), ix], np.log(5), rtol=1e-8
+    )
+    # via the sensitivities of the conserved total
+    assert_allclose(rdata.sx[-1, par_ids.index("b0"), ix], -1.0, rtol=1e-8)
+
+    edata = ExpData(rdata, 1.0, 0.0)
+    edata.set_measurements((np.asarray(rdata.y) + 0.5).flatten())
+    rdata_fsa = run_simulation(model, solver, edata)
+    solver.set_sensitivity_method(SensitivityMethod.adjoint)
+    rdata_asa = run_simulation(model, solver, edata)
+    assert rdata_fsa.status == rdata_asa.status == AMICI_SUCCESS
+    assert np.all(rdata_fsa.sllh != 0)
+    assert_allclose(rdata_asa.sllh, rdata_fsa.sllh, rtol=1e-6)
