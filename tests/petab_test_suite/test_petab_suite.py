@@ -37,9 +37,6 @@ stream_handler = logging.StreamHandler()
 logger.addHandler(stream_handler)
 
 
-@pytest.mark.filterwarnings(
-    "ignore:Adjoint sensitivity analysis for models with discontinuous ",
-)
 def test_case(case, model_type, version, jax):
     """Wrapper for _test_case for handling test outcomes"""
     if jax and petabtests.test_id_str(case) == "0007":
@@ -255,10 +252,7 @@ def check_derivatives(
         SteadyStateSensitivityMode.integrateIfNewtonFails
     )
 
-    sensi_methods = [SensitivityMethod.forward]
-    # TODO: adjoints fail for models without state variables (#3546)
-    if model.nx_solver > 0:
-        sensi_methods.append(SensitivityMethod.adjoint)
+    sensi_methods = [SensitivityMethod.forward, SensitivityMethod.adjoint]
     for edata in create_parameterized_edatas(
         amici_model=model,
         petab_problem=problem,

@@ -14,12 +14,6 @@ from util import (
     check_trajectories_without_sensitivities,
 )
 
-pytestmark = pytest.mark.filterwarnings(
-    # https://github.com/AMICI-dev/AMICI/issues/18
-    "ignore:Adjoint sensitivity analysis for models with discontinuous "
-    "right hand sides .*:UserWarning",
-)
-
 
 @pytest.fixture(
     params=[

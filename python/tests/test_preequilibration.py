@@ -35,12 +35,6 @@ from fiddy import check_gradient, check_jacobian
 from numpy.testing import assert_allclose, assert_equal
 from test_pysb import get_data
 
-pytestmark = pytest.mark.filterwarnings(
-    # https://github.com/AMICI-dev/AMICI/issues/18
-    "ignore:Adjoint sensitivity analysis for models with discontinuous "
-    "right hand sides .*:UserWarning",
-)
-
 
 @pytest.fixture
 def preeq_fixture(pysb_example_presimulation_module):

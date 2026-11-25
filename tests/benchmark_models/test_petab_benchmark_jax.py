@@ -32,7 +32,6 @@ jax.config.update("jax_enable_x64", True)
 @pytest.mark.filterwarnings(
     "ignore:The following problem parameters were not used *",
     "ignore: The environment variable *",
-    "ignore:Adjoint sensitivity analysis for models with discontinuous ",
     # v1->v2 auto-upgrade rewrites unsupported log10-normal priors/noise to
     # log-normal and drops initialisation priors; both are benign for the data
     # likelihood checked here (priors/init are not part of the objective).

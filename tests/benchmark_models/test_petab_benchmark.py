@@ -220,9 +220,6 @@ def assert_gradient_check_confirms_something(result) -> None:
 
 @pytest.mark.filterwarnings(
     "ignore:divide by zero encountered in log",
-    # https://github.com/AMICI-dev/AMICI/issues/18
-    "ignore:Adjoint sensitivity analysis for models with discontinuous "
-    "right hand sides .*:UserWarning",
 )
 def test_nominal_parameters_llh(benchmark_problem):
     """Test the log-likelihood computation at nominal parameters.
@@ -342,9 +339,6 @@ def test_nominal_parameters_llh(benchmark_problem):
 
 @pytest.mark.filterwarnings(
     "ignore:divide by zero encountered in log",
-    # https://github.com/AMICI-dev/AMICI/issues/18
-    "ignore:Adjoint sensitivity analysis for models with discontinuous "
-    "right hand sides .*:UserWarning",
 )
 @pytest.mark.parametrize("scale", (True, False), ids=["scaled", "unscaled"])
 @pytest.mark.parametrize(
@@ -440,9 +434,6 @@ def test_benchmark_gradient(benchmark_problem, scale, sensitivity_method):
 
 @pytest.mark.filterwarnings(
     "ignore:divide by zero encountered in log",
-    # https://github.com/AMICI-dev/AMICI/issues/18
-    "ignore:Adjoint sensitivity analysis for models with discontinuous "
-    "right hand sides .*:UserWarning",
     "ignore:.*has `useValuesFromTriggerTime=true'.*:UserWarning",
     "ignore:.*Using `log-normal` instead.*:UserWarning",
 )

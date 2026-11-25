@@ -280,11 +280,6 @@ def test_sbml_testsuite_case_sensitivity_forward(
         )
 
 
-@pytest.mark.filterwarnings(
-    # https://github.com/AMICI-dev/AMICI/issues/18
-    "ignore:Adjoint sensitivity analysis for models with discontinuous "
-    "right hand sides .*:UserWarning",
-)
 def test_sbml_testsuite_case_sensitivity_adjoint(
     test_id: str, compiled_case: CompiledCase
 ) -> None:
@@ -307,11 +302,6 @@ def test_sbml_testsuite_case_sensitivity_adjoint(
     _run_sensitivity_check(case, test_id, check, jitter_seed=43)
 
 
-@pytest.mark.filterwarnings(
-    # https://github.com/AMICI-dev/AMICI/issues/18
-    "ignore:Adjoint sensitivity analysis for models with discontinuous "
-    "right hand sides .*:UserWarning",
-)
 def test_sbml_testsuite_case_sensitivity_consistency(
     test_id: str, compiled_case: CompiledCase
 ) -> None:
