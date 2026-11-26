@@ -1,5 +1,6 @@
 import copy
 from collections import Counter
+from pathlib import Path
 
 import pytest
 from amici.importers.petab import (
@@ -1349,3 +1350,75 @@ def test_parameter_scales_jax_matches_sundials(
         [result.sllh[par_id] for par_id in jp.parameter_ids],
         rtol=1e-6,
     )
+
+
+def _constant_species_problem() -> Problem:
+    """A PEtab problem with a constant species (a conservation law)."""
+    problem = Problem()
+    problem.model = SbmlModel.from_antimony(
+        "compartment c = 1; species A in c; const species B in c;"
+        "A = 1; B = 2; k = 0.1; r: A -> ; k * A * B"
+    )
+    problem.add_parameter("k", nominal_value=0.1, estimate=True, lb=0.01, ub=1)
+    problem.add_observable("obs_a", formula="A", noise_formula="1")
+    problem.add_experiment("e1", 0, [])
+    problem.add_measurement(
+        "obs_a", experiment_id="e1", time=1.0, measurement=1.0
+    )
+    return problem
+
+
+@pytest.mark.parametrize("compute_conservation_laws", [True, False])
+def test_import_kwargs(compute_conservation_laws):
+    """`import_kwargs` are passed to the model import function."""
+    with TemporaryDirectoryWinSafe(prefix="petab_v2_import_kwargs_") as tmp:
+        pi = PetabImporter(
+            _constant_species_problem(),
+            module_name="test_petab_v2_import_kwargs",
+            output_dir=tmp,
+            compile_=False,
+            import_kwargs={
+                "compute_conservation_laws": compute_conservation_laws
+            },
+        )
+        pi._do_import_sbml()
+        assert Path(tmp, "total_cl.cpp").exists() == compute_conservation_laws
+
+
+def test_import_kwargs_invalid():
+    """Invalid `import_kwargs` are rejected before the model import."""
+    problem = _constant_species_problem()
+    with pytest.raises(ValueError, match=r"\['fixed_parameters'\].*set by"):
+        PetabImporter(problem, import_kwargs={"fixed_parameters": ["k"]})
+    with pytest.raises(
+        ValueError,
+        match=r"Unknown.*compute_conservation_law'.*"
+        r"Did you mean.*'compute_conservation_laws'",
+    ):
+        PetabImporter(
+            problem, import_kwargs={"compute_conservation_law": False}
+        )
+    # not supported by `sbml2jax`
+    with pytest.raises(ValueError, match=r"Unknown.*sbml2jax"):
+        PetabImporter(
+            problem,
+            jax=True,
+            import_kwargs={"generate_sensitivity_code": False},
+        )
+
+
+def test_import_kwargs_var_keyword(monkeypatch):
+    """Arbitrary `import_kwargs` are passed to an import function with
+    `**kwargs`, except for reserved ones."""
+
+    def import_function(model_name, *args, **kwargs):
+        pass
+
+    monkeypatch.setattr(
+        PetabImporter, "_import_function", lambda self: import_function
+    )
+    problem = _constant_species_problem()
+    pi = PetabImporter(problem, import_kwargs={"foo": 1})
+    assert pi._import_kwargs == {"foo": 1}
+    with pytest.raises(ValueError, match=r"\['model_name'\].*set by"):
+        PetabImporter(problem, import_kwargs={"model_name": "m"})
