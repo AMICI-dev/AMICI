@@ -2361,6 +2361,193 @@ def test_chained_initial_assignment_parameter_stays_expression():
 
 
 @skip_on_valgrind
+def test_initial_assignment_reading_event_target(tempdir):
+    """Regression test for #3506.
+
+    Initial assignments referencing event-assigned parameters or compartments
+    must use their initial values, and must not follow later changes.
+    """
+    model = antimony2sbml("""
+        model ia_event_target
+            compartment c = 1, c_ev = 1, c_ia;
+            k = 1;
+            a = 1;
+            p = 2 * k * a;
+            const cf;
+            cf = k;
+            c_ia = k * a;
+            q = c_ev * a;
+            p_sr = sr / a;
+            # B' = cf * 1, D' = sr * sr
+            substanceOnly species B in c, D in c;
+            B = 0;
+            D = 0;
+            B.conversionFactor = cf;
+            R1: -> B; 1;
+            R2: -> sr D; sr;
+            sr = k * a;
+            E: at time >= 1: k = 5, c_ev = 5;
+        end
+    """)
+
+    module_name = "ia_event_target"
+    SbmlImporter(model, from_file=False).sbml2amici(
+        module_name,
+        tempdir,
+        observation_model=[
+            MC(id_=f"obs_{x}", formula=x) for x in ("k", "p", "c_ia", "q", "D")
+        ],
+    )
+    amici_model = import_model_module(module_name, tempdir).get_model()
+    # determined by the event target, so not free parameters
+    assert set(amici_model.get_free_parameter_ids()) == {"a"}
+    t = np.array([0, 0.5, 2, 3])
+    amici_model.set_timepoints(t)
+    amici_model.set_parameter_list(
+        [amici_model.get_free_parameter_ids().index("a")]
+    )
+    solver = amici_model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    rdata = run_simulation(amici_model, solver)
+    assert rdata.status == AMICI_SUCCESS
+
+    # `k` and `c_ev` change at t=1, everything else uses their initial values
+    assert_allclose(rdata.by_id("obs_k"), [1, 1, 5, 5])
+    assert_allclose(rdata.by_id("obs_p"), 2)
+    assert_allclose(rdata.by_id("obs_c_ia"), 1)
+    assert_allclose(rdata.by_id("obs_q"), 1)
+    # conversion factor `cf` and `sr` remain 1
+    assert_allclose(rdata.by_id("B"), t, rtol=1e-6)
+    assert_allclose(rdata.by_id("D"), t, rtol=1e-6)
+    # sensitivities w.r.t. `a` must not follow the event either
+    # (D = a^2 * t)
+    assert_allclose(
+        rdata.sy[:, 0, :],
+        np.column_stack(
+            [np.zeros_like(t), *[np.full_like(t, x) for x in (2, 1, 1)], 2 * t]
+        ),
+        rtol=1e-6,
+        atol=1e-8,
+    )
+
+
+def test_initial_assignment_reading_rate_rule_compartment():
+    """Test initial assignments referencing rate-rule targets.
+
+    Regression test for #3620.
+    """
+    sbml_importer = SbmlImporter(
+        antimony2sbml("""
+            model test_ia_rate_rule_compartment
+                compartment c = 2;
+                c' = 1;
+                species S in c;
+                S = 3 * c;
+                p = 2 * c;
+                y := p;
+                k = 1;
+                k' = 1;
+                at time >= 1: k = 5;
+                p2 = 2 * k;
+                y2 := p2;
+            end
+        """),
+        from_file=False,
+    )
+    for ia_target in ("S", "p", "p2"):
+        assert (
+            sbml_importer.sbml_model.getInitialAssignment(ia_target)
+            is not None
+        )
+    # a rate-rule target that is also an event target can be read by
+    # fixed parameters
+    de_model = sbml_importer._build_ode_model(fixed_parameters=["p2"])
+    x0 = dict(
+        zip(
+            [str(x) for x in de_model.sym("x_rdata")],
+            de_model.eq("x0"),
+            strict=True,
+        )
+    )
+    assert float(x0["c"]) == 2
+    assert float(x0["S"]) == 6
+    values = {
+        q.get_id(): q.get_val()
+        for q in (
+            *de_model.free_parameters(),
+            *de_model.fixed_parameters(),
+            *de_model.expressions(),
+        )
+    }
+    assert float(values["p"]) == 4
+    assert float(values["p2"]) == 2
+    assert "p2" in {q.get_id() for q in de_model.fixed_parameters()}
+
+
+def test_initial_assignment_reading_event_target_symbolic():
+    """Test indirect references to event targets in initial assignments."""
+    sbml_str = antimony2sbml("""
+        model test_ia_event_target_symbolic
+            a = 1;
+            k = 1 * a;
+            compartment C = 2;
+            at time >= 1: k = 5, C = 4;
+            p = 2 * k;
+            species S;
+            S = k;
+            q = 2 * S;
+            S' = 0;
+            species T in C;
+            T = 3;
+            r = 2 * T;
+            species U in C;
+            U = 3;
+            u = 2 * U;
+            # stoichiometry with initial assignment referencing `C`, and `v`
+            # referencing the reaction rate depending on it
+            species W;
+            W = 0;
+            J1: -> sr W; sr;
+            sr = C;
+            v = J1;
+            compartment C2;
+            C2 = sr;
+            species X in C2;
+            X = 3;
+            w = X;
+        end
+    """)
+    sbml_model = libsbml.SBMLReader().readSBMLFromString(sbml_str).getModel()
+    # initial concentration of an amount-based species: initial amount
+    # depends on the event-assigned compartment `C`, for `X` via `C2 = sr`
+    # (not expressible in Antimony)
+    for species_id in ("T", "X"):
+        sbml_model.getSpecies(species_id).setHasOnlySubstanceUnits(True)
+    for ia_target in ("k", "p", "S", "q", "r", "u", "sr", "v", "C2"):
+        assert sbml_model.getInitialAssignment(ia_target) is not None
+    for species_id in ("T", "U", "X"):
+        assert sbml_model.getSpecies(species_id).isSetInitialConcentration()
+
+    de_model = SbmlImporter(sbml_model, from_file=False)._build_ode_model()
+    a = symbol_with_assumptions("a")
+    expressions = {e.get_id(): e.get_val() for e in de_model.expressions()}
+    # initial value of `k`, not `k`
+    assert sp.simplify(expressions["p"] - 2 * a) == 0
+    assert sp.simplify(expressions["q"] - 2 * a) == 0
+    assert float(expressions["r"]) == 12
+    assert float(expressions["v"]) == 2
+    assert float(expressions["w"]) == 6
+    # determined by event targets, therefore not free parameters,
+    # except for `u`, which does not depend on `C`
+    free_parameters = {
+        p.get_id(): p.get_val() for p in de_model.free_parameters()
+    }
+    assert free_parameters.keys() == {"a", "u"}
+    assert float(free_parameters["u"]) == 6
+
+
+@skip_on_valgrind
 def test_dae_consistent_initial_conditions_single_timepoint(tempdir):
     """Inconsistent algebraic initial states are corrected for any `ts`."""
     ant_model = """
