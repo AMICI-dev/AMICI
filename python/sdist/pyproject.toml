@@ -133,13 +133,17 @@ petab-sciml-torch = [
     # (observed on macOS) - only install it where actually needed.
     "petab_sciml[torch] @ git+https://github.com/petab-dev/petab_sciml.git@76a2006134621ceb1b116eaf2dc23cabc66e6870",
 ]
+# petabtests requires pysb. Include `pysb-dev`, so that the PyPI release of
+# pysb doesn't downgrade sympy.
 petab-test-suite = [
+    {include-group = "pysb-dev"},
     # TODO: back to main once #3599 is fixed
     "petabtests @ git+https://github.com/PEtab-dev/petab_test_suite@281e3e2671d542a85e888ee8e890770f77264616",
 ]
 # Pre-v2 test suite with PySB cases using PEtab v1 tables.
 # TODO: remove together with PEtab v1 PySB support (#3541)
 petab-test-suite-v1-pysb = [
+    {include-group = "pysb-dev"},
     "petabtests @ git+https://github.com/PEtab-dev/petab_test_suite@10ffb050380933b60ac192962bf9550a9df65a9c",
 ]
 pysb-dev = [

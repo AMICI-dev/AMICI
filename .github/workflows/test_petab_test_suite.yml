@@ -76,8 +76,7 @@ jobs:
         run: |
           source ./venv/bin/activate \
             && python3 -m pip uninstall -y petab \
-            && python3 -m pip install --group python/sdist/pyproject.toml:libpetab \
-            && python3 -m pip install --group python/sdist/pyproject.toml:pysb-dev
+            && python3 -m pip install --group python/sdist/pyproject.toml:libpetab
 
 
       - name: Run PEtab-related unit tests
@@ -185,8 +184,7 @@ jobs:
         run: |
           source ./venv/bin/activate \
             && python3 -m pip uninstall -y petab \
-            && python3 -m pip install --group python/sdist/pyproject.toml:libpetab \
-            && python3 -m pip install --group python/sdist/pyproject.toml:pysb-dev
+            && python3 -m pip install --group python/sdist/pyproject.toml:libpetab
 
       # run test models
       - name: Run PEtab test suite
