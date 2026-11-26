@@ -174,6 +174,12 @@ void IDASolver::init(
     }
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDAInit");
+    // IDAReInit keeps a stop time that was not reached, e.g., after an
+    // aborted integration. `Solver::run` sets the stop time again,
+    // but `Solver::step` does not.
+    status = IDAClearStopTime(solver_memory_.get());
+    if (status != IDA_SUCCESS)
+        throw IDAException(status, "IDAClearStopTime");
 }
 
 void IDASolver::init_steady_state(
