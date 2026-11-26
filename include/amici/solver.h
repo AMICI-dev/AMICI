@@ -714,6 +714,11 @@ class Solver {
      *
      * `InternalSensitivityMethod::staggered1` is only supported by CVODES.
      *
+     * For DAE models (IDAS), the local error test of the
+     * simultaneous corrector does not include the sensitivities
+     * (https://github.com/LLNL/sundials/pull/1065). To include them, use
+     * `InternalSensitivityMethod::staggered`.
+     *
      * @param ism internal sensitivity method
      */
     virtual void set_internal_sensitivity_method(InternalSensitivityMethod ism);

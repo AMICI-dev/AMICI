@@ -5403,3 +5403,51 @@ def test_dae_adjoint_event_output_algebraic_state(tempdir):
         assert_allclose(
             rdata.sllh, sllh_expected, rtol=1e-6, err_msg=method.name
         )
+
+
+@skip_on_valgrind
+def test_dae_sensitivity_error_control_after_event(tempdir):
+    """DAE forward sensitivities remain error-controlled after an event.
+
+    Making the states consistent after an event must not disable
+    sensitivity error control (#3464). ``x`` doesn't depend on ``p``,
+    but ``sx`` oscillates and is unaffected by the bolus.
+    Only the staggered corrector is checked, because IDAS doesn't include
+    sensitivities in the error test of the simultaneous corrector.
+    """
+    from amici.sim.sundials import InternalSensitivityMethod, ParameterScaling
+
+    model_name = "test_dae_sensitivity_error_control_after_event"
+    antimony2amici(
+        """
+        p = 1; p0 = 1; w = 10
+        x = 0; z = 0
+        x' = 1 - x + (p - p0) * sin(w * time)
+        0 = z - 2 * x
+        at time >= 1: x = x + 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+        fixed_parameters=["p0", "w"],
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_parameter_scale(ParameterScaling.none)
+    t = np.linspace(0, 10, 101)
+    model.set_timepoints(t)
+    w = 10
+    sx_expected = (np.sin(w * t) - w * np.cos(w * t) + w * np.exp(-t)) / (
+        1 + w**2
+    )
+
+    solver = model.create_solver()
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    solver.set_sensitivity_method(SensitivityMethod.forward)
+    solver.set_internal_sensitivity_method(InternalSensitivityMethod.staggered)
+    solver.set_relative_tolerance(1e-6)
+    solver.set_absolute_tolerance(1e-8)
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+    sx = rdata.sx[:, 0, model.get_state_ids().index("x")]
+    assert np.abs(sx).max() > 0.1
+    # without error control, the error after the event is ~3e-2
+    assert_allclose(sx, sx_expected, rtol=0, atol=1e-5)

@@ -1110,11 +1110,15 @@ void IDASolver::calc_consistent_state(
     // The sensitivities are not up to date at this point; they are made
     // consistent after the subsequent `sens_reinit`.
     auto ida_mem = static_cast<IDAMem>(solver_memory_.get());
+    // `IDACalcIC` resets `ida_errconS` (via `IDAInitialSetup`) if
+    // `ida_sensi` is false.
     auto const sensi = ida_mem->ida_sensi;
+    auto const errconS = ida_mem->ida_errconS;
     ida_mem->ida_sensi = SUNFALSE;
     int const status
         = IDACalcIC(ida_mem, IDA_YA_YDP_INIT, distinct_tout1(t, tout1, 1));
     ida_mem->ida_sensi = sensi;
+    ida_mem->ida_errconS = errconS;
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDACalcIC");
     // `IDAGetConsistentIC` is only available before the first step
