@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 import copy
+import difflib
+import inspect
 import logging
 import numbers
 import re
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from pprint import pprint
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pandas as pd
@@ -44,6 +46,28 @@ __all__ = [
 ]
 logger = get_logger(__name__, log_level=logging.INFO)
 
+
+#: Arguments of the model import functions that are set by
+#: :class:`PetabImporter` and can't be passed via ``import_kwargs``.
+_RESERVED_IMPORT_KWARGS = frozenset(
+    {
+        "self",
+        "model",
+        "model_name",
+        "output_dir",
+        "observation_model",
+        "fixed_parameters",
+        "verbose",
+        "compile",
+        "skip_if_unchanged",
+        "hybridization",
+        "pysb_model_has_obs_and_noise",
+        "_events",
+        # required for PEtab semantics
+        "allow_reinit_fixpar_initcond",
+        "hardcode_symbols",
+    }
+)
 
 #: Default experiment ID to be used for measurements without an experiment ID.
 _DEFAULT_EXPERIMENT_ID = "__default__"
@@ -227,6 +251,7 @@ class PetabImporter:
         output_parameter_defaults: dict[str, float] | None = None,
         verbose: int | bool = logging.INFO,
         non_estimated_parameters_as_constants: bool = True,
+        import_kwargs: Mapping[str, Any] | None = None,
     ):
         """
         Create a new PetabImporter instance.
@@ -254,6 +279,16 @@ class PetabImporter:
             considered constant in AMICI. Setting this to ``True`` will reduce
             model size and simulation times. If sensitivities with respect to
             those parameters are required, this should be set to ``False``.
+        :param import_kwargs:
+            Additional keyword arguments for the model import function,
+            e.g., ``{"compute_conservation_laws": False}``.
+            Depending on the model type and on ``jax``, this is
+            :meth:`amici.importers.sbml.SbmlImporter.sbml2amici`,
+            :meth:`amici.importers.sbml.SbmlImporter.sbml2jax`,
+            :func:`amici.importers.pysb.pysb2amici`, or
+            :func:`amici.importers.pysb.pysb2jax`.
+            Arguments that are set by the PetabImporter, such as
+            ``model_name`` or ``fixed_parameters``, are not allowed.
         """
         self.petab_problem: v2.Problem = self._upgrade_or_copy_if_needed(
             petab_problem
@@ -314,6 +349,7 @@ class PetabImporter:
         self._non_estimated_parameters_as_constants: bool = (
             non_estimated_parameters_as_constants
         )
+        self._import_kwargs = self._check_import_kwargs(import_kwargs)
 
         if validate:
             logger.info("Validating PEtab problem ...")
@@ -431,6 +467,57 @@ class PetabImporter:
             self._output_dir = get_model_dir(self._module_name, jax=self._jax)
         return self._output_dir
 
+    def _import_function(self) -> Callable:
+        """Get the model import function for the model type and backend."""
+        if self.petab_problem.model.type_id == MODEL_TYPE_SBML:
+            return (
+                amici.SbmlImporter.sbml2jax
+                if self._jax
+                else amici.SbmlImporter.sbml2amici
+            )
+
+        from amici.importers.pysb import pysb2amici, pysb2jax
+
+        return pysb2jax if self._jax else pysb2amici
+
+    def _check_import_kwargs(
+        self, import_kwargs: Mapping[str, Any] | None
+    ) -> dict[str, Any]:
+        """Check the user-provided arguments for the model import function.
+
+        :return: A copy of ``import_kwargs``.
+        :raises ValueError:
+            For arguments that are reserved or not accepted by the import
+            function.
+        """
+        import_kwargs = dict(import_kwargs or {})
+        if reserved := sorted(import_kwargs.keys() & _RESERVED_IMPORT_KWARGS):
+            raise ValueError(
+                f"The import arguments {reserved} are set by the "
+                "PetabImporter and can't be passed via `import_kwargs`."
+            )
+
+        import_function = self._import_function()
+        params = inspect.signature(import_function).parameters.values()
+        if any(p.kind == p.VAR_KEYWORD for p in params):
+            # validated by the import function
+            return import_kwargs
+        allowed = {
+            p.name for p in params if p.kind != p.VAR_POSITIONAL
+        } - _RESERVED_IMPORT_KWARGS
+        if unknown := sorted(import_kwargs.keys() - allowed):
+            hints = {
+                key: match[0]
+                for key in unknown
+                if (match := difflib.get_close_matches(key, allowed, n=1))
+            }
+            raise ValueError(
+                f"Unknown arguments for `{import_function.__name__}` in "
+                f"`import_kwargs`: {unknown}."
+                + (f" Did you mean: {hints}?" if hints else "")
+            )
+        return import_kwargs
+
     def _do_import_sbml(self, skip_if_unchanged: bool = False):
         """Import the model.
 
@@ -512,22 +599,20 @@ class PetabImporter:
                 verbose=self._verbose,
                 hybridization=hybridization,
                 skip_if_unchanged=skip_if_unchanged,
-                # **kwargs,
+                **self._import_kwargs,
             )
             return sbml_importer
         else:
-            # TODO:
-            allow_reinit_fixpar_initcond = True
             sbml_importer.sbml2amici(
                 model_name=self._module_name,
                 output_dir=self.output_dir,
                 observation_model=observation_model,
                 fixed_parameters=fixed_parameters,
-                allow_reinit_fixpar_initcond=allow_reinit_fixpar_initcond,
+                allow_reinit_fixpar_initcond=True,
                 verbose=self._verbose,
                 compile=self._compile,
                 skip_if_unchanged=skip_if_unchanged,
-                # **kwargs,
+                **self._import_kwargs,
             )
         # TODO check_model(amici_model=model, petab_problem=petab_problem)
 
@@ -590,7 +675,7 @@ class PetabImporter:
                 pysb_model_has_obs_and_noise=True,
                 skip_if_unchanged=skip_if_unchanged,
                 # TODO: events
-                # **kwargs,
+                **self._import_kwargs,
             )
             return
         else:
@@ -605,7 +690,7 @@ class PetabImporter:
                 compile=self._compile,
                 _events=self._events,
                 skip_if_unchanged=skip_if_unchanged,
-                # **kwargs,
+                **self._import_kwargs,
             )
         # TODO check_model(amici_model=model, petab_problem=petab_problem)
 
