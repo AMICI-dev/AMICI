@@ -31,5 +31,4 @@ antimony>=2.13
 # TODO: switch back to a PyPI release once the fiddy redesign ships
 fiddy @ git+https://github.com/ICB-DCM/fiddy.git@main
 petab_sciml[torch] @ git+https://github.com/petab-dev/petab_sciml.git@76a2006134621ceb1b116eaf2dc23cabc66e6870
-# pinned until #3623 is merged, see python/sdist/pyproject.toml
--e git+https://github.com/petab-dev/libpetab-python.git@bd715134110ac44b4403786cd9010d80af8ea8a0#egg=petab
+-e git+https://github.com/petab-dev/libpetab-python.git@main#egg=petab
