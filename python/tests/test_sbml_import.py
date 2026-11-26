@@ -755,18 +755,21 @@ def test_unsupported_sigmas_rejected(tempdir):
         "the sigma of obs_x depends on spl_0.",
     )
 
-    # event noise formulas that depend on the states or on the event
-    #  observable itself
+    # event noise formulas that depend on the states, on the event
+    #  observable itself, or on time-resolved observables; and noise formulas
+    #  of time-resolved observables that depend on event observables
     ant_model_event = "p = 3; x = 1; x' = -x; E1: at time > 1: x = x + 1"
-    for sigma, expected in (
-        ("x * p", "the sigma of z1 depends on x."),
-        ("z1 * p", "the sigma of z1 depends on z1."),
+    for sigma_x, sigma_z1, expected in (
+        (None, "x * p", "the sigma of z1 depends on x."),
+        (None, "z1 * p", "the sigma of z1 depends on z1."),
+        (None, "obs_x * p", "the sigma of z1 depends on obs_x."),
+        ("z1 * p", None, "the sigma of obs_x depends on z1."),
     ):
         assert_rejected(
             antimony2sbml(ant_model_event),
             [
-                MC("obs_x", formula="x"),
-                MC("z1", formula="x", event_id="E1", sigma=sigma),
+                MC("obs_x", formula="x", sigma=sigma_x),
+                MC("z1", formula="x", event_id="E1", sigma=sigma_z1),
             ],
             expected,
         )
@@ -1564,14 +1567,13 @@ def test_placeholder_parameters():
     )
 
     # no name-based detection
-    de_model = SbmlImporter(sbml, from_file=False)._build_ode_model(
-        observation_model=[
-            MC(obs_id, **obs_formulas)
-            for obs_id, obs_formulas in formulas.items()
-        ],
-    )
-    assert de_model.noise_parameters() == []
-    assert de_model.observable_parameters() == []
+    with pytest.raises(ValueError, match="unknown symbols"):
+        SbmlImporter(sbml, from_file=False)._build_ode_model(
+            observation_model=[
+                MC(obs_id, **obs_formulas)
+                for obs_id, obs_formulas in formulas.items()
+            ],
+        )
 
     # not supported for event observables and for the SUNDIALS backend
     with pytest.raises(NotImplementedError, match="time-resolved"):
@@ -2807,3 +2809,260 @@ def test_failure_before_main_simulation(tempdir):
     assert np.all(np.isnan(rdata.sllh))
     assert np.all(np.isnan(rdata.x))
     assert np.all(np.isnan(rdata.y))
+
+
+def _custom_nllh(str_symbol, extra=""):
+    return f"(m{str_symbol} - {str_symbol})**2 / sigma{str_symbol}{extra}"
+
+
+@pytest.mark.parametrize(
+    "channel",
+    [
+        MC("obs1", formula="2 * pi * x1"),
+        MC("obs1", formula="x1", sigma="E * x1"),
+        MC("obs1", formula="x1 + undeclared"),
+        # undeclared placeholder
+        MC("obs1", formula="x1", sigma="noiseParameter1"),
+    ],
+)
+def test_observation_model_undeclared_symbols(tempdir, channel):
+    """Unknown symbols in measurement channels are rejected."""
+    sbml_importer = SbmlImporter(
+        antimony2sbml("x1' = -k * x1; x1 = 1; k = 1"), from_file=False
+    )
+    with pytest.raises(ValueError, match="contains unknown symbols"):
+        sbml_importer.sbml2amici(
+            model_name="test_observation_model_undeclared_symbols",
+            output_dir=tempdir,
+            observation_model=[channel],
+            compile=False,
+        )
+
+
+@pytest.mark.parametrize(
+    "channel, match",
+    [
+        # placeholder declared for another channel
+        (
+            MC("obs2", formula="observableParameter1 * x1"),
+            "formula of measurement channel `obs2` .* unknown symbols: "
+            "observableParameter1\\.",
+        ),
+        # observable placeholder in sigma
+        (
+            MC(
+                "obs2",
+                formula="x1",
+                sigma="observableParameter1",
+                observable_placeholders=["observableParameter1"],
+            ),
+            "sigma of measurement channel `obs2` .* unknown symbols: "
+            "observableParameter1\\.",
+        ),
+        # noise placeholder in formula
+        (
+            MC(
+                "obs2",
+                formula="noiseParameter1 * x1",
+                noise_placeholders=["noiseParameter1"],
+            ),
+            "formula of measurement channel `obs2` .* unknown symbols: "
+            "noiseParameter1\\.",
+        ),
+        # placeholder in custom noise distribution
+        (
+            MC(
+                "obs2",
+                formula="x1",
+                noise_placeholders=["noiseParameter1"],
+                noise_distribution=lambda s: _custom_nllh(
+                    s, " + noiseParameter1"
+                ),
+            ),
+            "noise distribution of measurement channel `obs2` .* "
+            "unavailable symbols: noiseParameter1\\.",
+        ),
+    ],
+)
+def test_observation_model_misplaced_placeholders(channel, match):
+    """Placeholders can only be used where they are declared."""
+    sbml_importer = SbmlImporter(
+        antimony2sbml("x1' = -k * x1; x1 = 1; k = 1"), from_file=False
+    )
+    with pytest.raises(ValueError, match=match):
+        sbml_importer._build_ode_model(
+            observation_model=[
+                MC(
+                    "obs1",
+                    formula="observableParameter1 * x1",
+                    observable_placeholders=["observableParameter1"],
+                ),
+                channel,
+            ],
+        )
+
+
+@pytest.mark.parametrize(
+    "event_id, extra, unavailable",
+    [
+        (None, " + pi", "pi"),
+        (None, " + time", "time"),
+        (None, " + x1", "x1"),
+        # assignment rule target
+        (None, " + v", "v"),
+        # event target
+        (None, " + k2", "k2"),
+        # other channels' sigmas and measurements
+        (None, " + sigma_obs1", "sigma_obs1"),
+        (None, " + mobs1", "mobs1"),
+        ("E1", " + obs1", "obs1"),
+        # other event observables
+        ("E1", " + obs3", "obs3"),
+    ],
+)
+def test_observation_model_noise_distribution_unavailable(
+    event_id, extra, unavailable
+):
+    """Custom noise distributions can only use parameters and the
+    observables available when evaluating the log-likelihood."""
+    sbml_importer = SbmlImporter(
+        antimony2sbml(
+            "x1' = -k * x1; x1 = 1; k = 1; v := 2 * k; k2 = 1;"
+            "E1: at time > 1: k2 = 2"
+        ),
+        from_file=False,
+    )
+    with pytest.raises(
+        ValueError, match=f"contains unavailable symbols: {unavailable}\\."
+    ):
+        sbml_importer._build_ode_model(
+            observation_model=[
+                MC("obs1", formula="x1"),
+                MC(
+                    "obs2",
+                    formula="x1",
+                    event_id=event_id,
+                    noise_distribution=lambda s: _custom_nllh(s, extra),
+                ),
+                MC("obs3", formula="x1", event_id="E1"),
+            ],
+        )
+
+
+@pytest.mark.parametrize(
+    "channel",
+    [
+        MC("obs2", formula="x1 * obs3"),
+        MC("obs2", formula="x1 * obs1", event_id="E1"),
+    ],
+)
+def test_observation_model_other_kind_observables(channel):
+    """Time-resolved and event-resolved observables can't refer to each
+    other.
+
+    For sigmas, see `test_unsupported_sigmas_rejected`.
+    """
+    sbml_importer = SbmlImporter(
+        antimony2sbml("x1' = -k * x1; x1 = 1; k = 1; E1: at time > 1: k = 2"),
+        from_file=False,
+    )
+    with pytest.raises(ValueError, match="contains unknown symbols: obs"):
+        sbml_importer._build_ode_model(
+            observation_model=[
+                MC("obs1", formula="x1"),
+                channel,
+                MC("obs3", formula="x1", event_id="E1"),
+            ],
+        )
+
+
+def test_observation_model_declared_symbols():
+    """Measurement channels may use model entities, observables, time, and
+    declared placeholders."""
+    from amici.importers.utils import amici_time_symbol
+
+    sbml_importer = SbmlImporter(
+        antimony2sbml("x1' = -k * x1; x1 = 1; k = 1"), from_file=False
+    )
+    sbml_importer._build_ode_model(
+        observation_model=[
+            MC(
+                "obs1",
+                formula="observableParameter1 * x1 + time",
+                observable_placeholders=["observableParameter1"],
+            ),
+            MC(
+                "obs2",
+                formula="x1",
+                sigma="noiseParameter1 * obs2",
+                noise_placeholders=["noiseParameter1"],
+            ),
+            MC(
+                "obs3",
+                formula="x1",
+                noise_distribution=lambda s: _custom_nllh(s, " + k"),
+            ),
+            MC(
+                "obs4",
+                formula=symbol_with_assumptions("x1") * amici_time_symbol,
+                sigma=amici_time_symbol,
+            ),
+            MC("obs5", formula=sp.Symbol("t") * sp.Symbol("x1")),
+        ],
+    )
+    symbols = sbml_importer._symbols
+    x1, k, obs2, obs3 = (
+        symbol_with_assumptions(name) for name in ("x1", "k", "obs2", "obs3")
+    )
+    observable_parameter1 = symbol_with_assumptions("observableParameter1")
+    noise_parameter1 = symbol_with_assumptions("noiseParameter1")
+    assert set(symbols[SymbolId.OBSERVABLE_PARAMETER]) == {
+        observable_parameter1
+    }
+    assert set(symbols[SymbolId.NOISE_PARAMETER]) == {noise_parameter1}
+    observables = {
+        str(obs_id): obs["value"]
+        for obs_id, obs in symbols[SymbolId.OBSERVABLE].items()
+    }
+    assert (
+        observables["obs1"] == observable_parameter1 * x1 + amici_time_symbol
+    )
+    sigmas = {
+        str(sigma_id): sigma["value"]
+        for sigma_id, sigma in symbols[SymbolId.SIGMAY].items()
+    }
+    assert sigmas["sigma_obs2"] == noise_parameter1 * obs2
+    assert observables["obs4"] == x1 * amici_time_symbol
+    assert sigmas["sigma_obs4"] == amici_time_symbol
+    assert observables["obs5"] == x1 * amici_time_symbol
+    nllh_obs3 = next(
+        llh["value"]
+        for llh_id, llh in symbols[SymbolId.LLHY].items()
+        if str(llh_id) == "Jobs3"
+    )
+    assert k in nllh_obs3.free_symbols
+    assert obs3 in nllh_obs3.free_symbols
+
+
+def test_assignment_rules_to_observables_csymbols():
+    """Observables from assignment rules may use SBML csymbols."""
+    from amici.importers.sbml import assignment_rules_to_observables
+    from amici.importers.utils import amici_time_symbol
+    from sbmlmath import avogadro
+
+    sbml_importer = SbmlImporter(
+        antimony2sbml(
+            "x1' = -k * x1; x1 = 1; k = 1; v := x1 * time * avogadro"
+        ),
+        from_file=False,
+    )
+    observation_model = assignment_rules_to_observables(
+        sbml_importer.sbml_model,
+        filter_function=lambda p: p.getId() == "v",
+    )
+    sbml_importer._build_ode_model(observation_model=observation_model)
+    ((obs_id, obs),) = sbml_importer._symbols[SymbolId.OBSERVABLE].items()
+    assert str(obs_id) == "v"
+    assert obs["value"] == (
+        symbol_with_assumptions("x1") * amici_time_symbol * avogadro.evalf()
+    )

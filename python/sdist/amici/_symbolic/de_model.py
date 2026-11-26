@@ -2151,7 +2151,9 @@ class DEModel:
                 *self.sym("spl"),
             }
             if name == "sigmaz":
-                syms_unavailable |= set(syms_yz)
+                syms_unavailable |= {*syms_yz, *self.sym("y")}
+            else:
+                syms_unavailable |= set(self.sym("z"))
             unavailable_in_sigma = {
                 sym_yz: syms
                 for sym_yz, eq_sigma_yz in zip(
