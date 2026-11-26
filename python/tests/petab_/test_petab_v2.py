@@ -1034,6 +1034,49 @@ def test_parameter_scales_apply_parameters(parameter_scales_test_importer):
     }
 
 
+@pytest.mark.parametrize("placeholder_type", ["observable", "noise"])
+def test_apply_parameters_rejects_timepoint_specific_overrides(
+    parameter_scales_test_importer, placeholder_type
+):
+    """`apply_parameters` rejects timepoint-specific placeholder overrides,
+    except for numeric overrides of a bare noise placeholder."""
+    from amici.sim.sundials.petab import ExperimentManager
+
+    em = parameter_scales_test_importer.create_simulator().exp_man
+    problem = copy.deepcopy(em.petab_problem)
+    problem.add_parameter("p_new", estimate=True, nominal_value=3, lb=1, ub=5)
+    # `e1`: symbolic overrides; `e2`: numeric overrides
+    e1_measurements = problem.get_measurements_for_experiment(problem["e1"])
+    e2_measurements = problem.get_measurements_for_experiment(problem["e2"])
+    if placeholder_type == "observable":
+        e1_measurements[-1].observable_parameters = ["p_new"]
+        e2_measurements[-1].observable_parameters = [3.0]
+    else:
+        e1_measurements[-1].noise_parameters = ["p_new"]
+        e2_measurements[-1].noise_parameters = [0.3]
+
+    # `create_edata` applies the nominal parameter values
+    em = ExperimentManager(em.model, problem)
+    match = "Timepoint-specific placeholder overrides"
+    with pytest.raises(NotImplementedError, match=match):
+        em.create_edata("e1")
+
+    if placeholder_type == "observable":
+        with pytest.raises(NotImplementedError, match=match):
+            em.create_edata("e2")
+    else:
+        # numeric noise overrides are passed as sigmas
+        edata = em.create_edata("e2")
+        em.apply_parameters(edata, _PSCALE_TEST_X | {"p_new": 3.0})
+        assert list(edata.get_noise_scales()) == [0.2, 0.2, 0.3]
+        # the placeholder still gets a numeric value, for the sigmas at
+        #  unmeasured points
+        free_parameters = dict(
+            zip(em.model.get_free_parameter_ids(), edata.free_parameters)
+        )
+        assert free_parameters["noiseParameter1_obs_B"] == 0.3
+
+
 def test_parameter_scales_sensitivities(parameter_scales_simulators):
     """Simulation results on non-linear parameter scales equal those on
     linear scale, and their sensitivities are related by the chain rule."""
