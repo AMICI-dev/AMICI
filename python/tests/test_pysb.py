@@ -669,39 +669,57 @@ def test_pysb_events_disable_conservation_laws(caplog):
         )
 
 
+def _conservation_law_root_model():
+    """PySB model with a conservation law and nested expressions.
+
+    The conserved total of `R` enters the root function and the observable
+    via the expression `Rp`, which depends on the eliminated state.
+    """
+    from amici.importers.pysb import ode_model_from_pysb_importer
+
+    model = pysb.Model("cl_root", _export=False)
+    r = pysb.Monomer("R", ["s"], {"s": ["u", "p"]}, _export=False)
+    c = pysb.Monomer("C", _export=False)
+    r_0 = pysb.Parameter("R_0", 2.0, _export=False)
+    k1 = pysb.Parameter("k1", 1.0, _export=False)
+    rp = pysb.Observable("Rp", r(s="p"), _export=False)
+    # root function depending on `w`
+    rate = pysb.Expression(
+        "rate", sp.Piecewise((1, rp > 1.5), (0, True)), _export=False
+    )
+    # observable depending on `Rp`
+    rp2 = pysb.Expression("Rp2", 2 * rp, _export=False)
+    for component in (r, c, r_0, k1, rp, rate, rp2):
+        model.add_component(component)
+    model.add_initial(pysb.Initial(r(s="u"), r_0, _export=False))
+    for rule in (
+        pysb.Rule("conv", r(s="u") >> r(s="p"), k1, _export=False),
+        pysb.Rule("prod", None >> c(), rate, _export=False),
+    ):
+        model.add_component(rule)
+    de_model = ode_model_from_pysb_importer(
+        model,
+        observation_model=[MeasurementChannel("Rp2")],
+        compute_conservation_laws=True,
+    )
+    assert de_model.num_cons_law() == 1
+    return de_model
+
+
+def _assert_eqs_equal(actual, expected, name):
+    """Compare a matrix or a list of per-event matrices."""
+    if isinstance(actual, sp.MatrixBase):
+        actual, expected = [actual], [expected]
+    for a, b in zip(actual, expected, strict=True):
+        assert (a - b).is_zero_matrix, name
+
+
 @pytest.mark.parametrize("first", ["stau", "drootdp", "dtaudp", "drootdtcl"])
 def test_conservation_law_derivatives_independent_of_order(first):
     """Derivatives involving conservation laws don't depend on the order in
     which they are computed."""
-    from amici.importers.pysb import ode_model_from_pysb_importer
-
-    def build():
-        model = pysb.Model("lock_order", _export=False)
-        r = pysb.Monomer("R", ["s"], {"s": ["u", "p"]}, _export=False)
-        c = pysb.Monomer("C", _export=False)
-        r_0 = pysb.Parameter("R_0", 2.0, _export=False)
-        k1 = pysb.Parameter("k1", 1.0, _export=False)
-        rp = pysb.Observable("Rp", r(s="p"), _export=False)
-        # root function depending on `w`
-        rate = pysb.Expression(
-            "rate", sp.Piecewise((1, rp > 1.5), (0, True)), _export=False
-        )
-        for component in (r, c, r_0, k1, rp, rate):
-            model.add_component(component)
-        model.add_initial(pysb.Initial(r(s="u"), r_0, _export=False))
-        for rule in (
-            pysb.Rule("conv", r(s="u") >> r(s="p"), k1, _export=False),
-            pysb.Rule("prod", None >> c(), rate, _export=False),
-        ):
-            model.add_component(rule)
-        de_model = ode_model_from_pysb_importer(
-            model, compute_conservation_laws=True
-        )
-        assert de_model.num_cons_law() == 1
-        return de_model
-
     names = ("dwdp", "drootdp", "sroot", "stau", "dtaudp", "drootdtcl")
-    ref = build()
+    ref = _conservation_law_root_model()
     expected = {name: ref.eq(name) for name in names}
 
     # The conserved total of `R` enters the root functions via `Rp`, so
@@ -719,14 +737,114 @@ def test_conservation_law_derivatives_independent_of_order(first):
     for stau in expected["stau"]:
         assert set(stcl.values()) <= stau.free_symbols
 
-    de_model = build()
+    de_model = _conservation_law_root_model()
     de_model.eq(first)
     for name in names:
-        actual = de_model.eq(name)
-        if isinstance(actual, sp.MatrixBase):
-            actual, ref_val = [actual], [expected[name]]
-        else:
-            # per-event lists for `stau` and `dtaudp`
-            ref_val = expected[name]
-        for a, b in zip(actual, ref_val, strict=True):
-            assert (a - b).is_zero_matrix, name
+        _assert_eqs_equal(de_model.eq(name), expected[name], name)
+
+
+@pytest.mark.parametrize("seed", [None, 0, 1])
+def test_derivatives_independent_of_order_permuted(seed):
+    """Derivatives don't depend on the order in which they are computed.
+
+    Compares the derivatives computed in the order below with
+    those computed in reversed (``seed=None``) or shuffled order.
+    """
+    import random
+
+    names = [
+        "dwdw",
+        "dwdp",
+        "dwdx",
+        "dwdtcl",
+        # (`dxdotdw`, `dxdotdx_explicit`, and `dxdotdp_explicit` are
+        #  precomputed by the PySB importer, so their order can't be varied)
+        "dydw",
+        "dydx",
+        "dydp",
+        "drootdw",
+        "drootdtcl",
+        "drootdx",
+        "drootdp",
+        "sroot",
+        "stau",
+        "dtaudx",
+        "dtaudp",
+        "deltasx",
+    ]
+    ref = _conservation_law_root_model()
+    expected = {name: ref.eq(name) for name in names}
+    # `y = 2 * Rp`; the derivative w.r.t. the eliminated state (`w[0]`)
+    #  enters only via `dwdw`
+    assert expected["dydw"][0, 0] == 2
+
+    order = names[::-1]
+    if seed is not None:
+        random.Random(seed).shuffle(order)
+    de_model = _conservation_law_root_model()
+    for name in order:
+        de_model.eq(name)
+    for name in names:
+        _assert_eqs_equal(de_model.eq(name), expected[name], name)
+
+
+def test_total_derivatives():
+    """Total derivatives match the derivatives of the fully substituted
+    formulas."""
+    de_model = _conservation_law_root_model()
+    w, p, x = de_model.sym("w"), de_model.sym("p"), de_model.sym("x")
+    # `tcl` as a function of `p` with derivative `dtcldp`
+    tcl = de_model.sym("tcl")
+    tcl_of_p = tcl + de_model.sym("dtcldp") * p
+
+    def substitute(expr):
+        for _ in range(len(w)):
+            expr = expr.subs(dict(zip(w, de_model.eq("w"), strict=True)))
+        return expr.subs(dict(zip(tcl, tcl_of_p, strict=True)))
+
+    for eq in ("y", "root"):
+        formula = de_model.eq(eq).applyfunc(substitute)
+        for var, sym_var in (("x", x), ("p", p)):
+            actual = de_model.eq(f"d{eq}d{var}")
+            if eq == "y" and var == "x":
+                # stored transposed
+                actual = actual.T
+            expected = formula.jacobian(sym_var)
+            assert not expected.is_zero_matrix
+            assert sp.simplify(
+                actual.applyfunc(substitute) - expected
+            ).is_zero_matrix, f"d{eq}d{var}"
+
+
+def test_chain_variables():
+    """The chain variables of the total derivatives, see
+    `DEModel._derivative`."""
+    de_model = _conservation_law_root_model()
+    expected = {
+        # total in `tcl`; the dependencies on `w` are added at runtime
+        ("w", "p"): ["tcl"],
+        # `dwdx` is computed separately (`dtcldx = 0`)
+        ("w", "x"): ["tcl"],
+        # partial w.r.t. chain variables
+        ("w", "w"): [],
+        ("w", "tcl"): [],
+        ("root", "w"): [],
+        ("root", "tcl"): [],
+        ("y", "w"): [],
+        # total
+        ("y", "p"): ["w"],
+        ("y", "x"): ["w"],
+        ("root", "p"): ["w", "tcl"],
+        ("root", "x"): ["w", "tcl"],
+        # the dependencies via `w` are added at runtime
+        ("xdot", "p"): [],
+        ("xdot", "x"): [],
+        # `w` is substituted in per-event equations
+        ("deltax", "p"): [],
+        ("z", "p"): [],
+        ("rz", "p"): [],
+    }
+    actual = {
+        (eq, var): de_model._chain_variables(eq, var) for eq, var in expected
+    }
+    assert actual == expected
