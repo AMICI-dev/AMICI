@@ -1643,7 +1643,8 @@ void Model::get_event_time_sensitivity(
             &stau.at(ip), t, compute_x_pos(x),
             state_.unscaled_parameters.data(), state_.fixed_parameters.data(),
             state_.h.data(), derived_state_.w_.data(), dx.data(),
-            state_.total_cl.data(), sx.data(ip), plist(ip), ie
+            state_.total_cl.data(), state_.stotal_cl.data(), sx.data(ip),
+            plist(ip), ie
         );
     }
 }
@@ -1849,7 +1850,7 @@ void Model::add_adjoint_event_time_update(
             &dtaudp, t, x_pos, state_.unscaled_parameters.data(),
             state_.fixed_parameters.data(), state_.h.data(),
             derived_state_.w_.data(), dx.data(), state_.total_cl.data(),
-            plist(ip), ie
+            state_.stotal_cl.data(), plist(ip), ie
         );
         if (always_check_finite_) {
             check_finite(

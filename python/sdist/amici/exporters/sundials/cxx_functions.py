@@ -307,8 +307,8 @@ functions = {
         "realtype *stau, const realtype t, const realtype *x, "
         "const realtype *p, const realtype *k, const realtype *h, "
         "const realtype *w, const realtype *dx, "
-        "const realtype *tcl, const realtype *sx, const int ip, "
-        "const int ie"
+        "const realtype *tcl, const realtype *dtcldp, const realtype *sx, "
+        "const int ip, const int ie"
     ),
     "deltax": _FunctionInfo(
         "double *deltax, const realtype t, const realtype *x, "
@@ -364,7 +364,7 @@ functions = {
         "realtype *dtaudp, const realtype t, const realtype *x, "
         "const realtype *p, const realtype *k, const realtype *h, "
         "const realtype *w, const realtype *dx, const realtype *tcl, "
-        "const int ip, const int ie"
+        "const realtype *dtcldp, const int ip, const int ie"
     ),
     "w": _FunctionInfo(
         "realtype *w, const realtype t, const realtype *x, "

@@ -2340,12 +2340,12 @@ class DEModel:
         :param dydx_name:
             defines the name of the symbolic variable that
             defines the derivative of the ``eq`` with respect to ``chainvar``,
-            default is ``d{eq}d{chainvar}``
+            default is ``d{eq}d{chainvar}``, only for a single chain variable
 
         :param dxdz_name:
             defines the name of the symbolic variable that
             defines the derivative of the ``chainvar`` with respect to ``var``,
-            default is d{chainvar}d{var}
+            default is ``d{chainvar}d{var}``, only for a single chain variable
         """
         # compute total derivative according to chainrule
         # Dydz = dydx*dxdz + dydz
@@ -2357,14 +2357,17 @@ class DEModel:
             # NB deepcopy does not work safely, see sympy issue #7672
             self._eqs[name] = self._eqs[name].copy()
 
-        for chainvar in chainvars:
-            if dydx_name is None:
-                dydx_name = f"d{eq}d{chainvar}"
-            if dxdz_name is None:
-                dxdz_name = f"d{chainvar}d{var}"
+        if len(chainvars) > 1 and (
+            dydx_name is not None or dxdz_name is not None
+        ):
+            raise ValueError(
+                "`dydx_name` and `dxdz_name` are only supported for a single "
+                "chain variable."
+            )
 
-            dydx = self.sym_or_eq(name, dydx_name)
-            dxdz = self.sym_or_eq(name, dxdz_name)
+        for chainvar in chainvars:
+            dydx = self.sym_or_eq(name, dydx_name or f"d{eq}d{chainvar}")
+            dxdz = self.sym_or_eq(name, dxdz_name or f"d{chainvar}d{var}")
             # Save time for large models if one multiplicand is zero,
             # which is not checked for by sympy
             if not smart_is_zero_matrix(dydx) and not smart_is_zero_matrix(
