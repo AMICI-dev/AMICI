@@ -115,7 +115,9 @@ fiddy = [
     "fiddy @ git+https://github.com/ICB-DCM/fiddy.git@b6c80eef138faa85591c3b5088ddf0a1635b4a20",
 ]
 libpetab = [
-    "petab @ git+https://github.com/petab-dev/libpetab-python.git@main",
+    # pinned to the commit before PEtab-dev/libpetab-python#579, which breaks
+    # the JAX backend for converted PEtab v2 problems; unpin with AMICI#3623
+    "petab @ git+https://github.com/petab-dev/libpetab-python.git@bd715134110ac44b4403786cd9010d80af8ea8a0",
 ]
 # pinned: petab_sciml is still pre-release. Since PR #84 ("update_api_page"),
 # Layer/Node are no longer top-level exports (amici imports them from
