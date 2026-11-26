@@ -526,9 +526,6 @@ class PetabImporter:
                 allow_reinit_fixpar_initcond=allow_reinit_fixpar_initcond,
                 verbose=self._verbose,
                 compile=self._compile,
-                # FIXME: simplification takes ages for Smith_BMCSystBiol2013
-                #  due to nested piecewises / Heavisides?!
-                simplify=None,
                 skip_if_unchanged=skip_if_unchanged,
                 # **kwargs,
             )
