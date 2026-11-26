@@ -1824,10 +1824,21 @@ class DEModel:
                 event_ids.index(event_obs.get_event())
                 for event_obs in self._event_observables
             ]
+            # z is evaluated without access to `w`
+            substitute_w = self._get_expression_substituter()
             for (iz, ie), event_obs in zip(
                 enumerate(z2event), self._event_observables, strict=True
             ):
-                event_observables[ie][iz] = event_obs.get_val()
+                event_observables[ie][iz] = substitute_w(event_obs.get_val())
+                if syms_spl := (
+                    event_observables[ie][iz].free_symbols
+                    & set(self.sym("spl"))
+                ):
+                    raise NotImplementedError(
+                        "Event observables that depend on splines are not "
+                        f"supported. However, {event_obs.get_id()} depends "
+                        f"on {', '.join(sorted(map(str, syms_spl)))}."
+                    )
 
             self._eqs[name] = event_observables
             self._z2event = z2event
@@ -1855,20 +1866,37 @@ class DEModel:
                 for ie in range(self.num_events())
             ]
 
-        elif name in ["rz", "drzdx", "drzdp"]:
+        elif name == "rz":
+            # rz is evaluated without access to `w`
+            substitute_w = self._get_expression_substituter()
+            root = self.eq("root")
+            # sets `_z2event`
+            self.eq("z")
             eq_events = []
             for ie in range(self.num_events()):
-                val = sp.zeros(
-                    self.num_eventobs(),
-                    1 if name == "rz" else len(self.sym(match_deriv[2])),
-                )
+                val = sp.zeros(self.num_eventobs(), 1)
                 # match event observables to root function
                 for iz in range(self.num_eventobs()):
                     if ie == self._z2event[iz]:
-                        val[iz, :] = self.eq(name.replace("rz", "root"))[ie, :]
+                        val[iz] = substitute_w(root[ie])
+                if syms_spl := val.free_symbols & set(self.sym("spl")):
+                    raise NotImplementedError(
+                        "Triggers of events with event observables that "
+                        "depend on splines are not supported. However, the "
+                        f"trigger of {self._events[ie].get_id()} depends on "
+                        f"{', '.join(sorted(map(str, syms_spl)))}."
+                    )
                 eq_events.append(val)
 
             self._eqs[name] = eq_events
+
+        elif name in ["drzdx", "drzdp"]:
+            # partial derivatives, see `dzdx`
+            var = self.sym(match_deriv[2])
+            self._eqs[name] = [
+                smart_jacobian(self.eq("rz")[ie], var)
+                for ie in range(self.num_events())
+            ]
 
         elif name == "stau":
             self._eqs[name] = [
