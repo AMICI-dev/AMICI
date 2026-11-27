@@ -178,8 +178,12 @@ class DEModel:
         arguments for :meth:`DEModel.totalDerivative`
 
     :ivar _lock_total_derivative:
-        add chainvariables to this set when computing total derivative from a partial derivative call to enforce a
-        partial derivative in the next recursion. prevents infinite recursion
+        chain variables that are held fixed while a total derivative ``d{eq}d{var}`` is computed. Derivatives computed
+        while a chain variable is listed here don't apply the chain rule for that variable. In
+        :meth:`DEModel._derivative`, the total derivative starts from the partial derivative, which is computed under
+        the same name and later overwritten; the lock ensures that this nested computation yields the partial
+        derivative and prevents infinite recursion.
+        While the lock is non-empty, ``Jy``, ``Jz``, ``Jrz``, and ``dydx`` are not transposed.
 
     :ivar _simplify:
         If not ``None``, this function will be used to simplify symbolic
@@ -2285,17 +2289,20 @@ class DEModel:
         ignore_chainrule = {
             ("xdot", "p"): "w",  # has generic implementation in c++ code
             ("xdot", "x"): "w",  # has generic implementation in c++ code
-            ("w", "w"): "tcl",  # dtcldw = 0
             ("w", "x"): "tcl",  # dtcldx = 0
-            ("root", "w"): "tcl",  # dtcldw = 0
         }
         # automatically detect chainrule
+        chain_candidates = ["w", "tcl"]
         chainvars = [
             cv
-            for cv in ["w", "tcl"]
+            for cv in chain_candidates
             if var_in_function_signature(eq, cv, self.is_ode())
             and cv not in self._lock_total_derivative
-            and var != cv
+            # Derivatives w.r.t. a chain variable are partial w.r.t. the
+            #  other chain variables. They are the left factors of the chain
+            #  rule (e.g., `drootdtcl` in `drootdp`) and would otherwise
+            #  double-count the paths via the other chain variables.
+            and var not in chain_candidates
             and min(self.sym(cv).shape)
             and (
                 (eq, var) not in ignore_chainrule
@@ -2303,6 +2310,10 @@ class DEModel:
             )
         ]
         if len(chainvars):
+            # The derivatives of the chain variables must be total
+            #  derivatives, so they must be computed before locking.
+            for cv in chainvars:
+                self.sym_or_eq(name, f"d{cv}d{var}")
             self._lock_total_derivative += chainvars
             self._total_derivative(name, eq, chainvars, var)
             for cv in chainvars:

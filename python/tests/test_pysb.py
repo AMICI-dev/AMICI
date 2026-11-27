@@ -667,3 +667,66 @@ def test_pysb_events_disable_conservation_laws(caplog):
         ode_model_from_pysb_importer(
             model, _events=[event(symbol_with_assumptions("foo"))]
         )
+
+
+@pytest.mark.parametrize("first", ["stau", "drootdp", "dtaudp", "drootdtcl"])
+def test_conservation_law_derivatives_independent_of_order(first):
+    """Derivatives involving conservation laws don't depend on the order in
+    which they are computed."""
+    from amici.importers.pysb import ode_model_from_pysb_importer
+
+    def build():
+        model = pysb.Model("lock_order", _export=False)
+        r = pysb.Monomer("R", ["s"], {"s": ["u", "p"]}, _export=False)
+        c = pysb.Monomer("C", _export=False)
+        r_0 = pysb.Parameter("R_0", 2.0, _export=False)
+        k1 = pysb.Parameter("k1", 1.0, _export=False)
+        rp = pysb.Observable("Rp", r(s="p"), _export=False)
+        # root function depending on `w`
+        rate = pysb.Expression(
+            "rate", sp.Piecewise((1, rp > 1.5), (0, True)), _export=False
+        )
+        for component in (r, c, r_0, k1, rp, rate):
+            model.add_component(component)
+        model.add_initial(pysb.Initial(r(s="u"), r_0, _export=False))
+        for rule in (
+            pysb.Rule("conv", r(s="u") >> r(s="p"), k1, _export=False),
+            pysb.Rule("prod", None >> c(), rate, _export=False),
+        ):
+            model.add_component(rule)
+        de_model = ode_model_from_pysb_importer(
+            model, compute_conservation_laws=True
+        )
+        assert de_model.num_cons_law() == 1
+        return de_model
+
+    names = ("dwdp", "drootdp", "sroot", "stau", "dtaudp", "drootdtcl")
+    ref = build()
+    expected = {name: ref.eq(name) for name in names}
+
+    # The conserved total of `R` enters the root functions via `Rp`, so
+    #  `drootdp` contains the total's sensitivities, each exactly once.
+    stcl = {
+        str(s): s
+        for s in expected["drootdp"].free_symbols
+        if str(s).startswith("stcl_")
+    }
+    assert set(stcl) == {"stcl_s1__R_0", "stcl_s1__k1"}
+    stcl_r0, stcl_k1 = stcl["stcl_s1__R_0"], stcl["stcl_s1__k1"]
+    assert expected["drootdp"] == sp.Matrix(
+        [[-stcl_r0, -stcl_k1], [stcl_r0, stcl_k1]]
+    )
+    for stau in expected["stau"]:
+        assert set(stcl.values()) <= stau.free_symbols
+
+    de_model = build()
+    de_model.eq(first)
+    for name in names:
+        actual = de_model.eq(name)
+        if isinstance(actual, sp.MatrixBase):
+            actual, ref_val = [actual], [expected[name]]
+        else:
+            # per-event lists for `stau` and `dtaudp`
+            ref_val = expected[name]
+        for a, b in zip(actual, ref_val, strict=True):
+            assert (a - b).is_zero_matrix, name
