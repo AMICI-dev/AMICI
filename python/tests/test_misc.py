@@ -107,7 +107,11 @@ def test_cmake_compilation(sbml_example_presimulation_module):
 @pytest.mark.skipif(sys.platform == "win32", reason="requires POSIX shell")
 def test_model_rebuild_reruns_swig_on_swig_change(tmp_path, monkeypatch):
     """Check that rebuilding a model reruns SWIG if the SWIG version changed,
-    even if the SWIG executable path and the interface file didn't."""
+    even if the SWIG executable path and the interface file didn't.
+
+    Also checks that the build uses cmake and ninja of the current Python
+    environment.
+    """
     from amici.exporters.sundials import compile as compile_module
     from amici.exporters.sundials.compile import build_model_extension
     from amici.importers.antimony import antimony2amici
@@ -135,6 +139,17 @@ def test_model_rebuild_reruns_swig_on_swig_change(tmp_path, monkeypatch):
     )
     swig.chmod(0o755)
     monkeypatch.setenv("SWIG", str(swig))
+
+    # Also check that the model build uses cmake and ninja of the current
+    #  Python environment, not broken ones that come first on PATH.
+    from amici._installation.build_tools import _get_env_tool_dir
+
+    if _get_env_tool_dir("cmake") and _get_env_tool_dir("ninja"):
+        for tool in ("cmake", "ninja"):
+            _write_fake_tool(bin_dir, tool)
+        monkeypatch.setenv(
+            "PATH", f"{bin_dir}{os.pathsep}{os.environ['PATH']}"
+        )
 
     module_name = "test_model_rebuild_reruns_swig"
     model_dir = tmp_path / module_name
@@ -218,9 +233,10 @@ def _write_fake_swig(path: Path) -> Path:
 def test_model_build_uses_env_swig(tmp_path, monkeypatch):
     """Check that model compilation uses the SWIG of the current Python
     environment, not the first one on PATH."""
+    from amici._installation.build_tools import get_env_swig
     from amici.exporters.sundials import compile as compile_module
 
-    if (env_swig := compile_module._get_env_swig()) is None:
+    if (env_swig := get_env_swig()) is None:
         pytest.skip("no swig in the current Python environment")
 
     fake_swig = _write_fake_swig(tmp_path / "bin")
@@ -247,6 +263,86 @@ def test_model_build_uses_env_swig(tmp_path, monkeypatch):
 
     assert len(build_envs) == 1
     assert build_envs[0]["SWIG"] == env_swig != str(fake_swig)
+
+
+def _write_fake_tool(directory: Path, name: str) -> Path:
+    """Write a dummy executable ``name`` to ``directory``."""
+    directory.mkdir(parents=True, exist_ok=True)
+    tool = directory / name
+    tool.write_text("#!/bin/sh\nexit 1\n")
+    tool.chmod(0o755)
+    return tool
+
+
+@skip_on_valgrind
+@pytest.mark.skipif(sys.platform == "win32", reason="requires POSIX shell")
+def test_use_env_build_tools(tmp_path, monkeypatch):
+    """Check that cmake and ninja of the current Python environment take
+    precedence over those on PATH."""
+    from amici._installation import build_tools
+
+    env_dirs = {}
+    for tool in ("cmake", "ninja"):
+        env_dirs[tool] = tmp_path / f"env_{tool}"
+        _write_fake_tool(env_dirs[tool], tool)
+    monkeypatch.setattr(
+        build_tools, "_get_env_tool_dir", lambda name: str(env_dirs[name])
+    )
+    monkeypatch.setattr(build_tools, "get_env_swig", lambda: "/env/swig")
+    other_dir = tmp_path / "other"
+    _write_fake_tool(other_dir, "cmake")
+
+    def which(name, env):
+        return shutil.which(name, path=env["PATH"])
+
+    # not on PATH at all
+    env = {"PATH": str(tmp_path / "empty")}
+    build_tools.use_env_build_tools(env)
+    assert which("cmake", env) == str(env_dirs["cmake"] / "cmake")
+    assert which("ninja", env) == str(env_dirs["ninja"] / "ninja")
+    assert env["SWIG"] == "/env/swig"
+
+    # a different cmake comes first on PATH, the env one later
+    orig_path = os.pathsep.join(map(str, [other_dir, *env_dirs.values()]))
+    env = {"PATH": orig_path, "SWIG": "/my/swig"}
+    build_tools.use_env_build_tools(env)
+    # only cmake is prepended, ninja already resolves to the env one
+    assert env["PATH"] == f"{env_dirs['cmake']}{os.pathsep}{orig_path}"
+    assert env["SWIG"] == "/my/swig"
+
+    # already the env tools -> PATH unchanged
+    orig_path = os.pathsep.join(map(str, [*env_dirs.values(), other_dir]))
+    env = {"PATH": orig_path}
+    build_tools.use_env_build_tools(env)
+    assert env["PATH"] == orig_path
+
+    # PATH unset
+    env = {}
+    build_tools.use_env_build_tools(env)
+    assert env["PATH"].endswith(os.defpath)
+    assert which("cmake", env) == str(env_dirs["cmake"] / "cmake")
+
+
+@skip_on_valgrind
+def test_use_env_build_tools_not_activated():
+    """Check that the build tools of the current Python environment are found
+    if the environment is not activated."""
+    from amici._installation.build_tools import (
+        _get_env_tool_dir,
+        use_env_build_tools,
+    )
+
+    for path in (os.devnull, ""):
+        env = {"PATH": path}
+        use_env_build_tools(env)
+        # an empty entry would mean the current directory
+        assert "" not in env["PATH"].split(os.pathsep)
+        for tool in ("cmake", "ninja"):
+            if (tool_dir := _get_env_tool_dir(tool)) is None:
+                pytest.skip(f"no {tool} in the current Python environment")
+            assert shutil.which(tool, path=env["PATH"]) == shutil.which(
+                tool, path=tool_dir
+            )
 
 
 @skip_on_valgrind
