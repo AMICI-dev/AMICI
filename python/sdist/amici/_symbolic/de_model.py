@@ -71,6 +71,20 @@ logger = get_logger(__name__, logging.ERROR)
 
 DERIVATIVE_PATTERN = re.compile(r"^d(x_rdata|xdot|\w+?)d(\w+?)(?:_explicit)?$")
 
+# Variables through which the chain rule is applied in total derivatives,
+#  see `DEModel._derivative`.
+CHAIN_VARIABLES = ("w", "tcl")
+# (eq, var) -> chain variable that is not applied for d{eq}d{var}
+IGNORE_CHAIN_RULE = {
+    # The C++ code adds dxdotdw * dwdx and dxdotdw * dwdp at runtime.
+    ("xdot", "x"): "w",
+    ("xdot", "p"): "w",
+}
+# Equations whose derivatives w.r.t. `w` include the dependencies of `w` on
+#  itself (see `DEModel._close_w`). These are the equations for which the
+#  chain rule via `w` is applied in Python, see `DEModel._derivative`.
+W_CLOSED = ("y", "root")
+
 __all__ = [
     "DEModel",
 ]
@@ -172,18 +186,6 @@ class DEModel:
 
     :ivar _value_prototype:
         attribute from which a value should be generated via list comprehension (see :meth:`DEModel._generate_value`)
-
-    :ivar _total_derivative_prototypes:
-        defines how a total derivative equation is computed for an equation, key defines the name and values should be
-        arguments for :meth:`DEModel.totalDerivative`
-
-    :ivar _lock_total_derivative:
-        chain variables that are held fixed while a total derivative ``d{eq}d{var}`` is computed. Derivatives computed
-        while a chain variable is listed here don't apply the chain rule for that variable. In
-        :meth:`DEModel._derivative`, the total derivative starts from the partial derivative, which is computed under
-        the same name and later overwritten; the lock ensures that this nested computation yields the partial
-        derivative and prevents infinite recursion.
-        While the lock is non-empty, ``Jy``, ``Jz``, ``Jrz``, and ``dydx`` are not transposed.
 
     :ivar _simplify:
         If not ``None``, this function will be used to simplify symbolic
@@ -302,18 +304,6 @@ class DEModel:
             "p": self.free_parameters,
             "k": self.fixed_parameters,
         }
-        self._total_derivative_prototypes: dict[
-            str, dict[str, str | list[str]]
-        ] = {
-            "sroot": {
-                "eq": "root",
-                "chainvars": ["x"],
-                "var": "p",
-                "dxdz_name": "sx",
-            },
-        }
-
-        self._lock_total_derivative: list[str] = list()
         self._simplify: Callable = simplify
         if cache_simplify and simplify is not None:
 
@@ -753,22 +743,27 @@ class DEModel:
         the un-substituted `Function` form intact for sympy to apply the
         correct chain rule) -- see `_eq_raw`.
 
-        The substituted result is deliberately NOT cached separately from
-        `self._eqs`: some equations (e.g. `dydx`) are computed by mutating
-        `self._eqs[name]` in place across multiple reentrant calls, e.g. via
-        `sym_or_eq`, which may call `self.eq(name)` for the very `name`
-        that's still being computed, to obtain an intermediate partial
-        result. Caching a substituted snapshot from such a reentrant call
-        would freeze a stale, incomplete value under `name` once the
-        computation of `self._eqs[name]` later continues.
-
         :param name:
             name of the symbolic variable
 
         :return:
             matrix of symbolic formulas
         """
-        raw = self._eq_raw(name)
+        return self._substitute_splines_for_eq(name, self._eq_raw(name))
+
+    def _substitute_splines_for_eq(
+        self, name: str, raw: sp.Matrix | list[sp.Matrix]
+    ) -> sp.Matrix | list[sp.Matrix]:
+        """
+        Substitutes spline function calls in ``raw`` (see :meth:`eq`).
+
+        :param name:
+            name of the symbolic variable ``raw`` belongs to
+        :param raw:
+            the un-substituted formulas
+        :return:
+            the substituted formulas
+        """
         if not self._splines or name in ("spl", "sspl", "dspl"):
             return raw
 
@@ -1585,13 +1580,19 @@ class DEModel:
                 name, self._equation_prototype[name]()
             )
 
-        elif name in self._total_derivative_prototypes:
-            args = self._total_derivative_prototypes[name]
-            args["name"] = name
-            self._lock_total_derivative += args["chainvars"]
-            self._total_derivative(**args)
-            for cv in args["chainvars"]:
-                self._lock_total_derivative.remove(cv)
+        elif name == "sroot":
+            # sroot = drootdp + drootdx * sx, where `sx` is the state
+            #  sensitivity w.r.t. a single parameter. `drootdx * sx` is added
+            #  to every column of `drootdp`; only the column of that
+            #  parameter is used.
+            sroot = self.sym_or_eq(name, "drootdp").copy()
+            drootdx = self.sym_or_eq(name, "drootdx")
+            sx = self.sym_or_eq(name, "sx")
+            if not (smart_is_zero_matrix(drootdx) or smart_is_zero_matrix(sx)):
+                drootdx_sx = smart_multiply(drootdx, sx)
+                for ip in range(sroot.shape[1]):
+                    sroot[:, ip] += drootdx_sx
+            self._eqs[name] = sroot
 
         elif name == "xdot":
             if self.is_ode():
@@ -1873,20 +1874,15 @@ class DEModel:
             "dzdp",
             "dzdx",
             "dzdt",
+            "drzdx",
+            "drzdp",
         ]:
-            if match_deriv[2] == "t":
-                var = time_symbol
-            else:
-                var = self.sym(match_deriv[2])
-
-            # For `dzdx`, `dzdp`, and `dzdt`, these are the partial
-            # derivatives. The dependence of the event time on the
-            # parameters is taken into account at runtime (see
-            # `Model::fdzdt`).
-            self._eqs[name] = [
-                smart_jacobian(self.eq(match_deriv[1])[ie], var)
-                for ie in range(self.num_events())
-            ]
+            # These are taken at a fixed event time. The dependence of the
+            # event time on `x` and `p` is taken into account via `stau`
+            # (see `deltasx` and `Model::get_event_sensitivity`).
+            self._eqs[name] = self._event_derivative(
+                match_deriv[1], match_deriv[2]
+            )
 
         elif name == "rz":
             # rz is evaluated without access to `w`
@@ -1911,14 +1907,6 @@ class DEModel:
                 eq_events.append(val)
 
             self._eqs[name] = eq_events
-
-        elif name in ["drzdx", "drzdp"]:
-            # partial derivatives, see `dzdx`
-            var = self.sym(match_deriv[2])
-            self._eqs[name] = [
-                smart_jacobian(self.eq("rz")[ie], var)
-                for ie in range(self.num_events())
-            ]
 
         elif name == "stau":
             self._eqs[name] = [
@@ -2120,6 +2108,12 @@ class DEModel:
                 smart_jacobian(self._eq_raw("w")[self.num_cons_law() :, :], x)
             )
 
+        elif name == "dwdw":
+            self._eqs[name] = self._partial_derivative("w", "w")
+            self._w_recursion_depth = self._compute_w_recursion_depth(
+                self._eqs[name]
+            )
+
         elif name == "dwdt":
             self._eqs[name] = smart_jacobian(self._eq_raw("w"), time_symbol)
 
@@ -2240,25 +2234,35 @@ class DEModel:
             self.sym("h")
 
         if name in {"Jy", "Jz", "Jrz", "dydx"}:
-            # do not transpose if we compute the partial derivative as part of
-            # a total derivative
-            if not len(self._lock_total_derivative):
-                self._eqs[name] = self._eqs[name].transpose()
+            self._eqs[name] = self._eqs[name].transpose()
 
         if name in {"dzdx", "drzdx"}:
             self._eqs[name] = [e.T for e in self._eqs[name]]
 
-        if self._simplify:
-            dec = log_execution_time(f"simplifying {name}", logger)
-            if isinstance(self._eqs[name], list):
-                self._eqs[name] = [
-                    dec(_parallel_applyfunc)(sub_eq, self._simplify)
-                    for sub_eq in self._eqs[name]
-                ]
-            else:
-                self._eqs[name] = dec(_parallel_applyfunc)(
-                    self._eqs[name], self._simplify
-                )
+        self._eqs[name] = self._simplified(name, self._eqs[name])
+
+    def _simplified(
+        self, name: str, expr: sp.Matrix | list[sp.Matrix]
+    ) -> sp.Matrix | list[sp.Matrix]:
+        """
+        Applies :attr:`_simplify` (if set).
+
+        :param name:
+            name of the symbolic variable, for logging
+        :param expr:
+            matrix, or list of per-event matrices
+        :return:
+            the simplified expression
+        """
+        if not self._simplify:
+            return expr
+        dec = log_execution_time(f"simplifying {name}", logger)
+        if isinstance(expr, list):
+            return [
+                dec(_parallel_applyfunc)(sub_eq, self._simplify)
+                for sub_eq in expr
+            ]
+        return dec(_parallel_applyfunc)(expr, self._simplify)
 
     def sym_names(self) -> list[str]:
         """
@@ -2269,58 +2273,189 @@ class DEModel:
         """
         return list(self._syms.keys())
 
-    def _derivative(self, eq: str, var: str, name: str = None) -> None:
+    def _chain_variables(self, eq: str, var: str) -> list[str]:
         """
-        Creates a new symbolic variable according to a derivative
+        Returns the chain variables of the derivative ``d{eq}d{var}``.
+
+        If the C++ function computing ``eq`` takes a chain variable as
+        argument (see :data:`amici.exporters.sundials.cxx_functions.functions`),
+        the formula of ``eq`` refers to it symbolically, and the derivative
+        w.r.t. ``var`` must add the dependency via that variable through the
+        chain rule.
+
+        These are the non-empty variables from :data:`CHAIN_VARIABLES` in the
+        signature of ``eq``, unless excluded by :data:`IGNORE_CHAIN_RULE`.
+        Derivatives w.r.t. a chain variable have no chain variables, as they
+        are the left factors of the chain rule.
 
         :param eq:
             name of the symbolic variable that defines the formula
 
         :param var:
-            name of the symbolic variable that defines the identifiers
-            with respect to which the derivatives are to be computed
+            name of the symbolic variable w.r.t. which the derivative is
+            computed
+
+        :return:
+            names of the chain variables
+        """
+        if var in CHAIN_VARIABLES:
+            return []
+        return [
+            cv
+            for cv in CHAIN_VARIABLES
+            if var_in_function_signature(eq, cv, self.is_ode())
+            and min(self.sym(cv).shape)
+            and IGNORE_CHAIN_RULE.get((eq, var)) != cv
+        ]
+
+    def _close_w(self, d_dw: sp.Matrix) -> sp.Matrix:
+        """
+        Adds the dependencies of `w` on itself to a derivative w.r.t. `w`.
+
+        Returns ``d_dw * sum_{k>=0} dwdw^k`` (``dwdw`` is nilpotent).
+
+        :param d_dw:
+            partial derivative w.r.t. `w`
+
+        :return:
+            derivative w.r.t. `w`, including the dependencies via `w`
+        """
+        if smart_is_zero_matrix(d_dw):
+            return d_dw
+        dwdw = self.eq("dwdw")
+        # h(k) = d_dw * dwdw^k
+        h = smart_multiply(d_dw, dwdw)
+        while not smart_is_zero_matrix(h):
+            d_dw += h
+            h = smart_multiply(h, dwdw)
+        return d_dw
+
+    @staticmethod
+    def _chain_rule(
+        base: sp.Matrix, terms: list[tuple[sp.Matrix, sp.Matrix]]
+    ) -> sp.Matrix:
+        """
+        Applies the chain rule.
+
+        Returns ``base + sum(dydx * dxdz for dydx, dxdz in terms)``.
+
+        :param base:
+            partial derivative
+
+        :param terms:
+            pairs of derivatives w.r.t. a chain variable and derivatives of
+            that chain variable
+
+        :return:
+            total derivative
+        """
+        result = base
+        for dydx, dxdz in terms:
+            # Save time for large models if one multiplicand is zero,
+            #  which is not checked for by sympy
+            if smart_is_zero_matrix(dydx) or smart_is_zero_matrix(dxdz):
+                continue
+            result += smart_multiply(dydx, dxdz)
+        return result
+
+    def _derivative(self, eq: str, var: str, name: str | None = None) -> None:
+        """
+        Computes the derivative ``d{eq}d{var}``.
+
+        The derivative is the total derivative w.r.t. ``var`` via the chain
+        variables (:meth:`_chain_variables`)::
+
+            d{eq}d{var} = ∂eq/∂var + sum_cv d{eq}d{cv} * d{cv}d{var}
+
+        The left factors ``d{eq}d{cv}`` are derivatives w.r.t. a chain
+        variable, which are partial, except for the dependencies of `w` on
+        itself. The right factors ``d{cv}d{var}`` are total derivatives,
+        except for the dependencies of `w` on itself in ``dwdx`` and
+        ``dwdp``.
+
+        The dependencies of `w` on itself (``dwdw``) must be included in
+        exactly one factor of each product with a derivative w.r.t. `w`:
+        in the left factor for the products formed in Python (derivatives
+        of :data:`W_CLOSED` w.r.t. `w`, see :meth:`_close_w`), and in the
+        right factor for the products formed in the C++ code (``dwdx`` and
+        ``dwdp``, see ``Model::fdwdx`` and ``Model::fdwdp``). Therefore,
+        ``dwdx`` and ``dwdp`` here do not include them.
+
+        This results in the following kinds of derivatives:
+
+        * partial: derivatives without chain variables, e.g.,
+          w.r.t. `tcl` (``dwdtcl``, ``drootdtcl``),
+          w.r.t. `w` of equations not in :data:`W_CLOSED` (``dxdotdw``),
+          derivatives excluded by :data:`IGNORE_CHAIN_RULE`
+          (``dxdotdx_explicit``, ``dxdotdp_explicit``),
+          and derivatives of equations without chain variables in their
+          signature (e.g., ``dJydy``)
+        * partial, but including the dependencies of `w` on itself:
+          derivatives of :data:`W_CLOSED` w.r.t. `w` (``dydw``,
+          ``drootdw``)
+        * total via `tcl`, but not including the dependencies of `w` on
+          itself: ``dwdp`` (``dwdx`` is computed in
+          :meth:`_compute_equation`; `tcl` does not depend on `x`)
+        * total: ``dydx``, ``dydp`` (via `w`, which includes `tcl` via
+          ``dwdp``), ``drootdx``, ``drootdp`` (via `w` and `tcl`)
+
+        :param eq:
+            name of the symbolic variable that defines the formula
+
+        :param var:
+            name of the symbolic variable w.r.t. which the derivative is
+            computed
 
         :param name:
             name of resulting symbolic variable, default is ``d{eq}d{var}``
         """
-        if not name:
-            name = f"d{eq}d{var}"
-
-        ignore_chainrule = {
-            ("xdot", "p"): "w",  # has generic implementation in c++ code
-            ("xdot", "x"): "w",  # has generic implementation in c++ code
-            ("w", "x"): "tcl",  # dtcldx = 0
-        }
-        # automatically detect chainrule
-        chain_candidates = ["w", "tcl"]
-        chainvars = [
-            cv
-            for cv in chain_candidates
-            if var_in_function_signature(eq, cv, self.is_ode())
-            and cv not in self._lock_total_derivative
-            # Derivatives w.r.t. a chain variable are partial w.r.t. the
-            #  other chain variables. They are the left factors of the chain
-            #  rule (e.g., `drootdtcl` in `drootdp`) and would otherwise
-            #  double-count the paths via the other chain variables.
-            and var not in chain_candidates
-            and min(self.sym(cv).shape)
-            and (
-                (eq, var) not in ignore_chainrule
-                or ignore_chainrule[(eq, var)] != cv
+        name = name or f"d{eq}d{var}"
+        chain_vars = self._chain_variables(eq, var)
+        if "w" in chain_vars and eq not in W_CLOSED:
+            raise NotImplementedError(
+                f"Chain rule via `w` for `{name}` requires `{eq}` in "
+                "`W_CLOSED`."
             )
-        ]
-        if len(chainvars):
-            # The derivatives of the chain variables must be total
-            #  derivatives, so they must be computed before locking.
-            for cv in chainvars:
-                self.sym_or_eq(name, f"d{cv}d{var}")
-            self._lock_total_derivative += chainvars
-            self._total_derivative(name, eq, chainvars, var)
-            for cv in chainvars:
-                self._lock_total_derivative.remove(cv)
+        partial = self._partial_derivative(eq, var)
+        if var == "w" and eq in W_CLOSED:
+            partial = self._close_w(partial)
+
+        if not chain_vars:
+            self._eqs[name] = partial
             return
 
-        # partial derivative
+        # Simplify and substitute splines like for the factors below, which
+        #  are obtained through `eq`. (The result is simplified again in
+        #  `_compute_equation`.)
+        partial = self._substitute_splines_for_eq(
+            name, self._simplified(name, partial)
+        )
+        terms = []
+        for cv in chain_vars:
+            terms.append(
+                (
+                    self.sym_or_eq(name, f"d{eq}d{cv}"),
+                    self.sym_or_eq(name, f"d{cv}d{var}"),
+                )
+            )
+        self._eqs[name] = self._chain_rule(partial, terms)
+
+    def _partial_derivative(self, eq: str, var: str) -> sp.Matrix:
+        """
+        Computes the partial derivative of ``eq`` w.r.t. ``var``.
+
+        Chain variables are held fixed.
+
+        :param eq:
+            name of the symbolic variable that defines the formula
+
+        :param var:
+            name of the symbolic variable w.r.t. which the derivative is
+            computed
+
+        :return:
+            partial derivative
+        """
         if eq == "w":
             # differentiating `w` requires the un-substituted spline
             # `Function`-call form for sympy to apply the correct chain
@@ -2331,114 +2466,62 @@ class DEModel:
         else:
             sym_eq = self.eq(eq)
 
-        sym_var = self.sym(var)
+        return smart_jacobian(sym_eq, self.sym(var))
 
-        derivative = smart_jacobian(sym_eq, sym_var)
-
-        self._eqs[name] = derivative
-
-        # compute recursion depth based on nilpotency of jacobian. computing
-        # nilpotency can be done more efficiently on numerical sparsity pattern
-        if name == "dwdw":
-            nonzeros = np.asarray(
-                derivative.applyfunc(lambda x: int(not x.is_zero))
-            ).astype(np.int64)
-            recursion = nonzeros.copy()
-            if max(recursion.shape):
-                while recursion.max():
-                    recursion = recursion.dot(nonzeros)
-                    self._w_recursion_depth += 1
-                    if self._w_recursion_depth > len(sym_eq):
-                        raise RuntimeError(
-                            "dwdw is not nilpotent. Something, somewhere went "
-                            "terribly wrong. Please file a bug report at "
-                            "https://github.com/AMICI-dev/AMICI/issues and "
-                            "attach this model."
-                        )
-
-        elif name in ("dydw", "drootdw") and not smart_is_zero_matrix(
-            derivative
-        ):
-            dwdw = self.eq("dwdw")
-            # h(k) = d{eq}dw*dwdw^k* (k=1)
-            h = smart_multiply(derivative, dwdw)
-            while not smart_is_zero_matrix(h):
-                self._eqs[name] += h
-                # h(k+1) = d{eq}dw*dwdw^(k+1) = h(k)*dwdw
-                h = smart_multiply(h, dwdw)
-
-    def _total_derivative(
-        self,
-        name: str,
-        eq: str,
-        chainvars: list[str],
-        var: str,
-        dydx_name: str = None,
-        dxdz_name: str = None,
-    ) -> None:
+    def _event_derivative(self, eq: str, var: str) -> list[sp.Matrix]:
         """
-        Creates a new symbolic variable according to a total derivative
-        using the chain rule
-
-        :param name:
-            name of resulting symbolic variable
+        Computes the partial derivatives of a per-event equation.
 
         :param eq:
-            name of the symbolic variable that defines the formula
-
-        :param chainvars:
-            names of the symbolic variable that define the
-            identifiers with respect to which the chain rules are applied
+            name of the per-event symbolic variable that defines the formula
 
         :param var:
-            name of the symbolic variable that defines the identifiers
-            with respect to which the derivatives are to be computed
+            name of the symbolic variable w.r.t. which the derivative is
+            computed, or ``"t"`` for time
 
-        :param dydx_name:
-            defines the name of the symbolic variable that
-            defines the derivative of the ``eq`` with respect to ``chainvar``,
-            default is ``d{eq}d{chainvar}``, only for a single chain variable
-
-        :param dxdz_name:
-            defines the name of the symbolic variable that
-            defines the derivative of the ``chainvar`` with respect to ``var``,
-            default is ``d{chainvar}d{var}``, only for a single chain variable
+        :return:
+            derivatives, one per event
         """
-        # compute total derivative according to chainrule
-        # Dydz = dydx*dxdz + dydz
-
-        # initialize with partial derivative dydz without chain rule
-        self._eqs[name] = self.sym_or_eq(name, f"d{eq}d{var}")
-        if not isinstance(self._eqs[name], sp.Symbol):
-            # if not a Symbol, create a copy using sympy API
-            # NB deepcopy does not work safely, see sympy issue #7672
-            self._eqs[name] = self._eqs[name].copy()
-
-        if len(chainvars) > 1 and (
-            dydx_name is not None or dxdz_name is not None
-        ):
-            raise ValueError(
-                "`dydx_name` and `dxdz_name` are only supported for a single "
-                "chain variable."
+        if chain_vars := self._chain_variables(eq, var):
+            raise NotImplementedError(
+                f"Chain rule via {chain_vars} for per-event equation `{eq}`."
             )
+        sym_var = (
+            sp.Matrix([amici_time_symbol]) if var == "t" else self.sym(var)
+        )
+        return [smart_jacobian(expr, sym_var) for expr in self.eq(eq)]
 
-        for chainvar in chainvars:
-            dydx = self.sym_or_eq(name, dydx_name or f"d{eq}d{chainvar}")
-            dxdz = self.sym_or_eq(name, dxdz_name or f"d{chainvar}d{var}")
-            # Save time for large models if one multiplicand is zero,
-            # which is not checked for by sympy
-            if not smart_is_zero_matrix(dydx) and not smart_is_zero_matrix(
-                dxdz
-            ):
-                dydx_times_dxdz = smart_multiply(dydx, dxdz)
-                if (
-                    dxdz.shape[1] == 1
-                    and self._eqs[name].shape[1] != dxdz.shape[1]
-                ):
-                    for iz in range(self._eqs[name].shape[1]):
-                        self._eqs[name][:, iz] += dydx_times_dxdz
-                else:
-                    self._eqs[name] += dydx_times_dxdz
+    @staticmethod
+    def _compute_w_recursion_depth(dwdw: sp.Matrix) -> int:
+        """
+        Returns the recursion depth of `w`.
+
+        This is the smallest ``k`` with ``dwdw^(k+1) == 0``, computed on the
+        sparsity pattern of ``dwdw``.
+
+        :param dwdw:
+            derivative of `w` w.r.t. `w`
+
+        :return:
+            the recursion depth of `w`
+        """
+        nonzeros = np.asarray(
+            dwdw.applyfunc(lambda x: int(not x.is_zero))
+        ).astype(np.int64)
+        depth = 0
+        power = nonzeros.copy()
+        if max(power.shape):
+            while power.max():
+                power = power.dot(nonzeros)
+                depth += 1
+                if depth > dwdw.shape[0]:
+                    raise RuntimeError(
+                        "dwdw is not nilpotent. Something, somewhere went "
+                        "terribly wrong. Please file a bug report at "
+                        "https://github.com/AMICI-dev/AMICI/issues and "
+                        "attach this model."
+                    )
+        return depth
 
     def sym_or_eq(self, name: str, varname: str) -> sp.Matrix:
         """
