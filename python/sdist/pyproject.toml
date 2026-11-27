@@ -135,8 +135,7 @@ petab-sciml-torch = [
 # pysb doesn't downgrade sympy.
 petab-test-suite = [
     {include-group = "pysb-dev"},
-    # TODO: back to main once #3599 is fixed
-    "petabtests @ git+https://github.com/PEtab-dev/petab_test_suite@281e3e2671d542a85e888ee8e890770f77264616",
+    "petabtests @ git+https://github.com/PEtab-dev/petab_test_suite@bcd48485536e83d97fd765b5d4f6879ca34449b3",
 ]
 # Pre-v2 test suite with PySB cases using PEtab v1 tables.
 # TODO: remove together with PEtab v1 PySB support (#3541)

@@ -558,6 +558,19 @@ def ode_model_from_pysb_importer(
     return ode
 
 
+def _compartment_size_parameters(model: pysb.Model) -> set[str]:
+    """Get the IDs of all parameters that compartment sizes depend on."""
+    names = set()
+    for compartment in model.compartments:
+        if isinstance(compartment.size, pysb.Expression):
+            names |= {
+                sym.name for sym in compartment.size.expand_expr().free_symbols
+            }
+        elif compartment.size is not None:
+            names.add(compartment.size.name)
+    return names
+
+
 @log_execution_time("processing PySB stoich. matrix", logger)
 def _process_stoichiometric_matrix(
     pysb_model: pysb.Model,

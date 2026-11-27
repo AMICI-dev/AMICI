@@ -23,8 +23,8 @@ from petab.v1.C import (
     NOISE_FORMULA,
     OBSERVABLE_FORMULA,
 )
-from petab.v1.models.pysb_model import PySBModel
 from petab.v2.math import petab_math_str, sympify_petab
+from petab.v2.models.pysb_model import PySBModel
 
 import amici
 from amici import MeasurementChannel
