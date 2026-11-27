@@ -1644,3 +1644,66 @@ def test_pysb_no_events_without_changes(pysb_targets_model):
     )
     _, events = ExperimentsToPySBConverter(problem).convert()
     assert events == []
+
+
+def test_pysb_observation_model_time():
+    """PEtab's `time` in observable/noise formulas maps to `pysb.time`.
+
+    An output parameter `t` must not be confused with the AMICI time symbol.
+    """
+    pysb = pytest.importorskip("pysb")
+    from amici import MeasurementChannel
+    from amici.importers.petab._petab_importer import (
+        _add_observation_model_pysb,
+    )
+    from amici.importers.pysb import ode_model_from_pysb_importer
+    from amici.importers.utils import amici_time_symbol
+    from petab.v2.models.pysb_model import PySBModel
+
+    model = pysb.Model("pysb_time_petab", _export=False)
+    a = pysb.Monomer("A", _export=False)
+    model.add_component(a)
+    a0 = pysb.Parameter("a0", 1.0, _export=False)
+    model.add_component(a0)
+    model.add_initial(pysb.Initial(a(), a0, _export=False))
+    model.add_component(pysb.Observable("a_obs", a(), _export=False))
+    k = pysb.Parameter("k", 1.0, _export=False)
+    model.add_component(k)
+    model.add_component(pysb.Rule("deg", a() >> None, k, _export=False))
+
+    problem = Problem()
+    problem.models = [PySBModel(model=model, model_id=model.name)]
+    problem.add_observable("obs_t", "time * a_obs + t", "sd * time + t")
+
+    _add_observation_model_pysb(problem)
+
+    assert "time" not in model.parameters.keys()
+    assert {"sd", "t"} <= set(model.parameters.keys())
+    for expr_id in ("obs_t", "obs_t_sigma"):
+        assert pysb.core.time in model.expressions[expr_id].expr.free_symbols
+
+    ode = ode_model_from_pysb_importer(
+        model,
+        observation_model=[
+            MeasurementChannel(
+                id_=obs.id,
+                formula=obs.formula,
+                noise_distribution=obs.noise_distribution,
+                sigma=obs.noise_formula,
+            )
+            for obs in problem.observables
+        ],
+        compute_conservation_laws=False,
+        pysb_model_has_obs_and_noise=True,
+    )
+    # the output parameter `t` is renamed to avoid the clash with time
+    amici_t_par = next(
+        p.get_sym() for p in ode.free_parameters() if p.get_name() == "t"
+    )
+    assert amici_t_par != amici_time_symbol
+    for expr in (
+        ode.observables()[0].get_val(),
+        ode.sigma_ys()[0].get_val(),
+    ):
+        assert amici_time_symbol in expr.free_symbols
+        assert amici_t_par in expr.free_symbols

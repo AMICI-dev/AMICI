@@ -1495,12 +1495,14 @@ def _add_observation_model_pysb(petab_problem: v2.Problem, jax: bool = False):
         for comp in pysb_model.components
         if isinstance(comp, sp.Symbol)
     }
+    # PEtab's `time` is the simulation time
+    local_syms[sp.Symbol("time", real=True)] = pysb.core.time
 
     def process_formula(sym: sp.Basic):
         changed_formula = False
         sym = sym.subs(local_syms)
         for s in sym.free_symbols:
-            if not isinstance(s, pysb.Component):
+            if not isinstance(s, pysb.Component | pysb.core.SpecialSymbol):
                 if not isinstance(s, sp.Symbol):
                     raise AssertionError(
                         f"Unexpected symbol type in observable formula: {s}, "

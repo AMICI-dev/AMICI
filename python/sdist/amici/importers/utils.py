@@ -1521,7 +1521,9 @@ def contains_periodic_subexpression(expr: sp.Expr, symbol: sp.Symbol) -> bool:
 
 
 def _expr_to_amici(
-    expr: sp.Basic | sp.MatrixBase, renames: dict[str, str] | None = None
+    expr: sp.Basic | sp.MatrixBase,
+    renames: dict[str, str] | None = None,
+    symbol_map: dict[sp.Symbol, sp.Basic] | None = None,
 ):
     """Convert the given sympy expression to an AMICI-compatible expression.
 
@@ -1533,11 +1535,17 @@ def _expr_to_amici(
         optional mapping from a symbol's current name to a replacement
         name (e.g. from `resolve_reserved_symbol_renames`), applied while
         converting.
+    :param symbol_map:
+        optional mapping from specific symbols to their replacements.
+        Takes precedence over the name-based conversion and `renames`.
     :return: The AMICI-compatible sympy expression.
     """
     renames = renames or {}
+    symbol_map = symbol_map or {}
     replacements = {
-        s: symbol_with_assumptions(renames.get(s.name, s.name))
+        s: symbol_map[s]
+        if s in symbol_map
+        else symbol_with_assumptions(renames.get(s.name, s.name))
         for s in expr.free_symbols
     }
     return expr.xreplace(replacements)
