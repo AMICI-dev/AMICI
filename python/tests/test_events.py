@@ -40,12 +40,6 @@ from util import (
     check_trajectories_without_sensitivities,
 )
 
-pytestmark = pytest.mark.filterwarnings(
-    # https://github.com/AMICI-dev/AMICI/issues/18
-    "ignore:Adjoint sensitivity analysis for models with discontinuous "
-    "right hand sides .*:UserWarning",
-)
-
 
 @pytest.fixture(
     params=[
@@ -978,9 +972,6 @@ def test_event_outputs_llh(tempdir):
     assert np.isclose(rdata.llh, expected_llh, rtol=1e-12)
 
 
-@pytest.mark.filterwarnings(
-    "ignore:Adjoint sensitivity analysis for models with discontinuous "
-)
 @skip_on_valgrind
 def test_event_priorities(tempdir):
     """Test SBML event priorities."""
@@ -5057,9 +5048,6 @@ def test_event_cascade_assigns_trigger_onto_threshold_twice(tempdir):
 
 
 @skip_on_valgrind
-@pytest.mark.filterwarnings(
-    "ignore:Adjoint sensitivity analysis for models with discontinuous "
-)
 @pytest.mark.parametrize("dae", [True, False], ids=["dae", "ode"])
 def test_switch_after_root_at_stop_time(tempdir, dae):
     """Switches and events apply independently of the output timepoints.

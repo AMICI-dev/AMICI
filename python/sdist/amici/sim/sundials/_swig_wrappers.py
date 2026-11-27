@@ -66,19 +66,6 @@ def run_simulation(
     :returns:
         ReturnData object with simulation results
     """
-    if (
-        model.ne > 0
-        and solver.get_sensitivity_method()
-        == amici_swig.SensitivityMethod.adjoint
-        and solver.get_sensitivity_order() == amici_swig.SensitivityOrder.first
-    ):
-        warnings.warn(
-            "Adjoint sensitivity analysis for models with discontinuous right hand sides (events/piecewise functions) has not been thoroughly tested. "
-            "Sensitivities might be wrong. Tracked at https://github.com/AMICI-dev/AMICI/issues/18. "
-            "Adjoint sensitivity analysis may work if the location of the discontinuity is not parameter-dependent, but we still recommend testing accuracy of gradients.",
-            stacklevel=1,
-        )
-
     rdata = amici_swig.run_simulation(
         _get_ptr(solver), _get_ptr(edata), _get_ptr(model)
     )
@@ -108,19 +95,6 @@ def run_simulations(
 
     :returns: list of simulation results
     """
-    if (
-        model.ne > 0
-        and solver.get_sensitivity_method()
-        == amici_swig.SensitivityMethod.adjoint
-        and solver.get_sensitivity_order() == amici_swig.SensitivityOrder.first
-    ):
-        warnings.warn(
-            "Adjoint sensitivity analysis for models with discontinuous right hand sides (events/piecewise functions) has not been thoroughly tested. "
-            "Sensitivities might be wrong. Tracked at https://github.com/AMICI-dev/AMICI/issues/18. "
-            "Adjoint sensitivity analysis may work if the location of the discontinuity is not parameter-dependent, but we still recommend testing accuracy of gradients.",
-            stacklevel=1,
-        )
-
     edata_ptr_vector = amici_swig.ExpDataPtrVector(edata_list)
     rdata_ptr_list = amici_swig.run_simulations(
         _get_ptr(solver),

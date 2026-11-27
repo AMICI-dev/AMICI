@@ -1214,11 +1214,6 @@ def test_fsa_settings_after_simulation_without_states(tmp_path):
 
 
 @skip_on_valgrind
-@pytest.mark.filterwarnings(
-    # https://github.com/AMICI-dev/AMICI/issues/18
-    "ignore:Adjoint sensitivity analysis for models with discontinuous "
-    "right hand sides .*:UserWarning",
-)
 def test_adjoint_without_states(tmp_path):
     """Test adjoint sensitivities for a model without state variables."""
     from amici.importers.antimony import antimony2amici

@@ -971,9 +971,6 @@ def test_num_state_reinits_conservation_law(tempdir, monkeypatch):
     assert rdata.status == AMICI_SUCCESS
 
 
-@pytest.mark.filterwarnings(
-    "ignore:Adjoint sensitivity analysis for models with discontinuous "
-)
 def test_presimulation_events(tempdir):
     """Test that events are handled during presimulation."""
 
@@ -1059,9 +1056,6 @@ def test_presimulation_events(tempdir):
         )
 
 
-@pytest.mark.filterwarnings(
-    "ignore:Adjoint sensitivity analysis for models with discontinuous "
-)
 def test_presimulation_events_and_sensitivities(tempdir):
     """Test that presimulation with adjoint sensitivities works
     and test that events are handled during presimulation."""

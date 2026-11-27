@@ -15,16 +15,6 @@ Sensitivity analysis
 AMICI provides high-performance sensitivity analysis for a broad range of
 models. However, there are some limitations to be aware of:
 
-* Adjoint sensitivity analysis is not fully supported for models with
-  discontinuities (e.g. events).
-  See `this issue <https://github.com/AMICI-dev/AMICI/issues/18>`__.
-
-* Sensitivities may be incorrect for models with cascading events, where
-  secondary events have a bolus.
-
-* Sensitivities w.r.t. event trigger parameters may be incorrect for models
-  with simultaneous events.
-
 * For :term:`DAE` models, the default simultaneous corrector doesn't include
   forward sensitivities in the local error test
   (`SUNDIALS#1065 <https://github.com/LLNL/sundials/pull/1065>`__);
