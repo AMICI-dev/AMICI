@@ -414,6 +414,7 @@ def test_pysb_event(tempdir):
     a = pysb.Monomer("A")
     pysb.Initial(a(), pysb.Parameter("a0"))
     pysb.Rule("deg", a() >> None, pysb.Parameter("k", 1.0))
+    pysb.Observable("obs_a", a())
 
     events = [
         Event(
@@ -435,7 +436,7 @@ def test_pysb_event(tempdir):
         model,
         outdir,
         verbose=True,
-        observation_model=[MeasurementChannel("a")],
+        observation_model=[MeasurementChannel("obs_a")],
         compute_conservation_laws=False,
         _events=events,
     )
@@ -521,8 +522,8 @@ def test_pysb_derived_name_collisions(tempdir):
         pysb.Parameter(f"tcl_s{i}", 42.0)
     # decoys colliding with the observable's derived measurement/sigma
     # symbols (`m{obs}` / `sigma_{obs}`)
-    pysb.Parameter("mobs_a", 1.0)
-    pysb.Parameter("sigma_obs_a", 1.0)
+    pysb.Parameter("mobs_f", 1.0)
+    pysb.Parameter("sigma_obs_f", 1.0)
 
     pysb.Initial(a(b=None), model.parameters["A_0"])
     pysb.Initial(b(a=None), model.parameters["B_0"])
@@ -538,7 +539,7 @@ def test_pysb_derived_name_collisions(tempdir):
     pysb2amici(
         model,
         outdir,
-        observation_model=[MeasurementChannel("obs_a")],
+        observation_model=[MeasurementChannel("obs_f", formula="obs_a")],
         compute_conservation_laws=True,
     )
 
@@ -550,8 +551,9 @@ def test_pysb_derived_name_collisions(tempdir):
     # the decoy parameters kept their own original ids
     free_ids = amici_model.get_free_parameter_ids()
     assert all(f"tcl_s{i}" in free_ids for i in range(4))
-    assert "mobs_a" in free_ids
-    assert "sigma_obs_a" in free_ids
+    assert "mobs_f" in free_ids
+    assert "sigma_obs_f" in free_ids
+    assert amici_model.get_observable_ids() == ("obs_f",)
 
     amici_model.set_timepoints([0, 1, 2, 5])
     solver = amici_model.create_solver()
@@ -594,22 +596,16 @@ def test_pysb_named_sigma():
         ],
     )
 
-    assert [str(y.get_sym()) for y in ode.observables()] == [
-        "obs_a",
-        "obs_b",
-    ]
-    assert [str(s.get_sym()) for s in ode.sigma_ys()] == [
-        "sigma_obs_a",
-        "sigma_obs_b",
-    ]
-    assert [s.get_val() for s in ode.sigma_ys()] == [
-        symbol_with_assumptions("sd_a"),
-        sp.Float(1.0),
-    ]
+    assert _observable_ids(ode) == ["obs_a", "obs_b"]
     assert "sd_a" in {str(w.get_sym()) for w in ode.expressions()}
     assert ode.get_noise_distributions() == ["normal", "log-laplace"]
+    y_a = ode.observables()[0].get_sym()
+    assert [s.get_val() for s in ode.sigma_ys()] == [
+        2 * symbol_with_assumptions("p_sd") * y_a,
+        sp.Float(1.0),
+    ]
     assert list(ode.eq("sigmay")) == [
-        2 * symbol_with_assumptions("p_sd") * symbol_with_assumptions("obs_a"),
+        2 * symbol_with_assumptions("p_sd") * y_a,
         sp.Float(1.0),
     ]
 
@@ -731,3 +727,266 @@ def test_conservation_law_derivatives_independent_of_order(first):
             ref_val = expected[name]
         for a, b in zip(actual, ref_val, strict=True):
             assert (a - b).is_zero_matrix, name
+
+
+def _observable_ids(ode) -> list[str]:
+    """Get the public IDs of the observables of a DEModel."""
+    return [
+        ode.reserved_symbol_original_ids.get(
+            str(y.get_sym()), str(y.get_sym())
+        )
+        for y in ode.observables()
+    ]
+
+
+def _observation_model_test_model(with_t: bool = True):
+    model = pysb.Model("pysb_observation_model_test", _export=False)
+
+    def add(component):
+        model.add_component(component)
+        return component
+
+    a = add(pysb.Monomer("A", _export=False))
+    b = add(pysb.Monomer("B", _export=False))
+    a_0 = add(pysb.Parameter("A_0", 1.0, _export=False))
+    b_0 = add(pysb.Parameter("B_0", 2.0, _export=False))
+    model.add_initial(pysb.Initial(a(), a_0, _export=False))
+    model.add_initial(pysb.Initial(b(), b_0, _export=False))
+    p_sd = add(pysb.Parameter("p_sd", 0.1, _export=False))
+    k = add(pysb.Parameter("k", 1.0, _export=False))
+    obs_a = add(pysb.Observable("obs_a", a(), _export=False))
+    obs_b = add(pysb.Observable("obs_b", b(), _export=False))
+    sd_a = add(pysb.Expression("sd_a", 2 * p_sd * obs_a, _export=False))
+    add(pysb.Expression("ratio", obs_a / (obs_b + k), _export=False))
+    # can't be solved uniquely for the states
+    sq = add(pysb.Expression("sq", obs_a**2 + obs_b, _export=False))
+    add(pysb.Expression("sd_sq", 0.2 * sq, _export=False))
+    add(pysb.Rule("deg_a", a() >> None, k, _export=False))
+    # the sigma expression is also used in the dynamics
+    add(pysb.Rule("deg_b", b() >> None, sd_a, _export=False))
+    if with_t:
+        add(pysb.Parameter("t", 3.0, _export=False))
+    return model
+
+
+@pytest.mark.parametrize("pysb_model_has_obs_and_noise", [False, True])
+def test_pysb_observation_model(pysb_model_has_obs_and_noise):
+    """Observables given by reference or by formula, in the given order.
+
+    `pysb_model_has_obs_and_noise` has no effect.
+    """
+    from amici.importers.pysb import ode_model_from_pysb_importer
+
+    ode = ode_model_from_pysb_importer(
+        _observation_model_test_model(),
+        observation_model=[
+            MeasurementChannel("ratio", sigma="0.5 * ratio + p_sd"),
+            MeasurementChannel(
+                "obs_a", sigma="sd_a", noise_distribution="log-normal"
+            ),
+            MeasurementChannel(
+                "y_t", formula="t * time + obs_b", sigma="0.1 * y_t"
+            ),
+            MeasurementChannel(
+                "scaled",
+                name="B scaled",
+                formula="k * obs_b",
+                noise_distribution="laplace",
+            ),
+            # the sigma depends on the observable via a model expression
+            MeasurementChannel("sq", sigma="sd_sq"),
+            # formula given as the name of a model expression
+            MeasurementChannel("y_sq", formula="sq", sigma="sd_sq"),
+            # the ID must not clash with names in the likelihood formula
+            MeasurementChannel("pi", formula="obs_b"),
+        ],
+        compute_conservation_laws=False,
+        pysb_model_has_obs_and_noise=pysb_model_has_obs_and_noise,
+    )
+    sym = symbol_with_assumptions
+
+    assert _observable_ids(ode) == [
+        "ratio",
+        "obs_a",
+        "y_t",
+        "scaled",
+        "sq",
+        "y_sq",
+        "pi",
+    ]
+    assert [y.get_name() for y in ode.observables()] == [
+        "ratio",
+        "obs_a",
+        "y_t",
+        "B scaled",
+        "sq",
+        "y_sq",
+        "pi",
+    ]
+    # referenced model entities keep their symbols and IDs
+    assert {"obs_a", "obs_b", "sd_a", "ratio", "sq"} <= {
+        str(w.get_sym()) for w in ode.expressions()
+    }
+    y_ratio, y_a, y_t, y_scaled, y_sq, y_sq2, y_pi = (
+        y.get_sym() for y in ode.observables()
+    )
+    assert (
+        len({y_ratio, y_a, y_sq, sym("ratio"), sym("obs_a"), sym("sq")}) == 6
+    )
+    assert (y_t, y_scaled) == (sym("y_t"), sym("scaled"))
+    # model parameter `t` is renamed, `time` is the time symbol
+    t_par = sym(
+        next(
+            new_id
+            for new_id, old_id in ode.reserved_symbol_original_ids.items()
+            if old_id == "t" and new_id in map(str, ode.sym("p"))
+        )
+    )
+    assert [y.get_val() for y in ode.observables()] == [
+        sym("ratio"),
+        sym("obs_a"),
+        t_par * amici_time_symbol + sym("obs_b"),
+        sym("k") * sym("obs_b"),
+        sym("sq"),
+        sym("sq"),
+        sym("obs_b"),
+    ]
+    # sigmas depending on the referenced model entity are expressed in terms
+    #  of the observable
+    assert [s.get_val() for s in ode.sigma_ys()] == [
+        0.5 * y_ratio + sym("p_sd"),
+        2 * sym("p_sd") * y_a,
+        0.1 * y_t,
+        sp.Float(1.0),
+        0.2 * y_sq,
+        0.2 * y_sq2,
+        sp.Float(1.0),
+    ]
+    assert list(ode.eq("sigmay")) == [
+        0.5 * y_ratio + sym("p_sd"),
+        2 * sym("p_sd") * y_a,
+        0.1 * y_t,
+        sp.Float(1.0),
+        0.2 * y_sq,
+        0.2 * y_sq2,
+        sp.Float(1.0),
+    ]
+    llhs = ode.log_likelihood_ys()
+    assert len(llhs) == 7
+    assert llhs[-1].get_val().has(sp.pi)
+    assert llhs[-1].get_val().has(y_pi)
+    assert ode.get_noise_distributions() == [
+        "normal",
+        "log-normal",
+        "normal",
+        "laplace",
+        "normal",
+        "normal",
+        "normal",
+    ]
+
+
+def test_pysb_custom_noise_distribution():
+    """Names in custom noise distributions refer to the channel's
+    observable, measurement, and sigma, PySB parameters, and other channels.
+
+    Also checks a channel ID that is a Python keyword.
+    """
+    from amici.importers.pysb import ode_model_from_pysb_importer
+
+    str_symbols = []
+
+    def nllh(str_symbol):
+        str_symbols.append(str_symbol)
+        return (
+            f"t * obs_b * ({str_symbol} - m{str_symbol}) / sigma{str_symbol}"
+        )
+
+    def import_(noise_distribution):
+        model = _observation_model_test_model()
+        model.add_component(
+            pysb.Expression(
+                "lambda", 2 * model.observables["obs_b"], _export=False
+            )
+        )
+        return ode_model_from_pysb_importer(
+            model,
+            observation_model=[
+                MeasurementChannel(
+                    "obs_a", noise_distribution=noise_distribution
+                ),
+                MeasurementChannel("obs_b"),
+                MeasurementChannel("lambda"),
+            ],
+            compute_conservation_laws=False,
+        )
+
+    ode = import_(nllh)
+    assert str_symbols == ["obs_a"]
+    assert ode.get_noise_distributions() == ["custom", "normal", "normal"]
+    y_a, y_b, y_lambda = (y.get_sym() for y in ode.observables())
+    assert y_lambda != symbol_with_assumptions("lambda")
+    assert ode.observables()[2].get_val() == symbol_with_assumptions("lambda")
+    m_a = ode.observables()[0].get_measurement_symbol()
+    sigma_a = ode.sigma_ys()[0].get_sym()
+    t_par = next(
+        p
+        for p in ode.sym("p")
+        if ode.reserved_symbol_original_ids.get(str(p)) == "t"
+    )
+    assert ode.log_likelihood_ys()[0].get_val() == (
+        t_par * y_b * (y_a - m_a) / sigma_a
+    )
+
+    # model time, constants, and expressions aren't available
+    for name in ("time", "pi", "sd_a"):
+        with pytest.raises(ValueError, match=f"custom noise.*: {name}\\.$"):
+            import_(lambda s, name=name: f"{name} * ({s} - m{s})")
+
+
+def test_pysb_observation_model_errors():
+    from amici.importers.pysb import ode_model_from_pysb_importer
+
+    def import_(observation_model, with_t=True):
+        return ode_model_from_pysb_importer(
+            _observation_model_test_model(with_t),
+            observation_model=observation_model,
+            compute_conservation_laws=False,
+        )
+
+    with pytest.raises(ValueError, match="no PySB observable or expression"):
+        import_([MeasurementChannel("k")])
+
+    # IDs of channels with formula that denote model entities
+    for channel_id in ("k", "obs_b", "ratio", "t", "time"):
+        with pytest.raises(NotImplementedError, match="has a formula"):
+            import_([MeasurementChannel(channel_id, formula="obs_a")])
+
+    with pytest.raises(ValueError, match="Duplicate measurement channel"):
+        import_([MeasurementChannel("obs_a"), MeasurementChannel("obs_a")])
+
+    with pytest.raises(ValueError, match="Unknown symbols.*sd_typo"):
+        import_([MeasurementChannel("obs_a", sigma="2 * sd_typo")])
+
+    # internal observable symbols are not available
+    with pytest.raises(ValueError, match="Unknown symbols.*: obs_a_2\\.$"):
+        import_([MeasurementChannel("obs_a", sigma="obs_a_2 * k")])
+
+    # `t` is not the model time
+    with pytest.raises(ValueError, match="Unknown symbols.*: t\\.$"):
+        import_([MeasurementChannel("y1", formula="t * obs_a")], False)
+
+    # errors refer to the channel ID, not to the internal observable symbol
+    with pytest.raises(NotImplementedError, match="sigma of obs_a depends"):
+        import_([MeasurementChannel("obs_a", sigma="obs_b")]).eq("sigmay")
+
+    with pytest.raises(NotImplementedError, match="Event-resolved"):
+        import_([MeasurementChannel("obs_a", event_id="e1")])
+
+    with pytest.raises(ValueError, match="Nested observables"):
+        import_(
+            [
+                MeasurementChannel("y1", formula="obs_a"),
+                MeasurementChannel("y2", formula="2 * y1"),
+            ]
+        )

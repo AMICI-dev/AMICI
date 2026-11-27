@@ -641,7 +641,19 @@ class PetabImporter:
             f"Writing model code to '{self.output_dir}'."
         )
 
-        observation_model = self._get_observation_model()
+        # `_add_observation_model_pysb` added the observable formulas to the
+        #  PySB model as expressions named by the observable IDs. Drop the
+        #  formulas, so that the measurement channels reference these
+        #  expressions by ID.
+        observation_model = [
+            MeasurementChannel(
+                channel.id,
+                name=channel.name,
+                noise_distribution=channel.noise_distribution,
+                sigma=channel.sigma,
+            )
+            for channel in self._get_observation_model()
+        ]
 
         logger.info(f"#Observables: {len(observation_model)}")
         logger.debug(f"Observables: {observation_model}")

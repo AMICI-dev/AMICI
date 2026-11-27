@@ -44,7 +44,6 @@ from amici._symbolic.de_model_components import (
     DifferentialState,
     Event,
     Expression,
-    symbol_to_type,
 )
 from amici._symbolic.sympy_utils import (
     _monkeypatch_sympy,
@@ -55,6 +54,7 @@ from amici._symbolic.sympy_utils import (
 )
 from amici.constants import SymbolId
 from amici.importers._observation_model import (
+    add_components,
     add_log_likelihoods,
     add_observables,
     check_event_id,
@@ -787,46 +787,7 @@ class SbmlImporter:
                 )
 
         # create all basic components of the DE model and add them.
-        for symbol_name in self._symbols:
-            # transform dict of lists into a list of dicts
-            args = ["name", "symbol"]
-
-            if symbol_name == SymbolId.SPECIES:
-                args += ["dt", "init"]
-            elif symbol_name == SymbolId.ALGEBRAIC_STATE:
-                args += ["init"]
-            else:
-                args += ["value"]
-
-            if symbol_name == SymbolId.EVENT:
-                args += [
-                    "assignments",
-                    "initial_value",
-                    "priority",
-                    "use_values_from_trigger_time",
-                ]
-            elif symbol_name == SymbolId.OBSERVABLE:
-                args += ["noise_distribution", "measurement_symbol"]
-            elif symbol_name == SymbolId.EVENT_OBSERVABLE:
-                args += [
-                    "event",
-                    "measurement_symbol",
-                    "regularization_symbol",
-                    "noise_distribution",
-                ]
-
-            comp_kwargs = [
-                {
-                    "symbol": var_id,
-                    **{k: v for k, v in var.items() if k in args},
-                }
-                for var_id, var in self._symbols[symbol_name].items()
-            ]
-
-            for comp_kwarg in comp_kwargs:
-                ode_model.add_component(
-                    symbol_to_type[symbol_name](**comp_kwarg)
-                )
+        add_components(ode_model, self._symbols)
 
         # add fluxes as expressions, this needs to happen after base
         # expressions from symbols have been parsed
