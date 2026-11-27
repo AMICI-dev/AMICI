@@ -480,19 +480,28 @@ class EventHandlingSimulator {
      * @brief Estimate the uncertainty and the time derivative of the root
      * functions at the current state.
      *
-     * The uncertainty is estimated as the maximum of `|g(x + d) - g(x)|`
-     * with `d_i = atol + rtol * |x_i|` (likewise for `dx`), the change of
-     * `g` within the root-finding time tolerance, and the roundoff error of
-     * the states. The time derivative is estimated by a central difference
-     * along the current right-hand side.
-     * Afterwards, re-evaluates the root functions at the current state,
-     * which also restores the model's derived state.
+     * The uncertainty is estimated as the change of `g` for a perturbation
+     * of the states by `d_j = atol + rtol * |x_j|` plus the roundoff error of
+     * `x_j` in the direction of the gradient of `g`, i.e., to first order
+     * `sum_j |dg/dx_j| * d_j`, plus the change of `g` within the
+     * root-finding time tolerance. The time derivative is the
+     * total derivative along the current right-hand side, for DAEs with
+     * consistent derivatives of the algebraic states, or a finite difference
+     * where that is not available. It is zero if it is at roundoff level.
+     * Evaluates the model expressions at the current state.
      *
-     * @param[out] noise estimated uncertainty of each root function
-     * @param[out] slope estimated time derivative of each root function
+     * The uncertainty takes two evaluations of all root functions per root
+     * function, so it is only computed for the requested ones.
+     *
+     * @param[out] noise estimated uncertainty of each root function, NaN
+     * where `noise_needed` is false
+     * @param[out] slope time derivative of each root function
+     * @param noise_needed whether the uncertainty of each root function is
+     * needed
      */
     void estimate_root_noise_and_slope(
-        std::vector<realtype>& noise, std::vector<realtype>& slope
+        std::vector<realtype>& noise, std::vector<realtype>& slope,
+        std::vector<bool> const& noise_needed
     );
 
     /**

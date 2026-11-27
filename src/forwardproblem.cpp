@@ -9,8 +9,10 @@
 #include "amici/steadystateproblem.h"
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <limits>
+#include <span>
 
 namespace amici {
 
@@ -917,7 +919,10 @@ void EventHandlingSimulator::handle_initial_events(ExpData const* edata) {
     model_->froot(ws_->sol.t, ws_->sol.x, ws_->sol.dx, ws_->rootvals);
     std::vector<realtype> root_noise;
     std::vector<realtype> root_slope;
-    estimate_root_noise_and_slope(root_noise, root_slope);
+    // once per simulation period, so not restricted to the roots that need it
+    estimate_root_noise_and_slope(
+        root_noise, root_slope, std::vector<bool>(model_->ne, true)
+    );
     auto const& h = model_->get_model_state().h;
     std::vector<int> h_update(model_->ne, 0);
     std::vector<bool> by_slope(model_->ne, false);
@@ -1176,8 +1181,20 @@ int EventHandlingSimulator::detect_secondary_events() {
         if (std::isnan(rootval)
             || (!crossed && !changed && ie >= model_->ne_solver))
             continue;
-        if (root_noise.empty())
-            estimate_root_noise_and_slope(root_noise, root_slope);
+        if (root_noise.empty()) {
+            // The uncertainty is only used for roots that crossed zero or
+            // were moved across zero, see `near_zero` below. The loop only
+            // modifies the workspace entries of roots already processed.
+            std::vector<bool> noise_needed(model_->ne, false);
+            for (int je = ie; je < model_->ne; je++) {
+                auto const rv = ws_->rootvals.at(je);
+                noise_needed[je] = !std::isnan(rv)
+                                   && (ws_->t_root_crossed.at(je) == ws_->sol.t
+                                       || (rv != ws_->rval_tmp.at(je)
+                                           && (rv >= 0.0) != (h.at(je) > 0.0)));
+            }
+            estimate_root_noise_and_slope(root_noise, root_slope, noise_needed);
+        }
         // Root functions keep their Heaviside value, unless they crossed zero
         // at this time, an event assignment moved them to the other side of
         // zero, or they are exactly zero, where the event may have changed
@@ -1185,6 +1202,8 @@ int EventHandlingSimulator::detect_secondary_events() {
         // their own time, also if an event assignment changed them slightly.
         bool const moved_across
             = changed && (rootval >= 0.0) != (h.at(ie) > 0.0);
+        // requested in `noise_needed` above
+        assert(!(crossed || moved_across) || !std::isnan(root_noise[ie]));
         bool const near_zero = (crossed || moved_across)
                                    ? std::abs(rootval) <= root_noise[ie]
                                    : rootval == 0.0;
@@ -1264,61 +1283,134 @@ int EventHandlingSimulator::detect_secondary_events() {
 }
 
 void EventHandlingSimulator::estimate_root_noise_and_slope(
-    std::vector<realtype>& noise, std::vector<realtype>& slope
+    std::vector<realtype>& noise, std::vector<realtype>& slope,
+    std::vector<bool> const& noise_needed
 ) {
     constexpr auto eps = std::numeric_limits<realtype>::epsilon();
     auto const t = ws_->sol.t;
     auto const rtol = solver_->get_relative_tolerance();
     auto const atol = solver_->get_absolute_tolerance();
-    auto const& x0 = ws_->sol.x;
-    realtype x_max = 0.0;
-    for (int ix = 0; ix < x0.size(); ++ix)
-        x_max = std::max(x_max, std::abs(x0[ix]));
+    auto const& x = ws_->sol.x;
+    auto const ne = model_->ne;
+    Expects(noise_needed.size() == gsl::narrow<std::size_t>(ne));
 
-    AmiVector x(x0);
+    // Time derivative of the states. For DAEs, the derivatives of the
+    // algebraic states in `sol.dx` are not necessarily consistent.
+    AmiVector xdot(x);
+    model_->fdxdt(t, x, ws_->sol.dx, xdot);
     AmiVector dx(ws_->sol.dx);
-    for (int ix = 0; ix < x.size(); ++ix)
-        x[ix] += atol + rtol * std::abs(x[ix]);
-    for (int ix = 0; ix < dx.size(); ++ix)
-        dx[ix] += atol + rtol * std::abs(dx[ix]);
-    noise.resize(model_->ne);
-    model_->froot(t, x, dx, noise);
-
-    // Central difference along the right-hand side, with a step that is
-    // small compared to the time scales of the states
-    AmiVector xdot(x0);
-    model_->fdxdt(t, x0, ws_->sol.dx, xdot);
-    if (model_->has_algebraic_states())
-        set_algebraic_state_derivatives(*model_, t, x0, xdot, rtol, atol);
-    auto dt = std::cbrt(eps) * std::max(std::abs(t), 1.0);
-    for (int ix = 0; ix < x0.size(); ++ix) {
-        auto const x_scale = std::abs(x0[ix]) + rtol * x_max + atol;
-        if (dt * std::abs(xdot[ix]) > std::cbrt(eps) * x_scale)
-            dt = std::cbrt(eps) * x_scale / std::abs(xdot[ix]);
+    if (model_->has_algebraic_states()) {
+        set_algebraic_state_derivatives(*model_, t, x, xdot, rtol, atol);
+        dx.copy(xdot);
     }
-    // resolvable in `t`
-    dt = std::max(dt, 64 * eps * std::max(std::abs(t), 1.0));
-    std::vector<realtype> root_backward(model_->ne);
+
+    model_->fdrootdt_total_or_nan(t, x, dx, slope);
+
+    // Uncertainty of the states, including roundoff
+    std::vector<realtype> x_error(x.size());
     for (int ix = 0; ix < x.size(); ++ix)
-        x[ix] = x0[ix] - dt * xdot[ix];
-    model_->froot(t - dt, x, ws_->sol.dx, root_backward);
+        x_error[ix] = atol + (rtol + 16 * eps) * std::abs(x[ix]);
+
+    // The change of each root function for a perturbation of the states by
+    // their uncertainty, in the direction of the gradient of that root
+    // function, so that contributions of different states do not cancel
+    // out. To first order, this is `sum_j |d root / d x_j| * x_error_j`, but
+    // also valid if the root function is strongly nonlinear within the
+    // uncertainty of the states, e.g., `sqrt(x)` at `x = 0`. States the root
+    // function does not depend on are not perturbed, as they may still enter
+    // exactly evaluated conditions, e.g., `x == 0` for a state `x` that only
+    // changes at events.
+    std::vector<realtype> rootvals(ne);
+    model_->froot(t, x, ws_->sol.dx, rootvals);
+    std::vector<realtype> slope_scale(ne, 0.0);
+    std::vector<realtype> drootdx_all;
+    model_->fdrootdx(t, x, dx, drootdx_all);
+    std::vector<realtype> root_perturbed(ne);
+    AmiVector x_perturbed(x);
+    noise.assign(ne, 0.0);
+    for (int ie = 0; ie < ne; ++ie) {
+        auto const drootdx = std::span<realtype const>(drootdx_all)
+                                 .subspan(ie * x.size(), x.size());
+        realtype first_order = 0.0;
+        for (int ix = 0; ix < x.size(); ++ix) {
+            first_order += std::abs(drootdx[ix]) * x_error[ix];
+            slope_scale[ie] += std::abs(drootdx[ix]) * std::abs(xdot[ix]);
+        }
+        if (!noise_needed[ie]) {
+            noise[ie] = std::numeric_limits<realtype>::quiet_NaN();
+            continue;
+        }
+        auto change = std::numeric_limits<realtype>::quiet_NaN();
+        for (int const sign : {1, -1}) {
+            for (int ix = 0; ix < x.size(); ++ix) {
+                x_perturbed[ix] = x[ix];
+                if (drootdx[ix] != 0.0)
+                    x_perturbed[ix]
+                        += (drootdx[ix] < 0 ? -sign : sign) * x_error[ix];
+            }
+            model_->froot(t, x_perturbed, ws_->sol.dx, root_perturbed);
+            auto const change_ie = std::abs(root_perturbed[ie] - rootvals[ie]);
+            if (std::isfinite(change_ie)
+                && (std::isnan(change) || change_ie > change))
+                change = change_ie;
+        }
+        if (std::isfinite(change))
+            noise[ie] = change;
+        else if (std::isfinite(first_order))
+            noise[ie] = first_order;
+    }
+
+    // Unavailable analytically for root functions depending on the time
+    // derivative of splines, or not finite (e.g., `inf * 0` for `sqrt(x)` at
+    // `x = 0` with `dx/dt = 0`): central difference along the right-hand
+    // side, with a step that is small compared to the time scales of the
+    // states
+    if (std::ranges::any_of(slope, [](realtype const s) {
+            return std::isnan(s);
+        })) {
+        realtype x_max = 0.0;
+        for (int ix = 0; ix < x.size(); ++ix)
+            x_max = std::max(x_max, std::abs(x[ix]));
+        auto dt = std::cbrt(eps) * std::max(std::abs(t), 1.0);
+        for (int ix = 0; ix < x.size(); ++ix) {
+            auto const x_scale = std::abs(x[ix]) + rtol * x_max + atol;
+            if (dt * std::abs(xdot[ix]) > std::cbrt(eps) * x_scale)
+                dt = std::cbrt(eps) * x_scale / std::abs(xdot[ix]);
+        }
+        // resolvable in `t`
+        dt = std::max(dt, 64 * eps * std::max(std::abs(t), 1.0));
+        std::vector<realtype> root_backward(ne);
+        for (int ix = 0; ix < x.size(); ++ix)
+            x_perturbed[ix] = x[ix] - dt * xdot[ix];
+        model_->froot(t - dt, x_perturbed, ws_->sol.dx, root_backward);
+        for (int ix = 0; ix < x.size(); ++ix)
+            x_perturbed[ix] = x[ix] + dt * xdot[ix];
+        model_->froot(t + dt, x_perturbed, ws_->sol.dx, root_perturbed);
+        for (int ie = 0; ie < ne; ++ie) {
+            if (std::isnan(slope[ie]))
+                slope[ie] = (root_perturbed[ie] - root_backward[ie])
+                            / ((t + dt) - (t - dt));
+        }
+    }
+
+    // Time tolerance of the root-finding. The change within it is bounded by
+    // the actual change, as above.
+    auto const t_tol = root_time_tolerance(*solver_, t);
     for (int ix = 0; ix < x.size(); ++ix)
-        x[ix] = x0[ix] + dt * xdot[ix];
-    slope.resize(model_->ne);
-    model_->froot(t + dt, x, ws_->sol.dx, slope);
+        x_perturbed[ix] = x[ix] + t_tol * xdot[ix];
+    model_->froot(t + t_tol, x_perturbed, ws_->sol.dx, root_perturbed);
+    for (int ie = 0; ie < ne; ++ie) {
+        // a slope at roundoff level has no direction
+        if (std::isfinite(slope_scale[ie])
+            && std::abs(slope[ie]) <= 16 * eps * slope_scale[ie])
+            slope[ie] = 0.0;
+        auto const change = std::abs(root_perturbed[ie] - rootvals[ie]);
+        if (std::isfinite(slope[ie]))
+            noise[ie] += std::min(std::abs(slope[ie]) * t_tol, change);
+    }
 
     // restore the model's derived state at the current state
-    model_->froot(t, x0, ws_->sol.dx, ws_->rootvals);
-    auto const t_tol = root_time_tolerance(*solver_, t);
-    for (int ie = 0; ie < model_->ne; ++ie) {
-        slope[ie] = (slope[ie] - root_backward[ie]) / ((t + dt) - (t - dt));
-        // The perturbation of all states in the same direction may cancel
-        // out, e.g., for differences of states, hence the roundoff term.
-        noise[ie] = std::max(
-            {std::abs(noise[ie] - ws_->rootvals.at(ie)),
-             std::abs(slope[ie]) * t_tol, 16 * eps * x_max}
-        );
-    }
+    model_->froot(t, x, ws_->sol.dx, rootvals);
 }
 
 bool EventHandlingSimulator::collect_roots(realtype const t_trigger) {

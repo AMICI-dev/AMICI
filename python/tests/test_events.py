@@ -4544,8 +4544,10 @@ def test_root_at_threshold_changes_direction(tempdir):
     """A root function at its threshold whose direction is changed by an
     event that does not change the root function itself.
 
-    `x` stays at the threshold of `E2` until `E3` makes it decrease, so
-    `x >= 1` becomes false right after `t = 2`, and true again at `t = 8`.
+    `x` stays at the threshold of `E2` until `E3` makes it decrease slowly,
+    so `x >= 1` becomes false right after `t = 2`, and true again at `t = 8`.
+    `y` is zero with a large derivative at `t = 2`: the direction of the root
+    function must not depend on the time scales of unrelated states.
     """
     model_name = "test_root_at_threshold_changes_direction"
     antimony2amici(
@@ -4553,8 +4555,9 @@ def test_root_at_threshold_changes_direction(tempdir):
         x = 1; r = 0; c = 0; z = 0
         x' = r
         z' = piecewise(1, x >= 1, 0)
-        E3: at time >= 2: r = -1
-        E4: at time >= 5: r = 1
+        y = -2000; y' = 1000
+        E3: at time >= 2: r = -1e-4
+        E4: at time >= 5: r = 1e-4
         E2: at x >= 1: c = c + 1
         """,
         model_name=model_name,
@@ -4564,9 +4567,12 @@ def test_root_at_threshold_changes_direction(tempdir):
     model.set_timepoints([1.0, 3.0, 6.0, 9.0])
     rdata = run_simulation(model, model.create_solver())
     assert rdata.status == AMICI_SUCCESS
-    assert_allclose(rdata.by_id("x"), [1, 0, -1, 2], rtol=0, atol=1e-8)
+    assert_allclose(
+        rdata.by_id("x"), [1, 1 - 1e-4, 1 - 2e-4, 1 + 1e-4], rtol=0, atol=1e-10
+    )
+    assert_allclose(rdata.by_id("y"), [-1000, 1000, 4000, 7000], rtol=1e-8)
     assert_allclose(rdata.by_id("c"), [0, 0, 0, 1], rtol=0, atol=0)
-    assert_allclose(rdata.by_id("z"), [1, 2, 2, 3], rtol=0, atol=1e-8)
+    assert_allclose(rdata.by_id("z"), [1, 2, 2, 3], rtol=0, atol=1e-6)
 
 
 @skip_on_valgrind
@@ -5132,6 +5138,124 @@ def test_switch_after_root_at_stop_time(tempdir, dae):
 
 
 @skip_on_valgrind
+def test_event_moves_own_trigger_back_large_other_state(tempdir):
+    """An event moving its own trigger back by more than the tolerances
+    retriggers, also if another state is large.
+
+    The uncertainty of the root function must not depend on the magnitude of
+    unrelated states.
+    """
+    model_name = "test_event_moves_own_trigger_back_large_other_state"
+    antimony2amici(
+        r"""
+        cells = 1e9; cells' = 0
+        c = 0; c' = 1e-3
+        n = 0
+        E: at c >= 2e-3: c = c - 1e-6, n = n + 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    # E triggers at t = 2, and again every 1e-3 time units
+    model.set_timepoints([1.0, 2.0055])
+    rdata = run_simulation(model, model.create_solver())
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.by_id("n"), [0, 6], rtol=0, atol=0)
+    assert_allclose(rdata.by_id("cells"), [1e9, 1e9], rtol=0, atol=0)
+
+
+@skip_on_valgrind
+def test_root_steep_at_unrelated_event(tempdir, subtests):
+    """Root functions whose derivative w.r.t. the state is infinite or huge.
+
+    * At `E1`, `xa` is zero and `xb` is tiny. `xa^0.5 >= 0.5` becomes true at
+      `t = 1.25`, `xb^0.5 >= 0.5` at `t = 1.125`.
+    * `-xa^0.5` is exactly zero until `t = 1`, where it starts decreasing
+      with an infinite slope, so the condition `xa^0.5 <= 0` becomes false
+      at `t = 1`.
+    * `0.1 - xc^0.5` is `0.1` at `t = 0` and decreasing with a huge slope.
+      Its uncertainty due to that of `xc` is about `1e-8`, but `5` to first
+      order, and its change within the time tolerance is far below
+      `slope * t_tol`. So the condition `xc^0.5 <= 0.1` must not become false
+      at `t = 0`, but at `t = 0.01`.
+    """
+    model_name = "test_root_steep_at_unrelated_event"
+    antimony2amici(
+        r"""
+        xa = 0; ca = 0; za = 0
+        xb = 1e-34; cb = 0
+        xc = 1e-34; zc = 0
+        q = 0
+        xa' = piecewise(0, time < 1, 1)
+        xb' = piecewise(0, time < 1, 2)
+        xc' = 1
+        za' = piecewise(1, xa^0.5 <= 0, 0)
+        zc' = piecewise(1, xc^0.5 <= 0.1, 0)
+        E1: at time >= 1: q = 1
+        Ea: at xa^0.5 >= 0.5: ca = ca + 1
+        Eb: at xb^0.5 >= 0.5: cb = cb + 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints([1.1, 1.2, 1.3])
+    rdata = run_simulation(model, model.create_solver())
+    assert rdata.status == AMICI_SUCCESS
+    for var, expected in {
+        "ca": [0, 0, 1],
+        "cb": [0, 1, 1],
+        "za": [1, 1, 1],
+        "zc": [0.01, 0.01, 0.01],
+    }.items():
+        with subtests.test(msg=var):
+            assert_allclose(rdata.by_id(var), expected, rtol=1e-6, atol=0)
+
+
+@skip_on_valgrind
+def test_spline_trigger_at_threshold_changes_direction(tempdir):
+    """As `test_root_at_threshold_changes_direction`, for a trigger that
+    depends on a spline of time, which is zero here."""
+    model_name = "test_spline_trigger_at_threshold_changes_direction"
+    sbml_model = (
+        libsbml.SBMLReader()
+        .readSBMLFromString(
+            antimony2sbml(
+                r"""
+                model m
+                    x = 1; r = 0; c = 0; z = 0
+                    x' = r
+                    z' = piecewise(1, x + u >= 1, 0)
+                    var u = 0; sp1 = 0; sp2 = 0
+                    E3: at time >= 2: r = -1
+                    E4: at time >= 5: r = 1
+                    E2: at x + u >= 1: c = c + 1
+                end
+                """
+            )
+        )
+        .getModel()
+    )
+    CubicHermiteSpline(
+        sbml_id="u",
+        evaluate_at=amici_time_symbol,
+        nodes=[0, 10],
+        values_at_nodes=[sp.Symbol("sp1"), sp.Symbol("sp2")],
+        extrapolate=("constant", "constant"),
+    ).add_to_sbml_model(sbml_model, auto_add=False)
+    SbmlImporter(sbml_model).sbml2amici(
+        model_name, tempdir, generate_sensitivity_code=False
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints([1.0, 3.0, 6.0, 9.0])
+    rdata = run_simulation(model, model.create_solver())
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.by_id("c"), [0, 0, 0, 1], rtol=0, atol=0)
+    assert_allclose(rdata.by_id("z"), [1, 2, 2, 3], rtol=0, atol=1e-8)
+
+
+@skip_on_valgrind
 def test_event_time_sensitivities_with_time_varying_spline(tempdir):
     """Event-time sensitivities for a trigger that depends on an expression,
     in a model with a time-varying spline that the trigger does not depend
@@ -5451,3 +5575,71 @@ def test_dae_sensitivity_error_control_after_event(tempdir):
     assert np.abs(sx).max() > 0.1
     # without error control, the error after the event is ~3e-2
     assert_allclose(sx, sx_expected, rtol=0, atol=1e-5)
+
+
+@skip_on_valgrind
+def test_event_moves_difference_trigger_back_within_tolerance(
+    tempdir, subtests
+):
+    """An event moves its trigger, a difference of states, back below its
+    threshold by less than the tolerances.
+
+    The uncertainty of the trigger must not cancel out for differences of
+    states, so that the result is the same if the threshold is a constant
+    state (`E1`) or a parameter (`E2`).
+    """
+    model_name = "test_event_moves_difference_trigger_back_within_tolerance"
+    antimony2amici(
+        r"""
+        x1 = 0; x1' = 1; n1 = 0
+        x2 = 0.5; x2' = 0
+        y1 = 0; y1' = 1; n2 = 0
+        p2 = 0.7
+        E1: at x1 - x2 >= 0: x1 = x1 - 1e-10, n1 = n1 + 1
+        E2: at y1 - p2 >= 0: y1 = y1 - 1e-10, n2 = n2 + 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints([0.4, 0.6, 0.8])
+    solver = model.create_solver()
+    solver.set_max_steps(20000)
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+    for counter, expected in {"n1": [0, 1, 1], "n2": [0, 0, 1]}.items():
+        with subtests.test(msg=counter):
+            assert_allclose(rdata.by_id(counter), expected, rtol=0, atol=0)
+
+
+@skip_on_valgrind
+def test_gated_trigger_moved_below_threshold(tempdir):
+    """An event assignment moves an open-gated trigger below its threshold.
+
+    The gate `u == 0` of `Ea` is evaluated exactly. A perturbation of `u`
+    within the tolerances must not count as uncertainty of the trigger, or
+    `Ea` would trigger at `Ej`, while `s < c` and increasing, instead of when
+    `s` reaches `c`. `Ec` is the same without the gate. `E9` only makes `u`
+    a state.
+    """
+    model_name = "test_gated_trigger_moved_below_threshold"
+    antimony2amici(
+        r"""
+        c = 0.3
+        s = 0.5; s' = 1
+        u = 0
+        E9: at time >= 5: u = 1
+        Ej: at time >= 0.2: s = 0.1
+        na = 0; nc = 0
+        Ea: at (s > c) && (u == 0): na = na + 1
+        Ec: at s > c: nc = nc + 1
+        """,
+        model_name=model_name,
+        output_dir=tempdir,
+    )
+    model = import_model_module(model_name, tempdir).get_model()
+    model.set_timepoints([0.1, 0.3, 0.5])
+    rdata = run_simulation(model, model.create_solver())
+    assert rdata.status == AMICI_SUCCESS
+    assert_allclose(rdata.by_id("nc"), [0, 0, 1], rtol=0, atol=0)
+    assert_allclose(rdata.by_id("na"), [0, 0, 1], rtol=0, atol=0)
