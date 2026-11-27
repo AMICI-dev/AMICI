@@ -335,35 +335,74 @@ void Model::reinitialize_b(
     auto const* k = state_.fixed_parameters.data();
     auto const* x_pos = compute_x_pos(x);
 
-    // xQB += (dx0/dp)^T xB for the reinitialized states
-    std::vector<realtype> sx0(nx_rdata);
+    // xQB += (dx0/dp)^T xB for the reinitialized states. `xB` refers to the
+    // solver states, `fsx0_fixedParameters` writes x_rdata. Reinitialized
+    // states that were eliminated via conservation laws enter via the
+    // sensitivities of the conserved totals during the main simulation.
+    std::vector<realtype> sx0_rdata(nx_rdata);
+    std::vector<realtype> sx0_solver(nx_solver);
     for (int ip = 0; ip < nplist(); ++ip) {
-        std::ranges::fill(sx0, 0.0);
-        fsx0_fixedParameters(sx0.data(), t, x_pos, p, k, plist(ip), idxs);
+        std::ranges::fill(sx0_rdata, 0.0);
+        fsx0_fixedParameters(sx0_rdata.data(), t, x_pos, p, k, plist(ip), idxs);
+        fsx_solver(sx0_solver.data(), sx0_rdata.data());
         xQB.at(ip) += std::inner_product(
-            sx0.cbegin(), sx0.cend(), xB.get_vector().cbegin(), 0.0
+            sx0_solver.cbegin(), sx0_solver.cend(), xB.get_vector().cbegin(),
+            0.0
         );
     }
 
     // xB <- P xB, the reinitialized states don't depend on the previous ones.
     // fx0_fixedParameters only writes the reinitialized states.
-    std::vector<realtype> x0(nx_rdata, NAN);
-    fx0_fixedParameters(x0.data(), t, p, k, idxs);
+    std::vector<realtype> x0_rdata(nx_rdata, NAN);
+    fx0_fixedParameters(x0_rdata.data(), t, p, k, idxs);
+    std::vector<realtype> x0_solver(nx_solver);
+    fx_solver(x0_solver.data(), x0_rdata.data());
     for (int ix = 0; ix < nx_solver; ++ix) {
-        if (!std::isnan(x0[ix]))
+        if (!std::isnan(x0_solver[ix]))
             xB.at(ix) = 0.0;
     }
 }
 
-void Model::check_reinitialize_b_supported() const {
+void Model::check_reinitialize_b_supported() {
     if (!get_reinitialize_fixed_parameter_initial_states() || nx_reinit() == 0)
         return;
 
-    if (ncl() > 0)
-        throw AmiException(
-            "Adjoint pre-equilibration with reinitialization of non-constant "
-            "states is not supported for models with conservation laws."
+    if (ncl() > 0) {
+        // Reinitializing a state that shares a conservation law with other
+        // states would make the conserved total depend on the other states
+        // at the end of pre-equilibration, which would require the adjoint
+        // of the conserved totals.
+        auto& dtcldx = derived_state_.dtotal_cldx_rdata;
+        fdtotal_cldx_rdata_colptrs(dtcldx);
+        fdtotal_cldx_rdata_rowvals(dtcldx);
+        std::vector<int> n_members(ncl(), 0);
+        for (sunindextype inz = 0; inz < dtcldx.get_indexptr(nx_rdata); ++inz)
+            ++n_members.at(dtcldx.get_indexval(inz));
+        // `reinitialization_state_idxs_sim` may include states whose initial
+        // values don't depend on the fixed parameters. Only those written by
+        // fx0_fixedParameters are actually reinitialized.
+        std::vector<realtype> x0_rdata(nx_rdata, NAN);
+        fx0_fixedParameters(
+            x0_rdata.data(), t0(), state_.unscaled_parameters.data(),
+            state_.fixed_parameters.data(),
+            simulation_parameters_.reinitialization_state_idxs_sim
         );
+        for (int ix = 0; ix < nx_rdata; ++ix) {
+            if (std::isnan(x0_rdata[ix]))
+                continue;
+            for (auto inz = dtcldx.get_indexptr(ix);
+                 inz < dtcldx.get_indexptr(ix + 1); ++inz) {
+                if (n_members.at(dtcldx.get_indexval(inz)) > 1)
+                    throw AmiException(
+                        "Adjoint pre-equilibration with reinitialization "
+                        "of non-constant states is not supported for "
+                        "states that share a conservation law with other "
+                        "states (here: %s).",
+                        std::string(get_state_ids()[ix]).c_str()
+                    );
+            }
+        }
+    }
     if (has_algebraic_states())
         throw AmiException(
             "Adjoint pre-equilibration with reinitialization of non-constant "

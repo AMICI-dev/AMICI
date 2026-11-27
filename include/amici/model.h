@@ -298,10 +298,11 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Check whether `reinitialize_b` is supported.
      *
-     * Throws if non-constant states are reinitialized for a model with
-     * conservation laws, a DAE model, or `nJ != 1`.
+     * Throws if non-constant states are reinitialized for a DAE model or
+     * `nJ != 1`, or if a reinitialized state shares a conservation law with
+     * other states.
      */
-    void check_reinitialize_b_supported() const;
+    void check_reinitialize_b_supported();
 
     /**
      * @brief Initialize model state.
