@@ -839,12 +839,44 @@ class Model : public AbstractModel, public ModelDimensions {
     virtual std::span<std::string_view const> get_expression_ids() const;
 
     /**
-     * @brief Checks whether the defined noise model is Gaussian, i.e., the nllh
-     * is quadratic
+     * @brief Get the noise distribution of a time-resolved observable.
+     *
+     * @param iy observable index
+     * @return noise distribution
+     */
+    [[nodiscard]] virtual NoiseDistribution
+    get_noise_distribution(int iy) const;
+
+    /**
+     * @brief Get the noise distribution of an event-resolved observable.
+     *
+     * @param iz event observable index
+     * @return noise distribution
+     */
+    [[nodiscard]] virtual NoiseDistribution
+    get_event_noise_distribution(int iz) const;
+
+    /**
+     * @brief Check whether all time-resolved observables have
+     * (log-/log10-)normal noise.
+     *
+     * Only then, residuals, chi2 values, and the Gauss-Newton approximation of
+     * the Fisher information matrix are computed.
+     *
+     * @param edata Experimental data. Currently unused.
+     * @return boolean flag
+     */
+    [[nodiscard]] bool is_quadratic_llh(ExpData const* edata) const;
+
+    /**
+     * @brief Check whether all time-resolved observables have
+     * (log-/log10-)normal noise.
+     *
+     * @deprecated Use `is_quadratic_llh` instead.
      *
      * @return boolean flag
      */
-    virtual bool has_quadratic_llh() const;
+    [[nodiscard]] bool has_quadratic_llh() const;
 
     /**
      * @brief Get the timepoint vector.
@@ -1189,11 +1221,12 @@ class Model : public AbstractModel, public ModelDimensions {
     /**
      * @brief Get scaling type for observable
      *
+     * @deprecated Use `get_noise_distribution` instead.
+     *
      * @param iy observable index
      * @return scaling type
      */
-    [[nodiscard]] virtual ObservableScaling
-    get_observable_scaling(int iy) const;
+    [[nodiscard]] ObservableScaling get_observable_scaling(int iy) const;
 
     /**
      * @brief Get sensitivity of time-resolved observables.

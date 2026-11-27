@@ -16,7 +16,6 @@ from amici.constants import SymbolId
 from amici.importers.utils import (
     MeasurementChannel,
     noise_distribution_to_cost_function,
-    noise_distribution_to_observable_transformation,
     symbol_with_assumptions,
 )
 
@@ -118,9 +117,7 @@ def add_observables(
         symbol_with_assumptions(channel.id): {
             "name": channel.name or f"y{iobs}",
             "value": sympify(channel.formula),
-            "transformation": noise_distribution_to_observable_transformation(
-                channel.noise_distribution
-            ),
+            "noise_distribution": channel.noise_distribution,
         }
         for iobs, channel in enumerate(
             filter(lambda c: c.is_time_resolved, observation_model)
@@ -135,9 +132,7 @@ def add_observables(
             "name": channel.name or f"z{iobs}",
             "value": sympify(channel.formula),
             "event": sp.Symbol(channel.event_id),
-            "transformation": noise_distribution_to_observable_transformation(
-                channel.noise_distribution
-            ),
+            "noise_distribution": channel.noise_distribution,
         }
         for iobs, channel in enumerate(
             filter(lambda c: c.is_event_resolved, observation_model)

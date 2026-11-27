@@ -46,7 +46,6 @@ from ..utils import (
     generate_measurement_symbol,
     make_name_unique,
     noise_distribution_to_cost_function,
-    noise_distribution_to_observable_transformation,
     resolve_reserved_symbol_renames,
     symbol_with_assumptions,
 )
@@ -545,12 +544,6 @@ def ode_model_from_pysb_importer(
     for event in _events or []:
         ode.add_component(event)
 
-    ode._has_quadratic_nllh = all(
-        channel.noise_distribution
-        in ["normal", "lin-normal", "log-normal", "log10-normal"]
-        for channel in observation_model.values()
-    )
-
     _process_stoichiometric_matrix(model, ode, fixed_parameters, renames)
 
     ode.generate_basic_variables()
@@ -899,7 +892,6 @@ def _add_expression(
         noise_dist = observation_model[name].noise_distribution
 
         y = symbol_with_assumptions(sym_name)
-        trafo = noise_distribution_to_observable_transformation(noise_dist)
         # note that this is a bit iffy since we are potentially using the same
         # _symbolic identifier in expressions (w) and observables (y).
         # This is not a problem as there currently are no model functions that
@@ -917,7 +909,11 @@ def _add_expression(
         # of the call, not just on `name` itself
         my = generate_measurement_symbol(y, taken_names=all_names)
         obs = Observable(
-            y, name, expr, measurement_symbol=my, transformation=trafo
+            y,
+            name,
+            expr,
+            measurement_symbol=my,
+            noise_distribution=noise_dist,
         )
         ode_model.add_component(obs)
 

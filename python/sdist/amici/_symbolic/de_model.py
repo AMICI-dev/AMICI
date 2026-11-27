@@ -24,7 +24,6 @@ from amici.exporters.sundials.cxx_functions import (
 )
 from amici.exporters.sundials.cxxcodeprinter import csc_matrix
 from amici.importers.utils import (
-    ObservableTransformation,
     _default_simplify,
     amici_time_symbol,
     symbol_with_assumptions,
@@ -196,9 +195,6 @@ class DEModel:
     :ivar _w_recursion_depth:
         recursion depth in w, quantified as nilpotency of dwdw
 
-    :ivar _has_quadratic_nllh:
-        whether all observables have a gaussian noise model, i.e. whether res and FIM make sense.
-
     :ivar _static_indices:
         indices of static variables for different model entities.
 
@@ -348,7 +344,6 @@ class DEModel:
             self._simplify = cached_simplify
         self._x0_fixedParameters_idx: None | Sequence[int]
         self._w_recursion_depth: int = 0
-        self._has_quadratic_nllh: bool = True
         set_log_level(logger, verbose)
 
         self._static_indices: dict[str, list[int]] = {}
@@ -565,14 +560,25 @@ class DEModel:
             )
         )
 
-    def get_observable_transformations(self) -> list[ObservableTransformation]:
+    def get_noise_distributions(self) -> list[str]:
         """
-        List of observable transformations
+        Noise distributions of the time-resolved observables.
 
         :return:
-            list of transformations
+            canonical noise distribution identifiers, see
+            :func:`amici.importers.utils.canonicalize_noise_distribution`
         """
-        return [obs.trafo for obs in self._observables]
+        return [obs.noise_distribution for obs in self._observables]
+
+    def get_event_noise_distributions(self) -> list[str]:
+        """
+        Noise distributions of the event-resolved observables.
+
+        :return:
+            canonical noise distribution identifiers, see
+            :func:`amici.importers.utils.canonicalize_noise_distribution`
+        """
+        return [obs.noise_distribution for obs in self._event_observables]
 
     def num_states_rdata(self) -> int:
         """
@@ -3051,6 +3057,7 @@ class DEModel:
                         symbol=comp.get_sym(),
                         name=net_id,
                         value=out_val,
+                        noise_distribution=comp.noise_distribution,
                     )
                 )
 

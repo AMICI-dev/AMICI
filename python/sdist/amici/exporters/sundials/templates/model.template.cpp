@@ -26,8 +26,12 @@ extern const std::array<std::string_view const, TPL_NY> observable_names = {
     TPL_OBSERVABLE_NAMES_INITIALIZER_LIST
 };
 
-std::array<const ObservableScaling, TPL_NY> observable_scalings = {
-    TPL_OBSERVABLE_TRAFO_INITIALIZER_LIST
+extern const std::array<NoiseDistribution const, TPL_NY> noise_distributions = {
+    TPL_NOISE_DISTRIBUTIONS_INITIALIZER_LIST
+};
+
+extern const std::array<NoiseDistribution const, TPL_NZ> event_noise_distributions = {
+    TPL_EVENT_NOISE_DISTRIBUTIONS_INITIALIZER_LIST
 };
 
 extern const std::array<std::string_view const, TPL_NW> expression_names = {

@@ -19,7 +19,8 @@ extern const std::array<std::string_view const, TPL_NK> fixed_parameter_names;
 extern const std::array<std::string_view const, TPL_NX_RDATA> state_names;
 extern const std::array<std::string_view const, TPL_NX_SOLVER> state_names_solver;
 extern const std::array<std::string_view const, TPL_NY> observable_names;
-extern std::array<const ObservableScaling, TPL_NY> observable_scalings;
+extern const std::array<NoiseDistribution const, TPL_NY> noise_distributions;
+extern const std::array<NoiseDistribution const, TPL_NZ> event_noise_distributions;
 extern const std::array<std::string_view const, TPL_NW> expression_names;
 extern const std::array<std::string_view const, TPL_NP> free_parameter_ids;
 extern const std::array<std::string_view const, TPL_NK> fixed_parameter_ids;
@@ -438,12 +439,12 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
         return "TPL_AMICI_COMMIT_STRING";
     }
 
-    bool has_quadratic_llh() const override {
-        return TPL_QUADRATIC_LLH;
+    NoiseDistribution get_noise_distribution(int iy) const override {
+        return noise_distributions.at(iy);
     }
 
-    ObservableScaling get_observable_scaling(int iy) const override {
-        return observable_scalings.at(iy);
+    NoiseDistribution get_event_noise_distribution(int iz) const override {
+        return event_noise_distributions.at(iz);
     }
 };
 

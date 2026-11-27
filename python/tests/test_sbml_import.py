@@ -31,6 +31,8 @@ from amici.sim.sundials import (
     InternalSensitivityMethod,
     LogSeverity,
     ModelModule,
+    NoiseDistribution,
+    ObservableScaling,
     ParameterScaling,
     ReturnDataView,
     SensitivityMethod,
@@ -1226,6 +1228,26 @@ def model_test_likelihoods(tempdir):
 def test_likelihoods(model_test_likelihoods):
     """Test the custom noise distributions used to define cost functions."""
     model = model_test_likelihoods.get_model()
+    assert model.get_noise_distributions() == [
+        NoiseDistribution.normal,
+        NoiseDistribution.log_normal,
+        NoiseDistribution.log10_normal,
+        NoiseDistribution.laplace,
+        NoiseDistribution.log_laplace,
+        NoiseDistribution.log10_laplace,
+        NoiseDistribution.custom,
+    ]
+    assert all(
+        isinstance(nd, NoiseDistribution)
+        for nd in model.get_noise_distributions()
+    )
+    assert model.get_event_noise_distributions() == []
+    assert model.get_noise_distribution(5) == NoiseDistribution.log10_laplace
+    assert not model.is_quadratic_llh(None)
+    with pytest.warns(DeprecationWarning, match="has_quadratic_llh"):
+        assert not model.has_quadratic_llh()
+    with pytest.warns(DeprecationWarning, match="get_observable_scaling"):
+        assert model.get_observable_scaling(2) == ObservableScaling.log10
     model.set_timepoints(np.linspace(0, 60, 60))
     solver = model.create_solver()
     solver.set_sensitivity_order(SensitivityOrder.first)

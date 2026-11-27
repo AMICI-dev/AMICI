@@ -36,3 +36,18 @@ class SymbolId(enum.StrEnum):
     LLHRZ = "llhrz"
     NOISE_PARAMETER = "noise_parameter"
     OBSERVABLE_PARAMETER = "observable_parameter"
+
+
+#: Canonical identifiers of the noise distributions supported by AMICI.
+#: ``"custom"`` stands for a user-provided cost function.
+NOISE_DISTRIBUTIONS = (
+    "normal",
+    "log-normal",
+    "log10-normal",
+    "laplace",
+    "log-laplace",
+    "log10-laplace",
+    "binomial",
+    "negative-binomial",
+    "custom",
+)

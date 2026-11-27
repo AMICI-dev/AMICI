@@ -736,12 +736,6 @@ class SbmlImporter:
             simplify=simplify,
             cache_simplify=cache_simplify,
         )
-
-        ode_model._has_quadratic_nllh = all(
-            llh["dist"]
-            in ["normal", "lin-normal", "log-normal", "log10-normal"]
-            for llh in self._symbols[SymbolId.LLHY].values()
-        )
         ode_model.reserved_symbol_original_ids = (
             self._reserved_symbol_original_ids
         )
@@ -812,12 +806,13 @@ class SbmlImporter:
                     "use_values_from_trigger_time",
                 ]
             elif symbol_name == SymbolId.OBSERVABLE:
-                args += ["transformation", "measurement_symbol"]
+                args += ["noise_distribution", "measurement_symbol"]
             elif symbol_name == SymbolId.EVENT_OBSERVABLE:
                 args += [
                     "event",
                     "measurement_symbol",
                     "regularization_symbol",
+                    "noise_distribution",
                 ]
 
             comp_kwargs = [

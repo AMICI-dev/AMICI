@@ -1,7 +1,6 @@
 """Miscellaneous functions related to model import, independent of any specific
 model format"""
 
-import enum
 import keyword
 import numbers
 import sys
@@ -19,6 +18,8 @@ from sympy.parsing.sympy_parser import (
     standard_transformations,
 )
 from toposort import toposort
+
+from amici.constants import NOISE_DISTRIBUTIONS
 
 __all__ = [
     "MeasurementChannel",
@@ -159,16 +160,6 @@ setattr(
 )
 
 annotation_namespace = "https://github.com/AMICI-dev/AMICI"
-
-
-class ObservableTransformation(enum.StrEnum):
-    """
-    Different modes of observable transformation.
-    """
-
-    LOG10 = "log10"
-    LOG = "log"
-    LIN = "lin"
 
 
 class MeasurementChannel:
@@ -414,25 +405,42 @@ noise_distribution='log-normal', sigma='sigma1', event_id='event1')
         return self.event_id is not None
 
 
-def noise_distribution_to_observable_transformation(
+def canonicalize_noise_distribution(
     noise_distribution: str | Callable,
-) -> ObservableTransformation:
+) -> str:
     """
-    Parse noise distribution string and extract observable transformation
+    Get the canonical identifier of a noise distribution.
+
+    Strips the optional ``lin-`` prefix (e.g., ``"lin-normal"`` ->
+    ``"normal"``) and maps callables to ``"custom"``.
 
     :param noise_distribution:
         see :func:`noise_distribution_to_cost_function`
 
     :return:
-        observable transformation
+        one of :data:`amici.constants.NOISE_DISTRIBUTIONS`
     """
-    if isinstance(noise_distribution, str):
-        if noise_distribution.startswith("log-"):
-            return ObservableTransformation.LOG
-        if noise_distribution.startswith("log10-"):
-            return ObservableTransformation.LOG10
+    if isinstance(noise_distribution, Callable):
+        return "custom"
+    if not isinstance(noise_distribution, str):
+        raise TypeError(
+            "Noise distribution must be a string or a callable, got "
+            f"{type(noise_distribution)}."
+        )
 
-    return ObservableTransformation.LIN
+    canonical = noise_distribution.removeprefix("lin-")
+    if (
+        canonical not in NOISE_DISTRIBUTIONS
+        or canonical == "custom"
+        or (
+            canonical != noise_distribution
+            and canonical.startswith(("log-", "log10-"))
+        )
+    ):
+        raise ValueError(
+            f"Cost identifier {noise_distribution} not recognized."
+        )
+    return canonical
 
 
 def noise_distribution_to_cost_function(
@@ -561,8 +569,9 @@ def noise_distribution_to_cost_function(
 
         return nllh_custom
 
+    noise_distribution = canonicalize_noise_distribution(noise_distribution)
     half = sp.Float(0.5)
-    if noise_distribution in ["normal", "lin-normal"]:
+    if noise_distribution == "normal":
 
         def nllh(y, m, sigma):
             return (
@@ -583,7 +592,7 @@ def noise_distribution_to_cost_function(
                 half * sp.log(2 * sp.pi * sigma**2 * m**2 * sp.log(10) ** 2)
                 + half * ((sp.log(y, 10) - sp.log(m, 10)) / sigma) ** 2
             )
-    elif noise_distribution in ["laplace", "lin-laplace"]:
+    elif noise_distribution == "laplace":
 
         def nllh(y, m, sigma):
             return sp.log(2 * sigma) + sp.Abs(y - m) / sigma
@@ -600,7 +609,7 @@ def noise_distribution_to_cost_function(
                 sp.log(2 * sigma * m * sp.log(10))
                 + sp.Abs(sp.log(y, 10) - sp.log(m, 10)) / sigma
             )
-    elif noise_distribution in ["binomial", "lin-binomial"]:
+    elif noise_distribution == "binomial":
         # Binomial noise model parameterized via success probability p
         def nllh(y, m, sigma):
             return (
@@ -611,7 +620,7 @@ def noise_distribution_to_cost_function(
                 - m * sp.log(sigma)
                 - (y - m) * sp.log(1 - sigma)
             )
-    elif noise_distribution in ["negative-binomial", "lin-negative-binomial"]:
+    elif noise_distribution == "negative-binomial":
         # Negative binomial noise model of the number of successes m
         # (data) before r=(1-sigma)/sigma * y failures occur,
         # with mean number of successes y (simulation),

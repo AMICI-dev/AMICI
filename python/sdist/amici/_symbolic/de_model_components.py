@@ -14,8 +14,8 @@ from amici._symbolic.sympy_utils import (
 from amici.constants import SymbolId
 from amici.importers.utils import (
     RESERVED_SYMBOLS,
-    ObservableTransformation,
     amici_time_symbol,
+    canonicalize_noise_distribution,
     cast_to_sym,
     contains_periodic_subexpression,
     generate_measurement_symbol,
@@ -409,9 +409,9 @@ class Observable(ModelQuantity):
         sympy symbol used in the objective function to represent
         measurements to this observable
 
-    :ivar trafo:
-        observable transformation, only applies when evaluating objective
-        function or residuals
+    :ivar noise_distribution:
+        canonical noise distribution identifier, see
+        :func:`amici.importers.utils.canonicalize_noise_distribution`
     """
 
     _measurement_symbol: sp.Symbol | None = None
@@ -423,8 +423,7 @@ class Observable(ModelQuantity):
         value: sp.Expr,
         measurement_symbol: sp.Symbol | None = None,
         regularization_symbol: sp.Symbol | None = None,
-        transformation: None
-        | ObservableTransformation = ObservableTransformation.LIN,
+        noise_distribution: str = "normal",
     ):
         """
         Create a new Observable instance.
@@ -450,14 +449,18 @@ class Observable(ModelQuantity):
         :param regularization_symbol:
             as `measurement_symbol`, but for `get_regularization_symbol`.
 
-        :param transformation:
-            observable transformation, only applies when evaluating objective
-            function or residuals
+        :param noise_distribution:
+            noise distribution identifier, see
+            :func:`amici.importers.utils.noise_distribution_to_cost_function`.
+            Only used for model metadata and for residuals; the
+            log-likelihood itself is defined separately.
         """
         super().__init__(symbol, name, value)
         self._measurement_symbol = measurement_symbol
         self._regularization_symbol = regularization_symbol
-        self.trafo = transformation
+        self.noise_distribution = canonicalize_noise_distribution(
+            noise_distribution
+        )
 
     def get_measurement_symbol(self) -> sp.Symbol:
         if self._measurement_symbol is None:
@@ -493,7 +496,7 @@ class EventObservable(Observable):
         event: sp.Symbol,
         measurement_symbol: sp.Symbol | None = None,
         regularization_symbol: sp.Symbol | None = None,
-        transformation: ObservableTransformation | None = "lin",
+        noise_distribution: str = "normal",
     ):
         """
         Create a new EventObservable instance.
@@ -513,7 +516,7 @@ class EventObservable(Observable):
         :param regularization_symbol:
             See :py:meth:`Observable.__init__`.
 
-        :param transformation:
+        :param noise_distribution:
             See :py:meth:`Observable.__init__`.
 
         :param event:
@@ -525,7 +528,7 @@ class EventObservable(Observable):
             value,
             measurement_symbol,
             regularization_symbol,
-            transformation,
+            noise_distribution,
         )
         self._event: sp.Symbol = event
 

@@ -134,6 +134,62 @@ enum class ObservableScaling {
     log10
 };
 
+/**
+ * @brief Noise distribution of an observable.
+ *
+ * For the definitions, see
+ * `amici.importers.utils.noise_distribution_to_cost_function`.
+ * `custom` denotes a user-provided negative log-likelihood (cost function).
+ */
+enum class NoiseDistribution {
+    normal,
+    log_normal,
+    log10_normal,
+    laplace,
+    log_laplace,
+    log10_laplace,
+    binomial,
+    negative_binomial,
+    custom
+};
+
+/**
+ * @brief Whether the negative log-likelihood is quadratic in the residuals.
+ *
+ * This holds for (log-/log10-)normal noise: the negative log-likelihood is
+ * \f$\frac{1}{2} r^2\f$ with \f$r = (h(m) - h(y)) / \sigma\f$ and \f$h\f$
+ * the observable transformation, plus \f$\log \sigma\f$ and terms that
+ * only depend on the data.
+ * @param noise_distribution noise distribution
+ * @return `true` for (log-/log10-)normal distributions
+ */
+constexpr bool
+has_quadratic_residual_llh(NoiseDistribution noise_distribution) {
+    return noise_distribution == NoiseDistribution::normal
+           || noise_distribution == NoiseDistribution::log_normal
+           || noise_distribution == NoiseDistribution::log10_normal;
+}
+
+/**
+ * @brief Get the observable transformation of a noise distribution.
+ * @internal
+ * @param noise_distribution noise distribution
+ * @return the transformation applied to simulation and measurement
+ */
+constexpr ObservableScaling
+to_observable_scaling(NoiseDistribution noise_distribution) {
+    switch (noise_distribution) {
+    case NoiseDistribution::log_normal:
+    case NoiseDistribution::log_laplace:
+        return ObservableScaling::log;
+    case NoiseDistribution::log10_normal:
+    case NoiseDistribution::log10_laplace:
+        return ObservableScaling::log10;
+    default:
+        return ObservableScaling::lin;
+    }
+}
+
 /** modes for second order sensitivity analysis */
 enum class SecondOrderMode {
     none,

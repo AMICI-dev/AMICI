@@ -24,14 +24,15 @@ ReturnData::ReturnData(Solver const& solver, Model const& model)
           model.get_parameter_list(), model.get_parameter_scale(),
           model.get_second_order_mode(), solver.get_sensitivity_order(),
           solver.get_sensitivity_method(),
-          solver.get_return_data_reporting_mode(), model.has_quadratic_llh(),
-          model.get_add_sigma_residuals(), model.get_minimum_sigma_residuals(),
-          model.get_free_parameter_ids(), model.get_free_parameter_names(),
-          model.get_fixed_parameter_ids(), model.get_fixed_parameter_names(),
-          model.get_state_ids(), model.get_state_names(),
-          model.get_state_ids_solver(), model.get_state_names_solver(),
-          model.get_observable_ids(), model.get_observable_names(),
-          model.get_expression_ids(), model.get_expression_names()
+          solver.get_return_data_reporting_mode(),
+          model.is_quadratic_llh(nullptr), model.get_add_sigma_residuals(),
+          model.get_minimum_sigma_residuals(), model.get_free_parameter_ids(),
+          model.get_free_parameter_names(), model.get_fixed_parameter_ids(),
+          model.get_fixed_parameter_names(), model.get_state_ids(),
+          model.get_state_names(), model.get_state_ids_solver(),
+          model.get_state_names_solver(), model.get_observable_ids(),
+          model.get_observable_names(), model.get_expression_ids(),
+          model.get_expression_names()
       ) {}
 
 ReturnData::ReturnData(
@@ -339,7 +340,7 @@ void ReturnData::process_forward_problem(
     }
 
     if (edata)
-        initialize_objective_function(model.has_quadratic_llh());
+        initialize_objective_function(model.is_quadratic_llh(nullptr));
 
     model.set_model_state(initialState.mod);
 
@@ -1059,7 +1060,7 @@ void ReturnData::fres(
 
         res.at(iyt) = amici::fres(
             y_it.at(iy), observedData[iy], sigmay_it.at(iy),
-            model.get_observable_scaling(iy)
+            to_observable_scaling(model.get_noise_distribution(iy))
         );
 
         if (sigma_res)
@@ -1127,7 +1128,7 @@ void ReturnData::fsres(
             sres.at(idx) = amici::fsres(
                 y_it.at(iy), sy_it.at(iy + ny * ip), observedData[iy],
                 sigmay_it.at(iy), ssigmay_it.at(iy + ny * ip),
-                model.get_observable_scaling(iy)
+                to_observable_scaling(model.get_noise_distribution(iy))
             );
 
             if (sigma_res) {
@@ -1220,7 +1221,7 @@ void ReturnData::fFIM(
         auto y = y_it.at(iy);
         auto m = observedData[iy];
         auto s = sigmay_it.at(iy);
-        auto os = model.get_observable_scaling(iy);
+        auto os = to_observable_scaling(model.get_noise_distribution(iy));
         // auto r = amici::fres(y, m, s);
         for (int ip = 0; ip < nplist; ++ip) {
             auto dy_i = sy_it.at(iy + ny * ip);
