@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 116.
+List of publications using AMICI. Total number is 118.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new
 [GitHub issue](https://github.com/AMICI-dev/AMICI/issues/new?labels=documentation&title=Add+publication&body=AMICI+was+used+in+this+manuscript:+DOI).
@@ -48,6 +48,20 @@ Pomereu, Theodore de, and Fabian Fröhlich. 2026. <span>“Symbolic
 Regression Enables Coarse-Grained Model Discovery of Intracellular
 Signalling Dynamics.”</span> <em>bioRxiv</em>. <a
 href="https://doi.org/10.64898/2026.08.20.745973">https://doi.org/10.64898/2026.08.20.745973</a>.
+</div>
+<div id="ref-PomereuSne2026" class="csl-entry" role="listitem">
+Pomereu, Theodore de, Branwen Snelling, and Fabian Fröhlich. 2026.
+<span>“<span>GEMOT</span>: Towards Mechanistic World Models for
+Biology.”</span> <em>bioRxiv</em>. <a
+href="https://doi.org/10.64898/2026.09.26.754619">https://doi.org/10.64898/2026.09.26.754619</a>.
+</div>
+<div id="ref-WeckelGou2026" class="csl-entry" role="listitem">
+Weckel, Chloé, Juliette Gourdon, Léo Darrigade, Vinesh Jugnarain,
+Pascale Crépieux, Eric Reiter, Frédéric Jean-Alphonse, Stefan Haar, and
+Romain Yvinec. 2026. <span>“Spatiotemporal Modeling of <span>GPCR</span>
+Signaling: The Role of Endosomal Dynamics and Receptor
+Recycling.”</span> <em>PLOS Computational Biology</em> 22 (9): 1–36. <a
+href="https://doi.org/10.1371/journal.pcbi.1014790">https://doi.org/10.1371/journal.pcbi.1014790</a>.
 </div>
 <div id="ref-WielandBlu2026" class="csl-entry" role="listitem">
 Wieland, Vincent, Tobias Blum, Irina Iriady, Laia Reverte-Salisa, Dilan
