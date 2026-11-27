@@ -31,23 +31,27 @@ from amici._symbolic.de_model_components import (
     Expression,
     FixedParameter,
     FreeParameter,
-    LogLikelihoodY,
-    Observable,
-    SigmaY,
 )
+from amici.constants import SymbolId
 from amici.logging import get_logger, log_execution_time, set_log_level
 
-from .._observation_model import get_placeholders
+from .._observation_model import (
+    add_components,
+    add_log_likelihoods,
+    add_observables,
+    get_placeholders,
+)
 from ..utils import (
+    RESERVED_SYMBOLS,
     MeasurementChannel,
     _default_simplify,
     _expr_to_amici,
     _parse_special_functions,
-    generate_measurement_symbol,
+    amici_time_symbol,
     make_name_unique,
-    noise_distribution_to_cost_function,
     resolve_reserved_symbol_renames,
     symbol_with_assumptions,
+    sympify_str,
 )
 
 __all__ = [
@@ -104,13 +108,22 @@ def pysb2jax(
     :param observation_model:
         The different measurement channels that make up the observation
         model, see also :class:`amici.importers.utils.MeasurementChannel`.
-        The ID is expected to be the name of a :class:`pysb.core.Expression` or
-        :class:`pysb.core.Observable` in the provided model that should be
-        mapped to an observable.
-        ``sigma`` is expected to be the name of a :class:`pysb.core.Expression`
-        to be mapped to the scale parameter of the noise distribution.
-        :attr:`MeasurementChannel.formula` is expected to be
-        ``None``. Event-observables are not supported.
+        If :attr:`MeasurementChannel.formula` is ``None``, the ID must be
+        the name of a :class:`pysb.core.Observable` or
+        :class:`pysb.core.Expression` in the provided model, which is then
+        used as the observable formula. Otherwise, IDs that are ``time`` or
+        the name of a model parameter, expression, or observable are
+        currently not supported.
+        Formulas and ``sigma`` may refer to ``time`` and to the names of
+        model parameters, expressions, and observables (except for
+        expressions with tags). ``sigma`` may also refer to the channel's
+        own ID, but must not depend on the model state other than via the
+        channel's observable. Custom noise distributions may refer to the
+        names of model parameters and to measurement channel IDs.
+        ``sigma`` referring to ``time`` is currently not supported for JAX
+        models.
+        The observables are ordered as in this list.
+        Event-observables are not supported.
 
     :param verbose: verbosity level for logging, True/False default to
         :attr:`logging.DEBUG`/:attr:`logging.ERROR`
@@ -136,8 +149,7 @@ def pysb2jax(
         If None, :attr:`pysb.core.Model.name` will be used.
 
     :param pysb_model_has_obs_and_noise:
-        If set to ``True``, the pysb model is expected to have extra
-        observables and noise variables added.
+        Ignored.
 
     :param skip_if_unchanged:
         If ``True``, and ``output_dir`` contains a complete model that was
@@ -242,13 +254,20 @@ def pysb2amici(
     :param observation_model:
         The different measurement channels that make up the observation
         model, see also :class:`amici.importers.utils.MeasurementChannel`.
-        The ID is expected to be the name of a :class:`pysb.core.Expression` or
-        :class:`pysb.core.Observable` in the provided model that should be
-        mapped to an observable.
-        ``sigma`` is expected to be the name of a :class:`pysb.core.Expression`
-        to be mapped to the scale parameter of the noise distribution.
-        :attr:`MeasurementChannel.formula` is expected to be
-        ``None``. Event-observables are not supported.
+        If :attr:`MeasurementChannel.formula` is ``None``, the ID must be
+        the name of a :class:`pysb.core.Observable` or
+        :class:`pysb.core.Expression` in the provided model, which is then
+        used as the observable formula. Otherwise, IDs that are ``time`` or
+        the name of a model parameter, expression, or observable are
+        currently not supported.
+        Formulas and ``sigma`` may refer to ``time`` and to the names of
+        model parameters, expressions, and observables (except for
+        expressions with tags). ``sigma`` may also refer to the channel's
+        own ID, but must not depend on the model state other than via the
+        channel's observable. Custom noise distributions may refer to the
+        names of model parameters and to measurement channel IDs.
+        The observables are ordered as in this list.
+        Event-observables are not supported.
 
     :param fixed_parameters:
         list of :class:`pysb.core.Parameter` to be excluded from sensitivity
@@ -295,8 +314,7 @@ def pysb2amici(
         If None, :attr:`pysb.core.Model.name` will be used.
 
     :param pysb_model_has_obs_and_noise:
-        if set to ``True``, the pysb model is expected to have extra
-        observables and noise variables added
+        Ignored.
 
     :param skip_if_unchanged:
         If ``True``, and ``output_dir`` contains a complete model that was
@@ -461,8 +479,7 @@ def ode_model_from_pysb_importer(
         if set to ``True``, the generated model will be compatible with JAX export
 
     :param pysb_model_has_obs_and_noise:
-        if set to ``True``, the pysb model is expected to have extra
-        observables and noise variables added
+        Ignored.
 
     :return:
         New DEModel instance according to `model`
@@ -484,14 +501,17 @@ def ode_model_from_pysb_importer(
             "Placeholder parameters in the observation model are not "
             "supported for PySB models."
         )
-    observation_model = {channel.id: channel for channel in observation_model}
+    if any(channel.is_event_resolved for channel in observation_model):
+        raise NotImplementedError(
+            "Event-resolved observables are not supported for PySB models."
+        )
 
     pysb.bng.generate_equations(model, verbose=verbose)
 
-    # species/conservation-law/sigma/log-likelihood symbols are all
-    # synthetically prefixed (__s{ix}, tcl_s{ix}, sigma_{name}, llh_{name})
-    # so they can never literally match a reserved name (`t`);
-    # only parameter and expression/observable names need checking
+    # species and conservation-law symbols are synthetically prefixed
+    # (__s{ix}, tcl_s{ix}), so they can never literally match a reserved
+    # name (`t`); only parameter and expression/observable names need
+    # checking
     #
     # `all_names` is threaded through the rest of this import and mutated
     # in place as further names are claimed: besides the reserved-symbol
@@ -513,6 +533,7 @@ def ode_model_from_pysb_importer(
     ode.reserved_symbol_original_ids = {
         new_name: old_name for old_name, new_name in renames.items()
     }
+    all_names |= set(RESERVED_SYMBOLS) | set(renames.values())
 
     _process_pysb_species(model, ode, renames)
     _process_pysb_parameters(model, ode, fixed_parameters, renames)
@@ -524,21 +545,11 @@ def ode_model_from_pysb_importer(
         compute_conservation_laws = False
     if compute_conservation_laws:
         _process_pysb_conservation_laws(model, ode, all_names)
-    _process_pysb_observables(
-        model,
-        ode,
-        observation_model,
-        pysb_model_has_obs_and_noise,
-        renames,
-        all_names,
-    )
-    _process_pysb_expressions(
-        model,
-        ode,
-        observation_model,
-        pysb_model_has_obs_and_noise,
-        renames,
-        all_names,
+    expression_names = _process_pysb_observables(model, ode, renames)
+    expression_names |= _process_pysb_expressions(model, ode, renames)
+    all_names |= {str(state.get_sym()) for state in ode.states()}
+    _process_observation_model(
+        model, ode, observation_model, expression_names, renames, all_names
     )
 
     for event in _events or []:
@@ -763,38 +774,24 @@ def _process_pysb_parameters(
 def _process_pysb_expressions(
     pysb_model: pysb.Model,
     ode_model: DEModel,
-    observation_model: dict[str, MeasurementChannel],
-    pysb_model_has_obs_and_noise: bool = False,
-    renames: dict[str, str] | None = None,
-    all_names: set[str] | None = None,
-) -> None:
-    r"""
-    Converts pysb expressions/observables into Observables (with
-    corresponding standard deviation SigmaY and LogLikelihoodY) or
-    Expressions and adds them to the DEModel instance
+    renames: dict[str, str],
+) -> set[str]:
+    """
+    Converts pysb expressions into Expressions and adds them to the DEModel
+    instance
 
     :param pysb_model:
         pysb model
 
-    :param observation_model:
-        A map of observable names to
-        :class:`amici.importers.utils.MeasurementChannel`.
-        see also :func:`amici.importers.pysb.pysb2amici`
-
     :param ode_model:
         DEModel instance
-
-    :param pysb_model_has_obs_and_noise:
-        if set to ``True``, the pysb model is expected to have extra
-        observables and noise variables added
 
     :param renames:
         mapping from a PySB-chosen name to a non-colliding replacement, see
         `resolve_reserved_symbol_renames`
 
-    :param all_names:
-        names already claimed in the model so far, see `all_names` in
-        `ode_model_from_pysb_importer`
+    :return:
+        The names of the added expressions.
     """
     # we no longer expand expressions here. pysb/bng guarantees that
     # they are ordered according to their dependency and we can
@@ -803,6 +800,7 @@ def _process_pysb_expressions(
 
     # we use _constant and _dynamic functions to get access to derived
     # expressions that are otherwise only accessible as private attribute
+    names = set()
     for expr in pysb_model.expressions_constant(
         include_derived=True
     ) | pysb_model.expressions_dynamic(include_derived=True):
@@ -815,31 +813,19 @@ def _process_pysb_expressions(
             # expressions are not needed and lead to compilation errors so
             # we skip them.
             continue
-        _add_expression(
-            expr.name,
-            expr.expr,
-            pysb_model,
-            ode_model,
-            observation_model,
-            pysb_model_has_obs_and_noise,
-            renames,
-            all_names,
-        )
+        _add_expression(expr.name, expr.expr, ode_model, renames)
+        names.add(expr.name)
+    return names
 
 
 def _add_expression(
     name: str,
     expr: sp.Basic,
-    pysb_model: pysb.Model,
     ode_model: DEModel,
-    observation_model: dict[str, MeasurementChannel],
-    pysb_model_has_obs_and_noise: bool = False,
-    renames: dict[str, str] | None = None,
-    all_names: set[str] | None = None,
+    renames: dict[str, str],
 ):
     """
-    Adds expressions to the ODE model given and adds observables/sigmas if
-    appropriate
+    Adds an expression to the ODE model
 
     :param name:
         name of the expression
@@ -847,170 +833,28 @@ def _add_expression(
     :param expr:
         _symbolic expression that the symbol refers to
 
-    :param pysb_model:
-        see :py:func:`_process_pysb_expressions`
-
-    :param observation_model:
-        see :py:func:`_process_pysb_expressions`
-
     :param ode_model:
         see :py:func:`_process_pysb_expressions`
 
-    :param pysb_model_has_obs_and_noise:
-        if set to ``True``, the pysb model is expected to have extra
-        observables and noise variables added
-
     :param renames:
         mapping from a PySB-chosen name to a non-colliding replacement, see
         `resolve_reserved_symbol_renames`
-
-    :param all_names:
-        names already claimed in the model so far, see `all_names` in
-        `ode_model_from_pysb_importer`
     """
-    renames = renames or {}
-    # `name` stays the original (used for `observation_model` lookups and
-    # as the human-readable label); only the identifier is renamed
+    # `name` stays the original (used as the human-readable label); only the
+    # identifier is renamed
     sym_name = renames.get(name, name)
-    if not pysb_model_has_obs_and_noise or name not in observation_model:
-        # Without `pysb_model_has_obs_and_noise`, sigma expressions stay
-        # regular expressions (they may be used elsewhere in the model), and
-        # each observable gets its own `SigmaY`, see below.
-        if pysb_model_has_obs_and_noise and any(
-            name == str(channel.sigma)
-            for channel in observation_model.values()
-        ):
-            component = SigmaY
-        else:
-            component = Expression
-        expr = _parse_special_functions(_expr_to_amici(expr, renames))
-        ode_model.add_component(
-            component(symbol_with_assumptions(sym_name), name, expr)
-        )
-
-    if name in observation_model:
-        noise_dist = observation_model[name].noise_distribution
-
-        y = symbol_with_assumptions(sym_name)
-        # note that this is a bit iffy since we are potentially using the same
-        # _symbolic identifier in expressions (w) and observables (y).
-        # This is not a problem as there currently are no model functions that
-        # use both.
-        # If this changes, I would expect symbol redefinition warnings in CPP
-        # models and overwriting in JAX models, but as both symbols refer to
-        # the same _symbolic entity, this should not be a problem (untested)
-        expr = _parse_special_functions(_expr_to_amici(expr, renames))
-        # mint (and, if needed, disambiguate) the measurement symbol up
-        # front and pass it into the `Observable` explicitly -- a later,
-        # independent call to `Observable.get_measurement_symbol()` (e.g.
-        # from `DEModel`'s own lazy "my" array construction) is not
-        # guaranteed to reproduce the same disambiguated symbol, since
-        # disambiguation depends on `all_names`' mutable state at the time
-        # of the call, not just on `name` itself
-        my = generate_measurement_symbol(y, taken_names=all_names)
-        obs = Observable(
-            y,
-            name,
-            expr,
-            measurement_symbol=my,
-            noise_distribution=noise_dist,
-        )
-        ode_model.add_component(obs)
-
-        sigma_name = observation_model[name].sigma
-        if isinstance(sigma_name, sp.Symbol):
-            sigma_name = sigma_name.name
-
-        if pysb_model_has_obs_and_noise:
-            # the sigma expression itself was added as `SigmaY` above
-            sigma = _get_sigma(
-                pysb_model, name, sigma_name, renames, all_names
-            )
-        else:
-            # add the `SigmaY` here, so that sigmas are in the same order as
-            # observables
-            sigma = _get_sigma(pysb_model, name, None, renames, all_names)
-            sigma_value = (
-                sp.Float(1.0)
-                if sigma_name is None
-                else _get_sigma(
-                    pysb_model, name, sigma_name, renames, all_names
-                )
-            )
-            ode_model.add_component(
-                SigmaY(sigma, f"sigma_{name}", sigma_value)
-            )
-
-        cost_fun_expr = noise_distribution_to_cost_function(noise_dist)(
-            y, my, sigma, str_symbol=name
-        )
-        cost_fun_expr = _expr_to_amici(cost_fun_expr, renames)
-        llh_symbol_name = f"llh_{name}"
-        if all_names is not None:
-            llh_symbol_name = make_name_unique(llh_symbol_name, all_names)
-        ode_model.add_component(
-            LogLikelihoodY(
-                symbol_with_assumptions(llh_symbol_name),
-                f"llh_{name}",
-                cost_fun_expr,
-            )
-        )
-
-
-def _get_sigma(
-    pysb_model: pysb.Model,
-    obs_name: str,
-    sigma_name: str | None,
-    renames: dict[str, str] | None = None,
-    all_names: set[str] | None = None,
-) -> sp.Symbol:
-    """
-    Tries to extract standard deviation _symbolic identifier and formula
-    for a given observable name from the pysb model and if no specification is
-    available sets default values
-
-    :param pysb_model:
-        pysb model
-
-    :param obs_name:
-        name of the observable
-
-    :param sigma_name:
-        Name of a :class:`pysb.core.Expression` that should be mapped to a
-        sigma or ``None``.
-
-    :param renames:
-        mapping from a PySB-chosen name to a non-colliding replacement, see
-        `resolve_reserved_symbol_renames`
-
-    :param all_names:
-        names already claimed in the model so far, see `all_names` in
-        `ode_model_from_pysb_importer`
-
-    :return:
-        _symbolic variable representing the standard deviation of the observable
-    """
-    if sigma_name is None:
-        name = f"sigma_{obs_name}"
-        if all_names is not None:
-            name = make_name_unique(name, all_names)
-        return symbol_with_assumptions(name)
-
-    if sigma_name in pysb_model.expressions.keys():
-        return _expr_to_amici(pysb_model.expressions[sigma_name], renames)
-
-    raise ValueError(f"value of sigma {obs_name} is not a valid expression.")
+    expr = _parse_special_functions(_expr_to_amici(expr, renames))
+    ode_model.add_component(
+        Expression(symbol_with_assumptions(sym_name), name, expr)
+    )
 
 
 @log_execution_time("processing PySB observables", logger)
 def _process_pysb_observables(
     pysb_model: pysb.Model,
     ode_model: DEModel,
-    observation_model: dict[str, MeasurementChannel],
-    pysb_model_has_obs_and_noise: bool = False,
-    renames: dict[str, str] | None = None,
-    all_names: set[str] | None = None,
-) -> None:
+    renames: dict[str, str],
+) -> set[str]:
     """
     Converts :class:`pysb.core.Observable` into
     :class:`DEModel.Expressions` and adds them to the DEModel instance
@@ -1021,13 +865,42 @@ def _process_pysb_observables(
     :param ode_model:
         DEModel instance
 
-    :param observation_model:
-        Mapping from observable name to
-        :class:`amici.importers.utils.MeasurementChannel`.
+    :param renames:
+        mapping from a PySB-chosen name to a non-colliding replacement, see
+        `resolve_reserved_symbol_renames`
 
-    :param pysb_model_has_obs_and_noise:
-        if set to ``True``, the pysb model is expected to have extra
-        observables and noise variables added
+    :return:
+        The names of the added expressions.
+    """
+    for obs in pysb_model.observables:
+        _add_expression(obs.name, obs.expand_obs(), ode_model, renames)
+    return {obs.name for obs in pysb_model.observables}
+
+
+@log_execution_time("processing observation model", logger)
+def _process_observation_model(
+    pysb_model: pysb.Model,
+    ode_model: DEModel,
+    observation_model: list[MeasurementChannel],
+    expression_names: set[str],
+    renames: dict[str, str],
+    all_names: set[str],
+) -> None:
+    """
+    Add observables, sigmas, and log-likelihoods to the DEModel instance
+
+    :param pysb_model:
+        pysb model
+
+    :param ode_model:
+        DEModel instance
+
+    :param observation_model:
+        The measurement channels, see :func:`pysb2amici`.
+
+    :param expression_names:
+        The names of the PySB observables and expressions added to the
+        DEModel instance as expressions.
 
     :param renames:
         mapping from a PySB-chosen name to a non-colliding replacement, see
@@ -1037,18 +910,177 @@ def _process_pysb_observables(
         names already claimed in the model so far, see `all_names` in
         `ode_model_from_pysb_importer`
     """
-    # only add those pysb observables that occur in the added
-    # Observables as expressions
-    for obs in pysb_model.observables:
-        _add_expression(
-            obs.name,
-            obs.expand_obs(),
-            pysb_model,
-            ode_model,
-            observation_model,
-            pysb_model_has_obs_and_noise,
-            renames,
-            all_names,
+    local_syms = {
+        name: symbol_with_assumptions(renames.get(name, name))
+        for name in expression_names
+        | {par.name for par in pysb_model.parameters}
+    }
+    local_syms.setdefault("time", amici_time_symbol)
+
+    y_syms = {}
+    for channel in observation_model:
+        if channel.id in y_syms:
+            raise ValueError(
+                f"Duplicate measurement channel ID {channel.id!r}."
+            )
+        if channel.formula is None:
+            if channel.id not in expression_names:
+                raise ValueError(
+                    f"Measurement channel {channel.id!r} has no formula, but "
+                    "there is no PySB observable or expression with that "
+                    "name."
+                )
+        elif channel.id in local_syms:
+            raise NotImplementedError(
+                f"Measurement channel {channel.id!r} has a formula. For such "
+                "channels, IDs that are `time` or the name of a PySB "
+                "parameter, expression, or observable are currently not "
+                "supported."
+            )
+        # The ID of a channel without formula denotes the referenced model
+        #  entity, which keeps its own symbol. The observable then gets a
+        #  new symbol, and its original ID is restored for the generated
+        #  model.
+        y_name = make_name_unique(channel.id, all_names)
+        if y_name != channel.id:
+            ode_model.reserved_symbol_original_ids[y_name] = channel.id
+        y_syms[channel.id] = symbol_with_assumptions(y_name)
+        if channel.formula is not None:
+            local_syms[channel.id] = y_syms[channel.id]
+
+    resolved = set(local_syms.values()) | set(y_syms.values())
+    # Placeholders for parsing strings, so that names equal to the (renamed)
+    #  model symbols, but not in `local_syms`, are not resolved.
+    placeholders = {name: sp.Dummy(name) for name in local_syms}
+    from_placeholders = {
+        placeholders[name]: s for name, s in local_syms.items()
+    }
+
+    def sympify(expr: sp.Basic | str | float) -> sp.Expr:
+        if isinstance(expr, str):
+            # `t` would otherwise be the model time symbol
+            expr = sympify_str(expr, {"t": sp.Symbol("t"), **placeholders})
+            unresolved = expr.free_symbols - from_placeholders.keys()
+            expr = expr.xreplace(from_placeholders)
+        else:
+            expr = sp.sympify(expr)
+            unresolved = expr.free_symbols - resolved
+        if unknown := {s.name for s in unresolved} - local_syms.keys():
+            raise ValueError(
+                f"Unknown symbols in observation model formula {expr}: "
+                f"{', '.join(sorted(unknown))}."
+            )
+        expr = expr.xreplace({s: local_syms[s.name] for s in unresolved})
+        return _parse_special_functions(expr)
+
+    w_defs = {w.get_sym(): w.get_val() for w in ode_model.expressions()}
+
+    def to_observable(sigma: sp.Expr, ref: sp.Symbol, y: sp.Symbol) -> sp.Expr:
+        """Express a sigma in terms of the observable.
+
+        Inlines the PySB expressions that depend on the PySB observable or
+        expression `ref` that the observable `y` is equal to, and replaces
+        `ref` by `y`. Otherwise, the observable formula would later have to
+        be solved for the model states, which fails for non-invertible
+        formulas.
+        """
+        depends = {ref: True}
+
+        def depends_on_ref(sym: sp.Symbol) -> bool:
+            if sym not in depends:
+                depends[sym] = sym in w_defs and any(
+                    map(depends_on_ref, w_defs[sym].free_symbols)
+                )
+            return depends[sym]
+
+        while subs := {
+            sym: w_defs[sym]
+            for sym in sigma.free_symbols
+            if sym != ref and depends_on_ref(sym)
+        }:
+            sigma = sigma.xreplace(subs)
+        return sigma.xreplace({ref: y})
+
+    channels = []
+    for channel in observation_model:
+        sigma = channel.sigma
+        if sigma is not None:
+            sigma = sympify(sigma)
+            ref = (
+                local_syms[channel.id]
+                if channel.formula is None
+                else sympify(channel.formula)
+            )
+            if ref in w_defs:
+                sigma = to_observable(sigma, ref, y_syms[channel.id])
+        channels.append(
+            MeasurementChannel(
+                str(y_syms[channel.id]),
+                name=channel.name or channel.id,
+                formula=local_syms[channel.id]
+                if channel.formula is None
+                else channel.formula,
+                noise_distribution=channel.noise_distribution,
+                sigma=sigma,
+            )
+        )
+
+    symbols = {SymbolId.EVENT: {}}
+    add_observables(symbols, channels, sympify)
+    add_log_likelihoods(
+        symbols,
+        channels,
+        sympify,
+        lambda name: make_name_unique(name, all_names),
+        str_symbols={str(y_syms[c.id]): c.id for c in observation_model},
+    )
+    _resolve_custom_noise_distributions(
+        symbols,
+        {y: channel_id for channel_id, y in y_syms.items()},
+        {par.name: local_syms[par.name] for par in pysb_model.parameters}
+        | y_syms,
+    )
+    add_components(ode_model, symbols)
+
+
+def _resolve_custom_noise_distributions(
+    symbols: dict[SymbolId, dict[sp.Symbol, dict[str, Any]]],
+    channel_ids: dict[sp.Symbol, str],
+    llh_locals: dict[str, sp.Symbol],
+) -> None:
+    """Resolve the names in log-likelihoods from custom noise distributions.
+
+    :param symbols:
+        The symbol dictionary with observables, sigmas, and log-likelihoods.
+    :param channel_ids:
+        The measurement channel IDs by observable symbol.
+    :param llh_locals:
+        The symbols that names other than the channel's observable,
+        measurement, and sigma may refer to, by name.
+    """
+    for (y, obs), sigma, llh in zip(
+        symbols[SymbolId.OBSERVABLE].items(),
+        symbols[SymbolId.SIGMAY],
+        symbols[SymbolId.LLHY].values(),
+        strict=True,
+    ):
+        if not callable(llh["dist"]):
+            continue
+        unresolved = llh["value"].free_symbols - {
+            y,
+            obs["measurement_symbol"],
+            sigma,
+        }
+        if unknown := {s.name for s in unresolved} - llh_locals.keys():
+            raise ValueError(
+                "The custom noise distribution of measurement channel "
+                f"{channel_ids[y]!r} contains symbols that are neither the "
+                "channel's observable, measurement, or sigma, nor PySB "
+                "parameters or measurement channel IDs: "
+                f"{', '.join(sorted(unknown))}."
+            )
+        llh["value"] = llh["value"].xreplace(
+            {s: llh_locals[s.name] for s in unresolved}
         )
 
 

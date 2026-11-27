@@ -242,8 +242,8 @@ class DEModel:
         self._splines: list[AbstractSpline] = []
         # internal symbol name -> original user-facing id, for symbols an
         # importer had to rename to avoid colliding with an amici-internal
-        # symbol; consulted wherever an id is reported outward so the
-        # rename stays invisible to users
+        # symbol or another model entity; consulted wherever an id is
+        # reported outward so the rename stays invisible to users
         self.reserved_symbol_original_ids: dict[str, str] = {}
         self._symboldim_funs: dict[str, Callable[[], int]] = {
             "sx": self.num_states_solver,
@@ -2218,8 +2218,9 @@ class DEModel:
                 if (syms := eq_sigma_yz.free_symbols & syms_unavailable)
             }
             if unavailable_in_sigma:
+                original_ids = self.reserved_symbol_original_ids
                 msg = "; ".join(
-                    f"the sigma of {yz} depends on "
+                    f"the sigma of {original_ids.get(str(yz), yz)} depends on "
                     f"{', '.join(sorted(map(str, syms)))}"
                     for yz, syms in unavailable_in_sigma.items()
                 )

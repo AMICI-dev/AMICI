@@ -12,6 +12,8 @@ from typing import Any
 
 import sympy as sp
 
+from amici._symbolic.de_model import DEModel
+from amici._symbolic.de_model_components import symbol_to_type
 from amici.constants import SymbolId
 from amici.importers.utils import (
     MeasurementChannel,
@@ -20,6 +22,7 @@ from amici.importers.utils import (
 )
 
 __all__ = [
+    "add_components",
     "add_log_likelihoods",
     "add_observables",
     "check_event_id",
@@ -28,6 +31,55 @@ __all__ = [
 
 #: ``SymbolId`` -> {symbol -> component attributes}
 SymbolDict = dict[SymbolId, dict[sp.Symbol, dict[str, Any]]]
+
+
+def add_components(de_model: DEModel, symbols: SymbolDict) -> None:
+    """Add the entries of a symbol dictionary to a model as components.
+
+    :param de_model:
+        The model to add the components to.
+    :param symbols:
+        The symbol dictionary. Each entry is added as a component of the
+        type corresponding to its ``SymbolId``.
+    """
+    for symbol_name in symbols:
+        # transform dict of lists into a list of dicts
+        args = ["name", "symbol"]
+
+        if symbol_name == SymbolId.SPECIES:
+            args += ["dt", "init"]
+        elif symbol_name == SymbolId.ALGEBRAIC_STATE:
+            args += ["init"]
+        else:
+            args += ["value"]
+
+        if symbol_name == SymbolId.EVENT:
+            args += [
+                "assignments",
+                "initial_value",
+                "priority",
+                "use_values_from_trigger_time",
+            ]
+        elif symbol_name == SymbolId.OBSERVABLE:
+            args += ["noise_distribution", "measurement_symbol"]
+        elif symbol_name == SymbolId.EVENT_OBSERVABLE:
+            args += [
+                "event",
+                "measurement_symbol",
+                "regularization_symbol",
+                "noise_distribution",
+            ]
+
+        comp_kwargs = [
+            {
+                "symbol": var_id,
+                **{k: v for k, v in var.items() if k in args},
+            }
+            for var_id, var in symbols[symbol_name].items()
+        ]
+
+        for comp_kwarg in comp_kwargs:
+            de_model.add_component(symbol_to_type[symbol_name](**comp_kwarg))
 
 
 def check_event_id(symbols: SymbolDict, channel: MeasurementChannel) -> None:
@@ -149,6 +201,7 @@ def add_log_likelihoods(
     observation_model: list[MeasurementChannel] | None,
     sympify: Callable[[Any], sp.Expr],
     make_derived_name_unique: Callable[[str], str],
+    str_symbols: dict[str, str] | None = None,
 ) -> None:
     """Add sigmas and log-likelihood contributions for all observables.
 
@@ -166,165 +219,166 @@ def add_log_likelihoods(
     :param make_derived_name_unique:
         Function to disambiguate the name of a derived symbol against all
         names already used in the model.
+    :param str_symbols:
+        The ``str_symbol`` to pass to custom noise distribution callables,
+        by observable ID. Defaults to the observable ID.
     """
-    sigmas = {
-        channel.id: channel.sigma
-        for channel in observation_model or []
-        if channel.is_time_resolved and channel.sigma is not None
-    }
-    noise_distributions = {
-        channel.id: channel.noise_distribution
-        for channel in observation_model or []
-        if channel.is_time_resolved
-    }
-    _process_log_likelihood(
-        symbols, sigmas, noise_distributions, sympify, make_derived_name_unique
-    )
-
-    sigmas = {
-        channel.id: channel.sigma
-        for channel in observation_model or []
-        if channel.is_event_resolved and channel.sigma is not None
-    }
-    noise_distributions = {
-        channel.id: channel.noise_distribution
-        for channel in observation_model or []
-        if channel.is_event_resolved
-    }
+    channels = {channel.id: channel for channel in observation_model or []}
+    str_symbols = str_symbols or {}
     _process_log_likelihood(
         symbols,
-        sigmas,
-        noise_distributions,
+        channels,
         sympify,
         make_derived_name_unique,
-        events=True,
+        str_symbols,
+        obs_type=SymbolId.OBSERVABLE,
+        sigma_type=SymbolId.SIGMAY,
+        llh_type=SymbolId.LLHY,
     )
     _process_log_likelihood(
         symbols,
-        sigmas,
-        noise_distributions,
+        channels,
         sympify,
         make_derived_name_unique,
-        events=True,
-        event_reg=True,
+        str_symbols,
+        obs_type=SymbolId.EVENT_OBSERVABLE,
+        sigma_type=SymbolId.SIGMAZ,
+        llh_type=SymbolId.LLHZ,
+        llh_reg_type=SymbolId.LLHRZ,
     )
 
 
 def _process_log_likelihood(
     symbols: SymbolDict,
-    sigmas: dict[str, str | float],
-    noise_distributions: dict[str, str],
+    channels: dict[str, MeasurementChannel],
     sympify: Callable[[Any], sp.Expr],
     make_derived_name_unique: Callable[[str], str],
-    events: bool = False,
-    event_reg: bool = False,
+    str_symbols: dict[str, str],
+    obs_type: SymbolId,
+    sigma_type: SymbolId,
+    llh_type: SymbolId,
+    llh_reg_type: SymbolId | None = None,
 ):
-    """
-    Perform symbolic computations required for objective function
-    evaluation.
+    """Add sigmas and log-likelihood contributions for one observable type.
 
     :param symbols:
         See :func:`add_log_likelihoods`.
-
-    :param sigmas:
-        Sigma expressions by observable ID.
-
-    :param noise_distributions:
-        Noise distributions by observable ID.
-
+    :param channels:
+        Measurement channels by observable ID. Observables without a channel
+        get a normal noise distribution with unit sigma.
     :param sympify:
         See :func:`add_observables`.
-
     :param make_derived_name_unique:
         See :func:`add_log_likelihoods`.
-
-    :param events:
-        indicates whether the passed definitions are for observables
-        (False) or for event observables (True).
-
-    :param event_reg:
-        indicates whether log-likelihood definitions should be processed
-        for event observable regularization (Jrz). If this is activated,
-        measurements are substituted by 0 and the observable by the
-        respective regularization symbol.
+    :param str_symbols:
+        See :func:`add_log_likelihoods`.
+    :param obs_type:
+        The type of the observables to process.
+    :param sigma_type:
+        The type of the sigmas to add.
+    :param llh_type:
+        The type of the log-likelihood contributions to add.
+    :param llh_reg_type:
+        If not ``None``, additionally add log-likelihood contributions of
+        this type for event observable regularization: the measurement is
+        replaced by 0, and the observable by its regularization symbol.
     """
+    observables = symbols[obs_type]
+    for obs_id, obs in observables.items():
+        obs["measurement_symbol"] = symbol_with_assumptions(
+            make_derived_name_unique(f"m{obs_id}")
+        )
 
-    if events:
-        if event_reg:
-            obs_symbol = SymbolId.EVENT_OBSERVABLE
-            sigma_symbol = SymbolId.SIGMAZ
-            llh_symbol = SymbolId.LLHRZ
-        else:
-            obs_symbol = SymbolId.EVENT_OBSERVABLE
-            sigma_symbol = SymbolId.SIGMAZ
-            llh_symbol = SymbolId.LLHZ
-    else:
-        assert not event_reg
-        obs_symbol = SymbolId.OBSERVABLE
-        sigma_symbol = SymbolId.SIGMAY
-        llh_symbol = SymbolId.LLHY
-
-    for obs_id, obs in symbols[obs_symbol].items():
-        # event observables go through this method twice (once with
-        # `event_reg=False`, once with `event_reg=True`, both against
-        # the same `symbols[SymbolId.EVENT_OBSERVABLE]` dict) --
-        # only mint the measurement symbol once, so a second pass
-        # doesn't see its own first choice as an already-taken name and
-        # needlessly disambiguate again
-        if "measurement_symbol" not in obs:
-            obs["measurement_symbol"] = symbol_with_assumptions(
-                make_derived_name_unique(f"m{obs_id}")
+    sigmas = {
+        str(obs_id): sympify(channel.sigma)
+        for obs_id in observables
+        if (channel := channels.get(str(obs_id))) and channel.sigma is not None
+    }
+    # check that only the corresponding observable ID is used in the
+    #  sigma formula, but not any other observable ID
+    #  https://github.com/AMICI-dev/AMICI/issues/2561
+    obs_syms = set(observables.keys())
+    for obs_id in observables:
+        if (sigma := sigmas.get(str(obs_id))) and sigma.has(
+            *(obs_syms - {obs_id})
+        ):
+            raise ValueError(
+                f"Sigma expression for {obs_id} ({sigma}) must not "
+                f"contain any observable symbols other than {obs_id}."
             )
-        if event_reg:
-            obs["regularization_symbol"] = symbol_with_assumptions(
-                make_derived_name_unique(f"r{obs_id}")
-            )
-
-    if not event_reg:
-        sigmas = {obs_id: sympify(sigma) for obs_id, sigma in sigmas.items()}
-        obs_syms = set(symbols[obs_symbol].keys())
-        for obs_id in symbols[obs_symbol]:
-            if (sigma := sigmas.get(str(obs_id))) and sigma.has(
-                *(obs_syms - {obs_id})
-            ):
-                raise ValueError(
-                    f"Sigma expression for {obs_id} ({sigma}) must not "
-                    f"contain any observable symbols other than {obs_id}."
-                )
-        # check that only the corresponding observable ID is used in the
-        #  sigma formula, but not any other observable ID
-        #  https://github.com/AMICI-dev/AMICI/issues/2561
-        symbols[sigma_symbol] = {
-            symbol_with_assumptions(
-                make_derived_name_unique(f"sigma_{obs_id}")
-            ): {
-                "name": f"sigma_{obs['name']}",
-                "value": sigmas.get(str(obs_id), sp.Float(1.0)),
-            }
-            for obs_id, obs in symbols[obs_symbol].items()
+    symbols[sigma_type] = {
+        symbol_with_assumptions(make_derived_name_unique(f"sigma_{obs_id}")): {
+            "name": f"sigma_{obs['name']}",
+            "value": sigmas.get(str(obs_id), sp.Float(1.0)),
         }
+        for obs_id, obs in observables.items()
+    }
 
-    symbols[llh_symbol] = {}
-    for (obs_id, obs), (sigma_id, sigma) in zip(
-        symbols[obs_symbol].items(),
-        symbols[sigma_symbol].items(),
+    symbols[llh_type] = _log_likelihoods(
+        symbols,
+        channels,
+        str_symbols,
+        obs_type,
+        sigma_type,
+        make_derived_name_unique,
+    )
+    if llh_reg_type is None:
+        return
+
+    for obs_id, obs in observables.items():
+        obs["regularization_symbol"] = symbol_with_assumptions(
+            make_derived_name_unique(f"r{obs_id}")
+        )
+    symbols[llh_reg_type] = _log_likelihoods(
+        symbols,
+        channels,
+        str_symbols,
+        obs_type,
+        sigma_type,
+        make_derived_name_unique,
+        regularization=True,
+    )
+
+
+def _log_likelihoods(
+    symbols: SymbolDict,
+    channels: dict[str, MeasurementChannel],
+    str_symbols: dict[str, str],
+    obs_type: SymbolId,
+    sigma_type: SymbolId,
+    make_derived_name_unique: Callable[[str], str],
+    regularization: bool = False,
+) -> dict[sp.Symbol, dict[str, Any]]:
+    """Create the log-likelihood contributions for one observable type.
+
+    See :func:`_process_log_likelihood`.
+    """
+    llhs = {}
+    for (obs_id, obs), sigma_id in zip(
+        symbols[obs_type].items(),
+        symbols[sigma_type].keys(),
         strict=True,
     ):
         symbol = symbol_with_assumptions(
             make_derived_name_unique(f"J{obs_id}")
         )
-        dist = noise_distributions.get(str(obs_id), "normal")
+        channel = channels.get(str(obs_id))
+        dist = channel.noise_distribution if channel else "normal"
         value = noise_distribution_to_cost_function(dist)(
-            obs_id, obs["measurement_symbol"], sigma_id
+            obs_id,
+            obs["measurement_symbol"],
+            sigma_id,
+            str_symbol=str_symbols.get(str(obs_id)),
         )
-        if event_reg:
+        if regularization:
             value = value.subs(obs["measurement_symbol"], 0.0)
             value = value.subs(obs_id, obs["regularization_symbol"])
-        symbols[llh_symbol][symbol] = {
+        llhs[symbol] = {
             "name": f"J{obs['name']}",
             "value": value,
             "dist": dist,
         }
+    return llhs
 
 
 def _check_symbol_nesting(
