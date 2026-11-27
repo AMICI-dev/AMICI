@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 from amici import _get_amici_path
+from amici._installation.build_tools import use_env_build_tools
 from amici._installation.custom_commands import AmiciBuildCMakeExtension
 from cmake_build_extension import CMakeExtension
 from setuptools import find_namespace_packages, setup
@@ -67,6 +68,10 @@ def get_extension() -> CMakeExtension:
 
 # Change working directory to setup.py location
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
+# Use cmake, ninja, and swig of the current Python environment, even if it is
+#  not activated
+use_env_build_tools()
 
 MODEL_EXT = get_extension()
 
