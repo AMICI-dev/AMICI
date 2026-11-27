@@ -153,6 +153,7 @@ class Model_model_steadystate_py : public amici::Model_ODE {
                   .ndxdotdp_explicit = 11,
                   .ndxdotdx_explicit = 9,
                   .w_recursion_depth = 0,
+                  .w_recursion_depth_dynamic = 0,
               },
               amici::SimulationParameters(
                   std::vector<realtype>{0.10000000000000001, 0.40000000000000002, 0.69999999999999996, 1.0}, // fixedParameters

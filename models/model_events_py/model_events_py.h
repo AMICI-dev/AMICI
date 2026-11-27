@@ -153,6 +153,7 @@ class Model_model_events_py : public amici::Model_ODE {
                   .ndxdotdp_explicit = 3,
                   .ndxdotdx_explicit = 4,
                   .w_recursion_depth = 0,
+                  .w_recursion_depth_dynamic = 0,
               },
               amici::SimulationParameters(
                   std::vector<realtype>{4.0, 8.0, 10.0, 4.0}, // fixedParameters

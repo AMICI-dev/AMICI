@@ -56,6 +56,7 @@ struct ModelDimensions {
         Expects(ndxdotdp_explicit >= 0);
         Expects(ndxdotdx_explicit >= 0);
         Expects(w_recursion_depth >= 0);
+        Expects(w_recursion_depth_dynamic <= w_recursion_depth);
     }
     /** Number of state variables */
     int nx_rdata{0};
@@ -165,6 +166,28 @@ struct ModelDimensions {
 
     /** Recursion depth of fw */
     int w_recursion_depth = 0;
+
+    /**
+     * Recursion depth of fw, restricted to dynamic expressions, i.e., those
+     * that depend on time, state variables, or Heaviside variables (directly
+     * or indirectly).
+     *
+     * This is sufficient for the chain rule of derivatives that are zero
+     * for all other expressions, such as `dwdx` and `dwdt`.
+     * A negative value means unknown, in which case `w_recursion_depth` is
+     * used.
+     */
+    int w_recursion_depth_dynamic = -1;
+
+    /**
+     * @brief Recursion depth for the chain rule of `dwdx`.
+     * @return `w_recursion_depth_dynamic` if known, otherwise
+     * `w_recursion_depth`.
+     */
+    [[nodiscard]] int dwdx_recursion_depth() const {
+        return w_recursion_depth_dynamic < 0 ? w_recursion_depth
+                                             : w_recursion_depth_dynamic;
+    }
 };
 
 } // namespace amici

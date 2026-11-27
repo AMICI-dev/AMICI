@@ -1154,6 +1154,38 @@ class DEModel:
         """
         return self.static_symbols | self.constant_state_symbols
 
+    @property
+    def w_recursion_depth_dynamic(self) -> int:
+        """
+        Recursion depth of ``w``, restricted to dynamic expressions.
+
+        This is the largest ``k`` for which ``dwdw**k``, restricted to the
+        dynamic entries of ``w`` (see :meth:`dynamic_indices`), is nonzero.
+        Static expressions only depend on other static expressions.
+        Therefore, for derivatives whose explicit part is zero for all static
+        expressions (e.g., ``dwdx``), the chain rule only needs to follow
+        chains of dynamic expressions.
+        """
+        dynamic_idxs = self.dynamic_indices("w")
+        if not dynamic_idxs:
+            return 0
+
+        nonzeros = np.asarray(
+            self.eq("dwdw").applyfunc(lambda x: int(not x.is_zero))
+        ).astype(np.int64)[np.ix_(dynamic_idxs, dynamic_idxs)]
+        depth = 0
+        recursion = nonzeros
+        while recursion.any():
+            recursion = (recursion @ nonzeros != 0).astype(np.int64)
+            depth += 1
+            if depth > len(dynamic_idxs):
+                raise RuntimeError(
+                    "dwdw is not nilpotent. Please file a bug report at "
+                    "https://github.com/AMICI-dev/AMICI/issues and attach "
+                    "this model."
+                )
+        return depth
+
     def dynamic_indices(self, name: str) -> list[int]:
         """
         Return the indices of dynamic expressions in the given model entity.

@@ -153,6 +153,7 @@ class Model_model_nested_events_py : public amici::Model_ODE {
                   .ndxdotdp_explicit = 2,
                   .ndxdotdx_explicit = 1,
                   .w_recursion_depth = 0,
+                  .w_recursion_depth_dynamic = 0,
               },
               amici::SimulationParameters(
                   std::vector<realtype>{}, // fixedParameters

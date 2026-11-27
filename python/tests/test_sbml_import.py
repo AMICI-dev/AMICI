@@ -644,6 +644,70 @@ def test_sigma_depending_on_assignment_rules(tempdir, monkeypatch):
 
 
 @skip_on_valgrind
+def test_static_and_dynamic_expression_chains(tempdir):
+    """Check derivatives for chains of static and dynamic expressions.
+
+    The chain rule for `dwdx` only follows chains of dynamic expressions.
+    """
+    ant_model = """
+    model test_static_and_dynamic_expression_chains
+        q = 0.2; c = 0.5
+        species A = 1; species B = 0
+        # static chain
+        ks := 10^q
+        ks2 := 2 * ks
+        # dynamic chain, depending on the static one
+        rate := ks2 * A
+        rate2 := rate * A + c * A
+        R1: A => B; rate2
+        R2: B => A; c * B
+        # no conservation law, which would turn A into an expression
+        R3: B => ; c * B
+    end
+    """
+    model_name = "test_static_and_dynamic_expression_chains"
+    sbml_importer = SbmlImporter(antimony2sbml(ant_model), from_file=False)
+    de_model = sbml_importer._build_ode_model(
+        observation_model=[MC("obs_a", formula="A"), MC("obs_b", formula="B")]
+    )
+    de_model.generate_basic_variables()
+    de_model.eq("dwdw")
+    w_ids = list(map(str, de_model.sym("w")))
+    static_ids = {w_ids[i] for i in de_model.static_indices("w")}
+    assert {"ks", "ks2"} <= static_ids
+    assert {"rate", "rate2"}.isdisjoint(static_ids)
+    # static chains don't count for the dynamic recursion depth
+    # (flux -> rate2 -> rate vs. flux -> rate2 -> rate -> ks2 -> ks)
+    assert de_model.w_recursion_depth_dynamic == 2
+    assert de_model._w_recursion_depth == 4
+
+    sbml_importer = SbmlImporter(antimony2sbml(ant_model), from_file=False)
+    sbml_importer.sbml2amici(
+        model_name=model_name,
+        output_dir=tempdir,
+        observation_model=[MC("obs_a", formula="A"), MC("obs_b", formula="B")],
+    )
+    model = amici.import_model_module(model_name, tempdir).get_model()
+    assert model.w_recursion_depth_dynamic == 2
+    assert model.w_recursion_depth == 4
+    model.set_timepoints(np.linspace(0, 5, 6))
+    solver = model.create_solver()
+    solver.set_relative_tolerance(1e-12)
+    solver.set_absolute_tolerance(1e-12)
+    rdata = run_simulation(model, solver)
+    assert rdata.status == AMICI_SUCCESS
+    edata = ExpData(rdata, 1.0, 0.0)
+    edata.set_measurements((1.1 * rdata.y).flatten())
+    solver.set_sensitivity_order(SensitivityOrder.first)
+    for sensi_method in (SensitivityMethod.forward, SensitivityMethod.adjoint):
+        solver.set_sensitivity_method(sensi_method)
+        rdata = run_simulation(model, solver, edata)
+        assert rdata.status == AMICI_SUCCESS
+        assert np.all(rdata.sllh != 0.0)
+        check_derivatives(model, solver=solver, edata=edata)
+
+
+@skip_on_valgrind
 def test_root_depending_on_zero_assignment_rule(tempdir):
     """Check roots that depend on an assignment rule with value zero."""
     ant_model = """

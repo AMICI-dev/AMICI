@@ -153,6 +153,7 @@ class Model_TPL_MODELNAME : public amici::Model_TPL_MODEL_TYPE_UPPER {
                   .ndxdotdp_explicit = TPL_NDXDOTDP_EXPLICIT,
                   .ndxdotdx_explicit = TPL_NDXDOTDX_EXPLICIT,
                   .w_recursion_depth = TPL_W_RECURSION_DEPTH,
+                  .w_recursion_depth_dynamic = TPL_W_RECURSION_DEPTH_DYNAMIC,
               },
               amici::SimulationParameters(
                   std::vector<realtype>{TPL_FIXED_PARAMETERS}, // fixedParameters

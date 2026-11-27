@@ -3392,7 +3392,11 @@ void Model::fdwdx(realtype const t, realtype const* x, bool include_static) {
         derived_state_.spl_.data(), include_static
     );
 
-    for (int irecursion = 1; irecursion <= w_recursion_depth; irecursion++) {
+    // Static expressions don't depend on x, and only depend on other static
+    // expressions. Therefore, only chains through dynamic expressions
+    // contribute.
+    for (int irecursion = 1; irecursion <= dwdx_recursion_depth();
+         irecursion++) {
         derived_state_.dwdw_.sparse_multiply(
             derived_state_.dwdx_hierarchical_.at(irecursion),
             derived_state_.dwdx_hierarchical_.at(irecursion - 1)
