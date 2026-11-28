@@ -1221,7 +1221,7 @@ int EventHandlingSimulator::detect_secondary_events() {
                        && (root_slope[ie] > 0.0 || root_slope[ie] < 0.0)) {
                 by_slope = true;
                 // The sign of a root function close to zero may be due to
-                // roundoff or, for DAEs, the re-computation of the algebraic
+                // roundoff or, for DAEs, the recomputation of the algebraic
                 // states. The direction in which it moves decides.
                 above = root_slope[ie] > 0.0;
             } else if (!changed) {
@@ -1239,11 +1239,13 @@ int EventHandlingSimulator::detect_secondary_events() {
             && solver_->get_logger()) {
             solver_->get_logger()->log(
                 LogSeverity::warning, "TRIGGER_WITHIN_TOLERANCE",
-                "At t = %.17g, an event assignment moved the trigger of event "
-                "%s below zero by less than its uncertainty while it is "
-                "increasing. The trigger is considered to remain true, so an "
-                "event that is expected to trigger again faster than the "
-                "tolerances can resolve does not trigger again.",
+                "At t = %.17g, the trigger of event %s is below zero by less "
+                "than its uncertainty after the discontinuity, while it is "
+                "increasing. This may be due to event assignments or, for "
+                "DAEs, the recomputation of the algebraic states. The "
+                "trigger is considered to remain true, so an event that is "
+                "expected to trigger again faster than the tolerances can "
+                "resolve does not trigger again.",
                 ws_->sol.t, model_->get_event(ie).get_id().c_str()
             );
         }

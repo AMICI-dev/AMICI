@@ -556,7 +556,12 @@ void IDASolver::reinit_post_process_b(realtype const tnext) const {
         reinit_post_process(
             static_cast<void*>(idaB_mem->IDA_mem), &tBret, &xB_, &dxB_, tnext
         );
-        // idaB_mem->ida_tout = tBret;
+        // IDASolveB returns the solution in ida_yy/ida_yp. If tnext is within
+        // IDAS' stop time roundoff, the step above already reached it, and
+        // IDASolveB's IDASolve(tnext) returns early (tout == tretlast)
+        // without updating them.
+        N_VScale(ONE, xB_.get_nvector(), idaB_mem->ida_yy);
+        N_VScale(ONE, dxB_.get_nvector(), idaB_mem->ida_yp);
         idaB_mem = idaB_mem->ida_next;
     }
     force_reinit_postprocess_B_ = false;
